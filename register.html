@@ -717,6 +717,18 @@ loading.style.display="none";
 return;
 
 }
+if(whatsapp.length < 10){
+
+alert("Nomor WhatsApp minimal 10 digit.");
+
+btn.disabled=false;
+
+loading.style.display="none";
+
+return;
+
+}
+
 
 if(password!==konfirmasi){
 
@@ -753,7 +765,6 @@ password
 
 const uid=userCredential.user.uid;
 
-const tanggalDaftar=new Date();
 
 const tanggalBerakhir=new Date();
 
@@ -764,6 +775,8 @@ tanggalBerakhir.getMonth()+3
 await setDoc(doc(db,"users",uid),{
 
 uid,
+
+aplikasi:"Fixzy",
 
 namaKonter,
 
@@ -777,11 +790,15 @@ alamat,
 
 paket:"FREE TRIAL",
 
+jenisLisensi:"Trial Gratis",
+
 durasi:"3 Bulan",
 
 harga:0,
 
 status:"pending",
+
+statusPembayaran:"free",
 
 masaAktif:"trial",
 
@@ -790,18 +807,18 @@ perpanjangan:false,
 role:"user",
 
 createdAt:serverTimestamp(),
+
+tanggalDaftar:serverTimestamp(),
+
 trialMulai:serverTimestamp(),
 
-trialSelesai:
-tanggalBerakhir.toISOString(),
-
-tanggalDaftar:
-tanggalDaftar.toISOString(),
+trialSelesai:tanggalBerakhir.toISOString(),
 
 tanggalAktivasi:null,
 
-tanggalBerakhir:
-tanggalBerakhir.toISOString(),
+tanggalBerakhir:tanggalBerakhir.toISOString(),
+
+device:navigator.userAgent,
 
 versi:"Fixzy V1"
 
