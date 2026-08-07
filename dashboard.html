@@ -39,7 +39,7 @@ body{background:#0d0d0d;background-image:radial-gradient(circle at top, rgba(255
 .trial-card{background:linear-gradient(135deg,#1b1b1b,#222);border:1px solid rgba(255,193,7,.25);position:relative;overflow:hidden;}
 .trial-card::before{content:"";position:absolute;top:-30px;right:-30px;width:120px;height:120px;background:radial-gradient(circle, rgba(255,193,7,.25), transparent 70%);pointer-events:none;}
 .trial-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;}
-.badge-trial{background:#FFC107;color:#111;padding:6px 12px;border-radius:20px;font-size:11px;font-weight:800;letter-spacing:.5px;}
+.badge-trial{background:#FFC107;color:#111;padding:6px 12px;border-radius:20px;font-size:11px;font-weight:800;}
 .trial-top span{font-size:12px;color:#FFC107;font-weight:600;}
 .trial-card h3{font-size:20px;font-weight:800;color:#fff;margin-bottom:4px;}
 .trial-card p{font-size:13px;color:#bbb;margin-bottom:14px;}
@@ -69,87 +69,34 @@ body{background:#0d0d0d;background-image:radial-gradient(circle at top, rgba(255
 #loadingScreen{position:fixed;top:0;left:0;width:100%;height:100%;background:#0d0d0d;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:9998;}
 .spinner{width:50px;height:50px;border:3px solid #222;border-top-color:#FFC107;border-radius:50%;animation:spin 1s linear infinite;margin-bottom:15px;}
 @keyframes spin{to{transform:rotate(360deg);}}
-@keyframes logoGlow{0%{transform:scale(1);box-shadow:0 0 20px rgba(255,193,7,.25);}100%{transform:scale(1.03);box-shadow:0 0 40px rgba(255,193,7,.5);}}
-/* === LOGIN POPUP STYLE === */
-#loginPopup{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.88);backdrop-filter:blur(6px);display:none;justify-content:center;align-items:center;z-index:9999;padding:15px;}
-.login-card{width:100%;max-width:400px;background:#1b1b1b;border-radius:25px;padding:25px;border:1px solid rgba(255,193,7,.25);box-shadow:0 20px 50px rgba(0,0,0,.6), 0 0 40px rgba(255,193,7,.15);animation:popUp .35s ease;}
-@keyframes popUp{from{transform:scale(.9) translateY(20px);opacity:0;}to{transform:scale(1) translateY(0);opacity:1;}}
-.logo-area{text-align:center;margin-bottom:22px;}
-.logo-area .logo{width:90px;height:90px;object-fit:contain;padding:10px;border-radius:20px;background:#111;box-shadow:0 0 25px rgba(255,193,7,.35);animation:logoGlow 2.5s infinite alternate;}
-.logo-area h1{margin-top:12px;font-size:24px;font-weight:700;color:#FFC107;}
-.logo-area p{margin-top:6px;font-size:13px;color:#bdbdbd;}
-.input-box{margin-bottom:16px;text-align:left;}
-.input-box label{display:block;margin-bottom:7px;font-size:13px;font-weight:600;color:#FFC107;}
-.input-box input{width:100%;padding:13px 14px;background:#252525;border:1px solid #333;border-radius:14px;font-size:14px;color:#fff;outline:none;transition:.25s;}
-.input-box input:focus{border-color:#FFC107;box-shadow:0 0 12px rgba(255,193,7,.25);}
-.password{display:flex;align-items:center;background:#252525;border:1px solid #333;border-radius:14px;overflow:hidden;transition:.25s;}
-.password:focus-within{border-color:#FFC107;box-shadow:0 0 12px rgba(255,193,7,.25);}
-.password input{border:none!important;background:transparent!important;box-shadow:none!important;margin:0;flex:1;}
-.password button{width:50px;height:48px;border:none;background:#FFC107;color:#111;font-size:18px;cursor:pointer;}
-#btnLogin{width:100%;padding:15px;border:none;border-radius:14px;background:linear-gradient(90deg,#FFC107,#FF9800);color:#111;font-size:15px;font-weight:700;cursor:pointer;transition:.3s;box-shadow:0 10px 25px rgba(255,193,7,.30);}
-#btnLogin:hover{transform:translateY(-2px);}
-#btnLogin:disabled{opacity:.6;cursor:not-allowed;transform:none;}
-#loginLoading{display:none;margin-top:12px;text-align:center;color:#FFC107;font-weight:600;font-size:13px;}
-.forgot{text-align:right;margin-top:-8px;margin-bottom:16px;}
-.forgot button{background:none;border:none;color:#FFC107;font-size:12px;font-weight:600;cursor:pointer;}
-.link-area{margin-top:18px;text-align:center;font-size:13px;color:#bbb;}
-.link-area a{color:#FFC107;font-weight:700;text-decoration:none;}
-.link-area a:hover{text-decoration:underline;}
-.badge-info{margin:18px 0 0;padding:10px;text-align:center;border-radius:12px;background:rgba(255,193,7,.12);border:1px solid rgba(255,193,7,.25);color:#FFC107;font-weight:600;font-size:11px;}
-/* Popup Message */
+
+/* LOGIN POPUP IFRAME */
+#loginPopup{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.88);backdrop-filter:blur(8px);display:none;justify-content:center;align-items:center;z-index:9999;padding:0;}
+#loginPopup .popup-wrapper{width:100%;height:100%;max-width:440px;position:relative;background:#0d0d0d;display:flex;flex-direction:column;animation:popUp .35s ease;}
+@keyframes popUp{from{transform:translateY(20px);opacity:0;}to{transform:translateY(0);opacity:1;}}
+#loginPopup iframe{width:100%;height:100%;border:none;flex:1;}
+#closeLoginPopup{position:absolute;top:12px;right:12px;z-index:10;background:#252525;border:1px solid #333;color:#fff;width:36px;height:36px;border-radius:50%;cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center;}
+.skip-login{position:absolute;bottom:20px;left:50%;transform:translateX(-50%);background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.15);color:#aaa;padding:8px 18px;border-radius:20px;font-size:11px;cursor:pointer;z-index:10;}
+
 #popupMsg{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.7);justify-content:center;align-items:center;z-index:10000;}
 #popupMsg .box{width:90%;max-width:340px;background:#1b1b1b;padding:25px;border-radius:20px;text-align:center;border:1px solid #FFC107;}
-#popupMsg h3{color:#FFC107;margin-bottom:10px;}
-#popupMsg p{margin:15px 0;color:#fff;white-space:pre-line;font-size:14px;line-height:1.5;}
-#popupMsg button{padding:11px 28px;border:none;border-radius:10px;background:#FFC107;color:#111;font-weight:bold;cursor:pointer;}
 </style>
 </head>
 <body>
 
-<!-- LOADING -->
 <div id="loadingScreen">
   <div class="spinner"></div>
   <p style="color:#FFC107;font-weight:600;font-size:14px;">Memuat Dashboard...</p>
 </div>
 
-<!-- LOGIN POPUP - Tampil sebelum dashboard jika belum login -->
+<!-- POPUP LOGIN.HTML - INI YANG KAMU MAU -->
 <div id="loginPopup">
-  <div class="login-card">
-    <div class="logo-area">
-      <img src="logo.png" class="logo" alt="Fixzy Logo">
-      <h1>Login Akun</h1>
-      <p>Masuk ke Fixzy Dashboard</p>
-    </div>
-
-    <form id="loginForm">
-      <div class="input-box">
-        <label>Email</label>
-        <input type="email" id="email" placeholder="email@gmail.com" required>
-      </div>
-
-      <div class="input-box">
-        <label>Password</label>
-        <div class="password">
-          <input type="password" id="password" placeholder="Masukkan password" required>
-          <button type="button" id="lihatPassword">👁</button>
-        </div>
-      </div>
-
-      <div class="forgot">
-        <button type="button" id="btnLupa">Lupa Password?</button>
-      </div>
-
-      <button id="btnLogin" type="submit">LOGIN</button>
-      <div id="loginLoading">Sedang masuk...</div>
-      <div class="badge-info">🔒 Akun Trial harus diaktivasi Admin terlebih dahulu</div>
-      <div class="link-area">
-        Belum punya akun? <a href="register.html">Daftar Sekarang</a>
-      </div>
-    </form>
+  <div class="popup-wrapper">
+    <button id="closeLoginPopup">✕</button>
+    <iframe id="loginFrame" src="login.html?popup=1"></iframe>
   </div>
 </div>
 
-<!-- MAIN DASHBOARD -->
 <div class="container" id="mainContent" style="display:none;">
   <div class="header">
     <div class="header-left">
@@ -175,7 +122,7 @@ body{background:#0d0d0d;background-image:radial-gradient(circle at top, rgba(255
       <span>Sisa: <b id="sisaDetail">90 hari</b></span>
     </div>
     <div id="warningPerpanjangan" style="display:none;margin-top:14px;padding:10px;background:rgba(255,0,0,.12);border:1px solid rgba(255,0,0,.25);border-radius:12px;font-size:11px;color:#ff8a80;text-align:center;">
-      ⚠️ Sisa trial kurang dari 7 hari, segera perpanjang biar tidak terblokir!
+      ⚠️ Sisa trial kurang dari 7 hari, segera perpanjang!
       <a href="perpanjangan.html" style="display:block;margin-top:8px;background:#ff5252;color:#fff;padding:8px;border-radius:8px;text-decoration:none;font-weight:700;">Perpanjang Sekarang</a>
     </div>
   </div>
@@ -205,19 +152,18 @@ body{background:#0d0d0d;background-image:radial-gradient(circle at top, rgba(255
   <a href="perpanjangan.html"><span>👤</span>Akun</a>
 </div>
 
-<!-- POPUP MESSAGE -->
-<div id="popupMsg">
+<div id="popupMsg" style="display:none;justify-content:center;align-items:center;">
   <div class="box">
-    <h3 id="popupJudul">Fixzy</h3>
-    <p id="popupPesan"></p>
-    <button onclick="tutupPopupMsg()">OK</button>
+    <h3 style="color:#FFC107;">Fixzy</h3>
+    <p id="popupPesan" style="margin:15px 0;color:#fff;white-space:pre-line;"></p>
+    <button onclick="document.getElementById('popupMsg').style.display='none'" style="padding:10px 24px;border:none;border-radius:10px;background:#FFC107;color:#111;font-weight:bold;cursor:pointer;">OK</button>
   </div>
 </div>
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js";
-import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, signOut, sendPasswordResetEmail } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-auth.js";
-import { getFirestore, doc, getDoc, collection, query, where, getDocs, updateDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js";
+import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-auth.js";
+import { getFirestore, doc, getDoc, collection, query, where, getDocs } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyCwMbJsuORhIq4QCmp4c1r6OsjAUlfxU5Y",
@@ -234,94 +180,85 @@ const db = getFirestore(app);
 const loadingScreen = document.getElementById("loadingScreen");
 const mainContent = document.getElementById("mainContent");
 const loginPopup = document.getElementById("loginPopup");
-const loginForm = document.getElementById("loginForm");
-const btnLogin = document.getElementById("btnLogin");
-const loginLoading = document.getElementById("loginLoading");
-
-// --- POPUP MESSAGE HELPER ---
-window.tampilPopupMsg = (judul, pesan) => {
-  document.getElementById("popupJudul").innerText = judul;
-  document.getElementById("popupPesan").innerText = pesan;
-  document.getElementById("popupMsg").style.display = "flex";
-}
-window.tutupPopupMsg = () => {
-  document.getElementById("popupMsg").style.display = "none";
-}
 
 function showLoginPopup(){
-  loadingScreen.style.display = "none";
-  mainContent.style.display = "none";
-  loginPopup.style.display = "flex";
-  // tandai sudah pernah lihat popup? tidak, kita hanya tandai kalau sudah login
+  loadingScreen.style.display="none";
+  mainContent.style.display="none";
+  loginPopup.style.display="flex";
+  document.getElementById("loginFrame").src = "login.html?popup=1&t="+Date.now();
 }
 function hideLoginPopup(){
-  loginPopup.style.display = "none";
+  loginPopup.style.display="none";
 }
-function showMainContent(){
-  loadingScreen.style.display = "none";
-  loginPopup.style.display = "none";
-  mainContent.style.display = "block";
+function showMain(){
+  loadingScreen.style.display="none";
+  loginPopup.style.display="none";
+  mainContent.style.display="block";
 }
 function showLoading(){
-  loadingScreen.style.display = "flex";
-  mainContent.style.display = "none";
-  loginPopup.style.display = "none";
+  loadingScreen.style.display="flex";
+  mainContent.style.display="none";
+  loginPopup.style.display="none";
 }
 
-// Toggle password
-document.getElementById("lihatPassword").addEventListener("click", ()=>{
-  const p = document.getElementById("password");
-  p.type = p.type === "password" ? "text" : "password";
+// Tutup popup manual
+document.getElementById("closeLoginPopup").addEventListener("click", ()=>{
+  // Kalau user close tanpa login, tetap paksa login atau redirect ke login.html
+  if(!localStorage.getItem("fixzy_uid")){
+    window.location.href="login.html";
+  } else {
+    hideLoginPopup();
+  }
 });
 
-// --- AUTH STATE LISTENER ---
+// Terima pesan dari iframe login.html
+window.addEventListener("message", async (event)=>{
+  if(event.data && event.data.type === "FIXZY_LOGIN_SUCCESS"){
+    console.log("Login success dari popup:", event.data);
+    hideLoginPopup();
+    const uid = event.data.uid || localStorage.getItem("fixzy_uid");
+    if(uid){
+      await loadUser(uid);
+    } else {
+      location.reload();
+    }
+  }
+});
+
 onAuthStateChanged(auth, async (user)=>{
   if(user){
-    // Sudah login di Firebase -> lewati popup
     localStorage.setItem("fixzy_uid", user.uid);
-    localStorage.setItem("fixzy_last_login_popup", "logged_in"); // penanda sudah pernah login
+    localStorage.setItem("fixzy_last_login_popup","logged_in");
     await loadUser(user.uid);
   }else{
     const uid = localStorage.getItem("fixzy_uid");
-    const lastLoginFlag = localStorage.getItem("fixzy_last_login_popup");
-
-    if(uid && lastLoginFlag === "logged_in"){
-      // Lewati popup karena sebelumnya sudah login, coba load dengan uid local
+    const flag = localStorage.getItem("fixzy_last_login_popup");
+    if(uid && flag === "logged_in"){
       try{
         await loadUser(uid);
         return;
       }catch(e){
-        console.log("Gagal load dengan uid local, tampilkan popup login", e);
+        console.log("UID local invalid, tampil popup");
         showLoginPopup();
       }
     }else{
-      // Belum pernah login -> tampilkan popup login.html
       showLoginPopup();
     }
   }
 });
 
-// --- LOAD USER DASHBOARD ---
 async function loadUser(uid){
   showLoading();
   try{
     const snap = await getDoc(doc(db,"users",uid));
-    if(!snap.exists()){
-      throw new Error("Data user tidak ditemukan");
-    }
+    if(!snap.exists()) throw new Error("User tidak ada");
     const data = snap.data();
-
     if(data.role==="admin"){ window.location.href="admin.html"; return; }
-    if(data.status==="blocked"){ tampilPopupMsg("Fixzy","Akun diblokir"); logoutToPopup(); return; }
+    if(data.status==="blocked"){ alert("Akun diblokir"); logout(); return; }
 
     if(data.tanggalBerakhir){
       const exp = new Date(data.tanggalBerakhir);
       if(new Date() > exp){
-        if(data.perpanjanganStatus==="pending"){
-          tampilPopupMsg("Fixzy","Masa aktif habis, perpanjangan menunggu approval Admin.");
-          setTimeout(()=> logoutToPopup(), 1500);
-          return;
-        }
         window.location.href=`perpanjangan.html?uid=${uid}`;
         return;
       }
@@ -331,10 +268,9 @@ async function loadUser(uid){
     document.getElementById("namaPemilik").innerText = data.namaPemilik || data.email;
     document.getElementById("badgePaket").innerText = data.paket || "FREE TRIAL";
 
-    const tglMulai = data.trialMulai?.toDate ? data.trialMulai.toDate() : new Date(data.createdAt?.toDate?.() || new Date());
+    const tglMulai = data.trialMulai?.toDate ? data.trialMulai.toDate() : new Date();
     const tglSelesai = new Date(data.tanggalBerakhir);
-    const now = new Date();
-    const diffDays = Math.max(0, Math.ceil((tglSelesai - now) / (1000*60*60*24)));
+    const diffDays = Math.max(0, Math.ceil((tglSelesai - new Date())/(1000*60*60*24)));
     const persen = Math.max(5, Math.min(100, (diffDays/90)*100));
 
     document.getElementById("sisaHariText").innerText = `Sisa ${diffDays} Hari`;
@@ -342,7 +278,6 @@ async function loadUser(uid){
     document.getElementById("tglBerakhirText").innerText = `Aktif sampai ${tglSelesai.toLocaleDateString("id-ID",{day:"numeric",month:"long",year:"numeric"})}`;
     document.getElementById("tglMulai").innerText = tglMulai.toLocaleDateString("id-ID",{day:"numeric",month:"short"});
     document.getElementById("progressBar").style.width = persen+"%";
-
     if(diffDays <= 7){
       document.getElementById("warningPerpanjangan").style.display="block";
       document.getElementById("progressBar").style.background="linear-gradient(90deg,#ff5252,#ff1744)";
@@ -367,126 +302,24 @@ async function loadUser(uid){
       document.getElementById("statProses").innerText=proses;
       document.getElementById("statSelesai").innerText=selesaiHariIni;
       document.getElementById("statPendapatan").innerText="Rp "+pendapatan.toLocaleString("id-ID");
-    }catch(e){ console.log("stats skip",e); }
+    }catch(e){}
 
-    showMainContent();
+    showMain();
     localStorage.setItem("fixzy_last_login_popup","logged_in");
-
   }catch(err){
     console.error(err);
-    // Jika gagal dan bukan karena belum login, tampilkan popup login
-    if(!localStorage.getItem("fixzy_uid")){
-      showLoginPopup();
-    }else{
-      tampilPopupMsg("Fixzy","Gagal load: "+err.message);
-      showLoginPopup();
-    }
-  }
-}
-
-// --- LOGIN FORM DI DALAM POPUP ---
-loginForm.addEventListener("submit", async (e)=>{
-  e.preventDefault();
-  btnLogin.disabled = true;
-  loginLoading.style.display = "block";
-  const email = document.getElementById("email").value.trim();
-  const password = document.getElementById("password").value;
-
-  try{
-    const cred = await signInWithEmailAndPassword(auth, email, password);
-    const uid = cred.user.uid;
-    const snap = await getDoc(doc(db,"users",uid));
-    if(!snap.exists()){
-      tampilPopupMsg("Fixzy","Data user tidak ditemukan di Firestore.\nHubungi Admin.");
-      await signOut(auth);
-      return;
-    }
-    const data = snap.data();
-    localStorage.setItem("fixzy_uid", uid);
-    localStorage.setItem("fixzy_role", data.role || "user");
-    localStorage.setItem("fixzy_data", JSON.stringify(data));
-    localStorage.setItem("fixzy_last_login_popup","logged_in");
-
-    if(data.role === "admin"){
-      await updateDoc(doc(db,"users",uid),{ lastLogin: serverTimestamp() });
-      tampilPopupMsg("Fixzy","Login Admin Berhasil!");
-      setTimeout(()=> window.location.href="admin.html", 800);
-      return;
-    }
-    if(data.status === "pending_activiation" || data.status === "pending_activasi"){
-      tampilPopupMsg("Fixzy","Akun Anda sedang menunggu aktivasi Admin Fixzy.\n\nSilakan hubungi Admin untuk aktivasi.");
-      await signOut(auth);
-      localStorage.clear();
-      return;
-    }
-    if(data.status === "rejected" || data.status === "blocked"){
-      tampilPopupMsg("Fixzy","Akun Anda ditolak / diblokir.\nHubungi Admin Fixzy.");
-      await signOut(auth);
-      localStorage.clear();
-      return;
-    }
-    if(data.tanggalBerakhir){
-      const tglAkhir = new Date(data.tanggalBerakhir);
-      if(new Date() > tglAkhir){
-        tampilPopupMsg("Fixzy","Masa aktif habis.\nSilakan perpanjang paket.");
-        setTimeout(()=> window.location.href=`perpanjangan.html?uid=${uid}`, 1200);
-        return;
-      }
-    }
-    await updateDoc(doc(db,"users",uid),{ lastLogin: serverTimestamp() });
-    tampilPopupMsg("Fixzy",`Selamat Datang, ${data.namaKonter || data.namaPemilik}!`);
-    setTimeout(async ()=>{
-      tutupPopupMsg();
-      hideLoginPopup();
-      await loadUser(uid);
-    }, 900);
-
-  }catch(err){
-    let pesan="Terjadi kesalahan login.";
-    switch(err.code){
-      case "auth/invalid-email": pesan="Format email tidak valid."; break;
-      case "auth/user-not-found": pesan="Email tidak terdaftar."; break;
-      case "auth/wrong-password": pesan="Password salah."; break;
-      case "auth/invalid-credential": pesan="Email atau password salah."; break;
-      case "auth/too-many-requests": pesan="Terlalu banyak percobaan. Coba lagi nanti."; break;
-      default: pesan=err.message;
-    }
-    tampilPopupMsg("Fixzy",pesan);
-  }finally{
-    btnLogin.disabled=false;
-    loginLoading.style.display="none";
-  }
-});
-
-// Lupa password
-document.getElementById("btnLupa").addEventListener("click", async ()=>{
-  const email = document.getElementById("email").value.trim();
-  if(!email){ tampilPopupMsg("Fixzy","Masukkan email dulu untuk reset password."); return; }
-  try{
-    await sendPasswordResetEmail(auth, email);
-    tampilPopupMsg("Fixzy","Link reset password sudah dikirim ke email:\n"+email);
-  }catch(err){
-    tampilPopupMsg("Fixzy","Gagal kirim reset: "+err.message);
-  }
-});
-
-function logoutToPopup(){
-  signOut(auth).then(()=>{
-    localStorage.clear();
     showLoginPopup();
-  });
+  }
 }
-window.logoutToPopup = logoutToPopup;
 
 function logout(){
   signOut(auth).then(()=>{
     localStorage.clear();
-    localStorage.removeItem("fixzy_last_login_popup");
     showLoginPopup();
   });
 }
 document.getElementById("btnLogout").addEventListener("click", logout);
-
+window.logout=logout;
 </script>
 </body>
 </html>
