@@ -741,6 +741,29 @@ loading.style.display="none";
 return;
 
 }
+if(namaKonter.length < 3){
+
+alert("Nama konter minimal 3 karakter.");
+
+btn.disabled=false;
+
+loading.style.display="none";
+
+return;
+
+}
+
+if(namaPemilik.length < 3){
+
+alert("Nama pemilik minimal 3 karakter.");
+
+btn.disabled=false;
+
+loading.style.display="none";
+
+return;
+
+}
 
 if(!document.getElementById("setuju").checked){
 
@@ -831,6 +854,8 @@ alert(
 
 window.location.href="login.html";
 
+
+
 }catch(err){
 
 let pesan="Terjadi kesalahan.";
@@ -838,38 +863,31 @@ let pesan="Terjadi kesalahan.";
 switch(err.code){
 
 case "auth/email-already-in-use":
-
 pesan="Email sudah digunakan.";
-
 break;
 
 case "auth/invalid-email":
-
 pesan="Format email tidak valid.";
-
 break;
 
 case "auth/weak-password":
-
 pesan="Password terlalu lemah.";
-
 break;
 
 default:
-
 pesan=err.message;
 
 }
 
 alert(pesan);
 
-}
+}finally{
 
 btn.disabled=false;
 
 loading.style.display="none";
 
-});
+}
 
 </script>
 
