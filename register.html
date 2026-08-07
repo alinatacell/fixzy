@@ -640,6 +640,39 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 
 const db = getFirestore(app);
+// ==========================
+// Ambil Komponen
+// ==========================
+
+const form = document.getElementById("registerForm");
+
+const btn = document.getElementById("btnDaftar");
+
+const loading = document.getElementById("loading");
+
+const lihatPassword = document.getElementById("lihatPassword");
+
+const passwordInput = document.getElementById("password");
+
+// Tampilkan / Sembunyikan Password
+
+lihatPassword.addEventListener("click",()=>{
+
+passwordInput.type=
+passwordInput.type==="password"
+? "text"
+: "password";
+
+});
+
+// Nomor HP hanya angka
+
+document.getElementById("whatsapp")
+.addEventListener("input",function(){
+
+this.value=this.value.replace(/[^0-9]/g,"");
+
+});
 // ============================
 // PROSES REGISTRASI
 // ============================
@@ -742,15 +775,25 @@ email,
 
 alamat,
 
-paket:"Trial",
+paket:"FREE TRIAL",
 
 durasi:"3 Bulan",
 
+harga:0,
+
 status:"pending",
+
+masaAktif:"trial",
+
+perpanjangan:false,
 
 role:"user",
 
 createdAt:serverTimestamp(),
+trialMulai:serverTimestamp(),
+
+trialSelesai:
+tanggalBerakhir.toISOString(),
 
 tanggalDaftar:
 tanggalDaftar.toISOString(),
