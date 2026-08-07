@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="id">
+<head><!-- PLAYABLE_TOUCH_PATCH_V1 --><script>
+(function() {
+  if (window.__playableTouchPatchInstalled) return;
+  window.__playableTouchPatchInstalled = true;
+  var origAdd = EventTarget.prototype.addEventListener;
+  var blockedTypes = { touchstart: 1, touchmove: 1, wheel: 1 };
+  EventTarget.prototype.addEventListener = function(type, listener, options) {
+    if (blockedTypes[type]) {
+      if (options === undefined || options === null) {
+        options = { passive: true };
+      } else if (typeof options === 'boolean') {
+        options = { capture: options, passive: true };
+      } else {
+        options = Object.assign({}, options, { passive: true });
+      }
+    }
+    return origAdd.call(this, type, listener, options);
+  };
+})();
+</script><script>window.Intl=window.Intl||{};Intl.t=function(s){return(Intl._locale&&Intl._locale[s])||s;};</script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Fixzy | Login</title>
+<meta name="theme-color" content="#FFC107">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;font-family:'Poppins',sans-serif;}
+html{scroll-behavior:smooth;}
+body{
+  background:#0d0d0d;
+  background-image: radial-gradient(circle at top, rgba(255,193,7,.18), transparent 60%);
+  color:#fff;
+  min-height:100vh;
+  overflow-x:hidden;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}
+.container{width:100%;max-width:430px;margin:auto;padding:20px 15px 40px;}
+.card{
+  background:#1b1b1b;
+  border-radius:25px;
+  padding:25px;
+  border:1px solid rgba(255,193,7,.15);
+  box-shadow:0 15px 35px rgba(0,0,0,.45);
+}
+.logo-area{text-align:center;margin-bottom:25px;}
+.logo{
+  width:170px;height:170px;object-fit:contain;padding:10px;border-radius:30px;
+  background:#111;
+  box-shadow:0 0 25px rgba(255,193,7,.35), 0 0 60px rgba(255,193,7,.15);
+  animation:logoGlow 2.5s infinite alternate;
+}
+@keyframes logoGlow{
+  0%{transform:scale(1);box-shadow:0 0 20px rgba(255,193,7,.25);}
+  100%{transform:scale(1.03);box-shadow:0 0 40px rgba(255,193,7,.5);}
+}
+.logo-area h1{margin-top:18px;font-size:30px;font-weight:700;color:#FFC107;}
+.logo-area p{margin-top:8px;font-size:15px;color:#bdbdbd;}
+.input-box{margin-bottom:18px;}
+.input-box label{display:block;margin-bottom:8px;font-size:14px;font-weight:600;color:#FFC107;}
+.input-box input{
+  width:100%;padding:14px;background:#252525;border:1px solid #333;border-radius:14px;
+  font-size:15px;color:#fff;outline:none;transition:.25s;
+}
+.input-box input:focus{border-color:#FFC107;box-shadow:0 0 12px rgba(255,193,7,.25);}
+.password{
+  display:flex;align-items:center;background:#252525;border:1px solid #333;border-radius:14px;overflow:hidden;
+  transition:.25s;
+}
+.password:focus-within{border-color:#FFC107;box-shadow:0 0 12px rgba(255,193,7,.25);}
+.password input{border:none!important;background:transparent!important;box-shadow:none!important;margin:0;}
+.password button{width:55px;height:50px;border:none;background:#FFC107;color:#111;font-size:20px;cursor:pointer;transition:.3s;}
+.password button:hover{background:#FFD54F;}
+#btnLogin{
+  width:100%;padding:16px;border:none;border-radius:16px;
+  background:linear-gradient(90deg,#FFC107,#FF9800);color:#111;font-size:17px;font-weight:700;
+  cursor:pointer;transition:.3s;box-shadow:0 10px 25px rgba(255,193,7,.30);
+}
+#btnLogin:hover{transform:translateY(-2px);box-shadow:0 15px 35px rgba(255,193,7,.45);}
+#btnLogin:disabled{opacity:.6;cursor:not-allowed;transform:none;}
+#loading{display:none;margin-top:15px;text-align:center;color:#FFC107;font-weight:600;}
+.link-area{margin-top:20px;text-align:center;font-size:14px;color:#bbb;}
+.link-area a{color:#FFC107;font-weight:700;text-decoration:none;}
+.link-area a:hover{text-decoration:underline;}
+.forgot{ text-align:right; margin-top:-10px; margin-bottom:18px; }
+.forgot button{background:none;border:none;color:#FFC107;font-size:13px;font-weight:600;cursor:pointer;}
+.badge-info{
+  margin:20px 0;padding:12px;text-align:center;border-radius:14px;
+  background:rgba(255,193,7,.12);border:1px solid rgba(255,193,7,.25);color:#FFC107;font-weight:600;font-size:13px;
+}
+@media(max-width:480px){
+  .container{padding:15px;}
+  .logo{width:150px;height:150px;}
+  .logo-area h1{font-size:26px;}
+  .card{padding:20px;}
+}
+</style>
+</head>
+<body>
+<div class="container">
+<div class="card">
+  <div class="logo-area">
+    <img src="logo.png" class="logo" alt="Fixzy Logo">
+    <h1>Login Akun</h1>
+    <p>Masuk ke Fixzy Dashboard</p>
+  </div>
+
+  <form id="loginForm">
+    <div class="input-box">
+      <label>Email</label>
+      <input type="email" id="email" placeholder="email@gmail.com" required>
+    </div>
+
+    <div class="input-box">
+      <label>Password</label>
+      <div class="password">
+        <input type="password" id="password" placeholder="Masukkan password" required>
+        <button type="button" id="lihatPassword">👁</button>
+      </div>
+    </div>
+
+    <div class="forgot">
+      <button type="button" id="btnLupa">Lupa Password?</button>
+    </div>
+
+    <button id="btnLogin" type="submit">LOGIN</button>
+
+    <div id="loading">Sedang masuk...</div>
+
+    <div class="badge-info">💡 Akun Trial harus diaktivasi Admin terlebih dahulu</div>
+
+    <div class="link-area">
+      Belum punya akun? <a href="register.html">Daftar Sekarang</a>
+    </div>
+  </form>
+</div>
+</div>
+
+<div id="popup" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.7);justify-content:center;align-items:center;z-index:9999;">
+  <div style="width:90%;max-width:340px;background:#1b1b1b;padding:25px;border-radius:20px;text-align:center;border:1px solid #FFC107;">
+    <h3 id="popupJudul" style="color:#FFC107;">Fixzy</h3>
+    <p id="popupPesan" style="margin:20px 0;color:#fff;white-space:pre-line;line-height:1.5;"></p>
+    <button onclick="tutupPopup()" style="padding:12px 30px;border:none;border-radius:10px;background:#FFC107;color:#111;font-weight:bold;cursor:pointer;">OK</button>
+  </div>
+</div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js";
+import { getAuth, signInWithEmailAndPassword, signOut, sendPasswordResetEmail } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-auth.js";
+import { getFirestore, doc, getDoc, updateDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyCwMbJsuORhIq4QCmp4c1r6OsjAUlfxU5Y",
+  authDomain: "fixzy-f056f.firebaseapp.com",
+  projectId: "fixzy-f056f",
+  storageBucket: "fixzy-f056f.firebasestorage.app",
+  messagingSenderId: "838081521031",
+  appId: "1:838081521031:web:50fdee909b56460b055f22"
+};
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+
+const form = document.getElementById("loginForm");
+const btn = document.getElementById("btnLogin");
+const loading = document.getElementById("loading");
+const lihatPassword = document.getElementById("lihatPassword");
+const passwordInput = document.getElementById("password");
+
+lihatPassword.addEventListener("click",()=>{
+  passwordInput.type = passwordInput.type==="password" ? "text" : "password";
+});
+
+form.addEventListener("submit", async (e)=>{
+  e.preventDefault();
+  btn.disabled=true;
+  loading.style.display="block";
+
+  const email = document.getElementById("email").value.trim();
+  const password = passwordInput.value;
+
+  try{
+    const cred = await signInWithEmailAndPassword(auth,email,password);
+    const uid = cred.user.uid;
+    
+    const snap = await getDoc(doc(db,"users",uid));
+    if(!snap.exists()){
+      tampilPopup("Fixzy","Data user tidak ditemukan di Firestore.\nHubungi Admin.");
+      await signOut(auth);
+      return;
+    }
+    const data = snap.data();
+
+    // Simpan session lokal
+    localStorage.setItem("fixzy_uid", uid);
+    localStorage.setItem("fixzy_role", data.role || "user");
+    localStorage.setItem("fixzy_data", JSON.stringify(data));
+
+    // CEK ROLE ADMIN - langsung masuk
+    if(data.role === "admin"){
+      await updateDoc(doc(db,"users",uid),{ lastLogin: serverTimestamp() });
+      tampilPopup("Fixzy","Login Admin Berhasil!");
+      setTimeout(()=> window.location.href="admin.html", 1200);
+      return;
+    }
+
+    // CEK STATUS USER
+    if(data.status === "pending_activation"){
+      tampilPopup("Fixzy","Akun Anda sedang menunggu aktivasi Admin Fixzy.\n\nSilakan hubungi Admin untuk aktivasi.");
+      await signOut(auth);
+      localStorage.clear();
+      return;
+    }
+
+    if(data.status === "rejected" || data.status === "blocked"){
+      tampilPopup("Fixzy","Akun Anda ditolak / diblokir.\nHubungi Admin Fixzy.");
+      await signOut(auth);
+      localStorage.clear();
+      return;
+    }
+
+    // CEK MASA AKTIF
+    if(data.tanggalBerakhir){
+      const tglAkhir = new Date(data.tanggalBerakhir);
+      if(new Date() > tglAkhir){
+        tampilPopup("Fixzy","Masa aktif habis.\nSilakan perpanjang paket.");
+        setTimeout(()=> window.location.href=`perpanjangan.html?uid=${uid}`, 1500);
+        return;
+      }
+    }
+
+    // Jika status aktif atau trial aktif
+    await updateDoc(doc(db,"users",uid),{ lastLogin: serverTimestamp() });
+    tampilPopup("Fixzy",`Selamat Datang, ${data.namaKonter || data.namaPemilik}!`);
+    setTimeout(()=> window.location.href="dashboard.html", 1200);
+
+  }catch(err){
+    let pesan="Terjadi kesalahan login.";
+    switch(err.code){
+      case "auth/invalid-email": pesan="Format email tidak valid."; break;
+      case "auth/user-not-found": pesan="Email tidak terdaftar."; break;
+      case "auth/wrong-password": pesan="Password salah."; break;
+      case "auth/invalid-credential": pesan="Email atau password salah."; break;
+      case "auth/too-many-requests": pesan="Terlalu banyak percobaan. Coba lagi nanti."; break;
+      default: pesan=err.message;
+    }
+    tampilPopup("Fixzy",pesan);
+  }finally{
+    btn.disabled=false;
+    loading.style.display="none";
+  }
+});
+
+// Lupa Password
+document.getElementById("btnLupa").addEventListener("click", async ()=>{
+  const email = document.getElementById("email").value.trim();
+  if(!email){
+    tampilPopup("Fixzy","Masukkan email dulu untuk reset password.");
+    return;
+  }
+  try{
+    await sendPasswordResetEmail(auth,email);
+    tampilPopup("Fixzy","Link reset password sudah dikirim ke email:\n"+email);
+  }catch(err){
+    tampilPopup("Fixzy","Gagal kirim reset: "+err.message);
+  }
+});
+
+window.tampilPopup = function(judul,pesan){
+  document.getElementById("popupJudul").innerText=judul;
+  document.getElementById("popupPesan").innerText=pesan;
+  document.getElementById("popup").style.display="flex";
+}
+window.tutupPopup = function(){
+  document.getElementById("popup").style.display="none";
+}
+</script>
+</body>
+</html>
