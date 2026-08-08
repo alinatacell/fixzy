@@ -626,6 +626,89 @@ body.theme-light .bottom-nav{background:#fff!important;color:#333;}
   background:#222;
 }
 </style>
+
+<style id="fixzy-pro-menu-v5">
+.pro-drawer{
+  width:min(390px,92vw)!important;
+  background:linear-gradient(180deg,#171717 0%,#101010 100%)!important;
+  border:1px solid rgba(255,193,7,.22)!important;
+  box-shadow:0 24px 70px rgba(0,0,0,.65),0 0 35px rgba(255,193,7,.08)!important;
+  border-radius:24px!important;
+  padding:0!important;
+  overflow:hidden;
+}
+.pro-menu-head{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:22px 20px 18px;
+  background:linear-gradient(135deg,rgba(255,193,7,.16),rgba(255,145,0,.04));
+  border-bottom:1px solid rgba(255,255,255,.07);
+}
+.pro-menu-title{font-size:20px;font-weight:800;color:#fff;letter-spacing:.2px}
+.pro-menu-sub{font-size:11px;color:#8f8f8f;margin-top:3px}
+.pro-close{
+  width:38px;height:38px;border:1px solid #333;border-radius:12px;
+  background:#222;color:#fff;font-size:22px;cursor:pointer;
+}
+.pro-close:hover{background:#FFC107;color:#111}
+.pro-menu-list{padding:12px}
+.pro-menu-group{margin-top:7px}
+.pro-menu-item{
+  width:100%;display:flex;align-items:center;gap:12px;
+  min-height:62px;padding:10px 12px;border:1px solid rgba(255,255,255,.055);
+  border-radius:16px;background:#1c1c1c;color:#fff;text-align:left;
+  cursor:pointer;transition:.18s ease;
+}
+.pro-menu-item:hover{transform:translateY(-1px);border-color:rgba(255,193,7,.35);background:#222}
+.pro-icon{
+  width:40px;height:40px;display:grid;place-items:center;flex:none;
+  border-radius:12px;background:rgba(255,193,7,.11);color:#FFC107;
+  font-size:20px;font-weight:800;
+}
+.pro-text{display:flex;flex-direction:column;gap:3px;flex:1;min-width:0}
+.pro-text b{font-size:13px;font-weight:750;color:#f4f4f4}
+.pro-text small{font-size:10px;color:#777}
+.pro-arrow{font-size:22px;color:#777;transition:.2s}
+.pro-group.open .pro-arrow{transform:rotate(180deg);color:#FFC107}
+.pro-submenu{
+  display:none;margin:6px 0 2px 52px;padding:7px;
+  background:#151515;border:1px solid rgba(255,193,7,.10);
+  border-radius:14px;
+}
+.pro-group.open .pro-submenu{display:block;animation:proDrop .16s ease}
+@keyframes proDrop{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:none}}
+.pro-subitem{
+  width:100%;display:flex;align-items:center;gap:10px;
+  padding:11px 12px;border:0;border-radius:10px;background:transparent;
+  color:#ddd;text-align:left;font:600 11px inherit;cursor:pointer;
+}
+.pro-subitem:hover{background:#252525;color:#FFC107}
+.pro-subitem.logout{color:#ff7777}
+.pro-theme-select{
+  width:100%;height:42px;border:1px solid #333;border-radius:11px;
+  background:#202020;color:#fff;padding:0 12px;font:600 11px inherit;
+  outline:none;
+}
+.pro-theme-select:focus{border-color:#FFC107}
+.pro-menu-footer{
+  display:flex;align-items:center;gap:8px;padding:13px 18px;
+  color:#666;font-size:10px;border-top:1px solid rgba(255,255,255,.06);
+}
+.pro-status-dot{width:7px;height:7px;border-radius:50%;background:#19d36b;box-shadow:0 0 8px #19d36b}
+body.theme-light .pro-drawer{background:#f7f7f7!important;border-color:#ddd!important}
+body.theme-light .pro-menu-head{background:#fff;border-color:#ddd}
+body.theme-light .pro-menu-title{color:#222}
+body.theme-light .pro-menu-item{background:#fff;color:#222;border-color:#ddd}
+body.theme-light .pro-text b{color:#222}
+body.theme-light .pro-text small{color:#777}
+body.theme-light .pro-submenu{background:#f3f3f3;border-color:#ddd}
+body.theme-light .pro-subitem{color:#444}
+body.theme-light .pro-subitem:hover{background:#e8e8e8}
+@media(max-width:480px){
+  .pro-drawer{width:calc(100vw - 20px)!important;border-radius:20px!important}
+  .pro-menu-title{font-size:18px}
+  .pro-menu-item{min-height:58px}
+}
+</style>
 </head>
 <body>
 <div id="loadingScreen">
@@ -672,42 +755,78 @@ body.theme-light .bottom-nav{background:#fff!important;color:#333;}
 </div>
 <button class="drawer-close" onclick="closeDrawer()">✕</button>
 </div>
-<div class="drawer-menu">
-<div class="menu-section">
-<div class="menu-section-title">NAVIGASI</div>
-<a class="drawer-item active" href="dashboard.html"><span class="icon">🏠</span><span>Dashboard</span></a>
-<button class="drawer-item drawer-action" onclick="refreshPage()" type="button"><span class="icon">🔄</span><span>Refresh Halaman</span></button>
-<button class="drawer-item drawer-action" onclick="installFixzy()" type="button"><span class="icon">📲</span><span>APK Instal</span></button>
+
+<div class="drawer-menu pro-drawer">
+  <div class="pro-menu-head">
+    <div>
+      <div class="pro-menu-title">Menu Fixzy</div>
+      <div class="pro-menu-sub">Kelola aplikasi dengan cepat</div>
+    </div>
+    <button class="pro-close" type="button" onclick="closeDrawer()">×</button>
+  </div>
+
+  <div class="pro-menu-list">
+    <button class="pro-menu-item" type="button" onclick="location.href='dashboard.html'">
+      <span class="pro-icon">⌂</span><span class="pro-text"><b>Dashboard</b><small>Ringkasan usaha</small></span>
+      <span class="pro-arrow">›</span>
+    </button>
+
+    <button class="pro-menu-item" type="button" onclick="location.reload()">
+      <span class="pro-icon">↻</span><span class="pro-text"><b>Refresh Halaman</b><small>Muat ulang data terbaru</small></span>
+      <span class="pro-arrow">›</span>
+    </button>
+
+    <button class="pro-menu-item" type="button" onclick="alert('Fitur APK Instal siap dihubungkan ke file APK Fixzy.')">
+      <span class="pro-icon">▣</span><span class="pro-text"><b>APK Instal</b><small>Pasang Fixzy di HP</small></span>
+      <span class="pro-arrow">›</span>
+    </button>
+
+    <div class="pro-menu-group">
+      <button class="pro-menu-item pro-group-toggle" type="button" onclick="toggleProGroup(this)">
+        <span class="pro-icon">◐</span><span class="pro-text"><b>Tampilan</b><small>Tema Auto, Light, Dark</small></span>
+        <span class="pro-arrow">⌄</span>
+      </button>
+      <div class="pro-submenu">
+        <select id="themeSelect" class="pro-theme-select" aria-label="Pilih tema" onchange="setTheme(this.value)">
+          <option value="auto">◐ Auto</option>
+          <option value="light">☀ Light</option>
+          <option value="dark">● Dark</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="pro-menu-group">
+      <button class="pro-menu-item pro-group-toggle" type="button" onclick="toggleProGroup(this)">
+        <span class="pro-icon">▦</span><span class="pro-text"><b>Data & Transaksi</b><small>Semua data Fixzy</small></span>
+        <span class="pro-arrow">⌄</span>
+      </button>
+      <div class="pro-submenu">
+        <button class="pro-subitem" type="button" onclick="location.href='nota.html'">🧾 <span>Nota Servis & Belanja</span></button>
+        <button class="pro-subitem" type="button" onclick="location.href='servis.html'">🔧 <span>Data Servis & Penjualan</span></button>
+        <button class="pro-subitem" type="button" onclick="location.href='stock.html'">📦 <span>Data Produk</span></button>
+        <button class="pro-subitem" type="button" onclick="location.href='tagihan.html'">💳 <span>Data Tagihan</span></button>
+      </div>
+    </div>
+
+    <div class="pro-menu-group">
+      <button class="pro-menu-item pro-group-toggle" type="button" onclick="toggleProGroup(this)">
+        <span class="pro-icon">⚙</span><span class="pro-text"><b>Pengaturan</b><small>Akun dan aplikasi</small></span>
+        <span class="pro-arrow">⌄</span>
+      </button>
+      <div class="pro-submenu">
+        <button class="pro-subitem" type="button" onclick="location.href='akun.html'">👤 <span>Profil Konter</span></button>
+        <button class="pro-subitem" type="button" onclick="showAboutFixzy()">ⓘ <span>Tentang Fixzy</span></button>
+        <button class="pro-subitem logout" type="button" onclick="logoutFixzy()">⇥ <span>Logout</span></button>
+      </div>
+    </div>
+  </div>
+
+  <div class="pro-menu-footer">
+    <span class="pro-status-dot"></span>
+    <span>Fixzy • Sistem Pembukuan</span>
+  </div>
 </div>
-<div class="menu-section">
-<div class="menu-section-title">TAMPILAN</div>
-<div class="theme-row">
-<span class="theme-label"><span class="icon">🎨</span> Thema</span>
-<select id="themeSelect" class="theme-select" aria-label="Pilih tema"
-  onchange="setTheme(this.value)">
-  <option value="auto">Auto</option>
-  <option value="light">Light</option>
-  <option value="dark">Dark</option>
-</select>
-</div>
-</div>
-<div class="menu-section">
-<button class="menu-section-toggle" onclick="toggleDashboardMenu(this)" type="button">
-<span><span class="icon">📊</span> MENU DASHBOARD</span><span class="chevron">⌄</span>
-</button>
-<div class="collapsible-menu open" id="dashboardMenuItems">
-<a class="drawer-item" href="nota.html" onclick="return openMissingPage(event,'Nota Servis &amp; Belanja','nota.html')"><span class="icon">🧾</span><span>Nota Servis &amp; Belanja</span></a>
-<a class="drawer-item" href="servis.html"><span class="icon">🔧</span><span>Data Servis &amp; Penjualan</span></a>
-<a class="drawer-item" href="stock.html"><span class="icon">📦</span><span>Data Produk</span></a>
-<a class="drawer-item" href="tagihan.html" onclick="return openMissingPage(event,'Data Tagihan','tagihan.html')"><span class="icon">💳</span><span>Data Tagihan</span></a>
-</div>
-</div>
-<div class="menu-section">
-<div class="menu-section-title">AKUN</div>
-<a class="drawer-item" href="profil.html" onclick="return openMissingPage(event,'Profil Konter','profil.html')"><span class="icon">👤</span><span>Profil Konter</span></a>
-<a class="drawer-item" href="pengaturan.html" onclick="return openMissingPage(event,'Pengaturan','pengaturan.html')"><span class="icon">⚙️</span><span>Pengaturan</span></a>
-</div>
-</div>
+
 <div class="drawer-footer">
 <a class="drawer-item logout" href="#" onclick="logout(); return false;"><span class="icon">🚪</span> Logout</a>
 </div>
@@ -1040,5 +1159,21 @@ document.getElementById("btnLogout").addEventListener("click", logout);
   window.setTheme(saved);
   matchMedia('(prefers-color-scheme: dark)').addEventListener?.('change',()=>{if((localStorage.getItem('fixzy_theme')||'dark')==='auto') window.setTheme('auto');});
 })();
-</script></body>
+</script>
+<script id="fixzy-pro-menu-js-v5">
+function toggleProGroup(btn){
+  const group=btn.closest('.pro-menu-group');
+  if(group) group.classList.toggle('open');
+}
+function showAboutFixzy(){
+  if(typeof closeDrawer==='function') closeDrawer();
+  setTimeout(()=>alert('Fixzy\nPembukuan Servis HP & Penjualan\nVersi Pro'),120);
+}
+function logoutFixzy(){
+  if(typeof closeDrawer==='function') closeDrawer();
+  if(typeof logout==='function') return logout();
+  if(confirm('Keluar dari akun Fixzy?')) location.href='login.html';
+}
+</script>
+</body>
 </html>
