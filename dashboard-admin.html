@@ -248,10 +248,27 @@ function renderAll(){renderRingkasan();renderServis();renderPenjualan();renderPr
 document.querySelectorAll(".tab").forEach(btn=>btn.onclick=()=>{document.querySelectorAll(".tab").forEach(x=>x.classList.remove("active"));document.querySelectorAll(".panel").forEach(x=>x.classList.remove("active"));btn.classList.add("active");$(btn.dataset.tab).classList.add("active");if(btn.dataset.tab==="keuangan")renderKeuangan();if(btn.dataset.tab==="upah")renderUpah()});
 $("periodeRingkasan").onchange=renderRingkasan;
 onAuthStateChanged(auth,async user=>{
- if(!user){location.href="login.html";return}
+ // Dashboard tidak pernah melempar ke halaman login.
+ // Jika Firebase belum memiliki sesi, dashboard tetap tampil bersih;
+ // data Firebase akan dimuat saat sesi akun tersedia.
+ if(!user){
+   uid=null;
+   const p=profile();
+   $("brand").textContent=p.namaToko||p.namaUsaha||p.toko||"NAMA TOKO";
+   $("userInfo").textContent=p.nama||"Admin";
+   loadLocal();
+   setupYears();
+   renderAll();
+   return;
+ }
  uid=user.uid;
- const p=profile();$("brand").textContent=p.namaToko||p.namaUsaha||p.toko||"NAMA TOKO";$("userInfo").textContent=p.nama||user.email||"Admin";
- loadLocal();setupYears();renderAll();await loadStock();
+ const p=profile();
+ $("brand").textContent=p.namaToko||p.namaUsaha||p.toko||"NAMA TOKO";
+ $("userInfo").textContent=p.nama||user.email||"Admin";
+ loadLocal();
+ setupYears();
+ renderAll();
+ await loadStock();
 });
 </script>
 </body>
