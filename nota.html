@@ -89,6 +89,15 @@ body{background:#0d0d0d;background-image:radial-gradient(circle at top, rgba(255
 #popupMsg{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.75);display:none;justify-content:center;align-items:center;z-index:10000;padding:15px;}
 #popupMsg .box{width:90%;max-width:340px;background:#1b1b1b;padding:24px;border-radius:18px;text-align:center;border:1px solid #FFC107;}
 #debugInfo{font-size:11px;color:#666;text-align:center;margin-top:10px;padding:10px;background:#111;border-radius:10px;white-space:pre-line;}
+/* STATUS CHANGE WHATSAPP POPUP */
+#statusWaPopup{position:fixed;inset:0;background:rgba(0,0,0,.82);backdrop-filter:blur(6px);display:none;align-items:center;justify-content:center;z-index:12000;padding:15px}
+#statusWaPopup .status-wa-box{width:100%;max-width:430px;background:#1b1b1b;border:1px solid rgba(255,193,7,.45);border-radius:22px;padding:20px;box-shadow:0 20px 50px rgba(0,0,0,.55);animation:pop .25s ease}
+#statusWaPopup h3{color:#FFC107;font-size:17px;margin-bottom:5px}
+#statusWaPopup .sub{font-size:11px;color:#888;margin-bottom:14px}
+.status-wa-data{background:#252525;border:1px solid #333;border-radius:14px;padding:13px;font-size:12px;color:#bbb;line-height:1.7;margin-bottom:15px}
+.status-wa-data b{color:#fff}.status-wa-buttons{display:grid;grid-template-columns:1fr 1fr;gap:9px}.status-wa-buttons button{border:0;border-radius:12px;padding:12px;font-weight:800;cursor:pointer}.status-wa-send{background:#25D366;color:#fff}.status-wa-no{background:#333;color:#fff;border:1px solid #444!important}
+@media(max-width:767px){#statusWaPopup{padding:10px}#statusWaPopup .status-wa-box{padding:16px;max-height:calc(100dvh - 20px);overflow-y:auto}}
+
 
 /* AUTO RESPONSIVE MODE: HP + DESKTOP */
 html{width:100%;min-height:100%;}
@@ -125,8 +134,13 @@ body{width:100%;}
   .filter-chips{margin-bottom:18px;}
 
   /* Cards become a responsive grid on desktop */
-  #serviceList{display:block;}
-  #serviceList .card{margin-bottom:0;min-width:0;padding:0;}
+  #serviceList{
+    display:grid;
+    grid-template-columns:repeat(auto-fit,minmax(320px,1fr));
+    gap:14px;
+    align-items:start;
+  }
+  #serviceList .card{margin-bottom:0;min-width:0;padding:18px;}
   .card-top h3{font-size:15px;}
   .card-info{font-size:13px;}
   .card-actions button{font-size:12px;padding:10px;}
@@ -150,9 +164,9 @@ body{width:100%;}
 }
 
 /* Large desktop */
-@media (min-width:1200px){
+@media (min-width: 1200px){
   .container{padding-left:40px;padding-right:40px;}
-  #serviceList{display:block;}
+  #serviceList{grid-template-columns:repeat(3,minmax(0,1fr));}
 }
 
 
@@ -566,6 +580,8 @@ html.mobile-device #listServis .card{width:100% !important; margin-bottom:12px !
 </div>
 
 <div id="popupMsg"><div class="box"><h3 style="color:#FFC107;">Fixzy</h3><p id="popupPesan" style="margin:15px 0;color:#fff;white-space:pre-line;font-size:13px;"></p><button onclick="document.getElementById('popupMsg').style.display='none'" style="padding:10px 24px;border:none;border-radius:10px;background:#FFC107;color:#111;font-weight:bold;cursor:pointer;">OK</button></div></div>
+<div id="statusWaPopup"><div class="status-wa-box"><h3 id="statusWaTitle">Status Berubah</h3><div class="sub">Data sudah disimpan. Mau kirim informasi terbaru ke WhatsApp pelanggan?</div><div class="status-wa-data" id="statusWaData"></div><div class="status-wa-buttons"><button class="status-wa-no" onclick="closeStatusWaPopup()">Tidak</button><button class="status-wa-send" onclick="sendStatusWa()">💬 Kirim ke WA</button></div></div></div>
+
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js";
@@ -902,14 +918,41 @@ window.hapusServis=async(id)=>{
   }catch(err){showMsg("Gagal hapus: "+err.message);}
 };
 
+let pendingStatusWa=null;
+function formatStatusLabel(status){const map={masuk:"MASUK",proses:"PROSES / DIKERJAKAN",selesai:"SELESAI",diambil:"SUDAH DIAMBIL",batal:"BATAL",piutang:"PIUTANG"};return map[status]||String(status||"").toUpperCase();}
+function openStatusWaPopup(type,item,newStatus){
+  pendingStatusWa={type,item,newStatus};
+  document.getElementById("statusWaTitle").innerText=(type==="penjualan"?"Status Penjualan Berubah":"Status Servis Berubah")+" → "+formatStatusLabel(newStatus);
+  if(type==="penjualan"){
+    const qty=parseInt(item.qty)||1,harga=parseInt(item.harga)||0,diskon=parseInt(item.diskon)||0,total=Math.max(0,qty*harga-diskon);
+    document.getElementById("statusWaData").innerHTML=`👤 Pelanggan: <b>${escNota(item.namaPelanggan||"Umum")}</b><br>📱 WhatsApp: <b>${escNota(item.noHp||"-")}</b><br>📦 Produk: <b>${escNota(item.produk||"-")}</b><br>🔢 Kode: <b>${escNota(item.kodeProduk||"-")}</b><br>🏷️ Merk: <b>${escNota(item.merkProduk||"-")}</b><br>🧮 Qty: <b>${qty}</b> × Rp ${money(harga)}<br>💰 Total: <b>Rp ${money(total)}</b><br>💳 Pembayaran: <b>${escNota(item.pembayaran||"-")}</b><br>🔄 Status baru: <b style="color:#FFC107">${escNota(formatStatusLabel(newStatus))}</b>`;
+  }else{
+    const biaya=parseInt(item.biaya)||0,dp=parseInt(item.dp)||0,sisa=Math.max(0,biaya-dp);
+    document.getElementById("statusWaData").innerHTML=`👤 Pelanggan: <b>${escNota(item.namaPelanggan||"-")}</b><br>📱 WhatsApp: <b>${escNota(item.noHp||"-")}</b><br>📲 HP: <b>${escNota(item.tipeHp||"-")}</b><br>🔧 Kerusakan: <b>${escNota(item.kerusakan||"-")}</b><br>💰 Biaya: <b>Rp ${money(biaya)}</b><br>💵 DP: <b>Rp ${money(dp)}</b> • Sisa: <b>Rp ${money(sisa)}</b><br>🔄 Status baru: <b style="color:#FFC107">${escNota(formatStatusLabel(newStatus))}</b>`;
+  }
+  document.getElementById("statusWaPopup").style.display="flex";
+}
+window.closeStatusWaPopup=()=>{document.getElementById("statusWaPopup").style.display="none";pendingStatusWa=null;};
+window.sendStatusWa=()=>{
+  if(!pendingStatusWa)return; const {type,item,newStatus}=pendingStatusWa; let hp=String(item.noHp||"").replace(/\D/g,""); if(hp.startsWith("0"))hp="62"+hp.substring(1);
+  if(!hp){closeStatusWaPopup();showMsg("Nomor WhatsApp pelanggan belum tersedia.");return;}
+  let pesan="";
+  if(type==="penjualan"){const qty=parseInt(item.qty)||1,harga=parseInt(item.harga)||0,diskon=parseInt(item.diskon)||0,total=Math.max(0,qty*harga-diskon);pesan=`*FIXZY - UPDATE STATUS PENJUALAN*\n\nHalo ${item.namaPelanggan||"Kak"},\n\nProduk: ${item.produk||"-"}\nKode: ${item.kodeProduk||"-"}\nMerk: ${item.merkProduk||"-"}\nQty: ${qty} x Rp ${money(harga)}${diskon?'\nDiskon: Rp '+money(diskon):''}\n*Total: Rp ${money(total)}*\nPembayaran: ${item.pembayaran||"-"}\n*Status: ${formatStatusLabel(newStatus)}*\n\nTerima kasih,\nFIXZY`;}
+  else{const biaya=parseInt(item.biaya)||0,dp=parseInt(item.dp)||0,sisa=Math.max(0,biaya-dp);pesan=`*FIXZY - UPDATE STATUS SERVIS*\n\nHalo ${item.namaPelanggan||"Kak"},\n\nHP: ${item.tipeHp||"-"}\nKerusakan: ${item.kerusakan||"-"}\nBiaya: Rp ${money(biaya)}\nDP: Rp ${money(dp)}\nSisa: Rp ${money(sisa)}\n*Status: ${formatStatusLabel(newStatus)}*\n\nTerima kasih,\nFIXZY`;}
+  closeStatusWaPopup();window.open(`https://wa.me/${hp}?text=${encodeURIComponent(pesan)}`,"_blank");
+};
+
 window.ubahStatus=async(id,newStatus)=>{
   try{
+    const item=allData.find(d=>d.docId===id);
+    if(!item){showMsg("Data servis tidak ditemukan.");return;}
     const update={status:newStatus,updatedAt:serverTimestamp()};
     if(newStatus==='selesai'||newStatus==='diambil') update.tanggalSelesai=serverTimestamp();
     if(newStatus==='batal') update.tanggalBatal=serverTimestamp();
-
     await updateDoc(doc(db,"servis",id),update);
+    item.status=newStatus;
     await loadServis();
+    openStatusWaPopup("servis",item,newStatus);
   }catch(err){showMsg("Gagal update status: "+err.message);}
 };
 
@@ -1281,12 +1324,15 @@ window.editPenjualan=async(id)=>{
 
 window.ubahStatusPenjualan=async(id,newStatus)=>{
   try{
+    const item=allSales.find(d=>d.docId===id);
+    if(!item){showMsg("Data penjualan tidak ditemukan.");return;}
     await updateDoc(doc(db,"penjualan",id),{
-      status:newStatus,
-      updatedAt:serverTimestamp(),
-      ...(newStatus==="batal"?{tanggalBatal:serverTimestamp()}:{})
+      status:newStatus,updatedAt:serverTimestamp(),
+      ...(newStatus==="batal"?{tanggalBatal:serverTimestamp()}: {})
     });
+    item.status=newStatus;
     await loadPenjualan();
+    openStatusWaPopup("penjualan",item,newStatus);
   }catch(err){showMsg("Gagal update penjualan: "+err.message);}
 };
 
@@ -1404,45 +1450,7 @@ window.notaPenjualan=(id)=>{
           .paper{width:80mm;margin:0;padding:5mm;min-height:0}
           .actions{display:none}
         }
-      
-/* MODERN EXCEL-LIKE TABLE - NO GRID */
-#listServis,#listPenjualan{
-  width:100%;overflow-x:auto;background:#151515;
-  border:1px solid #2b2b2b;border-radius:16px;
-  box-shadow:0 10px 30px rgba(0,0,0,.18);
-}
-.data-table{width:100%;border-collapse:separate;border-spacing:0;min-width:900px;font-size:12px}
-.data-table th{
-  position:sticky;top:0;z-index:2;background:#202020;color:#FFC107;
-  font-weight:700;text-align:left;padding:12px 10px;
-  border-bottom:1px solid #383838;border-right:1px solid #292929;white-space:nowrap
-}
-.data-table td{
-  padding:10px;color:#ddd;border-bottom:1px solid #292929;
-  border-right:1px solid #242424;vertical-align:middle;white-space:nowrap
-}
-.data-table tbody tr:nth-child(even){background:#181818}
-.data-table tbody tr:hover{background:rgba(255,193,7,.07)}
-.data-table td:last-child,.data-table th:last-child{border-right:0}
-.data-table tbody tr:last-child td{border-bottom:0}
-.table-name{font-weight:700;color:#fff}
-.table-sub{font-size:10px;color:#777;margin-top:2px}
-.table-price{font-weight:700;color:#FFC107}
-.table-actions{display:flex;gap:5px}
-.table-actions button{
-  border:1px solid #383838;background:#252525;color:#ddd;
-  border-radius:8px;padding:7px 9px;cursor:pointer;font-size:11px;font-weight:700
-}
-.table-actions .btn-wa{background:#25D366;color:#fff;border-color:#25D366}
-.table-actions .btn-hapus{color:#ff8a80}
-.table-status{display:inline-block;padding:5px 9px;border-radius:10px;font-size:10px;font-weight:700}
-@media(max-width:767px){
-  #listServis,#listPenjualan{border-radius:12px}
-  .data-table{min-width:820px}
-  .data-table th,.data-table td{padding:9px 8px}
-}
-
-</style>
+      </style>
     </head>
     <body>
       <div class="actions">
