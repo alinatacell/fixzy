@@ -867,7 +867,10 @@ async function loadUser(uid){
           const t = s.tanggalSelesai.toDate ? s.tanggalSelesai.toDate() : new Date(s.tanggalSelesai);
           if(t.toDateString()===todayStr) selesaiHariIni++;
         }
-        if(s.biaya) pendapatan+= parseInt(s.biaya)||0;
+        // Status BATAL tidak dihitung sebagai pendapatan.
+        // Jika servis diubah menjadi BATAL, pendapatan otomatis berkurang
+        // saat dashboard memuat ulang data dari Firestore.
+        if(s.status !== "batal" && s.biaya) pendapatan+= parseInt(s.biaya)||0;
       });
       document.getElementById("statTotal").innerText=total;
       document.getElementById("statProses").innerText=proses;
