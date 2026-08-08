@@ -2,250 +2,143 @@
 <html lang="id">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,viewport-fit=cover">
 <meta name="theme-color" content="#111827">
-<title>FIXZY — Dashboard</title>
+<title>FIXZY | Dashboard</title>
 <style>
-:root{
-  --bg:#f5f7fb;
-  --card:#fff;
-  --text:#111827;
-  --muted:#6b7280;
-  --line:#e8ebf0;
-  --primary:#111827;
-  --accent:#f59e0b;
-  --green:#10b981;
-  --red:#ef4444;
-  --blue:#3b82f6;
-  --purple:#8b5cf6;
-  --shadow:0 10px 30px rgba(17,24,39,.07);
-  --radius:20px;
-}
-*{box-sizing:border-box}
-html,body{margin:0;padding:0;font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;background:var(--bg);color:var(--text)}
-button,input{font:inherit}
-button{cursor:pointer;border:0}
-.app{display:flex;min-height:100vh}
-.sidebar{
-  width:250px;background:#111827;color:#fff;padding:22px 16px;position:fixed;
-  inset:0 auto 0 0;z-index:20;display:flex;flex-direction:column
-}
-.brand{display:flex;align-items:center;gap:11px;padding:8px 10px 28px}
-.logo{
-  width:42px;height:42px;border-radius:13px;background:var(--accent);color:#111827;
-  display:grid;place-items:center;font-weight:900;font-size:20px
-}
-.brand b{font-size:19px;letter-spacing:.5px}.brand small{display:block;color:#9ca3af;margin-top:2px}
-.nav{display:grid;gap:7px}
-.nav button{
-  width:100%;text-align:left;padding:13px 14px;border-radius:13px;background:transparent;
-  color:#cbd5e1;font-weight:650;display:flex;gap:12px;align-items:center
-}
-.nav button:hover,.nav button.active{background:#1f2937;color:#fff}
-.nav .ico{width:23px;text-align:center}
-.sideBottom{margin-top:auto;background:#1f2937;border-radius:16px;padding:14px;color:#d1d5db;font-size:12px;line-height:1.5}
-.main{margin-left:250px;width:calc(100% - 250px);padding:22px 28px 40px}
-.topbar{display:flex;align-items:center;justify-content:space-between;gap:15px;margin-bottom:24px}
-.title h1{margin:0;font-size:28px}.title p{margin:5px 0 0;color:var(--muted);font-size:14px}
-.actions{display:flex;gap:10px;align-items:center}
-.search{
-  background:var(--card);border:1px solid var(--line);border-radius:13px;padding:11px 14px;
-  width:220px;outline:0
-}
-.iconBtn,.profile{
-  width:42px;height:42px;border-radius:13px;background:var(--card);border:1px solid var(--line);
-  display:grid;place-items:center
-}
-.profile{background:#111827;color:#fff;font-weight:800}
-.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:18px}
-.stat{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:18px;box-shadow:var(--shadow)}
-.statTop{display:flex;justify-content:space-between;align-items:center}
-.statIcon{width:42px;height:42px;border-radius:13px;display:grid;place-items:center;font-size:19px}
-.stat:nth-child(1) .statIcon{background:#fff3d6}.stat:nth-child(2) .statIcon{background:#dcfce7}
-.stat:nth-child(3) .statIcon{background:#dbeafe}.stat:nth-child(4) .statIcon{background:#ede9fe}
-.stat label{color:var(--muted);font-size:13px}.stat h2{font-size:24px;margin:12px 0 5px}
-.change{font-size:12px}.up{color:var(--green)}.down{color:var(--red)}
-.grid{display:grid;grid-template-columns:minmax(0,1.55fr) minmax(300px,.8fr);gap:18px}
-.card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);padding:20px}
-.cardHead{display:flex;justify-content:space-between;align-items:center;margin-bottom:17px}
-.cardHead h3{margin:0;font-size:17px}.cardHead span{font-size:12px;color:var(--muted)}
-.chartBox{height:255px;position:relative}
-.chart{width:100%;height:100%;display:block}
-.legend{display:flex;gap:18px;font-size:12px;color:var(--muted);margin-top:8px}
-.dot{width:8px;height:8px;border-radius:50%;display:inline-block;margin-right:5px}
-.quick{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-.quick button{padding:14px;border-radius:14px;background:#f8fafc;border:1px solid var(--line);font-weight:700;color:#374151}
-.quick button:hover{background:#f1f5f9}
-.activity{display:grid;gap:12px}
-.row{display:flex;align-items:center;gap:11px;padding:11px 0;border-bottom:1px solid var(--line)}
-.row:last-child{border:0}
-.avatar{width:38px;height:38px;border-radius:12px;background:#f3f4f6;display:grid;place-items:center;font-weight:800}
-.rowMain{flex:1}.rowMain b{font-size:13px}.rowMain small{display:block;color:var(--muted);margin-top:3px}
-.amount{font-weight:800;font-size:13px}.positive{color:var(--green)}.negative{color:var(--red)}
-.tableCard{margin-top:18px}
-.tableWrap{overflow:auto}
-table{width:100%;border-collapse:collapse;min-width:650px}
-th,td{text-align:left;padding:13px 10px;border-bottom:1px solid var(--line);font-size:13px}
-th{font-size:11px;text-transform:uppercase;color:var(--muted);letter-spacing:.5px}
-.badge{padding:5px 9px;border-radius:20px;font-size:11px;font-weight:750}
-.badge.green{background:#dcfce7;color:#15803d}.badge.yellow{background:#fef3c7;color:#a16207}.badge.red{background:#fee2e2;color:#b91c1c}
-.mobileMenu{display:none}
-.overlay{display:none}
-@media(max-width:1050px){
-  .stats{grid-template-columns:repeat(2,1fr)}
-  .grid{grid-template-columns:1fr}
-}
-@media(max-width:760px){
-  .sidebar{transform:translateX(-100%);transition:.25s;width:270px}
-  .sidebar.open{transform:translateX(0)}
-  .overlay.show{display:block;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:15}
-  .main{margin:0;width:100%;padding:16px 13px 30px}
-  .mobileMenu{display:grid;width:42px;height:42px;border-radius:13px;background:#111827;color:#fff;place-items:center}
-  .topbar{align-items:flex-start}.title{flex:1}.title h1{font-size:23px}
-  .search{display:none}.actions{gap:7px}
-  .stats{gap:10px}.stat{padding:14px;border-radius:16px}.stat h2{font-size:19px}
-  .stat label{font-size:11px}.statIcon{width:36px;height:36px}
-  .card{padding:15px;border-radius:17px}.chartBox{height:210px}
-  .quick{grid-template-columns:1fr 1fr}
-}
-@media(max-width:430px){
-  .stats{grid-template-columns:1fr 1fr}
-  .stat h2{font-size:17px}.change{font-size:10px}
-  .profile{display:none}
-}
+:root{--bg:#f5f6f8;--card:#fff;--dark:#111827;--yellow:#fbbf24;--text:#18202f;--muted:#78808f;--line:#e8ebef;--green:#10b981;--red:#ef4444;--radius:18px}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif}
+button,input{font:inherit}.app{min-height:100vh;display:flex}.side{position:fixed;z-index:30;left:0;top:0;bottom:0;width:245px;background:var(--dark);color:white;padding:20px 14px;transition:.25s}
+.logoBox{display:flex;align-items:center;gap:10px;padding:5px 9px 25px}.logo{width:45px;height:45px;object-fit:contain;border-radius:12px;background:#fff}.brand b{font-size:19px}.brand small{display:block;color:#9ca3af;font-size:11px;margin-top:2px}
+.nav{display:grid;gap:6px}.nav button{border:0;background:transparent;color:#cbd5e1;text-align:left;padding:13px 14px;border-radius:12px;font-weight:650;cursor:pointer}.nav button.active,.nav button:hover{background:#202938;color:#fff}.nav span{display:inline-block;width:25px}
+.sideInfo{position:absolute;left:14px;right:14px;bottom:18px;padding:13px;border-radius:14px;background:#202938;color:#cbd5e1;font-size:11px}
+.main{margin-left:245px;width:calc(100% - 245px);padding:22px 28px 40px}.top{display:flex;align-items:center;justify-content:space-between;margin-bottom:22px}.leftTop{display:flex;align-items:center;gap:12px}.hamb{display:none}.title h1{font-size:27px;margin:0}.title p{margin:4px 0 0;color:var(--muted);font-size:13px}.user{display:flex;align-items:center;gap:10px}.notif{border:1px solid var(--line);background:white;border-radius:12px;width:42px;height:42px}.avatar{width:42px;height:42px;border-radius:12px;background:var(--dark);color:#fff;display:grid;place-items:center;font-weight:800}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:15px}.stat,.card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);box-shadow:0 8px 25px #11182708}.stat{padding:17px}.stHead{display:flex;justify-content:space-between;align-items:center}.stHead span{font-size:12px;color:var(--muted)}.stIcon{width:39px;height:39px;border-radius:12px;background:#fff5d6;display:grid;place-items:center}.stat h2{font-size:22px;margin:13px 0 4px}.change{font-size:11px}.up{color:var(--green)}.down{color:var(--red)}
+.grid{display:grid;grid-template-columns:1.5fr .85fr;gap:15px;margin-top:15px}.card{padding:19px}.head{display:flex;align-items:center;justify-content:space-between;margin-bottom:15px}.head h3{font-size:16px;margin:0}.head small{color:var(--muted)}
+.chart{height:245px}.chart svg{width:100%;height:100%}.quick{display:grid;grid-template-columns:1fr 1fr;gap:10px}.quick button{padding:15px 8px;border:1px solid var(--line);background:#f8fafc;border-radius:13px;font-weight:700;color:#374151}.quick button:hover{background:#f1f5f9}.notice{margin-top:15px;padding:14px;border-radius:13px;background:#fff8df;font-size:12px;color:#6b7280}.notice b{color:#242424}
+.table{margin-top:15px;overflow:hidden}.tableScroll{overflow:auto}table{border-collapse:collapse;width:100%;min-width:650px}th,td{text-align:left;padding:13px 10px;border-bottom:1px solid var(--line);font-size:12px}th{color:var(--muted);font-size:10px;text-transform:uppercase}.badge{padding:5px 9px;border-radius:20px;font-weight:750;font-size:10px}.ok{background:#dcfce7;color:#15803d}.wait{background:#fef3c7;color:#a16207}.bad{background:#fee2e2;color:#b91c1c}
+.activity{display:grid}.act{display:flex;align-items:center;gap:10px;padding:11px 0;border-bottom:1px solid var(--line)}.act:last-child{border-bottom:0}.actIcon{width:37px;height:37px;border-radius:11px;background:#f3f4f6;display:grid;place-items:center}.actMain{flex:1}.actMain b{font-size:12px}.actMain small{display:block;color:var(--muted);margin-top:2px}.money{font-weight:800;font-size:12px}
+#loading{position:fixed;inset:0;background:#fff;z-index:100;display:grid;place-items:center}.loader{text-align:center}.loader img{width:75px;height:75px;object-fit:contain}.loader p{font-size:13px;color:#6b7280}
+#toast{position:fixed;left:50%;bottom:25px;transform:translateX(-50%);background:#111827;color:#fff;padding:11px 16px;border-radius:12px;z-index:200;font-size:12px;display:none}
+@media(max-width:1050px){.stats{grid-template-columns:1fr 1fr}.grid{grid-template-columns:1fr}}
+@media(max-width:720px){.side{transform:translateX(-100%);width:270px}.side.open{transform:translateX(0)}.main{margin-left:0;width:100%;padding:15px 12px 30px}.hamb{display:grid;border:0;background:var(--dark);color:white;width:40px;height:40px;border-radius:11px;place-items:center}.title h1{font-size:22px}.title p{font-size:11px}.notif{width:40px;height:40px}.avatar{width:40px;height:40px}.stats{gap:9px}.stat{padding:13px;border-radius:15px}.stat h2{font-size:17px}.stHead span{font-size:10px}.stIcon{width:34px;height:34px}.grid{gap:12px}.card{padding:14px}.chart{height:210px}}
+@media(max-width:400px){.stats{grid-template-columns:1fr 1fr}.user .avatar{display:none}}
 </style>
 </head>
 <body>
-<div class="app">
-  <aside class="sidebar" id="sidebar">
-    <div class="brand">
-      <div class="logo">F</div>
-      <div><b>FIXZY</b><small>Pembukuan Digital</small></div>
-    </div>
-    <nav class="nav">
-      <button class="active"><span class="ico">▦</span> Dashboard</button>
-      <button><span class="ico">↕</span> Transaksi</button>
-      <button><span class="ico">▣</span> Produk & Stok</button>
-      <button><span class="ico">👥</span> Pelanggan</button>
-      <button><span class="ico">💰</span> Hutang & Piutang</button>
-      <button><span class="ico">▤</span> Laporan</button>
-      <button><span class="ico">⚙</span> Pengaturan</button>
-    </nav>
-    <div class="sideBottom">FIXZY Dashboard<br><span>Kelola usaha lebih rapi & cepat.</span></div>
-  </aside>
 
-  <div class="overlay" id="overlay" onclick="toggleMenu()"></div>
+<div id="loading"><div class="loader"><img src="logo.png" onerror="this.style.display='none'"><p>Memuat FIXZY...</p></div></div>
 
-  <main class="main">
-    <header class="topbar">
-      <button class="mobileMenu" onclick="toggleMenu()">☰</button>
-      <div class="title">
-        <h1>Dashboard</h1>
-        <p id="dateText">Ringkasan usaha hari ini</p>
-      </div>
-      <div class="actions">
-        <input class="search" placeholder="Cari transaksi...">
-        <button class="iconBtn" title="Notifikasi">🔔</button>
-        <button class="profile">AY</button>
-      </div>
-    </header>
+<aside class="side" id="side">
+  <div class="logoBox"><img class="logo" src="logo.png" alt="FIXZY"><div class="brand"><b>FIXZY</b><small>Pembukuan Digital</small></div></div>
+  <nav class="nav">
+    <button class="active"><span>▦</span>Dashboard</button>
+    <button><span>↕</span>Transaksi</button>
+    <button><span>▣</span>Produk & Stok</button>
+    <button><span>👥</span>Pelanggan</button>
+    <button><span>💰</span>Hutang & Piutang</button>
+    <button><span>▤</span>Laporan</button>
+    <button><span>⚙</span>Pengaturan</button>
+  </nav>
+  <div class="sideInfo">Akun Firebase aktif<br><span id="sideEmail">Memuat akun...</span></div>
+</aside>
 
-    <section class="stats">
-      <div class="stat">
-        <div class="statTop"><label>Omzet Hari Ini</label><div class="statIcon">💵</div></div>
-        <h2>Rp 2.850.000</h2><div class="change up">▲ 12,5% dari kemarin</div>
-      </div>
-      <div class="stat">
-        <div class="statTop"><label>Laba Hari Ini</label><div class="statIcon">📈</div></div>
-        <h2>Rp 845.000</h2><div class="change up">▲ 8,2% dari kemarin</div>
-      </div>
-      <div class="stat">
-        <div class="statTop"><label>Saldo Kas</label><div class="statIcon">🏦</div></div>
-        <h2>Rp 12,4 jt</h2><div class="change up">Aman</div>
-      </div>
-      <div class="stat">
-        <div class="statTop"><label>Piutang</label><div class="statIcon">🧾</div></div>
-        <h2>Rp 4,75 jt</h2><div class="change down">7 pelanggan belum lunas</div>
-      </div>
-    </section>
+<main class="main">
+  <header class="top">
+    <div class="leftTop"><button class="hamb" onclick="toggleSide()">☰</button><div class="title"><h1>Dashboard</h1><p id="today">Memuat tanggal...</p></div></div>
+    <div class="user"><button class="notif">🔔</button><div class="avatar" id="avatar">AY</div></div>
+  </header>
 
-    <section class="grid">
-      <div class="card">
-        <div class="cardHead"><h3>Performa Penjualan</h3><span>7 hari terakhir</span></div>
-        <div class="chartBox">
-          <svg class="chart" viewBox="0 0 800 255" preserveAspectRatio="none">
-            <g stroke="#edf0f4" stroke-width="1">
-              <line x1="0" y1="35" x2="800" y2="35"/><line x1="0" y1="85" x2="800" y2="85"/>
-              <line x1="0" y1="135" x2="800" y2="135"/><line x1="0" y1="185" x2="800" y2="185"/>
-              <line x1="0" y1="235" x2="800" y2="235"/>
-            </g>
-            <path d="M0,190 C55,165 75,175 115,150 S175,130 225,155 S290,95 340,115 S405,145 455,105 S515,80 560,105 S630,65 680,82 S740,42 800,55 L800,255 L0,255 Z" fill="#fef3c7"/>
-            <path d="M0,190 C55,165 75,175 115,150 S175,130 225,155 S290,95 340,115 S405,145 455,105 S515,80 560,105 S630,65 680,82 S740,42 800,55" fill="none" stroke="#f59e0b" stroke-width="4" stroke-linecap="round"/>
-          </svg>
-        </div>
-        <div class="legend"><span><i class="dot" style="background:#f59e0b"></i>Omzet</span><span>Sen &nbsp; Sel &nbsp; Rab &nbsp; Kam &nbsp; Jum &nbsp; Sab &nbsp; Min</span></div>
-      </div>
+  <section class="stats">
+    <div class="stat"><div class="stHead"><span>Omzet Hari Ini</span><div class="stIcon">💵</div></div><h2 id="omzet">Rp 0</h2><div class="change up">Data dari Firebase</div></div>
+    <div class="stat"><div class="stHead"><span>Laba Hari Ini</span><div class="stIcon">📈</div></div><h2 id="laba">Rp 0</h2><div class="change up">Data dari Firebase</div></div>
+    <div class="stat"><div class="stHead"><span>Saldo Kas</span><div class="stIcon">🏦</div></div><h2 id="saldo">Rp 0</h2><div class="change up">Data akun</div></div>
+    <div class="stat"><div class="stHead"><span>Piutang</span><div class="stIcon">🧾</div></div><h2 id="piutang">Rp 0</h2><div class="change down">Belum lunas</div></div>
+  </section>
 
-      <div class="card">
-        <div class="cardHead"><h3>Aksi Cepat</h3><span>Menu utama</span></div>
-        <div class="quick">
-          <button onclick="toast('Form transaksi baru dibuka')">＋ Transaksi</button>
-          <button onclick="toast('Produk baru siap ditambahkan')">＋ Produk</button>
-          <button onclick="toast('Pelanggan siap ditambahkan')">＋ Pelanggan</button>
-          <button onclick="toast('Laporan sedang disiapkan')">▤ Laporan</button>
-        </div>
-        <div style="margin-top:18px;padding:15px;border-radius:15px;background:#fff7e6">
-          <b style="font-size:13px">💡 Pengingat</b>
-          <p style="margin:6px 0 0;font-size:12px;color:#6b7280">Ada 7 piutang yang perlu ditagih.</p>
-        </div>
-      </div>
-    </section>
+  <section class="grid">
+    <div class="card"><div class="head"><h3>Performa Penjualan</h3><small>7 hari terakhir</small></div><div class="chart"><svg viewBox="0 0 800 245" preserveAspectRatio="none"><g stroke="#edf0f4"><line x1="0" y1="35" x2="800" y2="35"/><line x1="0" y1="85" x2="800" y2="85"/><line x1="0" y1="135" x2="800" y2="135"/><line x1="0" y1="185" x2="800" y2="185"/><line x1="0" y1="235" x2="800" y2="235"/></g><path d="M0 190 C80 170 100 180 150 145 S240 155 300 110 S390 145 450 105 S550 115 600 75 S700 85 800 50 L800 245 L0 245Z" fill="#fff4ce"/><path d="M0 190 C80 170 100 180 150 145 S240 155 300 110 S390 145 450 105 S550 115 600 75 S700 85 800 50" fill="none" stroke="#f59e0b" stroke-width="4" stroke-linecap="round"/></svg></div></div>
+    <div class="card"><div class="head"><h3>Aksi Cepat</h3><small>Menu</small></div><div class="quick"><button onclick="msg('Transaksi baru')">＋ Transaksi</button><button onclick="msg('Tambah produk')">＋ Produk</button><button onclick="msg('Tambah pelanggan')">＋ Pelanggan</button><button onclick="msg('Membuka laporan')">▤ Laporan</button></div><div class="notice"><b>💡 Pengingat</b><br>Gunakan menu Hutang & Piutang untuk memantau tagihan.</div></div>
+  </section>
 
-    <section class="card tableCard">
-      <div class="cardHead"><h3>Transaksi Terbaru</h3><span>Lihat semua →</span></div>
-      <div class="tableWrap">
-        <table>
-          <thead><tr><th>No</th><th>Pelanggan</th><th>Jenis</th><th>Total</th><th>Status</th><th>Waktu</th></tr></thead>
-          <tbody>
-            <tr><td>#TRX-1025</td><td><b>Rian Cell</b></td><td>Ganti LCD</td><td>Rp 650.000</td><td><span class="badge green">Lunas</span></td><td>14:21</td></tr>
-            <tr><td>#TRX-1024</td><td><b>Andi</b></td><td>Service HP</td><td>Rp 250.000</td><td><span class="badge yellow">Tempo</span></td><td>13:48</td></tr>
-            <tr><td>#TRX-1023</td><td><b>Deni Cell</b></td><td>LCD + Batre</td><td>Rp 1.150.000</td><td><span class="badge green">Lunas</span></td><td>12:32</td></tr>
-            <tr><td>#TRX-1022</td><td><b>Fajar</b></td><td>Ganti Batre</td><td>Rp 180.000</td><td><span class="badge red">Belum Bayar</span></td><td>11:16</td></tr>
-          </tbody>
-        </table>
-      </div>
-    </section>
+  <section class="card table"><div class="head"><h3>Transaksi Terbaru</h3><small>Firebase Firestore</small></div><div class="tableScroll"><table><thead><tr><th>ID</th><th>Pelanggan</th><th>Jenis</th><th>Total</th><th>Status</th><th>Waktu</th></tr></thead><tbody id="transactionBody"><tr><td colspan="6">Memuat data transaksi...</td></tr></tbody></table></div></section>
 
-    <section class="card tableCard">
-      <div class="cardHead"><h3>Aktivitas Terakhir</h3><span>Hari ini</span></div>
-      <div class="activity">
-        <div class="row"><div class="avatar">R</div><div class="rowMain"><b>Transaksi baru dari Rian Cell</b><small>Ganti LCD • 14:21</small></div><div class="amount positive">+Rp650rb</div></div>
-        <div class="row"><div class="avatar">A</div><div class="rowMain"><b>Pembayaran masuk dari Andi</b><small>Service HP • 13:48</small></div><div class="amount positive">+Rp250rb</div></div>
-        <div class="row"><div class="avatar">S</div><div class="rowMain"><b>Stok LCD berkurang</b><small>Vivo Y20 • 12:50</small></div><div class="amount negative">-1 pcs</div></div>
-      </div>
-    </section>
-  </main>
-</div>
+  <section class="card table"><div class="head"><h3>Aktivitas Terakhir</h3><small>Hari ini</small></div><div class="activity" id="activity"><div class="act"><div class="actIcon">⏳</div><div class="actMain"><b>Memuat aktivitas...</b><small>Firebase</small></div></div></div></section>
+</main>
+<div id="toast"></div>
 
-<script>
-function toggleMenu(){
-  document.getElementById('sidebar').classList.toggle('open');
-  document.getElementById('overlay').classList.toggle('show');
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-app.js";
+import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-auth.js";
+import { getFirestore, doc, getDoc, collection, query, where, getDocs, limit } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js";
+
+const firebaseConfig={
+  apiKey:"AIzaSyCwMbJsuORhIq4QCmp4c1r6OsjAUlfxU5Y",
+  authDomain:"fixzy-f056f.firebaseapp.com",
+  projectId:"fixzy-f056f",
+  storageBucket:"fixzy-f056f.firebasestorage.app",
+  messagingSenderId:"838081521031",
+  appId:"1:838081521031:web:50fdee909b56460b055f22"
+};
+
+const app=initializeApp(firebaseConfig), auth=getAuth(app), db=getFirestore(app);
+const money=n=>new Intl.NumberFormat('id-ID',{style:'currency',currency:'IDR',maximumFractionDigits:0}).format(Number(n)||0);
+const $=id=>document.getElementById(id);
+
+function show(data={}) {
+  $('omzet').textContent=money(data.omzet||0);
+  $('laba').textContent=money(data.laba||0);
+  $('saldo').textContent=money(data.saldo||0);
+  $('piutang').textContent=money(data.piutang||0);
 }
-function toast(msg){
-  let t=document.getElementById('toast');
-  if(!t){
-    t=document.createElement('div');t.id='toast';
-    t.style.cssText='position:fixed;left:50%;bottom:25px;transform:translateX(-50%);background:#111827;color:#fff;padding:12px 18px;border-radius:12px;z-index:99;font-size:13px;box-shadow:0 10px 30px #0002';
-    document.body.appendChild(t);
-  }
-  t.textContent=msg;t.style.display='block';
-  clearTimeout(window.__toast);window.__toast=setTimeout(()=>t.style.display='none',2200);
+function renderTransactions(items){
+  const body=$('transactionBody');
+  if(!items.length){body.innerHTML='<tr><td colspan="6">Belum ada transaksi.</td></tr>';return}
+  body.innerHTML=items.map((x,i)=>`<tr><td>#${x.id||x.docId||String(i+1).padStart(4,'0')}</td><td><b>${x.pelanggan||x.customer||'-'}</b></td><td>${x.jenis||x.type||'Transaksi'}</td><td>${money(x.total||x.amount)}</td><td><span class="badge ${String(x.status||'').toLowerCase().includes('lunas')?'ok':'wait'}">${x.status||'Belum diproses'}</span></td><td>${x.waktu||x.time||'-'}</td></tr>`).join('');
 }
-const d=new Date();
-document.getElementById('dateText').textContent =
-  d.toLocaleDateString('id-ID',{weekday:'long',day:'numeric',month:'long',year:'numeric'}) +
-  ' • Ringkasan usaha hari ini';
+async function loadUser(uid){
+  try{
+    const snap=await getDoc(doc(db,'users',uid));
+    const u=snap.exists()?snap.data():{};
+    const name=u.nama||u.name||auth.currentUser.email.split('@')[0];
+    $('avatar').textContent=name.trim().slice(0,2).toUpperCase();
+    $('sideEmail').textContent=auth.currentUser.email||'-';
+    show({saldo:u.saldo||u.balance||0,piutang:u.piutang||u.receivable||0});
+  }catch(e){console.error(e)}
+}
+async function loadTransactions(uid){
+  try{
+    let items=[];
+    for(const col of ['transactions','transaksi']){
+      try{
+        const q=query(collection(db,col),where('uid','==',uid),limit(20));
+        const snaps=await getDocs(q);
+        snaps.forEach(s=>items.push({...s.data(),docId:s.id}));
+        if(items.length)break;
+      }catch(e){}
+    }
+    items.sort((a,b)=>String(b.waktu||b.time||'').localeCompare(String(a.waktu||a.time||'')));
+    renderTransactions(items);
+    let omzet=0,laba=0,piutang=0;
+    items.forEach(x=>{
+      const total=Number(x.total||x.amount||0);
+      omzet+=total;
+      laba+=Number(x.laba||x.profit||0);
+      if(String(x.status||'').toLowerCase().includes('belum')||String(x.status||'').toLowerCase().includes('tempo'))piutang+=total;
+    });
+    $('omzet').textContent=money(omzet); $('laba').textContent=money(laba);
+    if(!items.length) show({});
+  }catch(e){console.error(e);renderTransactions([])}
+}
+onAuthStateChanged(auth,async user=>{
+  if(!user){location.href='login.html';return}
+  $('loading').style.display='none';
+  $('today').textContent=new Date().toLocaleDateString('id-ID',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+  await loadUser(user.uid);
+  await loadTransactions(user.uid);
+});
+window.toggleSide=()=>document.getElementById('side').classList.toggle('open');
+window.msg=t=>{const x=$('toast');x.textContent=t;x.style.display='block';clearTimeout(window.__t);window.__t=setTimeout(()=>x.style.display='none',1800)};
 </script>
 </body>
 </html>
