@@ -1,0 +1,1659 @@
+<!DOCTYPE html>
+<html lang="id">
+<head><!-- PLAYABLE_TOUCH_PATCH_V1 --><script>
+(function() {
+  if (window.__playableTouchPatchInstalled) return;
+  window.__playableTouchPatchInstalled = true;
+  var origAdd = EventTarget.prototype.addEventListener;
+  var blockedTypes = { touchstart: 1, touchmove: 1, wheel: 1 };
+  EventTarget.prototype.addEventListener = function(type, listener, options) {
+    if (blockedTypes[type]) {
+      if (options === undefined || options === null) {
+        options = { passive: true };
+      } else if (typeof options === 'boolean') {
+        options = { capture: options, passive: true };
+      } else {
+        options = Object.assign({}, options, { passive: true });
+      }
+    }
+    return origAdd.call(this, type, listener, options);
+  };
+})();
+</script><script>window.Intl=window.Intl||{};Intl.t=function(s){return(Intl._locale&&Intl._locale[s])||s;};</script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Fixzy | Servis & Penjualan</title>
+<meta name="theme-color" content="#FFC107">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;font-family:'Poppins',sans-serif;}
+body{background:#0d0d0d;background-image:radial-gradient(circle at top, rgba(255,193,7,.18), transparent 60%);color:#fff;min-height:100vh;overflow-x:hidden;}
+.container{width:100%;max-width:500px;margin:auto;padding:15px 15px 110px;}
+.header{display:flex;justify-content:space-between;align-items:center;background:#1b1b1b;border:1px solid rgba(255,193,7,.15);border-radius:20px;padding:14px 16px;margin-bottom:14px;}
+.header-left{display:flex;align-items:center;gap:12px;}
+.header-left .back{width:38px;height:38px;background:#252525;border:none;color:#FFC107;border-radius:10px;cursor:pointer;font-size:18px;display:flex;align-items:center;justify-content:center;}
+.header h2{font-size:16px;font-weight:700;}
+.header p{font-size:11px;color:#888;}
+.btn-primary{width:100%;padding:14px;border:none;border-radius:14px;background:linear-gradient(90deg,#FFC107,#FF9800);color:#111;font-weight:700;cursor:pointer;box-shadow:0 8px 20px rgba(255,193,7,.25);transition:.2s;}
+.btn-primary:active{transform:scale(.97);}
+.btn-secondary{background:#252525;color:#fff;border:1px solid #333;padding:12px;border-radius:12px;cursor:pointer;font-weight:600;}
+.search-box{display:flex;gap:8px;margin-bottom:12px;}
+.search-box input{flex:1;padding:12px 14px;background:#1b1b1b;border:1px solid #333;border-radius:12px;color:#fff;outline:none;}
+.search-box input:focus{border-color:#FFC107;}
+.filter-chips{display:flex;gap:8px;overflow-x:auto;padding-bottom:8px;margin-bottom:14px;scrollbar-width:none;}
+.filter-chips::-webkit-scrollbar{display:none;}
+.chip{padding:8px 16px;background:#1b1b1b;border:1px solid #333;border-radius:20px;font-size:12px;font-weight:600;color:#aaa;cursor:pointer;white-space:nowrap;transition:.2s;}
+.chip.active{background:#FFC107;color:#111;border-color:#FFC107;}
+.card{background:#1b1b1b;border-radius:18px;padding:16px;border:1px solid rgba(255,255,255,.06);margin-bottom:12px;transition:.2s;}
+.card:hover{border-color:rgba(255,193,7,.2);}
+.card-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px;}
+.card-top h3{font-size:14px;font-weight:700;line-height:1.3;}
+.card-top span{font-size:10px;padding:5px 10px;border-radius:12px;font-weight:700;}
+.status-masuk{background:rgba(255,193,7,.15);color:#FFC107;border:1px solid rgba(255,193,7,.3);}
+.status-proses{background:rgba(33,150,243,.15);color:#64B5F6;border:1px solid rgba(33,150,243,.3);}
+.status-selesai{background:rgba(76,175,80,.15);color:#81C784;border:1px solid rgba(76,175,80,.3);}
+.status-diambil{background:rgba(158,158,158,.15);color:#aaa;border:1px solid rgba(158,158,158,.3);}
+.status-batal{background:rgba(244,67,54,.15);color:#ef9a9a;border:1px solid rgba(244,67,54,.3);}
+.card-info{font-size:12px;color:#aaa;line-height:1.6;margin-bottom:10px;}
+.card-info b{color:#fff;}
+.card-actions{display:flex;gap:8px;flex-wrap:wrap;}
+.card-actions button{flex:1;min-width:60px;padding:9px;border:none;border-radius:10px;font-size:11px;font-weight:700;cursor:pointer;transition:.2s;}
+.btn-wa{background:#25D366;color:#fff;}
+.btn-edit{background:#252525;color:#FFC107;border:1px solid #333;}
+.btn-hapus{background:rgba(255,0,0,.1);color:#ff8a80;border:1px solid rgba(255,0,0,.2);}
+.btn-selesai{background:#FFC107;color:#111;}
+#formModal{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.85);backdrop-filter:blur(6px);display:none;justify-content:center;align-items:flex-start;z-index:9999;overflow-y:auto;padding:15px;}
+.modal-card{width:100%;max-width:440px;background:#1b1b1b;border-radius:22px;padding:20px;border:1px solid rgba(255,193,7,.2);margin:20px auto;animation:pop .3s ease;}
+@keyframes pop{from{transform:translateY(20px);opacity:0;}to{transform:translateY(0);opacity:1;}}
+.modal-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:18px;}
+.modal-header h3{color:#FFC107;font-size:18px;font-weight:700;}
+.modal-header button{background:#252525;border:none;color:#fff;width:32px;height:32px;border-radius:50%;cursor:pointer;}
+.input-box{margin-bottom:14px;}
+.input-box label{font-size:12px;font-weight:600;color:#FFC107;margin-bottom:6px;display:block;}
+.input-box input, .input-box textarea, .input-box select{width:100%;padding:12px;background:#252525;border:1px solid #333;border-radius:12px;color:#fff;outline:none;font-size:13px;}
+.input-box textarea{resize:none;min-height:70px;}
+.input-box input:focus, .input-box textarea:focus, .input-box select:focus{border-color:#FFC107;}
+.row{ display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+.kelengkapan{display:flex;flex-wrap:wrap;gap:8px;margin-top:6px;}
+.kelengkapan label{font-size:11px;background:#252525;border:1px solid #333;padding:6px 10px;border-radius:20px;cursor:pointer;display:flex;align-items:center;gap:5px;color:#aaa;}
+.kelengkapan input{accent-color:#FFC107;}
+#loadingScreen{position:fixed;top:0;left:0;width:100%;height:100%;background:#0d0d0d;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:9998;}
+.spinner{width:44px;height:44px;border:3px solid #222;border-top-color:#FFC107;border-radius:50%;animation:spin 1s linear infinite;margin-bottom:12px;}
+@keyframes spin{to{transform:rotate(360deg);}}
+.bottom-nav{position:fixed;bottom:15px;left:50%;transform:translateX(-50%);width:calc(100% - 30px);max-width:430px;background:#1f1f1f;border:1px solid rgba(255,193,7,.15);border-radius:20px;display:flex;justify-content:space-around;padding:10px 5px;z-index:90;}
+.bottom-nav a{flex:1;text-align:center;text-decoration:none;color:#777;font-size:11px;font-weight:600;padding:6px;}
+.bottom-nav a.active{color:#FFC107;}
+.bottom-nav a span{display:block;font-size:20px;margin-bottom:2px;}
+.empty{text-align:center;padding:40px 20px;color:#666;}
+.empty .icon{font-size:48px;margin-bottom:12px;}
+#popupMsg{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.75);display:none;justify-content:center;align-items:center;z-index:10000;padding:15px;}
+#popupMsg .box{width:90%;max-width:340px;background:#1b1b1b;padding:24px;border-radius:18px;text-align:center;border:1px solid #FFC107;}
+#debugInfo{font-size:11px;color:#666;text-align:center;margin-top:10px;padding:10px;background:#111;border-radius:10px;white-space:pre-line;}
+
+/* AUTO RESPONSIVE MODE: HP + DESKTOP */
+html{width:100%;min-height:100%;}
+body{width:100%;}
+
+/* HP / tablet: keep compact single-column layout */
+@media (max-width: 767px){
+  .container{max-width:500px;padding:12px 12px 105px;}
+  .header{padding:13px 14px;border-radius:18px;}
+  .card{padding:14px;border-radius:16px;}
+  .row{grid-template-columns:1fr 1fr;}
+  .modal-card{max-width:440px;margin:10px auto;}
+  .bottom-nav{bottom:10px;width:calc(100% - 24px);max-width:500px;}
+}
+
+/* DESKTOP: automatically expands the workspace */
+@media (min-width: 768px){
+  body{overflow-x:hidden;}
+  .container{
+    max-width:1180px;
+    padding:28px 28px 45px;
+  }
+  .header{
+    padding:18px 22px;
+    border-radius:22px;
+    margin-bottom:18px;
+  }
+  .header h2{font-size:20px;}
+  .header p{font-size:12px;}
+  .header-left{gap:14px;}
+  .header-left .back{width:42px;height:42px;font-size:20px;}
+  .search-box{max-width:700px;margin-bottom:14px;}
+  .search-box input{padding:13px 16px;font-size:14px;}
+  .filter-chips{margin-bottom:18px;}
+
+  /* Cards become a responsive grid on desktop */
+  #serviceList{
+    display:grid;
+    grid-template-columns:repeat(auto-fit,minmax(320px,1fr));
+    gap:14px;
+    align-items:start;
+  }
+  #serviceList .card{margin-bottom:0;min-width:0;padding:18px;}
+  .card-top h3{font-size:15px;}
+  .card-info{font-size:13px;}
+  .card-actions button{font-size:12px;padding:10px;}
+
+  /* Bottom navigation becomes a compact desktop dock */
+  .bottom-nav{
+    bottom:20px;
+    width:auto;
+    min-width:430px;
+    max-width:620px;
+    padding:8px 10px;
+    border-radius:18px;
+  }
+  .bottom-nav a{font-size:12px;padding:7px 14px;}
+  .bottom-nav a span{font-size:21px;}
+
+  /* Modal uses a comfortable desktop size */
+  #formModal{padding:30px;}
+  .modal-card{max-width:620px;padding:24px;margin:20px auto;}
+  #popupMsg .box{max-width:420px;}
+}
+
+/* Large desktop */
+@media (min-width: 1200px){
+  .container{padding-left:40px;padding-right:40px;}
+  #serviceList{grid-template-columns:repeat(3,minmax(0,1fr));}
+}
+
+
+/* DEVICE-AWARE RESPONSIVE PATCH V3 */
+@media (max-width: 767px), (max-device-width: 767px){
+  .row{grid-template-columns:1fr !important;}
+  #formModal{padding:8px !important; align-items:flex-start !important;}
+  #formModal .modal-card{width:100% !important; max-width:none !important; margin:0 auto !important; padding:14px !important; max-height:calc(100dvh - 16px) !important; overflow-y:auto !important;}
+  #formModal .input-box{margin-bottom:10px !important;}
+  #formModal .input-box input,
+  #formModal .input-box textarea,
+  #formModal .input-box select{width:100% !important;}
+  #listServis{display:block !important;}
+  #listServis .card{width:100% !important; margin-bottom:12px !important;}
+}
+
+/* Force mobile layout when the browser is in Desktop Site mode on a phone. */
+html.mobile-device .row{grid-template-columns:1fr !important;}
+html.mobile-device #formModal{padding:8px !important; align-items:flex-start !important;}
+html.mobile-device #formModal .modal-card{width:100% !important; max-width:none !important; margin:0 auto !important; padding:14px !important; max-height:calc(100dvh - 16px) !important; overflow-y:auto !important;}
+html.mobile-device #formModal .input-box input,
+html.mobile-device #formModal .input-box textarea,
+html.mobile-device #formModal .input-box select{width:100% !important;}
+html.mobile-device #listServis{display:block !important;}
+html.mobile-device #listServis .card{width:100% !important; margin-bottom:12px !important;}
+
+/* ================================
+   FIXZY: SERVIS + PENJUALAN
+   ================================ */
+.mode-switch{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:8px;
+  margin-bottom:12px;
+}
+.mode-btn{
+  padding:12px 14px;
+  border-radius:12px;
+  border:1px solid #333;
+  background:#1b1b1b;
+  color:#aaa;
+  font-weight:700;
+  cursor:pointer;
+}
+.mode-btn.active{
+  background:#FFC107;
+  color:#111;
+  border-color:#FFC107;
+}
+.section-hidden{display:none !important;}
+.sales-total{
+  margin-top:6px;
+  padding:12px 14px;
+  border-radius:12px;
+  background:#252525;
+  border:1px solid #333;
+  font-weight:800;
+  color:#FFC107;
+}
+.status-jual-selesai{
+  background:rgba(76,175,80,.15);
+  color:#81C784;
+  border:1px solid rgba(76,175,80,.3);
+}
+.status-jual-batal{
+  background:rgba(244,67,54,.15);
+  color:#ef9a9a;
+  border:1px solid rgba(244,67,54,.3);
+}
+.status-jual-piutang{
+  background:rgba(255,193,7,.15);
+  color:#FFC107;
+  border:1px solid rgba(255,193,7,.3);
+}
+#formPenjualanModal{
+  position:fixed;
+  top:0;left:0;width:100%;height:100%;
+  background:rgba(0,0,0,.85);
+  backdrop-filter:blur(6px);
+  display:none;
+  justify-content:center;
+  align-items:flex-start;
+  z-index:9999;
+  overflow-y:auto;
+  padding:15px;
+}
+#formPenjualanModal .modal-card{
+  width:100%;
+  max-width:520px;
+  background:#1b1b1b;
+  border-radius:22px;
+  padding:20px;
+  border:1px solid rgba(255,193,7,.2);
+  margin:20px auto;
+  animation:pop .3s ease;
+}
+@media (max-width:767px),(max-device-width:767px){
+  #formPenjualanModal{padding:8px;align-items:flex-start;}
+  #formPenjualanModal .modal-card{
+    width:100%;
+    max-width:none;
+    margin:0 auto;
+    padding:14px;
+    max-height:calc(100dvh - 16px);
+    overflow-y:auto;
+  }
+}
+@media (min-width:768px){
+  #formPenjualanModal{padding:30px;}
+  #formPenjualanModal .modal-card{max-width:620px;padding:24px;margin:20px auto;}
+}
+
+
+/* =========================
+   FIXZY - NOTA PENJUALAN
+   ========================= */
+.btn-nota{
+  background:#FFC107;
+  color:#111;
+  border:none;
+}
+#notaPrint{
+  display:none;
+}
+@media print{
+  @page{size:80mm auto;margin:0}
+  html,body{background:#fff!important;color:#111!important;margin:0!important;padding:0!important}
+  body>*{display:none!important}
+  #notaPrint{
+    display:block!important;
+    width:80mm!important;
+    padding:5mm!important;
+    background:#fff!important;
+    color:#111!important;
+    font-family:Arial,sans-serif!important;
+    font-size:12px!important;
+    line-height:1.45!important;
+  }
+}
+
+
+/* =========================
+   FIXZY - KELOLA STOK FIREBASE
+   ========================= */
+.stock-tools{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px}
+.stock-btn{padding:12px 10px;border-radius:12px;border:1px solid #333;background:#252525;color:#fff;font-weight:700;cursor:pointer}
+.stock-btn.primary{background:linear-gradient(90deg,#FFC107,#FF9800);color:#111;border-color:#FFC107}
+.stock-summary{font-size:11px;color:#888;margin:-4px 2px 12px}
+.stock-list-mini{max-height:220px;overflow:auto;background:#151515;border:1px solid #2a2a2a;border-radius:12px;padding:8px;display:none}
+.stock-mini-row{display:flex;justify-content:space-between;gap:10px;padding:8px;border-bottom:1px solid #222;font-size:11px}
+.stock-mini-row:last-child{border-bottom:0}
+.stock-mini-row b{color:#fff}
+#stockManagerModal{position:fixed;inset:0;background:rgba(0,0,0,.88);backdrop-filter:blur(6px);display:none;align-items:flex-start;justify-content:center;z-index:10001;overflow-y:auto;padding:10px}
+#stockManagerModal .modal-card{width:100%;max-width:560px;margin:0 auto;padding:16px;max-height:calc(100dvh - 20px);overflow-y:auto}
+.stock-upload-box{background:#151515;border:1px dashed #555;border-radius:14px;padding:14px;margin-bottom:14px}
+.stock-upload-box input[type=file]{width:100%;color:#aaa;font-size:12px}
+.stock-help{font-size:10px;color:#777;line-height:1.5;margin-top:8px}
+.stock-mode{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.stock-mode label{display:flex;align-items:center;gap:6px;background:#252525;border:1px solid #333;padding:10px;border-radius:10px;font-size:11px;color:#aaa}
+@media(max-width:767px),(max-device-width:767px){#stockManagerModal{padding:8px}#stockManagerModal .modal-card{max-width:none;margin:0;padding:14px}.stock-tools{grid-template-columns:1fr 1fr}}
+
+</style>
+
+<script>
+(function(){
+  function applyDeviceMode(){
+    var w = Math.min(
+      window.screen && window.screen.width ? window.screen.width : 9999,
+      window.screen && window.screen.availWidth ? window.screen.availWidth : 9999
+    );
+    var ua = navigator.userAgent || '';
+    var mobileUA = /Android|iPhone|iPad|iPod|Mobile/i.test(ua);
+    var mobileScreen = w <= 767;
+    document.documentElement.classList.toggle('mobile-device', mobileUA || mobileScreen);
+  }
+  applyDeviceMode();
+  window.addEventListener('resize', applyDeviceMode);
+  window.addEventListener('orientationchange', function(){ setTimeout(applyDeviceMode, 100); });
+})();
+</script>
+<script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
+</head>
+<body>
+
+<div id="loadingScreen">
+  <div class="spinner"></div>
+  <p style="color:#FFC107;font-weight:600;font-size:14px;">Memuat Data Servis...</p>
+  <p id="debugLoading" style="color:#666;font-size:11px;margin-top:8px;"></p>
+</div>
+
+<div class="container" id="mainContent" style="display:none;">
+  <div class="header">
+    <div class="header-left">
+      <button class="back" onclick="location.href='dashboard.html'">‹</button>
+      <div>
+        <h2 id="pageTitle">Servis & Penjualan</h2>
+        <p id="totalInfo">0 data</p>
+      </div>
+    </div>
+    <button class="back" id="quickAddBtn" onclick="openAddModal()" style="background:#FFC107;color:#111;font-weight:800;">+</button>
+  </div>
+
+  <div class="mode-switch">
+    <button class="mode-btn active" id="modeServis" onclick="setMode('servis')">🔧 SERVIS HP</button>
+    <button class="mode-btn" id="modePenjualan" onclick="setMode('penjualan')">🛒 PENJUALAN</button>
+  </div>
+
+  <div id="servisSection">
+    <div class="search-box">
+      <input type="text" id="searchInput" placeholder="Cari nama, HP, tipe HP...">
+      <button class="btn-secondary" onclick="loadServis()">↻</button>
+    </div>
+
+    <div class="filter-chips" id="filterChips">
+      <div class="chip active" data-filter="semua">Semua</div>
+      <div class="chip" data-filter="masuk">Masuk</div>
+      <div class="chip" data-filter="proses">Proses</div>
+      <div class="chip" data-filter="selesai">Selesai</div>
+      <div class="chip" data-filter="diambil">Diambil</div>
+      <div class="chip" data-filter="batal">Batal</div>
+    </div>
+
+    <button class="btn-primary" onclick="openAddModal()" style="margin-bottom:16px;">+ TAMBAH SERVIS BARU</button>
+
+    <div id="listServis"></div>
+
+    <div id="emptyState" class="empty" style="display:none;">
+      <div class="icon">📱</div>
+      <h4 style="color:#fff;margin-bottom:6px;">Belum ada data servis</h4>
+      <p style="font-size:12px;">Klik Tambah Servis Baru untuk input HP masuk</p>
+      <div id="debugInfo"></div>
+    </div>
+  </div>
+
+  <div id="penjualanSection" class="section-hidden">
+    <div class="stock-tools">
+      <button class="stock-btn primary" onclick="openStockManager('upload')">📥 Upload Stok</button>
+      <button class="stock-btn" onclick="openStockManager('manual')">＋ Stok Baru</button>
+    </div>
+    <div class="stock-summary" id="stockSummary">Stok Firebase: memuat...</div>
+    <div class="search-box">
+      <input type="text" id="searchPenjualan" placeholder="Cari pelanggan atau nama produk...">
+      <button class="btn-secondary" onclick="loadPenjualan()">↻</button>
+    </div>
+
+    <div class="filter-chips" id="filterPenjualan">
+      <div class="chip active" data-sales-filter="semua">Semua</div>
+      <div class="chip" data-sales-filter="selesai">Selesai</div>
+      <div class="chip" data-sales-filter="piutang">Piutang</div>
+      <div class="chip" data-sales-filter="batal">Batal</div>
+    </div>
+
+    <button class="btn-primary" onclick="openPenjualanModal()" style="margin-bottom:8px;">+ TAMBAH PENJUALAN</button>
+    <div style="font-size:11px;color:#777;margin:0 2px 14px;">
+      Produk, harga, dan stok diambil langsung dari Firebase. Penjualan tidak boleh melebihi stok tersedia.
+    </div>
+
+    <div id="listPenjualan"></div>
+
+    <div id="emptyPenjualan" class="empty" style="display:none;">
+      <div class="icon">🛒</div>
+      <h4 style="color:#fff;margin-bottom:6px;">Belum ada data penjualan</h4>
+      <p style="font-size:12px;">Klik Tambah Penjualan untuk mencatat transaksi toko</p>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL FORM -->
+<div id="formModal">
+  <div class="modal-card">
+    <div class="modal-header">
+      <h3 id="modalTitle">Servis Baru</h3>
+      <button onclick="closeModal()">✕</button>
+    </div>
+    <form id="servisForm">
+      <input type="hidden" id="editId">
+      <div class="input-box">
+        <label>Nama Pelanggan *</label>
+        <input type="text" id="namaPelanggan" placeholder="Budi Santoso" required>
+      </div>
+      <div class="row">
+        <div class="input-box">
+          <label>No WhatsApp *</label>
+          <input type="tel" id="noHp" placeholder="08xxxxxxxxxx" required>
+        </div>
+        <div class="input-box">
+          <label>Tipe HP *</label>
+          <input type="text" id="tipeHp" placeholder="Redmi Note 12 / iPhone 13" required>
+        </div>
+      </div>
+      <div class="row">
+        <div class="input-box">
+          <label>IMEI / SN (opsional)</label>
+          <input type="text" id="imei" placeholder="Opsional">
+        </div>
+        <div class="input-box">
+          <label>Status</label>
+          <select id="status">
+            <option value="masuk">Masuk</option>
+            <option value="proses">Proses / Dikerjakan</option>
+            <option value="selesai">Selesai</option>
+            <option value="diambil">Sudah Diambil</option>
+            <option value="batal">Batal</option>
+          </select>
+        </div>
+      </div>
+      <div class="input-box">
+        <label>Kerusakan / Keluhan *</label>
+        <textarea id="kerusakan" placeholder="Contoh: Mati total, LCD pecah, tidak bisa dicas..." required></textarea>
+      </div>
+      <div class="input-box">
+        <label>Kelengkapan</label>
+        <div class="kelengkapan">
+          <label><input type="checkbox" value="HP Saja" class="kel"> HP Saja</label>
+          <label><input type="checkbox" value="Charger" class="kel"> Charger</label>
+          <label><input type="checkbox" value="Dus" class="kel"> Dus</label>
+          <label><input type="checkbox" value="Kabel" class="kel"> Kabel</label>
+          <label><input type="checkbox" value="Kartu" class="kel"> Kartu</label>
+        </div>
+        <input type="text" id="kelengkapan" placeholder="Otomatis terisi dari checklist / isi manual" style="margin-top:8px;">
+      </div>
+      <div class="row">
+        <div class="input-box">
+          <label>Estimasi Biaya (Rp)</label>
+          <input type="number" id="biaya" placeholder="150000" inputmode="numeric">
+        </div>
+        <div class="input-box">
+          <label>DP (Rp)</label>
+          <input type="number" id="dp" placeholder="0" inputmode="numeric">
+        </div>
+      </div>
+      <div class="input-box">
+        <label>Catatan Teknisi</label>
+        <textarea id="catatan" placeholder="Catatan internal teknisi..."></textarea>
+      </div>
+      <div class="input-box">
+        <label>Nama Teknisi</label>
+        <input type="text" id="teknisi" placeholder="Nama teknisi yang kerjakan">
+      </div>
+      <div style="display:flex;gap:10px;margin-top:18px;">
+        <button type="button" class="btn-secondary" style="flex:1;" onclick="closeModal()">Batal</button>
+        <button type="submit" class="btn-primary" style="flex:1.5;" id="btnSimpan">SIMPAN</button>
+      </div>
+      <div id="formLoading" style="display:none;text-align:center;color:#FFC107;margin-top:12px;font-size:13px;">Menyimpan...</div>
+    </form>
+  </div>
+</div>
+
+
+<!-- MODAL PENJUALAN -->
+<div id="formPenjualanModal">
+  <div class="modal-card">
+    <div class="modal-header">
+      <h3 id="salesModalTitle">Penjualan Baru</h3>
+      <button onclick="closePenjualanModal()">✕</button>
+    </div>
+
+    <form id="penjualanForm">
+      <input type="hidden" id="salesEditId">
+
+      <div class="input-box">
+        <label>Nama Pelanggan</label>
+        <input type="text" id="salesNama" placeholder="Nama pelanggan">
+      </div>
+
+      <div class="input-box">
+        <label>No WhatsApp</label>
+        <input type="tel" id="salesNoHp" placeholder="08xxxxxxxxxx">
+      </div>
+
+      <div class="input-box">
+        <label>Produk dari Stok Firebase *</label>
+        <select id="salesProdukSelect" required>
+          <option value="">Memuat daftar produk...</option>
+        </select>
+        <div id="salesStockInfo" style="margin-top:7px;font-size:11px;color:#888;">
+          Pilih produk untuk melihat stok yang tersedia.
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="input-box">
+          <label>Jumlah *</label>
+          <input type="number" id="salesQty" value="1" min="1" inputmode="numeric" required>
+        </div>
+        <div class="input-box">
+          <label>Harga Satuan (Rp) *</label>
+          <input type="number" id="salesHarga" placeholder="Otomatis dari spreadsheet" min="0" inputmode="numeric" required>
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="input-box">
+          <label>Diskon (Rp)</label>
+          <input type="number" id="salesDiskon" value="0" min="0" inputmode="numeric">
+        </div>
+        <div class="input-box">
+          <label>Pembayaran</label>
+          <select id="salesBayar">
+            <option value="Cash">Cash</option>
+            <option value="Transfer">Transfer</option>
+            <option value="QRIS">QRIS</option>
+            <option value="Piutang">Piutang</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="sales-total">TOTAL: <span id="salesTotal">Rp 0</span></div>
+
+      <div class="input-box" style="margin-top:14px;">
+        <label>Status</label>
+        <select id="salesStatus">
+          <option value="selesai">Selesai</option>
+          <option value="piutang">Piutang</option>
+          <option value="batal">Batal</option>
+        </select>
+      </div>
+
+      <div class="input-box">
+        <label>Catatan</label>
+        <textarea id="salesCatatan" placeholder="Catatan transaksi..."></textarea>
+      </div>
+
+      <div style="display:flex;gap:10px;margin-top:18px;">
+        <button type="button" class="btn-secondary" style="flex:1;" onclick="closePenjualanModal()">Batal</button>
+        <button type="submit" class="btn-primary" style="flex:1.5;" id="btnSimpanPenjualan">SIMPAN PENJUALAN</button>
+      </div>
+      <div id="salesFormLoading" style="display:none;text-align:center;color:#FFC107;margin-top:12px;font-size:13px;">Menyimpan...</div>
+    </form>
+  </div>
+</div>
+
+<!-- MODAL KELOLA STOK FIREBASE -->
+<div id="stockManagerModal">
+  <div class="modal-card">
+    <div class="modal-header">
+      <h3 id="stockManagerTitle">Kelola Stok Firebase</h3>
+      <button onclick="closeStockManager()">✕</button>
+    </div>
+
+    <div id="stockUploadPanel">
+      <div class="stock-upload-box">
+        <div style="font-weight:700;color:#FFC107;margin-bottom:8px">📥 Upload Stok Awal / Update Massal</div>
+        <input type="file" id="stockFile" accept=".csv,.txt,.json,.xlsx,.xls">
+        <div class="stock-help">
+          Bisa upload CSV dari Google Sheets. Kolom yang dikenali: <b>kode, nama, harga, stok/sisa, merk, kategori, status</b>.<br>
+          Produk dengan kode yang sama akan <b>di-update</b>, bukan dibuat duplikat. Produk baru akan dibuat otomatis.
+        </div>
+      </div>
+      <button class="btn-primary" id="btnImportStock" onclick="importStockFile()">UPLOAD KE FIREBASE</button>
+      <div id="stockImportInfo" style="font-size:11px;color:#888;text-align:center;margin-top:10px;white-space:pre-line"></div>
+    </div>
+
+    <div id="stockManualPanel" style="display:none">
+      <div class="input-box"><label>Kode Produk *</label><input id="stockKode" placeholder="Contoh: LCD001"></div>
+      <div class="input-box"><label>Nama Produk *</label><input id="stockNama" placeholder="Nama produk / sparepart"></div>
+      <div class="row">
+        <div class="input-box"><label>Harga Jual (Rp) *</label><input type="number" id="stockHarga" min="0" inputmode="numeric" placeholder="150000"></div>
+        <div class="input-box"><label>Stok *</label><input type="number" id="stockQty" min="0" inputmode="numeric" placeholder="1"></div>
+      </div>
+      <div class="row">
+        <div class="input-box"><label>Merk</label><input id="stockMerk" placeholder="Zevan / Vivan / dll"></div>
+        <div class="input-box"><label>Kategori</label><input id="stockKategori" placeholder="LCD / Baterai / Aksesoris"></div>
+      </div>
+      <div class="input-box"><label>Status</label>
+        <select id="stockStatus"><option value="tersedia">Tersedia</option><option value="habis">Habis</option><option value="nonaktif">Nonaktif</option></select>
+      </div>
+      <div class="stock-mode">
+        <label><input type="radio" name="stockAction" value="set" checked> Atur stok menjadi angka di atas</label>
+        <label><input type="radio" name="stockAction" value="add"> Tambahkan stok ke stok lama</label>
+      </div>
+      <button class="btn-primary" id="btnSaveStock" onclick="saveManualStock()" style="margin-top:14px">SIMPAN STOK KE FIREBASE</button>
+      <div id="stockManualInfo" style="font-size:11px;color:#888;text-align:center;margin-top:10px;white-space:pre-line"></div>
+    </div>
+  </div>
+</div>
+
+<div class="bottom-nav">
+  <a href="dashboard.html"><span>🏠</span>Home</a>
+  <a href="data:text/html;base64,PCFET0NUWVBFIGh0bWw+CjxodG1sIGxhbmc9ImlkIj4KPGhlYWQ+CjxtZXRhIGNoYXJzZXQ9IlVURi04Ij4KPG1ldGEgbmFtZT0idmlld3BvcnQiIGNvbnRlbnQ9IndpZHRoPWRldmljZS13aWR0aCxpbml0aWFsLXNjYWxlPTEuMCI+Cjx0aXRsZT5GaXh6eSB8IERhdGEgU2VydmlzPC90aXRsZT4KPG1ldGEgbmFtZT0idGhlbWUtY29sb3IiIGNvbnRlbnQ9IiNGRkMxMDciPgo8bGluayBocmVmPSJodHRwczovL2ZvbnRzLmdvb2dsZWFwaXMuY29tL2NzczI/ZmFtaWx5PVBvcHBpbnM6d2dodEAzMDA7NDAwOzUwMDs2MDA7NzAwOzgwMCZkaXNwbGF5PXN3YXAiIHJlbD0ic3R5bGVzaGVldCI+CjxzdHlsZT4KKnttYXJnaW46MDtwYWRkaW5nOjA7Ym94LXNpemluZzpib3JkZXItYm94O2ZvbnQtZmFtaWx5OidQb3BwaW5zJyxzYW5zLXNlcmlmO30KYm9keXtiYWNrZ3JvdW5kOiMwZDBkMGQ7YmFja2dyb3VuZC1pbWFnZTpyYWRpYWwtZ3JhZGllbnQoY2lyY2xlIGF0IHRvcCwgcmdiYSgyNTUsMTkzLDcsLjE4KSwgdHJhbnNwYXJlbnQgNjAlKTtjb2xvcjojZmZmO21pbi1oZWlnaHQ6MTAwdmg7b3ZlcmZsb3cteDpoaWRkZW47fQouY29udGFpbmVye3dpZHRoOjEwMCU7bWF4LXdpZHRoOjUwMHB4O21hcmdpbjphdXRvO3BhZGRpbmc6MTVweCAxNXB4IDExMHB4O30KLmhlYWRlcntkaXNwbGF5OmZsZXg7anVzdGlmeS1jb250ZW50OnNwYWNlLWJldHdlZW47YWxpZ24taXRlbXM6Y2VudGVyO2JhY2tncm91bmQ6IzFiMWIxYjtib3JkZXI6MXB4IHNvbGlkIHJnYmEoMjU1LDE5Myw3LC4xNSk7Ym9yZGVyLXJhZGl1czoyMHB4O3BhZGRpbmc6MTRweCAxNnB4O21hcmdpbi1ib3R0b206MTRweDt9Ci5oZWFkZXItbGVmdHtkaXNwbGF5OmZsZXg7YWxpZ24taXRlbXM6Y2VudGVyO2dhcDoxMnB4O30KLmhlYWRlci1sZWZ0IC5iYWNre3dpZHRoOjM4cHg7aGVpZ2h0OjM4cHg7YmFja2dyb3VuZDojMjUyNTI1O2JvcmRlcjpub25lO2NvbG9yOiNGRkMxMDc7Ym9yZGVyLXJhZGl1czoxMHB4O2N1cnNvcjpwb2ludGVyO2ZvbnQtc2l6ZToxOHB4O2Rpc3BsYXk6ZmxleDthbGlnbi1pdGVtczpjZW50ZXI7anVzdGlmeS1jb250ZW50OmNlbnRlcjt9Ci5oZWFkZXIgaDJ7Zm9udC1zaXplOjE2cHg7Zm9udC13ZWlnaHQ6NzAwO30KLmhlYWRlciBwe2ZvbnQtc2l6ZToxMXB4O2NvbG9yOiM4ODg7fQouYnRuLXByaW1hcnl7d2lkdGg6MTAwJTtwYWRkaW5nOjE0cHg7Ym9yZGVyOm5vbmU7Ym9yZGVyLXJhZGl1czoxNHB4O2JhY2tncm91bmQ6bGluZWFyLWdyYWRpZW50KDkwZGVnLCNGRkMxMDcsI0ZGOTgwMCk7Y29sb3I6IzExMTtmb250LXdlaWdodDo3MDA7Y3Vyc29yOnBvaW50ZXI7Ym94LXNoYWRvdzowIDhweCAyMHB4IHJnYmEoMjU1LDE5Myw3LC4yNSk7dHJhbnNpdGlvbjouMnM7fQouYnRuLXByaW1hcnk6YWN0aXZle3RyYW5zZm9ybTpzY2FsZSguOTcpO30KLmJ0bi1zZWNvbmRhcnl7YmFja2dyb3VuZDojMjUyNTI1O2NvbG9yOiNmZmY7Ym9yZGVyOjFweCBzb2xpZCAjMzMzO3BhZGRpbmc6MTJweDtib3JkZXItcmFkaXVzOjEycHg7Y3Vyc29yOnBvaW50ZXI7Zm9udC13ZWlnaHQ6NjAwO30KLnNlYXJjaC1ib3h7ZGlzcGxheTpmbGV4O2dhcDo4cHg7bWFyZ2luLWJvdHRvbToxMnB4O30KLnNlYXJjaC1ib3ggaW5wdXR7ZmxleDoxO3BhZGRpbmc6MTJweCAxNHB4O2JhY2tncm91bmQ6IzFiMWIxYjtib3JkZXI6MXB4IHNvbGlkICMzMzM7Ym9yZGVyLXJhZGl1czoxMnB4O2NvbG9yOiNmZmY7b3V0bGluZTpub25lO30KLnNlYXJjaC1ib3ggaW5wdXQ6Zm9jdXN7Ym9yZGVyLWNvbG9yOiNGRkMxMDc7fQouZmlsdGVyLWNoaXBze2Rpc3BsYXk6ZmxleDtnYXA6OHB4O292ZXJmbG93LXg6YXV0bztwYWRkaW5nLWJvdHRvbTo4cHg7bWFyZ2luLWJvdHRvbToxNHB4O3Njcm9sbGJhci13aWR0aDpub25lO30KLmZpbHRlci1jaGlwczo6LXdlYmtpdC1zY3JvbGxiYXJ7ZGlzcGxheTpub25lO30KLmNoaXB7cGFkZGluZzo4cHggMTZweDtiYWNrZ3JvdW5kOiMxYjFiMWI7Ym9yZGVyOjFweCBzb2xpZCAjMzMzO2JvcmRlci1yYWRpdXM6MjBweDtmb250LXNpemU6MTJweDtmb250LXdlaWdodDo2MDA7Y29sb3I6I2FhYTtjdXJzb3I6cG9pbnRlcjt3aGl0ZS1zcGFjZTpub3dyYXA7dHJhbnNpdGlvbjouMnM7fQouY2hpcC5hY3RpdmV7YmFja2dyb3VuZDojRkZDMTA3O2NvbG9yOiMxMTE7Ym9yZGVyLWNvbG9yOiNGRkMxMDc7fQouY2FyZHtiYWNrZ3JvdW5kOiMxYjFiMWI7Ym9yZGVyLXJhZGl1czoxOHB4O3BhZGRpbmc6MTZweDtib3JkZXI6MXB4IHNvbGlkIHJnYmEoMjU1LDI1NSwyNTUsLjA2KTttYXJnaW4tYm90dG9tOjEycHg7dHJhbnNpdGlvbjouMnM7fQouY2FyZDpob3Zlcntib3JkZXItY29sb3I6cmdiYSgyNTUsMTkzLDcsLjIpO30KLmNhcmQtdG9we2Rpc3BsYXk6ZmxleDtqdXN0aWZ5LWNvbnRlbnQ6c3BhY2UtYmV0d2VlbjthbGlnbi1pdGVtczpmbGV4LXN0YXJ0O21hcmdpbi1ib3R0b206MTBweDt9Ci5jYXJkLXRvcCBoM3tmb250LXNpemU6MTRweDtmb250LXdlaWdodDo3MDA7bGluZS1oZWlnaHQ6MS4zO30KLmNhcmQtdG9wIHNwYW57Zm9udC1zaXplOjEwcHg7cGFkZGluZzo1cHggMTBweDtib3JkZXItcmFkaXVzOjEycHg7Zm9udC13ZWlnaHQ6NzAwO30KLnN0YXR1cy1tYXN1a3tiYWNrZ3JvdW5kOnJnYmEoMjU1LDE5Myw3LC4xNSk7Y29sb3I6I0ZGQzEwNztib3JkZXI6MXB4IHNvbGlkIHJnYmEoMjU1LDE5Myw3LC4zKTt9Ci5zdGF0dXMtcHJvc2Vze2JhY2tncm91bmQ6cmdiYSgzMywxNTAsMjQzLC4xNSk7Y29sb3I6IzY0QjVGNjtib3JkZXI6MXB4IHNvbGlkIHJnYmEoMzMsMTUwLDI0MywuMyk7fQouc3RhdHVzLXNlbGVzYWl7YmFja2dyb3VuZDpyZ2JhKDc2LDE3NSw4MCwuMTUpO2NvbG9yOiM4MUM3ODQ7Ym9yZGVyOjFweCBzb2xpZCByZ2JhKDc2LDE3NSw4MCwuMyk7fQouc3RhdHVzLWRpYW1iaWx7YmFja2dyb3VuZDpyZ2JhKDE1OCwxNTgsMTU4LC4xNSk7Y29sb3I6I2FhYTtib3JkZXI6MXB4IHNvbGlkIHJnYmEoMTU4LDE1OCwxNTgsLjMpO30KLnN0YXR1cy1iYXRhbHtiYWNrZ3JvdW5kOnJnYmEoMjQ0LDY3LDU0LC4xNSk7Y29sb3I6I2VmOWE5YTtib3JkZXI6MXB4IHNvbGlkIHJnYmEoMjQ0LDY3LDU0LC4zKTt9Ci5jYXJkLWluZm97Zm9udC1zaXplOjEycHg7Y29sb3I6I2FhYTtsaW5lLWhlaWdodDoxLjY7bWFyZ2luLWJvdHRvbToxMHB4O30KLmNhcmQtaW5mbyBie2NvbG9yOiNmZmY7fQouY2FyZC1hY3Rpb25ze2Rpc3BsYXk6ZmxleDtnYXA6OHB4O30KLmNhcmQtYWN0aW9ucyBidXR0b257ZmxleDoxO3BhZGRpbmc6OXB4O2JvcmRlcjpub25lO2JvcmRlci1yYWRpdXM6MTBweDtmb250LXNpemU6MTFweDtmb250LXdlaWdodDo3MDA7Y3Vyc29yOnBvaW50ZXI7dHJhbnNpdGlvbjouMnM7fQouYnRuLXdhe2JhY2tncm91bmQ6IzI1RDM2Njtjb2xvcjojZmZmO30KLmJ0bi1lZGl0e2JhY2tncm91bmQ6IzI1MjUyNTtjb2xvcjojRkZDMTA3O2JvcmRlcjoxcHggc29saWQgIzMzMzt9Ci5idG4taGFwdXN7YmFja2dyb3VuZDpyZ2JhKDI1NSwwLDAsLjEpO2NvbG9yOiNmZjhhODA7Ym9yZGVyOjFweCBzb2xpZCByZ2JhKDI1NSwwLDAsLjIpO30KLmJ0bi1zZWxlc2Fpe2JhY2tncm91bmQ6I0ZGQzEwNztjb2xvcjojMTExO30KLyogTU9EQUwgKi8KI2Zvcm1Nb2RhbHtwb3NpdGlvbjpmaXhlZDt0b3A6MDtsZWZ0OjA7d2lkdGg6MTAwJTtoZWlnaHQ6MTAwJTtiYWNrZ3JvdW5kOnJnYmEoMCwwLDAsLjg1KTtiYWNrZHJvcC1maWx0ZXI6Ymx1cig2cHgpO2Rpc3BsYXk6bm9uZTtqdXN0aWZ5LWNvbnRlbnQ6Y2VudGVyO2FsaWduLWl0ZW1zOmZsZXgtc3RhcnQ7ei1pbmRleDo5OTk5O292ZXJmbG93LXk6YXV0bztwYWRkaW5nOjE1cHg7fQoubW9kYWwtY2FyZHt3aWR0aDoxMDAlO21heC13aWR0aDo0NDBweDtiYWNrZ3JvdW5kOiMxYjFiMWI7Ym9yZGVyLXJhZGl1czoyMnB4O3BhZGRpbmc6MjBweDtib3JkZXI6MXB4IHNvbGlkIHJnYmEoMjU1LDE5Myw3LC4yKTttYXJnaW46MjBweCBhdXRvO2FuaW1hdGlvbjpwb3AgLjNzIGVhc2U7fQpAa2V5ZnJhbWVzIHBvcHtmcm9te3RyYW5zZm9ybTp0cmFuc2xhdGVZKDIwcHgpO29wYWNpdHk6MDt9dG97dHJhbnNmb3JtOnRyYW5zbGF0ZVkoMCk7b3BhY2l0eToxO319Ci5tb2RhbC1oZWFkZXJ7ZGlzcGxheTpmbGV4O2p1c3RpZnktY29udGVudDpzcGFjZS1iZXR3ZWVuO2FsaWduLWl0ZW1zOmNlbnRlcjttYXJnaW4tYm90dG9tOjE4cHg7fQoubW9kYWwtaGVhZGVyIGgze2NvbG9yOiNGRkMxMDc7Zm9udC1zaXplOjE4cHg7Zm9udC13ZWlnaHQ6NzAwO30KLm1vZGFsLWhlYWRlciBidXR0b257YmFja2dyb3VuZDojMjUyNTI1O2JvcmRlcjpub25lO2NvbG9yOiNmZmY7d2lkdGg6MzJweDtoZWlnaHQ6MzJweDtib3JkZXItcmFkaXVzOjUwJTtjdXJzb3I6cG9pbnRlcjt9Ci5pbnB1dC1ib3h7bWFyZ2luLWJvdHRvbToxNHB4O30KLmlucHV0LWJveCBsYWJlbHtmb250LXNpemU6MTJweDtmb250LXdlaWdodDo2MDA7Y29sb3I6I0ZGQzEwNzttYXJnaW4tYm90dG9tOjZweDtkaXNwbGF5OmJsb2NrO30KLmlucHV0LWJveCBpbnB1dCwgLmlucHV0LWJveCB0ZXh0YXJlYSwgLmlucHV0LWJveCBzZWxlY3R7d2lkdGg6MTAwJTtwYWRkaW5nOjEycHg7YmFja2dyb3VuZDojMjUyNTI1O2JvcmRlcjoxcHggc29saWQgIzMzMztib3JkZXItcmFkaXVzOjEycHg7Y29sb3I6I2ZmZjtvdXRsaW5lOm5vbmU7Zm9udC1zaXplOjEzcHg7fQouaW5wdXQtYm94IHRleHRhcmVhe3Jlc2l6ZTpub25lO21pbi1oZWlnaHQ6NzBweDt9Ci5pbnB1dC1ib3ggaW5wdXQ6Zm9jdXMsIC5pbnB1dC1ib3ggdGV4dGFyZWE6Zm9jdXMsIC5pbnB1dC1ib3ggc2VsZWN0OmZvY3Vze2JvcmRlci1jb2xvcjojRkZDMTA3O30KLnJvd3sgZGlzcGxheTpncmlkOyBncmlkLXRlbXBsYXRlLWNvbHVtbnM6MWZyIDFmcjsgZ2FwOjEwcHg7IH0KLmtlbGVuZ2thcGFue2Rpc3BsYXk6ZmxleDtmbGV4LXdyYXA6d3JhcDtnYXA6OHB4O21hcmdpbi10b3A6NnB4O30KLmtlbGVuZ2thcGFuIGxhYmVse2ZvbnQtc2l6ZToxMXB4O2JhY2tncm91bmQ6IzI1MjUyNTtib3JkZXI6MXB4IHNvbGlkICMzMzM7cGFkZGluZzo2cHggMTBweDtib3JkZXItcmFkaXVzOjIwcHg7Y3Vyc29yOnBvaW50ZXI7ZGlzcGxheTpmbGV4O2FsaWduLWl0ZW1zOmNlbnRlcjtnYXA6NXB4O2NvbG9yOiNhYWE7fQoua2VsZW5na2FwYW4gaW5wdXR7YWNjZW50LWNvbG9yOiNGRkMxMDc7fQojbG9hZGluZ1NjcmVlbntwb3NpdGlvbjpmaXhlZDt0b3A6MDtsZWZ0OjA7d2lkdGg6MTAwJTtoZWlnaHQ6MTAwJTtiYWNrZ3JvdW5kOiMwZDBkMGQ7ZGlzcGxheTpmbGV4O2ZsZXgtZGlyZWN0aW9uOmNvbHVtbjthbGlnbi1pdGVtczpjZW50ZXI7anVzdGlmeS1jb250ZW50OmNlbnRlcjt6LWluZGV4Ojk5OTg7fQouc3Bpbm5lcnt3aWR0aDo0NHB4O2hlaWdodDo0NHB4O2JvcmRlcjozcHggc29saWQgIzIyMjtib3JkZXItdG9wLWNvbG9yOiNGRkMxMDc7Ym9yZGVyLXJhZGl1czo1MCU7YW5pbWF0aW9uOnNwaW4gMXMgbGluZWFyIGluZmluaXRlO21hcmdpbi1ib3R0b206MTJweDt9CkBrZXlmcmFtZXMgc3Bpbnt0b3t0cmFuc2Zvcm06cm90YXRlKDM2MGRlZyk7fX0KLmJvdHRvbS1uYXZ7cG9zaXRpb246Zml4ZWQ7Ym90dG9tOjE1cHg7bGVmdDo1MCU7dHJhbnNmb3JtOnRyYW5zbGF0ZVgoLTUwJSk7d2lkdGg6Y2FsYygxMDAlIC0gMzBweCk7bWF4LXdpZHRoOjQzMHB4O2JhY2tncm91bmQ6IzFmMWYxZjtib3JkZXI6MXB4IHNvbGlkIHJnYmEoMjU1LDE5Myw3LC4xNSk7Ym9yZGVyLXJhZGl1czoyMHB4O2Rpc3BsYXk6ZmxleDtqdXN0aWZ5LWNvbnRlbnQ6c3BhY2UtYXJvdW5kO3BhZGRpbmc6MTBweCA1cHg7ei1pbmRleDo5MDt9Ci5ib3R0b20tbmF2IGF7ZmxleDoxO3RleHQtYWxpZ246Y2VudGVyO3RleHQtZGVjb3JhdGlvbjpub25lO2NvbG9yOiM3Nzc7Zm9udC1zaXplOjExcHg7Zm9udC13ZWlnaHQ6NjAwO3BhZGRpbmc6NnB4O30KLmJvdHRvbS1uYXYgYS5hY3RpdmV7Y29sb3I6I0ZGQzEwNzt9Ci5ib3R0b20tbmF2IGEgc3BhbntkaXNwbGF5OmJsb2NrO2ZvbnQtc2l6ZToyMHB4O21hcmdpbi1ib3R0b206MnB4O30KLmVtcHR5e3RleHQtYWxpZ246Y2VudGVyO3BhZGRpbmc6NDBweCAyMHB4O2NvbG9yOiM2NjY7fQouZW1wdHkgLmljb257Zm9udC1zaXplOjQ4cHg7bWFyZ2luLWJvdHRvbToxMnB4O30KI3BvcHVwTXNne3Bvc2l0aW9uOmZpeGVkO3RvcDowO2xlZnQ6MDt3aWR0aDoxMDAlO2hlaWdodDoxMDAlO2JhY2tncm91bmQ6cmdiYSgwLDAsMCwuNyk7ZGlzcGxheTpub25lO2p1c3RpZnktY29udGVudDpjZW50ZXI7YWxpZ24taXRlbXM6Y2VudGVyO3otaW5kZXg6MTAwMDA7fQojcG9wdXBNc2cgLmJveHt3aWR0aDo5MCU7bWF4LXdpZHRoOjMyMHB4O2JhY2tncm91bmQ6IzFiMWIxYjtwYWRkaW5nOjIycHg7Ym9yZGVyLXJhZGl1czoxOHB4O3RleHQtYWxpZ246Y2VudGVyO2JvcmRlcjoxcHggc29saWQgI0ZGQzEwNzt9Cjwvc3R5bGU+CjwvaGVhZD4KPGJvZHk+Cgo8ZGl2IGlkPSJsb2FkaW5nU2NyZWVuIj4KICA8ZGl2IGNsYXNzPSJzcGlubmVyIj48L2Rpdj4KICA8cCBzdHlsZT0iY29sb3I6I0ZGQzEwNztmb250LXdlaWdodDo2MDA7Zm9udC1zaXplOjE0cHg7Ij5NZW11YXQgRGF0YSBTZXJ2aXMuLi48L3A+CjwvZGl2PgoKPGRpdiBjbGFzcz0iY29udGFpbmVyIiBpZD0ibWFpbkNvbnRlbnQiIHN0eWxlPSJkaXNwbGF5Om5vbmU7Ij4KICA8ZGl2IGNsYXNzPSJoZWFkZXIiPgogICAgPGRpdiBjbGFzcz0iaGVhZGVyLWxlZnQiPgogICAgICA8YnV0dG9uIGNsYXNzPSJiYWNrIiBvbmNsaWNrPSJoaXN0b3J5LmJhY2soKSI+4oC5PC9idXR0b24+CiAgICAgIDxkaXY+CiAgICAgICAgPGgyPkRhdGEgU2VydmlzPC9oMj4KICAgICAgICA8cCBpZD0idG90YWxJbmZvIj4wIGRhdGE8L3A+CiAgICAgIDwvZGl2PgogICAgPC9kaXY+CiAgICA8YnV0dG9uIGNsYXNzPSJiYWNrIiBvbmNsaWNrPSJvcGVuQWRkTW9kYWwoKSIgc3R5bGU9ImJhY2tncm91bmQ6I0ZGQzEwNztjb2xvcjojMTExO2ZvbnQtd2VpZ2h0OjgwMDsiPis8L2J1dHRvbj4KICA8L2Rpdj4KCiAgPGRpdiBjbGFzcz0ic2VhcmNoLWJveCI+CiAgICA8aW5wdXQgdHlwZT0idGV4dCIgaWQ9InNlYXJjaElucHV0IiBwbGFjZWhvbGRlcj0iQ2FyaSBuYW1hLCBIUCwgdGlwZSBIUC4uLiI+CiAgICA8YnV0dG9uIGNsYXNzPSJidG4tc2Vjb25kYXJ5IiBvbmNsaWNrPSJsb2FkU2VydmlzKCkiPuKGuzwvYnV0dG9uPgogIDwvZGl2PgoKICA8ZGl2IGNsYXNzPSJmaWx0ZXItY2hpcHMiIGlkPSJmaWx0ZXJDaGlwcyI+CiAgICA8ZGl2IGNsYXNzPSJjaGlwIGFjdGl2ZSIgZGF0YS1maWx0ZXI9InNlbXVhIj5TZW11YTwvZGl2PgogICAgPGRpdiBjbGFzcz0iY2hpcCIgZGF0YS1maWx0ZXI9Im1hc3VrIj5NYXN1azwvZGl2PgogICAgPGRpdiBjbGFzcz0iY2hpcCIgZGF0YS1maWx0ZXI9InByb3NlcyI+UHJvc2VzPC9kaXY+CiAgICA8ZGl2IGNsYXNzPSJjaGlwIiBkYXRhLWZpbHRlcj0ic2VsZXNhaSI+U2VsZXNhaTwvZGl2PgogICAgPGRpdiBjbGFzcz0iY2hpcCIgZGF0YS1maWx0ZXI9ImRpYW1iaWwiPkRpYW1iaWw8L2Rpdj4KICA8L2Rpdj4KCiAgPGJ1dHRvbiBjbGFzcz0iYnRuLXByaW1hcnkiIG9uY2xpY2s9Im9wZW5BZGRNb2RhbCgpIiBzdHlsZT0ibWFyZ2luLWJvdHRvbToxNnB4OyI+KyBUQU1CQUggU0VSVklTIEJBUlU8L2J1dHRvbj4KCiAgPGRpdiBpZD0ibGlzdFNlcnZpcyI+PC9kaXY+CgogIDxkaXYgaWQ9ImVtcHR5U3RhdGUiIGNsYXNzPSJlbXB0eSIgc3R5bGU9ImRpc3BsYXk6bm9uZTsiPgogICAgPGRpdiBjbGFzcz0iaWNvbiI+8J+TsTwvZGl2PgogICAgPGg0IHN0eWxlPSJjb2xvcjojZmZmO21hcmdpbi1ib3R0b206NnB4OyI+QmVsdW0gYWRhIGRhdGEgc2VydmlzPC9oND4KICAgIDxwIHN0eWxlPSJmb250LXNpemU6MTJweDsiPktsaWsgVGFtYmFoIFNlcnZpcyBCYXJ1IHVudHVrIGlucHV0IEhQIG1hc3VrPC9wPgogIDwvZGl2Pgo8L2Rpdj4KCjwhLS0gTU9EQUwgRk9STSAtLT4KPGRpdiBpZD0iZm9ybU1vZGFsIj4KICA8ZGl2IGNsYXNzPSJtb2RhbC1jYXJkIj4KICAgIDxkaXYgY2xhc3M9Im1vZGFsLWhlYWRlciI+CiAgICAgIDxoMyBpZD0ibW9kYWxUaXRsZSI+U2VydmlzIEJhcnU8L2gzPgogICAgICA8YnV0dG9uIG9uY2xpY2s9ImNsb3NlTW9kYWwoKSI+4pyVPC9idXR0b24+CiAgICA8L2Rpdj4KCiAgICA8Zm9ybSBpZD0ic2VydmlzRm9ybSI+CiAgICAgIDxpbnB1dCB0eXBlPSJoaWRkZW4iIGlkPSJlZGl0SWQiPgogICAgICA8ZGl2IGNsYXNzPSJpbnB1dC1ib3giPgogICAgICAgIDxsYWJlbD5OYW1hIFBlbGFuZ2dhbiAqPC9sYWJlbD4KICAgICAgICA8aW5wdXQgdHlwZT0idGV4dCIgaWQ9Im5hbWFQZWxhbmdnYW4iIHBsYWNlaG9sZGVyPSJCdWRpIFNhbnRvc28iIHJlcXVpcmVkPgogICAgICA8L2Rpdj4KICAgICAgPGRpdiBjbGFzcz0icm93Ij4KICAgICAgICA8ZGl2IGNsYXNzPSJpbnB1dC1ib3giPgogICAgICAgICAgPGxhYmVsPk5vIFdoYXRzQXBwICo8L2xhYmVsPgogICAgICAgICAgPGlucHV0IHR5cGU9InRlbCIgaWQ9Im5vSHAiIHBsYWNlaG9sZGVyPSIwOHh4eHh4eHh4eHgiIHJlcXVpcmVkPgogICAgICAgIDwvZGl2PgogICAgICAgIDxkaXYgY2xhc3M9ImlucHV0LWJveCI+CiAgICAgICAgICA8bGFiZWw+VGlwZSBIUCAqPC9sYWJlbD4KICAgICAgICAgIDxpbnB1dCB0eXBlPSJ0ZXh0IiBpZD0idGlwZUhwIiBwbGFjZWhvbGRlcj0iUmVkbWkgTm90ZSAxMiAvIGlQaG9uZSAxMyIgcmVxdWlyZWQ+CiAgICAgICAgPC9kaXY+CiAgICAgIDwvZGl2PgogICAgICA8ZGl2IGNsYXNzPSJyb3ciPgogICAgICAgIDxkaXYgY2xhc3M9ImlucHV0LWJveCI+CiAgICAgICAgICA8bGFiZWw+SU1FSSAvIFNOIChvcHNpb25hbCk8L2xhYmVsPgogICAgICAgICAgPGlucHV0IHR5cGU9InRleHQiIGlkPSJpbWVpIiBwbGFjZWhvbGRlcj0iT3BzaW9uYWwiPgogICAgICAgIDwvZGl2PgogICAgICAgIDxkaXYgY2xhc3M9ImlucHV0LWJveCI+CiAgICAgICAgICA8bGFiZWw+U3RhdHVzPC9sYWJlbD4KICAgICAgICAgIDxzZWxlY3QgaWQ9InN0YXR1cyI+CiAgICAgICAgICAgIDxvcHRpb24gdmFsdWU9Im1hc3VrIj5NYXN1azwvb3B0aW9uPgogICAgICAgICAgICA8b3B0aW9uIHZhbHVlPSJwcm9zZXMiPlByb3NlcyAvIERpa2VyamFrYW48L29wdGlvbj4KICAgICAgICAgICAgPG9wdGlvbiB2YWx1ZT0ic2VsZXNhaSI+U2VsZXNhaTwvb3B0aW9uPgogICAgICAgICAgICA8b3B0aW9uIHZhbHVlPSJkaWFtYmlsIj5TdWRhaCBEaWFtYmlsPC9vcHRpb24+CiAgICAgICAgICAgIDxvcHRpb24gdmFsdWU9ImJhdGFsIj5CYXRhbDwvb3B0aW9uPgogICAgICAgICAgPC9zZWxlY3Q+CiAgICAgICAgPC9kaXY+CiAgICAgIDwvZGl2PgogICAgICA8ZGl2IGNsYXNzPSJpbnB1dC1ib3giPgogICAgICAgIDxsYWJlbD5LZXJ1c2FrYW4gLyBLZWx1aGFuICo8L2xhYmVsPgogICAgICAgIDx0ZXh0YXJlYSBpZD0ia2VydXNha2FuIiBwbGFjZWhvbGRlcj0iQ29udG9oOiBNYXRpIHRvdGFsLCBMQ0QgcGVjYWgsIHRpZGFrIGJpc2EgZGljYXMuLi4iIHJlcXVpcmVkPjwvdGV4dGFyZWE+CiAgICAgIDwvZGl2PgogICAgICA8ZGl2IGNsYXNzPSJpbnB1dC1ib3giPgogICAgICAgIDxsYWJlbD5LZWxlbmdrYXBhbjwvbGFiZWw+CiAgICAgICAgPGRpdiBjbGFzcz0ia2VsZW5na2FwYW4iPgogICAgICAgICAgPGxhYmVsPjxpbnB1dCB0eXBlPSJjaGVja2JveCIgdmFsdWU9IkhQIFNhamEiIGNsYXNzPSJrZWwiPiBIUCBTYWphPC9sYWJlbD4KICAgICAgICAgIDxsYWJlbD48aW5wdXQgdHlwZT0iY2hlY2tib3giIHZhbHVlPSJDaGFyZ2VyIiBjbGFzcz0ia2VsIj4gQ2hhcmdlcjwvbGFiZWw+CiAgICAgICAgICA8bGFiZWw+PGlucHV0IHR5cGU9ImNoZWNrYm94IiB2YWx1ZT0iRHVzIiBjbGFzcz0ia2VsIj4gRHVzPC9sYWJlbD4KICAgICAgICAgIDxsYWJlbD48aW5wdXQgdHlwZT0iY2hlY2tib3giIHZhbHVlPSJLYWJlbCIgY2xhc3M9ImtlbCI+IEthYmVsPC9sYWJlbD4KICAgICAgICAgIDxsYWJlbD48aW5wdXQgdHlwZT0iY2hlY2tib3giIHZhbHVlPSJLYXJ0dSIgY2xhc3M9ImtlbCI+IEthcnR1PC9sYWJlbD4KICAgICAgICA8L2Rpdj4KICAgICAgICA8aW5wdXQgdHlwZT0idGV4dCIgaWQ9ImtlbGVuZ2thcGFuIiBwbGFjZWhvbGRlcj0iT3RvbWF0aXMgdGVyaXNpIGRhcmkgY2hlY2tsaXN0IC8gaXNpIG1hbnVhbCIgc3R5bGU9Im1hcmdpbi10b3A6OHB4OyI+CiAgICAgIDwvZGl2PgogICAgICA8ZGl2IGNsYXNzPSJyb3ciPgogICAgICAgIDxkaXYgY2xhc3M9ImlucHV0LWJveCI+CiAgICAgICAgICA8bGFiZWw+RXN0aW1hc2kgQmlheWEgKFJwKTwvbGFiZWw+CiAgICAgICAgICA8aW5wdXQgdHlwZT0ibnVtYmVyIiBpZD0iYmlheWEiIHBsYWNlaG9sZGVyPSIxNTAwMDAiIGlucHV0bW9kZT0ibnVtZXJpYyI+CiAgICAgICAgPC9kaXY+CiAgICAgICAgPGRpdiBjbGFzcz0iaW5wdXQtYm94Ij4KICAgICAgICAgIDxsYWJlbD5EUCAoUnApPC9sYWJlbD4KICAgICAgICAgIDxpbnB1dCB0eXBlPSJudW1iZXIiIGlkPSJkcCIgcGxhY2Vob2xkZXI9IjAiIGlucHV0bW9kZT0ibnVtZXJpYyI+CiAgICAgICAgPC9kaXY+CiAgICAgIDwvZGl2PgogICAgICA8ZGl2IGNsYXNzPSJpbnB1dC1ib3giPgogICAgICAgIDxsYWJlbD5DYXRhdGFuIFRla25pc2k8L2xhYmVsPgogICAgICAgIDx0ZXh0YXJlYSBpZD0iY2F0YXRhbiIgcGxhY2Vob2xkZXI9IkNhdGF0YW4gaW50ZXJuYWwgdGVrbmlzaS4uLiI+PC90ZXh0YXJlYT4KICAgICAgPC9kaXY+CiAgICAgIDxkaXYgY2xhc3M9ImlucHV0LWJveCI+CiAgICAgICAgPGxhYmVsPk5hbWEgVGVrbmlzaTwvbGFiZWw+CiAgICAgICAgPGlucHV0IHR5cGU9InRleHQiIGlkPSJ0ZWtuaXNpIiBwbGFjZWhvbGRlcj0iTmFtYSB0ZWtuaXNpIHlhbmcga2VyamFrYW4iPgogICAgICA8L2Rpdj4KCiAgICAgIDxkaXYgc3R5bGU9ImRpc3BsYXk6ZmxleDtnYXA6MTBweDttYXJnaW4tdG9wOjE4cHg7Ij4KICAgICAgICA8YnV0dG9uIHR5cGU9ImJ1dHRvbiIgY2xhc3M9ImJ0bi1zZWNvbmRhcnkiIHN0eWxlPSJmbGV4OjE7IiBvbmNsaWNrPSJjbG9zZU1vZGFsKCkiPkJhdGFsPC9idXR0b24+CiAgICAgICAgPGJ1dHRvbiB0eXBlPSJzdWJtaXQiIGNsYXNzPSJidG4tcHJpbWFyeSIgc3R5bGU9ImZsZXg6MS41OyIgaWQ9ImJ0blNpbXBhbiI+U0lNUEFOPC9idXR0b24+CiAgICAgIDwvZGl2PgogICAgICA8ZGl2IGlkPSJmb3JtTG9hZGluZyIgc3R5bGU9ImRpc3BsYXk6bm9uZTt0ZXh0LWFsaWduOmNlbnRlcjtjb2xvcjojRkZDMTA3O21hcmdpbi10b3A6MTJweDtmb250LXNpemU6MTNweDsiPk1lbnlpbXBhbi4uLjwvZGl2PgogICAgPC9mb3JtPgogIDwvZGl2Pgo8L2Rpdj4KCjxkaXYgY2xhc3M9ImJvdHRvbS1uYXYiPgogIDxhIGhyZWY9ImRhc2hib2FyZC5odG1sIj48c3Bhbj7wn4+gPC9zcGFuPkhvbWU8L2E+CiAgPGEgaHJlZj0iZGF0YTp0ZXh0L2h0bWw7YmFzZTY0LFBDRkVUME5VV1ZCRklHaDBiV3crQ2p4b2RHMXNJR3hoYm1jOUltbGtJajRLUEdobFlXUStDanh0WlhSaElHTm9ZWEp6WlhROUlsVlVSaTA0SWo0S1BHMWxkR0VnYm1GdFpUMGlkbWxsZDNCdmNuUWlJR052Ym5SbGJuUTlJbmRwWkhSb1BXUmxkbWxqWlMxM2FXUjBhQ3hwYm1sMGFXRnNMWE5qWVd4bFBURXVNQ0krQ2p4MGFYUnNaVDVHYVhoNmVTQjhJRVJoZEdFZ1UyVnlkbWx6UEM5MGFYUnNaVDRLUEcxbGRHRWdibUZ0WlQwaWRHaGxiV1V0WTI5c2IzSWlJR052Ym5SbGJuUTlJaU5HUmtNeE1EY2lQZ284YkdsdWF5Qm9jbVZtUFNKb2RIUndjem92TDJadmJuUnpMbWR2YjJkc1pXRndhWE11WTI5dEwyTnpjekkvWm1GdGFXeDVQVkJ2Y0hCcGJuTTZkMmRvZEVBek1EQTdOREF3T3pVd01EczJNREE3TnpBd096Z3dNQ1prYVhOd2JHRjVQWE4zWVhBaUlISmxiRDBpYzNSNWJHVnphR1ZsZENJK0NqeHpkSGxzWlQ0S0tudHRZWEpuYVc0Nk1EdHdZV1JrYVc1bk9qQTdZbTk0TFhOcGVtbHVaenBpYjNKa1pYSXRZbTk0TzJadmJuUXRabUZ0YVd4NU9pZFFiM0J3YVc1ekp5eHpZVzV6TFhObGNtbG1PMzBLWW05a2VYdGlZV05yWjNKdmRXNWtPaU13WkRCa01HUTdZbUZqYTJkeWIzVnVaQzFwYldGblpUcHlZV1JwWVd3dFozSmhaR2xsYm5Rb1kybHlZMnhsSUdGMElIUnZjQ3dnY21kaVlTZ3lOVFVzTVRrekxEY3NMakU0S1N3Z2RISmhibk53WVhKbGJuUWdOakFsS1R0amIyeHZjam9qWm1abU8yMXBiaTFvWldsbmFIUTZNVEF3ZG1nN2IzWmxjbVpzYjNjdGVEcG9hV1JrWlc0N2ZRb3VZMjl1ZEdGcGJtVnllM2RwWkhSb09qRXdNQ1U3YldGNExYZHBaSFJvT2pVd01IQjRPMjFoY21kcGJqcGhkWFJ2TzNCaFpHUnBibWM2TVRWd2VDQXhOWEI0SURFeE1IQjRPMzBLTG1obFlXUmxjbnRrYVhOd2JHRjVPbVpzWlhnN2FuVnpkR2xtZVMxamIyNTBaVzUwT25Od1lXTmxMV0psZEhkbFpXNDdZV3hwWjI0dGFYUmxiWE02WTJWdWRHVnlPMkpoWTJ0bmNtOTFibVE2SXpGaU1XSXhZanRpYjNKa1pYSTZNWEI0SUhOdmJHbGtJSEpuWW1Fb01qVTFMREU1TXl3M0xDNHhOU2s3WW05eVpHVnlMWEpoWkdsMWN6b3lNSEI0TzNCaFpHUnBibWM2TVRSd2VDQXhObkI0TzIxaGNtZHBiaTFpYjNSMGIyMDZNVFJ3ZUR0OUNpNW9aV0ZrWlhJdGJHVm1kSHRrYVhOd2JHRjVPbVpzWlhnN1lXeHBaMjR0YVhSbGJYTTZZMlZ1ZEdWeU8yZGhjRG94TW5CNE8zMEtMbWhsWVdSbGNpMXNaV1owSUM1aVlXTnJlM2RwWkhSb09qTTRjSGc3YUdWcFoyaDBPak00Y0hnN1ltRmphMmR5YjNWdVpEb2pNalV5TlRJMU8ySnZjbVJsY2pwdWIyNWxPMk52Ykc5eU9pTkdSa014TURjN1ltOXlaR1Z5TFhKaFpHbDFjem94TUhCNE8yTjFjbk52Y2pwd2IybHVkR1Z5TzJadmJuUXRjMmw2WlRveE9IQjRPMlJwYzNCc1lYazZabXhsZUR0aGJHbG5iaTFwZEdWdGN6cGpaVzUwWlhJN2FuVnpkR2xtZVMxamIyNTBaVzUwT21ObGJuUmxjanQ5Q2k1b1pXRmtaWElnYURKN1ptOXVkQzF6YVhwbE9qRTJjSGc3Wm05dWRDMTNaV2xuYUhRNk56QXdPMzBLTG1obFlXUmxjaUJ3ZTJadmJuUXRjMmw2WlRveE1YQjRPMk52Ykc5eU9pTTRPRGc3ZlFvdVluUnVMWEJ5YVcxaGNubDdkMmxrZEdnNk1UQXdKVHR3WVdSa2FXNW5PakUwY0hnN1ltOXlaR1Z5T201dmJtVTdZbTl5WkdWeUxYSmhaR2wxY3pveE5IQjRPMkpoWTJ0bmNtOTFibVE2YkdsdVpXRnlMV2R5WVdScFpXNTBLRGt3WkdWbkxDTkdSa014TURjc0kwWkdPVGd3TUNrN1kyOXNiM0k2SXpFeE1UdG1iMjUwTFhkbGFXZG9kRG8zTURBN1kzVnljMjl5T25CdmFXNTBaWEk3WW05NExYTm9ZV1J2ZHpvd0lEaHdlQ0F5TUhCNElISm5ZbUVvTWpVMUxERTVNeXczTEM0eU5TazdkSEpoYm5OcGRHbHZiam91TW5NN2ZRb3VZblJ1TFhCeWFXMWhjbms2WVdOMGFYWmxlM1J5WVc1elptOXliVHB6WTJGc1pTZ3VPVGNwTzMwS0xtSjBiaTF6WldOdmJtUmhjbmw3WW1GamEyZHliM1Z1WkRvak1qVXlOVEkxTzJOdmJHOXlPaU5tWm1ZN1ltOXlaR1Z5T2pGd2VDQnpiMnhwWkNBak16TXpPM0JoWkdScGJtYzZNVEp3ZUR0aWIzSmtaWEl0Y21Ga2FYVnpPakV5Y0hnN1kzVnljMjl5T25CdmFXNTBaWEk3Wm05dWRDMTNaV2xuYUhRNk5qQXdPMzBLTG5ObFlYSmphQzFpYjNoN1pHbHpjR3hoZVRwbWJHVjRPMmRoY0RvNGNIZzdiV0Z5WjJsdUxXSnZkSFJ2YlRveE1uQjRPMzBLTG5ObFlYSmphQzFpYjNnZ2FXNXdkWFI3Wm14bGVEb3hPM0JoWkdScGJtYzZNVEp3ZUNBeE5IQjRPMkpoWTJ0bmNtOTFibVE2SXpGaU1XSXhZanRpYjNKa1pYSTZNWEI0SUhOdmJHbGtJQ016TXpNN1ltOXlaR1Z5TFhKaFpHbDFjem94TW5CNE8yTnZiRzl5T2lObVptWTdiM1YwYkdsdVpUcHViMjVsTzMwS0xuTmxZWEpqYUMxaWIzZ2dhVzV3ZFhRNlptOWpkWE43WW05eVpHVnlMV052Ykc5eU9pTkdSa014TURjN2ZRb3VabWxzZEdWeUxXTm9hWEJ6ZTJScGMzQnNZWGs2Wm14bGVEdG5ZWEE2T0hCNE8yOTJaWEptYkc5M0xYZzZZWFYwYnp0d1lXUmthVzVuTFdKdmRIUnZiVG80Y0hnN2JXRnlaMmx1TFdKdmRIUnZiVG94TkhCNE8zTmpjbTlzYkdKaGNpMTNhV1IwYURwdWIyNWxPMzBLTG1acGJIUmxjaTFqYUdsd2N6bzZMWGRsWW10cGRDMXpZM0p2Ykd4aVlYSjdaR2x6Y0d4aGVUcHViMjVsTzMwS0xtTm9hWEI3Y0dGa1pHbHVaem80Y0hnZ01UWndlRHRpWVdOclozSnZkVzVrT2lNeFlqRmlNV0k3WW05eVpHVnlPakZ3ZUNCemIyeHBaQ0FqTXpNek8ySnZjbVJsY2kxeVlXUnBkWE02TWpCd2VEdG1iMjUwTFhOcGVtVTZNVEp3ZUR0bWIyNTBMWGRsYVdkb2REbzJNREE3WTI5c2IzSTZJMkZoWVR0amRYSnpiM0k2Y0c5cGJuUmxjanQzYUdsMFpTMXpjR0ZqWlRwdWIzZHlZWEE3ZEhKaGJuTnBkR2x2YmpvdU1uTTdmUW91WTJocGNDNWhZM1JwZG1WN1ltRmphMmR5YjNWdVpEb2pSa1pETVRBM08yTnZiRzl5T2lNeE1URTdZbTl5WkdWeUxXTnZiRzl5T2lOR1JrTXhNRGM3ZlFvdVkyRnlaSHRpWVdOclozSnZkVzVrT2lNeFlqRmlNV0k3WW05eVpHVnlMWEpoWkdsMWN6b3hPSEI0TzNCaFpHUnBibWM2TVRad2VEdGliM0prWlhJNk1YQjRJSE52Ykdsa0lISm5ZbUVvTWpVMUxESTFOU3d5TlRVc0xqQTJLVHR0WVhKbmFXNHRZbTkwZEc5dE9qRXljSGc3ZEhKaGJuTnBkR2x2YmpvdU1uTTdmUW91WTJGeVpEcG9iM1psY250aWIzSmtaWEl0WTI5c2IzSTZjbWRpWVNneU5UVXNNVGt6TERjc0xqSXBPMzBLTG1OaGNtUXRkRzl3ZTJScGMzQnNZWGs2Wm14bGVEdHFkWE4wYVdaNUxXTnZiblJsYm5RNmMzQmhZMlV0WW1WMGQyVmxianRoYkdsbmJpMXBkR1Z0Y3pwbWJHVjRMWE4wWVhKME8yMWhjbWRwYmkxaWIzUjBiMjA2TVRCd2VEdDlDaTVqWVhKa0xYUnZjQ0JvTTN0bWIyNTBMWE5wZW1VNk1UUndlRHRtYjI1MExYZGxhV2RvZERvM01EQTdiR2x1WlMxb1pXbG5hSFE2TVM0ek8zMEtMbU5oY21RdGRHOXdJSE53WVc1N1ptOXVkQzF6YVhwbE9qRXdjSGc3Y0dGa1pHbHVaem8xY0hnZ01UQndlRHRpYjNKa1pYSXRjbUZrYVhWek9qRXljSGc3Wm05dWRDMTNaV2xuYUhRNk56QXdPMzBLTG5OMFlYUjFjeTF0WVhOMWEzdGlZV05yWjNKdmRXNWtPbkpuWW1Fb01qVTFMREU1TXl3M0xDNHhOU2s3WTI5c2IzSTZJMFpHUXpFd056dGliM0prWlhJNk1YQjRJSE52Ykdsa0lISm5ZbUVvTWpVMUxERTVNeXczTEM0ektUdDlDaTV6ZEdGMGRYTXRjSEp2YzJWemUySmhZMnRuY205MWJtUTZjbWRpWVNnek15d3hOVEFzTWpRekxDNHhOU2s3WTI5c2IzSTZJelkwUWpWR05qdGliM0prWlhJNk1YQjRJSE52Ykdsa0lISm5ZbUVvTXpNc01UVXdMREkwTXl3dU15azdmUW91YzNSaGRIVnpMWE5sYkdWellXbDdZbUZqYTJkeWIzVnVaRHB5WjJKaEtEYzJMREUzTlN3NE1Dd3VNVFVwTzJOdmJHOXlPaU00TVVNM09EUTdZbTl5WkdWeU9qRndlQ0J6YjJ4cFpDQnlaMkpoS0RjMkxERTNOU3c0TUN3dU15azdmUW91YzNSaGRIVnpMV1JwWVcxaWFXeDdZbUZqYTJkeWIzVnVaRHB5WjJKaEtERTFPQ3d4TlRnc01UVTRMQzR4TlNrN1kyOXNiM0k2STJGaFlUdGliM0prWlhJNk1YQjRJSE52Ykdsa0lISm5ZbUVvTVRVNExERTFPQ3d4TlRnc0xqTXBPMzBLTG5OMFlYUjFjeTFpWVhSaGJIdGlZV05yWjNKdmRXNWtPbkpuWW1Fb01qUTBMRFkzTERVMExDNHhOU2s3WTI5c2IzSTZJMlZtT1dFNVlUdGliM0prWlhJNk1YQjRJSE52Ykdsa0lISm5ZbUVvTWpRMExEWTNMRFUwTEM0ektUdDlDaTVqWVhKa0xXbHVabTk3Wm05dWRDMXphWHBsT2pFeWNIZzdZMjlzYjNJNkkyRmhZVHRzYVc1bExXaGxhV2RvZERveExqWTdiV0Z5WjJsdUxXSnZkSFJ2YlRveE1IQjRPMzBLTG1OaGNtUXRhVzVtYnlCaWUyTnZiRzl5T2lObVptWTdmUW91WTJGeVpDMWhZM1JwYjI1emUyUnBjM0JzWVhrNlpteGxlRHRuWVhBNk9IQjRPMzBLTG1OaGNtUXRZV04wYVc5dWN5QmlkWFIwYjI1N1pteGxlRG94TzNCaFpHUnBibWM2T1hCNE8ySnZjbVJsY2pwdWIyNWxPMkp2Y21SbGNpMXlZV1JwZFhNNk1UQndlRHRtYjI1MExYTnBlbVU2TVRGd2VEdG1iMjUwTFhkbGFXZG9kRG8zTURBN1kzVnljMjl5T25CdmFXNTBaWEk3ZEhKaGJuTnBkR2x2YmpvdU1uTTdmUW91WW5SdUxYZGhlMkpoWTJ0bmNtOTFibVE2SXpJMVJETTJOanRqYjJ4dmNqb2pabVptTzMwS0xtSjBiaTFsWkdsMGUySmhZMnRuY205MWJtUTZJekkxTWpVeU5UdGpiMnh2Y2pvalJrWkRNVEEzTzJKdmNtUmxjam94Y0hnZ2MyOXNhV1FnSXpNek16dDlDaTVpZEc0dGFHRndkWE43WW1GamEyZHliM1Z1WkRweVoySmhLREkxTlN3d0xEQXNMakVwTzJOdmJHOXlPaU5tWmpoaE9EQTdZbTl5WkdWeU9qRndlQ0J6YjJ4cFpDQnlaMkpoS0RJMU5Td3dMREFzTGpJcE8zMEtMbUowYmkxelpXeGxjMkZwZTJKaFkydG5jbTkxYm1RNkkwWkdRekV3Tnp0amIyeHZjam9qTVRFeE8zMEtMeW9nVFU5RVFVd2dLaThLSTJadmNtMU5iMlJoYkh0d2IzTnBkR2x2YmpwbWFYaGxaRHQwYjNBNk1EdHNaV1owT2pBN2QybGtkR2c2TVRBd0pUdG9aV2xuYUhRNk1UQXdKVHRpWVdOclozSnZkVzVrT25KblltRW9NQ3d3TERBc0xqZzFLVHRpWVdOclpISnZjQzFtYVd4MFpYSTZZbXgxY2lnMmNIZ3BPMlJwYzNCc1lYazZibTl1WlR0cWRYTjBhV1o1TFdOdmJuUmxiblE2WTJWdWRHVnlPMkZzYVdkdUxXbDBaVzF6T21ac1pYZ3RjM1JoY25RN2VpMXBibVJsZURvNU9UazVPMjkyWlhKbWJHOTNMWGs2WVhWMGJ6dHdZV1JrYVc1bk9qRTFjSGc3ZlFvdWJXOWtZV3d0WTJGeVpIdDNhV1IwYURveE1EQWxPMjFoZUMxM2FXUjBhRG8wTkRCd2VEdGlZV05yWjNKdmRXNWtPaU14WWpGaU1XSTdZbTl5WkdWeUxYSmhaR2wxY3pveU1uQjRPM0JoWkdScGJtYzZNakJ3ZUR0aWIzSmtaWEk2TVhCNElITnZiR2xrSUhKblltRW9NalUxTERFNU15dzNMQzR5S1R0dFlYSm5hVzQ2TWpCd2VDQmhkWFJ2TzJGdWFXMWhkR2x2Ympwd2IzQWdMak56SUdWaGMyVTdmUXBBYTJWNVpuSmhiV1Z6SUhCdmNIdG1jbTl0ZTNSeVlXNXpabTl5YlRwMGNtRnVjMnhoZEdWWktESXdjSGdwTzI5d1lXTnBkSGs2TUR0OWRHOTdkSEpoYm5ObWIzSnRPblJ5WVc1emJHRjBaVmtvTUNrN2IzQmhZMmwwZVRveE8zMTlDaTV0YjJSaGJDMW9aV0ZrWlhKN1pHbHpjR3hoZVRwbWJHVjRPMnAxYzNScFpua3RZMjl1ZEdWdWREcHpjR0ZqWlMxaVpYUjNaV1Z1TzJGc2FXZHVMV2wwWlcxek9tTmxiblJsY2p0dFlYSm5hVzR0WW05MGRHOXRPakU0Y0hnN2ZRb3ViVzlrWVd3dGFHVmhaR1Z5SUdnemUyTnZiRzl5T2lOR1JrTXhNRGM3Wm05dWRDMXphWHBsT2pFNGNIZzdabTl1ZEMxM1pXbG5hSFE2TnpBd08zMEtMbTF2WkdGc0xXaGxZV1JsY2lCaWRYUjBiMjU3WW1GamEyZHliM1Z1WkRvak1qVXlOVEkxTzJKdmNtUmxjanB1YjI1bE8yTnZiRzl5T2lObVptWTdkMmxrZEdnNk16SndlRHRvWldsbmFIUTZNekp3ZUR0aWIzSmtaWEl0Y21Ga2FYVnpPalV3SlR0amRYSnpiM0k2Y0c5cGJuUmxjanQ5Q2k1cGJuQjFkQzFpYjNoN2JXRnlaMmx1TFdKdmRIUnZiVG94TkhCNE8zMEtMbWx1Y0hWMExXSnZlQ0JzWVdKbGJIdG1iMjUwTFhOcGVtVTZNVEp3ZUR0bWIyNTBMWGRsYVdkb2REbzJNREE3WTI5c2IzSTZJMFpHUXpFd056dHRZWEpuYVc0dFltOTBkRzl0T2pad2VEdGthWE53YkdGNU9tSnNiMk5yTzMwS0xtbHVjSFYwTFdKdmVDQnBibkIxZEN3Z0xtbHVjSFYwTFdKdmVDQjBaWGgwWVhKbFlTd2dMbWx1Y0hWMExXSnZlQ0J6Wld4bFkzUjdkMmxrZEdnNk1UQXdKVHR3WVdSa2FXNW5PakV5Y0hnN1ltRmphMmR5YjNWdVpEb2pNalV5TlRJMU8ySnZjbVJsY2pveGNIZ2djMjlzYVdRZ0l6TXpNenRpYjNKa1pYSXRjbUZrYVhWek9qRXljSGc3WTI5c2IzSTZJMlptWmp0dmRYUnNhVzVsT201dmJtVTdabTl1ZEMxemFYcGxPakV6Y0hnN2ZRb3VhVzV3ZFhRdFltOTRJSFJsZUhSaGNtVmhlM0psYzJsNlpUcHViMjVsTzIxcGJpMW9aV2xuYUhRNk56QndlRHQ5Q2k1cGJuQjFkQzFpYjNnZ2FXNXdkWFE2Wm05amRYTXNJQzVwYm5CMWRDMWliM2dnZEdWNGRHRnlaV0U2Wm05amRYTXNJQzVwYm5CMWRDMWliM2dnYzJWc1pXTjBPbVp2WTNWemUySnZjbVJsY2kxamIyeHZjam9qUmtaRE1UQTNPMzBLTG5KdmQzc2daR2x6Y0d4aGVUcG5jbWxrT3lCbmNtbGtMWFJsYlhCc1lYUmxMV052YkhWdGJuTTZNV1p5SURGbWNqc2daMkZ3T2pFd2NIZzdJSDBLTG10bGJHVnVaMnRoY0dGdWUyUnBjM0JzWVhrNlpteGxlRHRtYkdWNExYZHlZWEE2ZDNKaGNEdG5ZWEE2T0hCNE8yMWhjbWRwYmkxMGIzQTZObkI0TzMwS0xtdGxiR1Z1WjJ0aGNHRnVJR3hoWW1Wc2UyWnZiblF0YzJsNlpUb3hNWEI0TzJKaFkydG5jbTkxYm1RNkl6STFNalV5TlR0aWIzSmtaWEk2TVhCNElITnZiR2xrSUNNek16TTdjR0ZrWkdsdVp6bzJjSGdnTVRCd2VEdGliM0prWlhJdGNtRmthWFZ6T2pJd2NIZzdZM1Z5YzI5eU9uQnZhVzUwWlhJN1pHbHpjR3hoZVRwbWJHVjRPMkZzYVdkdUxXbDBaVzF6T21ObGJuUmxjanRuWVhBNk5YQjRPMk52Ykc5eU9pTmhZV0U3ZlFvdWEyVnNaVzVuYTJGd1lXNGdhVzV3ZFhSN1lXTmpaVzUwTFdOdmJHOXlPaU5HUmtNeE1EYzdmUW9qYkc5aFpHbHVaMU5qY21WbGJudHdiM05wZEdsdmJqcG1hWGhsWkR0MGIzQTZNRHRzWldaME9qQTdkMmxrZEdnNk1UQXdKVHRvWldsbmFIUTZNVEF3SlR0aVlXTnJaM0p2ZFc1a09pTXdaREJrTUdRN1pHbHpjR3hoZVRwbWJHVjRPMlpzWlhndFpHbHlaV04wYVc5dU9tTnZiSFZ0Ymp0aGJHbG5iaTFwZEdWdGN6cGpaVzUwWlhJN2FuVnpkR2xtZVMxamIyNTBaVzUwT21ObGJuUmxjanQ2TFdsdVpHVjRPams1T1RnN2ZRb3VjM0JwYm01bGNudDNhV1IwYURvME5IQjRPMmhsYVdkb2REbzBOSEI0TzJKdmNtUmxjam96Y0hnZ2MyOXNhV1FnSXpJeU1qdGliM0prWlhJdGRHOXdMV052Ykc5eU9pTkdSa014TURjN1ltOXlaR1Z5TFhKaFpHbDFjem8xTUNVN1lXNXBiV0YwYVc5dU9uTndhVzRnTVhNZ2JHbHVaV0Z5SUdsdVptbHVhWFJsTzIxaGNtZHBiaTFpYjNSMGIyMDZNVEp3ZUR0OUNrQnJaWGxtY21GdFpYTWdjM0JwYm50MGIzdDBjbUZ1YzJadmNtMDZjbTkwWVhSbEtETTJNR1JsWnlrN2ZYMEtMbUp2ZEhSdmJTMXVZWFo3Y0c5emFYUnBiMjQ2Wm1sNFpXUTdZbTkwZEc5dE9qRTFjSGc3YkdWbWREbzFNQ1U3ZEhKaGJuTm1iM0p0T25SeVlXNXpiR0YwWlZnb0xUVXdKU2s3ZDJsa2RHZzZZMkZzWXlneE1EQWxJQzBnTXpCd2VDazdiV0Y0TFhkcFpIUm9PalF6TUhCNE8ySmhZMnRuY205MWJtUTZJekZtTVdZeFpqdGliM0prWlhJNk1YQjRJSE52Ykdsa0lISm5ZbUVvTWpVMUxERTVNeXczTEM0eE5TazdZbTl5WkdWeUxYSmhaR2wxY3pveU1IQjRPMlJwYzNCc1lYazZabXhsZUR0cWRYTjBhV1o1TFdOdmJuUmxiblE2YzNCaFkyVXRZWEp2ZFc1a08zQmhaR1JwYm1jNk1UQndlQ0ExY0hnN2VpMXBibVJsZURvNU1EdDlDaTVpYjNSMGIyMHRibUYySUdGN1pteGxlRG94TzNSbGVIUXRZV3hwWjI0NlkyVnVkR1Z5TzNSbGVIUXRaR1ZqYjNKaGRHbHZianB1YjI1bE8yTnZiRzl5T2lNM056YzdabTl1ZEMxemFYcGxPakV4Y0hnN1ptOXVkQzEzWldsbmFIUTZOakF3TzNCaFpHUnBibWM2Tm5CNE8zMEtMbUp2ZEhSdmJTMXVZWFlnWVM1aFkzUnBkbVY3WTI5c2IzSTZJMFpHUXpFd056dDlDaTVpYjNSMGIyMHRibUYySUdFZ2MzQmhibnRrYVhOd2JHRjVPbUpzYjJOck8yWnZiblF0YzJsNlpUb3lNSEI0TzIxaGNtZHBiaTFpYjNSMGIyMDZNbkI0TzMwS0xtVnRjSFI1ZTNSbGVIUXRZV3hwWjI0NlkyVnVkR1Z5TzNCaFpHUnBibWM2TkRCd2VDQXlNSEI0TzJOdmJHOXlPaU0yTmpZN2ZRb3VaVzF3ZEhrZ0xtbGpiMjU3Wm05dWRDMXphWHBsT2pRNGNIZzdiV0Z5WjJsdUxXSnZkSFJ2YlRveE1uQjRPMzBLSTNCdmNIVndUWE5uZTNCdmMybDBhVzl1T21acGVHVmtPM1J2Y0Rvd08yeGxablE2TUR0M2FXUjBhRG94TURBbE8yaGxhV2RvZERveE1EQWxPMkpoWTJ0bmNtOTFibVE2Y21kaVlTZ3dMREFzTUN3dU55azdaR2x6Y0d4aGVUcHViMjVsTzJwMWMzUnBabmt0WTI5dWRHVnVkRHBqWlc1MFpYSTdZV3hwWjI0dGFYUmxiWE02WTJWdWRHVnlPM290YVc1a1pYZzZNVEF3TURBN2ZRb2pjRzl3ZFhCTmMyY2dMbUp2ZUh0M2FXUjBhRG81TUNVN2JXRjRMWGRwWkhSb09qTXlNSEI0TzJKaFkydG5jbTkxYm1RNkl6RmlNV0l4WWp0d1lXUmthVzVuT2pJeWNIZzdZbTl5WkdWeUxYSmhaR2wxY3pveE9IQjRPM1JsZUhRdFlXeHBaMjQ2WTJWdWRHVnlPMkp2Y21SbGNqb3hjSGdnYzI5c2FXUWdJMFpHUXpFd056dDlDand2YzNSNWJHVStDand2YUdWaFpENEtQR0p2WkhrK0NnbzhaR2wySUdsa1BTSnNiMkZrYVc1blUyTnlaV1Z1SWo0S0lDQThaR2wySUdOc1lYTnpQU0p6Y0dsdWJtVnlJajQ4TDJScGRqNEtJQ0E4Y0NCemRIbHNaVDBpWTI5c2IzSTZJMFpHUXpFd056dG1iMjUwTFhkbGFXZG9kRG8yTURBN1ptOXVkQzF6YVhwbE9qRTBjSGc3SWo1TlpXMTFZWFFnUkdGMFlTQlRaWEoyYVhNdUxpNDhMM0ErQ2p3dlpHbDJQZ29LUEdScGRpQmpiR0Z6Y3owaVkyOXVkR0ZwYm1WeUlpQnBaRDBpYldGcGJrTnZiblJsYm5RaUlITjBlV3hsUFNKa2FYTndiR0Y1T201dmJtVTdJajRLSUNBOFpHbDJJR05zWVhOelBTSm9aV0ZrWlhJaVBnb2dJQ0FnUEdScGRpQmpiR0Z6Y3owaWFHVmhaR1Z5TFd4bFpuUWlQZ29nSUNBZ0lDQThZblYwZEc5dUlHTnNZWE56UFNKaVlXTnJJaUJ2Ym1Oc2FXTnJQU0pvYVhOMGIzSjVMbUpoWTJzb0tTSSs0b0M1UEM5aWRYUjBiMjQrQ2lBZ0lDQWdJRHhrYVhZK0NpQWdJQ0FnSUNBZ1BHZ3lQa1JoZEdFZ1UyVnlkbWx6UEM5b01qNEtJQ0FnSUNBZ0lDQThjQ0JwWkQwaWRHOTBZV3hKYm1adklqNHdJR1JoZEdFOEwzQStDaUFnSUNBZ0lEd3ZaR2wyUGdvZ0lDQWdQQzlrYVhZK0NpQWdJQ0E4WW5WMGRHOXVJR05zWVhOelBTSmlZV05ySWlCdmJtTnNhV05yUFNKdmNHVnVRV1JrVFc5a1lXd29LU0lnYzNSNWJHVTlJbUpoWTJ0bmNtOTFibVE2STBaR1F6RXdOenRqYjJ4dmNqb2pNVEV4TzJadmJuUXRkMlZwWjJoME9qZ3dNRHNpUGlzOEwySjFkSFJ2Ymo0S0lDQThMMlJwZGo0S0NpQWdQR1JwZGlCamJHRnpjejBpYzJWaGNtTm9MV0p2ZUNJK0NpQWdJQ0E4YVc1d2RYUWdkSGx3WlQwaWRHVjRkQ0lnYVdROUluTmxZWEpqYUVsdWNIVjBJaUJ3YkdGalpXaHZiR1JsY2owaVEyRnlhU0J1WVcxaExDQklVQ3dnZEdsd1pTQklVQzR1TGlJK0NpQWdJQ0E4WW5WMGRHOXVJR05zWVhOelBTSmlkRzR0YzJWamIyNWtZWEo1SWlCdmJtTnNhV05yUFNKc2IyRmtVMlZ5ZG1sektDa2lQdUtHdXp3dlluVjBkRzl1UGdvZ0lEd3ZaR2wyUGdvS0lDQThaR2wySUdOc1lYTnpQU0ptYVd4MFpYSXRZMmhwY0hNaUlHbGtQU0ptYVd4MFpYSkRhR2x3Y3lJK0NpQWdJQ0E4WkdsMklHTnNZWE56UFNKamFHbHdJR0ZqZEdsMlpTSWdaR0YwWVMxbWFXeDBaWEk5SW5ObGJYVmhJajVUWlcxMVlUd3ZaR2wyUGdvZ0lDQWdQR1JwZGlCamJHRnpjejBpWTJocGNDSWdaR0YwWVMxbWFXeDBaWEk5SW0xaGMzVnJJajVOWVhOMWF6d3ZaR2wyUGdvZ0lDQWdQR1JwZGlCamJHRnpjejBpWTJocGNDSWdaR0YwWVMxbWFXeDBaWEk5SW5CeWIzTmxjeUkrVUhKdmMyVnpQQzlrYVhZK0NpQWdJQ0E4WkdsMklHTnNZWE56UFNKamFHbHdJaUJrWVhSaExXWnBiSFJsY2owaWMyVnNaWE5oYVNJK1UyVnNaWE5oYVR3dlpHbDJQZ29nSUNBZ1BHUnBkaUJqYkdGemN6MGlZMmhwY0NJZ1pHRjBZUzFtYVd4MFpYSTlJbVJwWVcxaWFXd2lQa1JwWVcxaWFXdzhMMlJwZGo0S0lDQThMMlJwZGo0S0NpQWdQR0oxZEhSdmJpQmpiR0Z6Y3owaVluUnVMWEJ5YVcxaGNua2lJRzl1WTJ4cFkyczlJbTl3Wlc1QlpHUk5iMlJoYkNncElpQnpkSGxzWlQwaWJXRnlaMmx1TFdKdmRIUnZiVG94Tm5CNE95SStLeUJVUVUxQ1FVZ2dVMFZTVmtsVElFSkJVbFU4TDJKMWRIUnZiajRLQ2lBZ1BHUnBkaUJwWkQwaWJHbHpkRk5sY25acGN5SStQQzlrYVhZK0Nnb2dJRHhrYVhZZ2FXUTlJbVZ0Y0hSNVUzUmhkR1VpSUdOc1lYTnpQU0psYlhCMGVTSWdjM1I1YkdVOUltUnBjM0JzWVhrNmJtOXVaVHNpUGdvZ0lDQWdQR1JwZGlCamJHRnpjejBpYVdOdmJpSSs4SitUc1R3dlpHbDJQZ29nSUNBZ1BHZzBJSE4wZVd4bFBTSmpiMnh2Y2pvalptWm1PMjFoY21kcGJpMWliM1IwYjIwNk5uQjRPeUkrUW1Wc2RXMGdZV1JoSUdSaGRHRWdjMlZ5ZG1selBDOW9ORDRLSUNBZ0lEeHdJSE4wZVd4bFBTSm1iMjUwTFhOcGVtVTZNVEp3ZURzaVBrdHNhV3NnVkdGdFltRm9JRk5sY25acGN5QkNZWEoxSUhWdWRIVnJJR2x1Y0hWMElFaFFJRzFoYzNWclBDOXdQZ29nSUR3dlpHbDJQZ284TDJScGRqNEtDandoTFMwZ1RVOUVRVXdnUms5U1RTQXRMVDRLUEdScGRpQnBaRDBpWm05eWJVMXZaR0ZzSWo0S0lDQThaR2wySUdOc1lYTnpQU0p0YjJSaGJDMWpZWEprSWo0S0lDQWdJRHhrYVhZZ1kyeGhjM005SW0xdlpHRnNMV2hsWVdSbGNpSStDaUFnSUNBZ0lEeG9NeUJwWkQwaWJXOWtZV3hVYVhSc1pTSStVMlZ5ZG1seklFSmhjblU4TDJnelBnb2dJQ0FnSUNBOFluVjBkRzl1SUc5dVkyeHBZMnM5SW1Oc2IzTmxUVzlrWVd3b0tTSSs0cHlWUEM5aWRYUjBiMjQrQ2lBZ0lDQThMMlJwZGo0S0NpQWdJQ0E4Wm05eWJTQnBaRDBpYzJWeWRtbHpSbTl5YlNJK0NpQWdJQ0FnSUR4cGJuQjFkQ0IwZVhCbFBTSm9hV1JrWlc0aUlHbGtQU0psWkdsMFNXUWlQZ29nSUNBZ0lDQThaR2wySUdOc1lYTnpQU0pwYm5CMWRDMWliM2dpUGdvZ0lDQWdJQ0FnSUR4c1lXSmxiRDVPWVcxaElGQmxiR0Z1WjJkaGJpQXFQQzlzWVdKbGJENEtJQ0FnSUNBZ0lDQThhVzV3ZFhRZ2RIbHdaVDBpZEdWNGRDSWdhV1E5SW01aGJXRlFaV3hoYm1kbllXNGlJSEJzWVdObGFHOXNaR1Z5UFNKQ2RXUnBJRk5oYm5SdmMyOGlJSEpsY1hWcGNtVmtQZ29nSUNBZ0lDQThMMlJwZGo0S0lDQWdJQ0FnUEdScGRpQmpiR0Z6Y3owaWNtOTNJajRLSUNBZ0lDQWdJQ0E4WkdsMklHTnNZWE56UFNKcGJuQjFkQzFpYjNnaVBnb2dJQ0FnSUNBZ0lDQWdQR3hoWW1Wc1BrNXZJRmRvWVhSelFYQndJQ284TDJ4aFltVnNQZ29nSUNBZ0lDQWdJQ0FnUEdsdWNIVjBJSFI1Y0dVOUluUmxiQ0lnYVdROUltNXZTSEFpSUhCc1lXTmxhRzlzWkdWeVBTSXdPSGg0ZUhoNGVIaDRlSGdpSUhKbGNYVnBjbVZrUGdvZ0lDQWdJQ0FnSUR3dlpHbDJQZ29nSUNBZ0lDQWdJRHhrYVhZZ1kyeGhjM005SW1sdWNIVjBMV0p2ZUNJK0NpQWdJQ0FnSUNBZ0lDQThiR0ZpWld3K1ZHbHdaU0JJVUNBcVBDOXNZV0psYkQ0S0lDQWdJQ0FnSUNBZ0lEeHBibkIxZENCMGVYQmxQU0owWlhoMElpQnBaRDBpZEdsd1pVaHdJaUJ3YkdGalpXaHZiR1JsY2owaVVtVmtiV2tnVG05MFpTQXhNaUF2SUdsUWFHOXVaU0F4TXlJZ2NtVnhkV2x5WldRK0NpQWdJQ0FnSUNBZ1BDOWthWFkrQ2lBZ0lDQWdJRHd2WkdsMlBnb2dJQ0FnSUNBOFpHbDJJR05zWVhOelBTSnliM2NpUGdvZ0lDQWdJQ0FnSUR4a2FYWWdZMnhoYzNNOUltbHVjSFYwTFdKdmVDSStDaUFnSUNBZ0lDQWdJQ0E4YkdGaVpXdytTVTFGU1NBdklGTk9JQ2h2Y0hOcGIyNWhiQ2s4TDJ4aFltVnNQZ29nSUNBZ0lDQWdJQ0FnUEdsdWNIVjBJSFI1Y0dVOUluUmxlSFFpSUdsa1BTSnBiV1ZwSWlCd2JHRmpaV2h2YkdSbGNqMGlUM0J6YVc5dVlXd2lQZ29nSUNBZ0lDQWdJRHd2WkdsMlBnb2dJQ0FnSUNBZ0lEeGthWFlnWTJ4aGMzTTlJbWx1Y0hWMExXSnZlQ0krQ2lBZ0lDQWdJQ0FnSUNBOGJHRmlaV3crVTNSaGRIVnpQQzlzWVdKbGJENEtJQ0FnSUNBZ0lDQWdJRHh6Wld4bFkzUWdhV1E5SW5OMFlYUjFjeUkrQ2lBZ0lDQWdJQ0FnSUNBZ0lEeHZjSFJwYjI0Z2RtRnNkV1U5SW0xaGMzVnJJajVOWVhOMWF6d3ZiM0IwYVc5dVBnb2dJQ0FnSUNBZ0lDQWdJQ0E4YjNCMGFXOXVJSFpoYkhWbFBTSndjbTl6WlhNaVBsQnliM05sY3lBdklFUnBhMlZ5YW1GcllXNDhMMjl3ZEdsdmJqNEtJQ0FnSUNBZ0lDQWdJQ0FnUEc5d2RHbHZiaUIyWVd4MVpUMGljMlZzWlhOaGFTSStVMlZzWlhOaGFUd3ZiM0IwYVc5dVBnb2dJQ0FnSUNBZ0lDQWdJQ0E4YjNCMGFXOXVJSFpoYkhWbFBTSmthV0Z0WW1sc0lqNVRkV1JoYUNCRWFXRnRZbWxzUEM5dmNIUnBiMjQrQ2lBZ0lDQWdJQ0FnSUNBZ0lEeHZjSFJwYjI0Z2RtRnNkV1U5SW1KaGRHRnNJajVDWVhSaGJEd3ZiM0IwYVc5dVBnb2dJQ0FnSUNBZ0lDQWdQQzl6Wld4bFkzUStDaUFnSUNBZ0lDQWdQQzlrYVhZK0NpQWdJQ0FnSUR3dlpHbDJQZ29nSUNBZ0lDQThaR2wySUdOc1lYTnpQU0pwYm5CMWRDMWliM2dpUGdvZ0lDQWdJQ0FnSUR4c1lXSmxiRDVMWlhKMWMyRnJZVzRnTHlCTFpXeDFhR0Z1SUNvOEwyeGhZbVZzUGdvZ0lDQWdJQ0FnSUR4MFpYaDBZWEpsWVNCcFpEMGlhMlZ5ZFhOaGEyRnVJaUJ3YkdGalpXaHZiR1JsY2owaVEyOXVkRzlvT2lCTllYUnBJSFJ2ZEdGc0xDQk1RMFFnY0dWallXZ3NJSFJwWkdGcklHSnBjMkVnWkdsallYTXVMaTRpSUhKbGNYVnBjbVZrUGp3dmRHVjRkR0Z5WldFK0NpQWdJQ0FnSUR3dlpHbDJQZ29nSUNBZ0lDQThaR2wySUdOc1lYTnpQU0pwYm5CMWRDMWliM2dpUGdvZ0lDQWdJQ0FnSUR4c1lXSmxiRDVMWld4bGJtZHJZWEJoYmp3dmJHRmlaV3crQ2lBZ0lDQWdJQ0FnUEdScGRpQmpiR0Z6Y3owaWEyVnNaVzVuYTJGd1lXNGlQZ29nSUNBZ0lDQWdJQ0FnUEd4aFltVnNQanhwYm5CMWRDQjBlWEJsUFNKamFHVmphMkp2ZUNJZ2RtRnNkV1U5SWtoUUlGTmhhbUVpSUdOc1lYTnpQU0pyWld3aVBpQklVQ0JUWVdwaFBDOXNZV0psYkQ0S0lDQWdJQ0FnSUNBZ0lEeHNZV0psYkQ0OGFXNXdkWFFnZEhsd1pUMGlZMmhsWTJ0aWIzZ2lJSFpoYkhWbFBTSkRhR0Z5WjJWeUlpQmpiR0Z6Y3owaWEyVnNJajRnUTJoaGNtZGxjand2YkdGaVpXdytDaUFnSUNBZ0lDQWdJQ0E4YkdGaVpXdytQR2x1Y0hWMElIUjVjR1U5SW1Ob1pXTnJZbTk0SWlCMllXeDFaVDBpUkhWeklpQmpiR0Z6Y3owaWEyVnNJajRnUkhWelBDOXNZV0psYkQ0S0lDQWdJQ0FnSUNBZ0lEeHNZV0psYkQ0OGFXNXdkWFFnZEhsd1pUMGlZMmhsWTJ0aWIzZ2lJSFpoYkhWbFBTSkxZV0psYkNJZ1kyeGhjM005SW10bGJDSStJRXRoWW1Wc1BDOXNZV0psYkQ0S0lDQWdJQ0FnSUNBZ0lEeHNZV0psYkQ0OGFXNXdkWFFnZEhsd1pUMGlZMmhsWTJ0aWIzZ2lJSFpoYkhWbFBTSkxZWEowZFNJZ1kyeGhjM005SW10bGJDSStJRXRoY25SMVBDOXNZV0psYkQ0S0lDQWdJQ0FnSUNBOEwyUnBkajRLSUNBZ0lDQWdJQ0E4YVc1d2RYUWdkSGx3WlQwaWRHVjRkQ0lnYVdROUltdGxiR1Z1WjJ0aGNHRnVJaUJ3YkdGalpXaHZiR1JsY2owaVQzUnZiV0YwYVhNZ2RHVnlhWE5wSUdSaGNta2dZMmhsWTJ0c2FYTjBJQzhnYVhOcElHMWhiblZoYkNJZ2MzUjViR1U5SW0xaGNtZHBiaTEwYjNBNk9IQjRPeUkrQ2lBZ0lDQWdJRHd2WkdsMlBnb2dJQ0FnSUNBOFpHbDJJR05zWVhOelBTSnliM2NpUGdvZ0lDQWdJQ0FnSUR4a2FYWWdZMnhoYzNNOUltbHVjSFYwTFdKdmVDSStDaUFnSUNBZ0lDQWdJQ0E4YkdGaVpXdytSWE4wYVcxaGMya2dRbWxoZVdFZ0tGSndLVHd2YkdGaVpXdytDaUFnSUNBZ0lDQWdJQ0E4YVc1d2RYUWdkSGx3WlQwaWJuVnRZbVZ5SWlCcFpEMGlZbWxoZVdFaUlIQnNZV05sYUc5c1pHVnlQU0l4TlRBd01EQWlJR2x1Y0hWMGJXOWtaVDBpYm5WdFpYSnBZeUkrQ2lBZ0lDQWdJQ0FnUEM5a2FYWStDaUFnSUNBZ0lDQWdQR1JwZGlCamJHRnpjejBpYVc1d2RYUXRZbTk0SWo0S0lDQWdJQ0FnSUNBZ0lEeHNZV0psYkQ1RVVDQW9VbkFwUEM5c1lXSmxiRDRLSUNBZ0lDQWdJQ0FnSUR4cGJuQjFkQ0IwZVhCbFBTSnVkVzFpWlhJaUlHbGtQU0prY0NJZ2NHeGhZMlZvYjJ4a1pYSTlJakFpSUdsdWNIVjBiVzlrWlQwaWJuVnRaWEpwWXlJK0NpQWdJQ0FnSUNBZ1BDOWthWFkrQ2lBZ0lDQWdJRHd2WkdsMlBnb2dJQ0FnSUNBOFpHbDJJR05zWVhOelBTSnBibkIxZEMxaWIzZ2lQZ29nSUNBZ0lDQWdJRHhzWVdKbGJENURZWFJoZEdGdUlGUmxhMjVwYzJrOEwyeGhZbVZzUGdvZ0lDQWdJQ0FnSUR4MFpYaDBZWEpsWVNCcFpEMGlZMkYwWVhSaGJpSWdjR3hoWTJWb2IyeGtaWEk5SWtOaGRHRjBZVzRnYVc1MFpYSnVZV3dnZEdWcmJtbHphUzR1TGlJK1BDOTBaWGgwWVhKbFlUNEtJQ0FnSUNBZ1BDOWthWFkrQ2lBZ0lDQWdJRHhrYVhZZ1kyeGhjM005SW1sdWNIVjBMV0p2ZUNJK0NpQWdJQ0FnSUNBZ1BHeGhZbVZzUGs1aGJXRWdWR1ZyYm1semFUd3ZiR0ZpWld3K0NpQWdJQ0FnSUNBZ1BHbHVjSFYwSUhSNWNHVTlJblJsZUhRaUlHbGtQU0owWld0dWFYTnBJaUJ3YkdGalpXaHZiR1JsY2owaVRtRnRZU0IwWld0dWFYTnBJSGxoYm1jZ2EyVnlhbUZyWVc0aVBnb2dJQ0FnSUNBOEwyUnBkajRLQ2lBZ0lDQWdJRHhrYVhZZ2MzUjViR1U5SW1ScGMzQnNZWGs2Wm14bGVEdG5ZWEE2TVRCd2VEdHRZWEpuYVc0dGRHOXdPakU0Y0hnN0lqNEtJQ0FnSUNBZ0lDQThZblYwZEc5dUlIUjVjR1U5SW1KMWRIUnZiaUlnWTJ4aGMzTTlJbUowYmkxelpXTnZibVJoY25raUlITjBlV3hsUFNKbWJHVjRPakU3SWlCdmJtTnNhV05yUFNKamJHOXpaVTF2WkdGc0tDa2lQa0poZEdGc1BDOWlkWFIwYjI0K0NpQWdJQ0FnSUNBZ1BHSjFkSFJ2YmlCMGVYQmxQU0p6ZFdKdGFYUWlJR05zWVhOelBTSmlkRzR0Y0hKcGJXRnllU0lnYzNSNWJHVTlJbVpzWlhnNk1TNDFPeUlnYVdROUltSjBibE5wYlhCaGJpSStVMGxOVUVGT1BDOWlkWFIwYjI0K0NpQWdJQ0FnSUR3dlpHbDJQZ29nSUNBZ0lDQThaR2wySUdsa1BTSm1iM0p0VEc5aFpHbHVaeUlnYzNSNWJHVTlJbVJwYzNCc1lYazZibTl1WlR0MFpYaDBMV0ZzYVdkdU9tTmxiblJsY2p0amIyeHZjam9qUmtaRE1UQTNPMjFoY21kcGJpMTBiM0E2TVRKd2VEdG1iMjUwTFhOcGVtVTZNVE53ZURzaVBrMWxibmxwYlhCaGJpNHVMand2WkdsMlBnb2dJQ0FnUEM5bWIzSnRQZ29nSUR3dlpHbDJQZ284TDJScGRqNEtDanhrYVhZZ1kyeGhjM005SW1KdmRIUnZiUzF1WVhZaVBnb2dJRHhoSUdoeVpXWTlJbVJoYzJoaWIyRnlaQzVvZEcxc0lqNDhjM0JoYmo3d240K2dQQzl6Y0dGdVBraHZiV1U4TDJFK0NpQWdQR0VnYUhKbFpqMGljMlZ5ZG1sekxtaDBiV3dpSUdOc1lYTnpQU0poWTNScGRtVWlQanh6Y0dGdVB2Q2ZsS2M4TDNOd1lXNCtVMlZ5ZG1selBDOWhQZ29nSUR4aElHaHlaV1k5SW14aGNHOXlZVzR1YUhSdGJDSStQSE53WVc0KzhKK1Rpand2YzNCaGJqNU1ZWEJ2Y21GdVBDOWhQZ29nSUR4aElHaHlaV1k5SW5CbGNuQmhibXBoYm1kaGJpNW9kRzFzSWo0OGMzQmhiajd3bjVHa1BDOXpjR0Z1UGtGcmRXNDhMMkUrQ2p3dlpHbDJQZ29LUEdScGRpQnBaRDBpY0c5d2RYQk5jMmNpUGp4a2FYWWdZMnhoYzNNOUltSnZlQ0krUEdneklITjBlV3hsUFNKamIyeHZjam9qUmtaRE1UQTNPeUkrUm1sNGVuazhMMmd6UGp4d0lHbGtQU0p3YjNCMWNGQmxjMkZ1SWlCemRIbHNaVDBpYldGeVoybHVPakUxY0hnZ01EdGpiMnh2Y2pvalptWm1PM2RvYVhSbExYTndZV05sT25CeVpTMXNhVzVsTzJadmJuUXRjMmw2WlRveE0zQjRPeUkrUEM5d1BqeGlkWFIwYjI0Z2IyNWpiR2xqYXowaVpHOWpkVzFsYm5RdVoyVjBSV3hsYldWdWRFSjVTV1FvSjNCdmNIVndUWE5uSnlrdWMzUjViR1V1WkdsemNHeGhlVDBuYm05dVpTY2lJSE4wZVd4bFBTSndZV1JrYVc1bk9qRXdjSGdnTWpSd2VEdGliM0prWlhJNmJtOXVaVHRpYjNKa1pYSXRjbUZrYVhWek9qRXdjSGc3WW1GamEyZHliM1Z1WkRvalJrWkRNVEEzTzJOdmJHOXlPaU14TVRFN1ptOXVkQzEzWldsbmFIUTZZbTlzWkR0amRYSnpiM0k2Y0c5cGJuUmxjanNpUGs5TFBDOWlkWFIwYjI0K1BDOWthWFkrUEM5a2FYWStDZ284YzJOeWFYQjBJSFI1Y0dVOUltMXZaSFZzWlNJK0NtbHRjRzl5ZENCN0lHbHVhWFJwWVd4cGVtVkJjSEFnZlNCbWNtOXRJQ0pvZEhSd2N6b3ZMM2QzZHk1bmMzUmhkR2xqTG1OdmJTOW1hWEpsWW1GelpXcHpMekV4TGpFd0xqQXZabWx5WldKaGMyVXRZWEJ3TG1weklqc0thVzF3YjNKMElIc2daMlYwUVhWMGFDd2diMjVCZFhSb1UzUmhkR1ZEYUdGdVoyVmtJSDBnWm5KdmJTQWlhSFIwY0hNNkx5OTNkM2N1WjNOMFlYUnBZeTVqYjIwdlptbHlaV0poYzJWcWN5OHhNUzR4TUM0d0wyWnBjbVZpWVhObExXRjFkR2d1YW5NaU93cHBiWEJ2Y25RZ2V5Qm5aWFJHYVhKbGMzUnZjbVVzSUdOdmJHeGxZM1JwYjI0c0lHRmtaRVJ2WXl3Z1pHOWpMQ0JuWlhSRWIyTnpMQ0IxY0dSaGRHVkViMk1zSUdSbGJHVjBaVVJ2WXl3Z2NYVmxjbmtzSUhkb1pYSmxMQ0J2Y21SbGNrSjVMQ0J6WlhKMlpYSlVhVzFsYzNSaGJYQXNJR2RsZEVSdll5QjlJR1p5YjIwZ0ltaDBkSEJ6T2k4dmQzZDNMbWR6ZEdGMGFXTXVZMjl0TDJacGNtVmlZWE5sYW5Ndk1URXVNVEF1TUM5bWFYSmxZbUZ6WlMxbWFYSmxjM1J2Y21VdWFuTWlPd29LWTI5dWMzUWdabWx5WldKaGMyVkRiMjVtYVdjZ1BTQjdDaUFnWVhCcFMyVjVPaUFpUVVsNllWTjVRM2ROWWtwemRVOVNhRWx4TkZGRGJYQTBZekZ5Tms5emFrRlZiR1o0VlRWWklpd0tJQ0JoZFhSb1JHOXRZV2x1T2lBaVptbDRlbmt0WmpBMU5tWXVabWx5WldKaGMyVmhjSEF1WTI5dElpd0tJQ0J3Y205cVpXTjBTV1E2SUNKbWFYaDZlUzFtTURVMlppSXNDaUFnYzNSdmNtRm5aVUoxWTJ0bGREb2dJbVpwZUhwNUxXWXdOVFptTG1acGNtVmlZWE5sYzNSdmNtRm5aUzVoY0hBaUxBb2dJRzFsYzNOaFoybHVaMU5sYm1SbGNrbGtPaUFpT0RNNE1EZ3hOVEl4TURNeElpd0tJQ0JoY0hCSlpEb2dJakU2T0RNNE1EZ3hOVEl4TURNeE9uZGxZam8xTUdaa1pXVTVNRGxpTlRZME5qQmlNRFUxWmpJeUlncDlPd3BqYjI1emRDQmhjSEFnUFNCcGJtbDBhV0ZzYVhwbFFYQndLR1pwY21WaVlYTmxRMjl1Wm1sbktUc0tZMjl1YzNRZ1lYVjBhQ0E5SUdkbGRFRjFkR2dvWVhCd0tUc0tZMjl1YzNRZ1pHSWdQU0JuWlhSR2FYSmxjM1J2Y21Vb1lYQndLVHNLQ214bGRDQmpkWEp5Wlc1MFZXbGtJRDBnYm5Wc2JEc0tiR1YwSUdGc2JFUmhkR0VnUFNCYlhUc0tiR1YwSUdGamRHbDJaVVpwYkhSbGNpQTlJRzVsZHlCVlVreFRaV0Z5WTJoUVlYSmhiWE1vZDJsdVpHOTNMbXh2WTJGMGFXOXVMbk5sWVhKamFDa3VaMlYwS0NkbWFXeDBaWEluS1NCOGZDQW5jMlZ0ZFdFbk93b0tZMjl1YzNRZ2JHOWhaR2x1WjFOamNtVmxiaUE5SUdSdlkzVnRaVzUwTG1kbGRFVnNaVzFsYm5SQ2VVbGtLQ0pzYjJGa2FXNW5VMk55WldWdUlpazdDbU52Ym5OMElHMWhhVzVEYjI1MFpXNTBJRDBnWkc5amRXMWxiblF1WjJWMFJXeGxiV1Z1ZEVKNVNXUW9JbTFoYVc1RGIyNTBaVzUwSWlrN0NtTnZibk4wSUd4cGMzUkZiQ0E5SUdSdlkzVnRaVzUwTG1kbGRFVnNaVzFsYm5SQ2VVbGtLQ0pzYVhOMFUyVnlkbWx6SWlrN0NtTnZibk4wSUdWdGNIUjVSV3dnUFNCa2IyTjFiV1Z1ZEM1blpYUkZiR1Z0Wlc1MFFubEpaQ2dpWlcxd2RIbFRkR0YwWlNJcE93cGpiMjV6ZENCelpXRnlZMmhKYm5CMWRDQTlJR1J2WTNWdFpXNTBMbWRsZEVWc1pXMWxiblJDZVVsa0tDSnpaV0Z5WTJoSmJuQjFkQ0lwT3dvS1puVnVZM1JwYjI0Z2MyaHZkMDF6Wnlod1pYTmhiaWw3SUdSdlkzVnRaVzUwTG1kbGRFVnNaVzFsYm5SQ2VVbGtLQ0p3YjNCMWNGQmxjMkZ1SWlrdWFXNXVaWEpVWlhoMFBYQmxjMkZ1T3lCa2IyTjFiV1Z1ZEM1blpYUkZiR1Z0Wlc1MFFubEpaQ2dpY0c5d2RYQk5jMmNpS1M1emRIbHNaUzVrYVhOd2JHRjVQU0ptYkdWNElqc2dmUW9LTHk4Z1FYVjBhQXB2YmtGMWRHaFRkR0YwWlVOb1lXNW5aV1FvWVhWMGFDd2dZWE41Ym1Nb2RYTmxjaWs5UG5zS0lDQnBaaWgxYzJWeUtYc0tJQ0FnSUdOMWNuSmxiblJWYVdRZ1BTQjFjMlZ5TG5WcFpEc0tJQ0FnSUd4dllXUnBibWRUWTNKbFpXNHVjM1I1YkdVdVpHbHpjR3hoZVQwaWJtOXVaU0k3Q2lBZ0lDQnRZV2x1UTI5dWRHVnVkQzV6ZEhsc1pTNWthWE53YkdGNVBTSmliRzlqYXlJN0NpQWdJQ0J6WlhSMWNFWnBiSFJsY2lncE93b2dJQ0FnWVhkaGFYUWdiRzloWkZObGNuWnBjeWdwT3dvZ0lIMGdaV3h6WlNCN0NpQWdJQ0JqYjI1emRDQjFhV1FnUFNCc2IyTmhiRk4wYjNKaFoyVXVaMlYwU1hSbGJTZ2labWw0ZW5sZmRXbGtJaWs3Q2lBZ0lDQnBaaWgxYVdRcGV3b2dJQ0FnSUNCamRYSnlaVzUwVldsa0lEMGdkV2xrT3dvZ0lDQWdJQ0JzYjJGa2FXNW5VMk55WldWdUxuTjBlV3hsTG1ScGMzQnNZWGs5SW01dmJtVWlPd29nSUNBZ0lDQnRZV2x1UTI5dWRHVnVkQzV6ZEhsc1pTNWthWE53YkdGNVBTSmliRzlqYXlJN0NpQWdJQ0FnSUhObGRIVndSbWxzZEdWeUtDazdDaUFnSUNBZ0lHRjNZV2wwSUd4dllXUlRaWEoyYVhNb0tUc0tJQ0FnSUgwZ1pXeHpaU0I3Q2lBZ0lDQWdJSGRwYm1SdmR5NXNiMk5oZEdsdmJpNW9jbVZtUFNKc2IyZHBiaTVvZEcxc0lqc0tJQ0FnSUgwS0lDQjlDbjBwT3dvS1puVnVZM1JwYjI0Z2MyVjBkWEJHYVd4MFpYSW9LWHNLSUNCcFppaGhZM1JwZG1WR2FXeDBaWElnSVQwOUlDZHpaVzExWVNjcGV3b2dJQ0FnWkc5amRXMWxiblF1Y1hWbGNubFRaV3hsWTNSdmNrRnNiQ2duTG1Ob2FYQW5LUzVtYjNKRllXTm9LR005UG5zS0lDQWdJQ0FnWXk1amJHRnpjMHhwYzNRdWNtVnRiM1psS0NkaFkzUnBkbVVuS1RzS0lDQWdJQ0FnYVdZb1l5NWtZWFJoYzJWMExtWnBiSFJsY2owOVBXRmpkR2wyWlVacGJIUmxjaWtnWXk1amJHRnpjMHhwYzNRdVlXUmtLQ2RoWTNScGRtVW5LVHNLSUNBZ0lIMHBPd29nSUgwS0lDQmtiMk4xYldWdWRDNXhkV1Z5ZVZObGJHVmpkRzl5UVd4c0tDY3VZMmhwY0NjcExtWnZja1ZoWTJnb1kyaHBjRDArZXdvZ0lDQWdZMmhwY0M1aFpHUkZkbVZ1ZEV4cGMzUmxibVZ5S0NkamJHbGpheWNzS0NrOVBuc0tJQ0FnSUNBZ1pHOWpkVzFsYm5RdWNYVmxjbmxUWld4bFkzUnZja0ZzYkNnbkxtTm9hWEFuS1M1bWIzSkZZV05vS0dNOVBtTXVZMnhoYzNOTWFYTjBMbkpsYlc5MlpTZ25ZV04wYVhabEp5a3BPd29nSUNBZ0lDQmphR2x3TG1Oc1lYTnpUR2x6ZEM1aFpHUW9KMkZqZEdsMlpTY3BPd29nSUNBZ0lDQmhZM1JwZG1WR2FXeDBaWElnUFNCamFHbHdMbVJoZEdGelpYUXVabWxzZEdWeU93b2dJQ0FnSUNCeVpXNWtaWEpNYVhOMEtDazdDaUFnSUNCOUtUc0tJQ0I5S1RzS0lDQnpaV0Z5WTJoSmJuQjFkQzVoWkdSRmRtVnVkRXhwYzNSbGJtVnlLQ2RwYm5CMWRDY3NJSEpsYm1SbGNreHBjM1FwT3dwOUNncGhjM2x1WXlCbWRXNWpkR2x2YmlCc2IyRmtVMlZ5ZG1sektDbDdDaUFnYVdZb0lXTjFjbkpsYm5SVmFXUXBJSEpsZEhWeWJqc0tJQ0IwY25sN0NpQWdJQ0JzYjJGa2FXNW5VMk55WldWdUxuTjBlV3hsTG1ScGMzQnNZWGs5SW1ac1pYZ2lPd29nSUNBZ1kyOXVjM1FnY1NBOUlIRjFaWEo1S0dOdmJHeGxZM1JwYjI0b1pHSXNJbk5sY25acGN5SXBMQ0IzYUdWeVpTZ2lkV2xrSWl3aVBUMGlMR04xY25KbGJuUlZhV1FwS1RzS0lDQWdJR052Ym5OMElITnVZWEFnUFNCaGQyRnBkQ0JuWlhSRWIyTnpLSEVwT3dvZ0lDQWdZV3hzUkdGMFlTQTlJRnRkT3dvZ0lDQWdjMjVoY0M1bWIzSkZZV05vS0dROVBuc0tJQ0FnSUNBZ1kyOXVjM1FnWkdGMFlTQTlJR1F1WkdGMFlTZ3BPd29nSUNBZ0lDQmtZWFJoTG1SdlkwbGtJRDBnWkM1cFpEc0tJQ0FnSUNBZ0x5OGdhR0Z1Wkd4bElIUnBiV1Z6ZEdGdGNBb2dJQ0FnSUNCa1lYUmhMbDkwWVc1bloyRnNUV0Z6ZFdzZ1BTQmtZWFJoTG5SaGJtZG5ZV3hOWVhOMWF6OHVkRzlFWVhSbElEOGdaR0YwWVM1MFlXNW5aMkZzVFdGemRXc3VkRzlFWVhSbEtDa2dPaUFvWkdGMFlTNWpjbVZoZEdWa1FYUS9MblJ2UkdGMFpTQS9JR1JoZEdFdVkzSmxZWFJsWkVGMExuUnZSR0YwWlNncElEb2dibVYzSUVSaGRHVW9LU2s3Q2lBZ0lDQWdJR0ZzYkVSaGRHRXVjSFZ6YUNoa1lYUmhLVHNLSUNBZ0lIMHBPd29nSUNBZ0x5OGdjMjl5ZENCMFpYSmlZWEoxSUdSMWJIVUtJQ0FnSUdGc2JFUmhkR0V1YzI5eWRDZ29ZU3hpS1QwK0lHSXVYM1JoYm1kbllXeE5ZWE4xYXlBdElHRXVYM1JoYm1kbllXeE5ZWE4xYXlrN0NpQWdJQ0JzYjJGa2FXNW5VMk55WldWdUxuTjBlV3hsTG1ScGMzQnNZWGs5SW01dmJtVWlPd29nSUNBZ2JXRnBia052Ym5SbGJuUXVjM1I1YkdVdVpHbHpjR3hoZVQwaVlteHZZMnNpT3dvZ0lDQWdaRzlqZFcxbGJuUXVaMlYwUld4bGJXVnVkRUo1U1dRb0luUnZkR0ZzU1c1bWJ5SXBMbWx1Ym1WeVZHVjRkQ0E5SUdBa2UyRnNiRVJoZEdFdWJHVnVaM1JvZlNCa1lYUmhJSE5sY25acGMyQTdDaUFnSUNCeVpXNWtaWEpNYVhOMEtDazdDaUFnZldOaGRHTm9LR1Z5Y2lsN0NpQWdJQ0JqYjI1emIyeGxMbVZ5Y205eUtHVnljaWs3Q2lBZ0lDQnNiMkZrYVc1blUyTnlaV1Z1TG5OMGVXeGxMbVJwYzNCc1lYazlJbTV2Ym1VaU93b2dJQ0FnYldGcGJrTnZiblJsYm5RdWMzUjViR1V1WkdsemNHeGhlVDBpWW14dlkyc2lPd29nSUNBZ2MyaHZkMDF6WnlnaVIyRm5ZV3dnYkc5aFpEb2dJaXRsY25JdWJXVnpjMkZuWlNrN0NpQWdmUXA5Q25kcGJtUnZkeTVzYjJGa1UyVnlkbWx6SUQwZ2JHOWhaRk5sY25acGN6c0tDbVoxYm1OMGFXOXVJSEpsYm1SbGNreHBjM1FvS1hzS0lDQmpiMjV6ZENCelpXRnlZMmdnUFNCelpXRnlZMmhKYm5CMWRDNTJZV3gxWlM1MGIweHZkMlZ5UTJGelpTZ3BPd29nSUd4bGRDQm1hV3gwWlhKbFpDQTlJR0ZzYkVSaGRHRXVabWxzZEdWeUtHbDBaVzA5UG5zS0lDQWdJR052Ym5OMElHMWhkR05vUm1sc2RHVnlJRDBnWVdOMGFYWmxSbWxzZEdWeVBUMDlKM05sYlhWaEp5QjhmQ0JwZEdWdExuTjBZWFIxY3owOVBXRmpkR2wyWlVacGJIUmxjanNLSUNBZ0lHTnZibk4wSUhSbGVIUWdQU0JnSkh0cGRHVnRMbTVoYldGUVpXeGhibWRuWVc1OUlDUjdhWFJsYlM1dWIwaHdmU0FrZTJsMFpXMHVkR2x3WlVod2ZTQWtlMmwwWlcwdWEyVnlkWE5oYTJGdWZXQXVkRzlNYjNkbGNrTmhjMlVvS1RzS0lDQWdJR052Ym5OMElHMWhkR05vVTJWaGNtTm9JRDBnSVhObFlYSmphQ0I4ZkNCMFpYaDBMbWx1WTJ4MVpHVnpLSE5sWVhKamFDazdDaUFnSUNCeVpYUjFjbTRnYldGMFkyaEdhV3gwWlhJZ0ppWWdiV0YwWTJoVFpXRnlZMmc3Q2lBZ2ZTazdDZ29nSUd4cGMzUkZiQzVwYm01bGNraFVUVXc5SWlJN0NpQWdhV1lvWm1sc2RHVnlaV1F1YkdWdVozUm9QVDA5TUNsN0NpQWdJQ0JsYlhCMGVVVnNMbk4wZVd4bExtUnBjM0JzWVhrOUltSnNiMk5ySWpzS0lDQWdJSEpsZEhWeWJqc0tJQ0I5Q2lBZ1pXMXdkSGxGYkM1emRIbHNaUzVrYVhOd2JHRjVQU0p1YjI1bElqc0tDaUFnWm1sc2RHVnlaV1F1Wm05eVJXRmphQ2hwZEdWdFBUNTdDaUFnSUNCamIyNXpkQ0J6YVhOaElEMGdLSEJoY25ObFNXNTBLR2wwWlcwdVltbGhlV0VwZkh3d0tTQXRJQ2h3WVhKelpVbHVkQ2hwZEdWdExtUndLWHg4TUNrN0NpQWdJQ0JqYjI1emRDQjBaMndnUFNCcGRHVnRMbDkwWVc1bloyRnNUV0Z6ZFdzdWRHOU1iMk5oYkdWRVlYUmxVM1J5YVc1bktDSnBaQzFKUkNJc2UyUmhlVG9pYm5WdFpYSnBZeUlzYlc5dWRHZzZJbk5vYjNKMElpeG9iM1Z5T2lJeUxXUnBaMmwwSWl4dGFXNTFkR1U2SWpJdFpHbG5hWFFpZlNrN0NpQWdJQ0JqYjI1emRDQnpkR0YwZFhORGJHRnpjeUE5SUdCemRHRjBkWE10Skh0cGRHVnRMbk4wWVhSMWMzMWdPd29nSUNBZ1kyOXVjM1FnWkdsMklEMGdaRzlqZFcxbGJuUXVZM0psWVhSbFJXeGxiV1Z1ZENnaVpHbDJJaWs3Q2lBZ0lDQmthWFl1WTJ4aGMzTk9ZVzFsUFNKallYSmtJanNLSUNBZ0lHUnBkaTVwYm01bGNraFVUVXc5WUFvZ0lDQWdJQ0E4WkdsMklHTnNZWE56UFNKallYSmtMWFJ2Y0NJK0NpQWdJQ0FnSUNBZ1BHUnBkajRLSUNBZ0lDQWdJQ0FnSUR4b016NGtlMmwwWlcwdWJtRnRZVkJsYkdGdVoyZGhibjA4TDJnelBnb2dJQ0FnSUNBZ0lDQWdQR1JwZGlCemRIbHNaVDBpWm05dWRDMXphWHBsT2pFeGNIZzdZMjlzYjNJNkl6ZzRPRHR0WVhKbmFXNHRkRzl3T2pKd2VEc2lQaVI3YVhSbGJTNTBhWEJsU0hCOUlPS0FvaUFrZTNSbmJIMDhMMlJwZGo0S0lDQWdJQ0FnSUNBOEwyUnBkajRLSUNBZ0lDQWdJQ0E4YzNCaGJpQmpiR0Z6Y3owaUpIdHpkR0YwZFhORGJHRnpjMzBpUGlSN2FYUmxiUzV6ZEdGMGRYTXVkRzlWY0hCbGNrTmhjMlVvS1gwOEwzTndZVzQrQ2lBZ0lDQWdJRHd2WkdsMlBnb2dJQ0FnSUNBOFpHbDJJR05zWVhOelBTSmpZWEprTFdsdVptOGlQZ29nSUNBZ0lDQWdJRHhrYVhZKzhKK1RuaUE4WWo0a2UybDBaVzB1Ym05SWNIMDhMMkkrSUNSN2FYUmxiUzVwYldWcFAyRGlnS0lnU1UxRlNUb2dKSHRwZEdWdExtbHRaV2w5WURvbkozMDhMMlJwZGo0S0lDQWdJQ0FnSUNBOFpHbDJQdkNmbEtjZ1BHSStKSHRwZEdWdExtdGxjblZ6WVd0aGJuMDhMMkkrUEM5a2FYWStDaUFnSUNBZ0lDQWdKSHRwZEdWdExtdGxiR1Z1WjJ0aGNHRnVQMkE4WkdsMlB2Q2ZrNllnUzJWc1pXNW5hMkZ3WVc0NklDUjdhWFJsYlM1clpXeGxibWRyWVhCaGJuMDhMMlJwZGo1Z09pY25mUW9nSUNBZ0lDQWdJRHhrYVhZKzhKK1NzQ0JDYVdGNVlUb2dQR0krVW5BZ0pIc29jR0Z5YzJWSmJuUW9hWFJsYlM1aWFXRjVZU2w4ZkRBcExuUnZURzlqWVd4bFUzUnlhVzVuS0NKcFpDMUpSQ0lwZlR3dllqNGdKSHRwZEdWdExtUndQMkRpZ0tJZ1JGQWdVbkFnSkhzb2NHRnljMlZKYm5Rb2FYUmxiUzVrY0NsOGZEQXBMblJ2VEc5allXeGxVM1J5YVc1bktDSnBaQzFKUkNJcGZTRGlnS0lnVTJsellTQlNjQ0FrZTNOcGMyRXVkRzlNYjJOaGJHVlRkSEpwYm1jb0ltbGtMVWxFSWlsOVlEb25KMzA4TDJScGRqNEtJQ0FnSUNBZ0lDQWtlMmwwWlcwdWRHVnJibWx6YVQ5Z1BHUnBkajd3bjVHbzRvQ044SitVcHlCVVpXdHVhWE5wT2lBa2UybDBaVzB1ZEdWcmJtbHphWDA4TDJScGRqNWdPaWNuZlFvZ0lDQWdJQ0FnSUNSN2FYUmxiUzVqWVhSaGRHRnVQMkE4WkdsMklITjBlV3hsUFNKdFlYSm5hVzR0ZEc5d09qWndlRHRpWVdOclozSnZkVzVrT2lNeU5USTFNalU3Y0dGa1pHbHVaem80Y0hnN1ltOXlaR1Z5TFhKaFpHbDFjem80Y0hnN1ptOXVkQzF6YVhwbE9qRXhjSGc3SWo0a2UybDBaVzB1WTJGMFlYUmhibjA4TDJScGRqNWdPaWNuZlFvZ0lDQWdJQ0E4TDJScGRqNEtJQ0FnSUNBZ1BHUnBkaUJqYkdGemN6MGlZMkZ5WkMxaFkzUnBiMjV6SWo0S0lDQWdJQ0FnSUNBOFluVjBkRzl1SUdOc1lYTnpQU0ppZEc0dGQyRWlJRzl1WTJ4cFkyczlJbmRoVUdWc1lXNW5aMkZ1S0Nja2UybDBaVzB1Ym05SWNIMG5MQ2NrZTJsMFpXMHVibUZ0WVZCbGJHRnVaMmRoYm4wbkxDY2tlMmwwWlcwdWRHbHdaVWh3ZlNjc0p5UjdhWFJsYlM1emRHRjBkWE45SnlraVBsZEJQQzlpZFhSMGIyNCtDaUFnSUNBZ0lDQWdQR0oxZEhSdmJpQmpiR0Z6Y3owaVluUnVMV1ZrYVhRaUlHOXVZMnhwWTJzOUltVmthWFJUWlhKMmFYTW9KeVI3YVhSbGJTNWtiMk5KWkgwbktTSStSV1JwZER3dlluVjBkRzl1UGdvZ0lDQWdJQ0FnSUNSN2FYUmxiUzV6ZEdGMGRYTWhQVDBuYzJWc1pYTmhhU2NnSmlZZ2FYUmxiUzV6ZEdGMGRYTWhQVDBuWkdsaGJXSnBiQ2NnUHlCZ1BHSjFkSFJ2YmlCamJHRnpjejBpWW5SdUxYTmxiR1Z6WVdraUlHOXVZMnhwWTJzOUluVmlZV2hUZEdGMGRYTW9KeVI3YVhSbGJTNWtiMk5KWkgwbkxDZHpaV3hsYzJGcEp5a2lQbE5sYkdWellXazhMMkoxZEhSdmJqNWdJRG9nSnlkOUNpQWdJQ0FnSUNBZ0pIdHBkR1Z0TG5OMFlYUjFjejA5UFNkelpXeGxjMkZwSnlBL0lHQThZblYwZEc5dUlHTnNZWE56UFNKaWRHNHRjMlZzWlhOaGFTSWdiMjVqYkdsamF6MGlkV0poYUZOMFlYUjFjeWduSkh0cGRHVnRMbVJ2WTBsa2ZTY3NKMlJwWVcxaWFXd25LU0krUkdsaGJXSnBiRHd2WW5WMGRHOXVQbUFnT2lBbkozMEtJQ0FnSUNBZ0lDQThZblYwZEc5dUlHTnNZWE56UFNKaWRHNHRhR0Z3ZFhNaUlHOXVZMnhwWTJzOUltaGhjSFZ6VTJWeWRtbHpLQ2NrZTJsMFpXMHVaRzlqU1dSOUp5a2lQa2hoY0hWelBDOWlkWFIwYjI0K0NpQWdJQ0FnSUR3dlpHbDJQZ29nSUNBZ1lEc0tJQ0FnSUd4cGMzUkZiQzVoY0hCbGJtUkRhR2xzWkNoa2FYWXBPd29nSUgwcE93cDlDZ3AzYVc1a2IzY3VkMkZRWld4aGJtZG5ZVzRnUFNBb2JtOHNibUZ0WVN4MGFYQmxMSE4wWVhSMWN5azlQbnNLSUNCc1pYUWdhSEFnUFNCdWJ5NXlaWEJzWVdObEtDOWJYakF0T1Ywdlp5d2lJaWs3Q2lBZ2FXWW9hSEF1YzNSaGNuUnpWMmwwYUNnaU1DSXBLU0JvY0NBOUlDSTJNaUlyYUhBdWMzVmljM1J5YVc1bktERXBPd29nSUdOdmJuTjBJSEJsYzJGdUlEMGdZRWhoYkc4Z0pIdHVZVzFoZlN3Z1NGQWdKSHQwYVhCbGZTQnpkR0YwZFhNZ2MyVnlkbWx6SUdScElFWnBlSHA1T2lBa2UzTjBZWFIxY3k1MGIxVndjR1Z5UTJGelpTZ3BmUzRnU1c1bWJ5QnNaV0pwYUNCc1lXNXFkWFFnYUhWaWRXNW5hU0JyWVcxcExtQTdDaUFnZDJsdVpHOTNMbTl3Wlc0b1lHaDBkSEJ6T2k4dmQyRXViV1V2Skh0b2NIMC9kR1Y0ZEQwa2UyVnVZMjlrWlZWU1NVTnZiWEJ2Ym1WdWRDaHdaWE5oYmlsOVlDd2lYMkpzWVc1cklpazdDbjA3Q2dwM2FXNWtiM2N1YjNCbGJrRmtaRTF2WkdGc0lEMGdLQ2s5UG5zS0lDQmtiMk4xYldWdWRDNW5aWFJGYkdWdFpXNTBRbmxKWkNnaWJXOWtZV3hVYVhSc1pTSXBMbWx1Ym1WeVZHVjRkRDBpVTJWeWRtbHpJRUpoY25VaU93b2dJR1J2WTNWdFpXNTBMbWRsZEVWc1pXMWxiblJDZVVsa0tDSnpaWEoyYVhOR2IzSnRJaWt1Y21WelpYUW9LVHNLSUNCa2IyTjFiV1Z1ZEM1blpYUkZiR1Z0Wlc1MFFubEpaQ2dpWldScGRFbGtJaWt1ZG1Gc2RXVTlJaUk3Q2lBZ1pHOWpkVzFsYm5RdVoyVjBSV3hsYldWdWRFSjVTV1FvSW5OMFlYUjFjeUlwTG5aaGJIVmxQU0p0WVhOMWF5STdDaUFnWkc5amRXMWxiblF1WjJWMFJXeGxiV1Z1ZEVKNVNXUW9JbXRsYkdWdVoydGhjR0Z1SWlrdWRtRnNkV1U5SWlJN0NpQWdaRzlqZFcxbGJuUXVjWFZsY25sVFpXeGxZM1J2Y2tGc2JDZ2lMbXRsYkNJcExtWnZja1ZoWTJnb1l6MCtZeTVqYUdWamEyVmtQV1poYkhObEtUc0tJQ0JrYjJOMWJXVnVkQzVuWlhSRmJHVnRaVzUwUW5sSlpDZ2labTl5YlUxdlpHRnNJaWt1YzNSNWJHVXVaR2x6Y0d4aGVUMGlabXhsZUNJN0NuMDdDbmRwYm1SdmR5NWpiRzl6WlUxdlpHRnNJRDBnS0NrOVBpQmtiMk4xYldWdWRDNW5aWFJGYkdWdFpXNTBRbmxKWkNnaVptOXliVTF2WkdGc0lpa3VjM1I1YkdVdVpHbHpjR3hoZVQwaWJtOXVaU0k3Q2dwa2IyTjFiV1Z1ZEM1eGRXVnllVk5sYkdWamRHOXlRV3hzS0NJdWEyVnNJaWt1Wm05eVJXRmphQ2hqWWowK2V3b2dJR05pTG1Ga1pFVjJaVzUwVEdsemRHVnVaWElvSW1Ob1lXNW5aU0lzS0NrOVBuc0tJQ0FnSUdOdmJuTjBJSFpoYkhNZ1BTQkJjbkpoZVM1bWNtOXRLR1J2WTNWdFpXNTBMbkYxWlhKNVUyVnNaV04wYjNKQmJHd29JaTVyWld3NlkyaGxZMnRsWkNJcEtTNXRZWEFvWXowK1l5NTJZV3gxWlNrN0NpQWdJQ0JrYjJOMWJXVnVkQzVuWlhSRmJHVnRaVzUwUW5sSlpDZ2lhMlZzWlc1bmEyRndZVzRpS1M1MllXeDFaU0E5SUhaaGJITXVhbTlwYmlnaUxDQWlLVHNLSUNCOUtUc0tmU2s3Q2dwa2IyTjFiV1Z1ZEM1blpYUkZiR1Z0Wlc1MFFubEpaQ2dpYzJWeWRtbHpSbTl5YlNJcExtRmtaRVYyWlc1MFRHbHpkR1Z1WlhJb0luTjFZbTFwZENJc0lHRnplVzVqS0dVcFBUNTdDaUFnWlM1d2NtVjJaVzUwUkdWbVlYVnNkQ2dwT3dvZ0lHTnZibk4wSUdKMGJqMWtiMk4xYldWdWRDNW5aWFJGYkdWdFpXNTBRbmxKWkNnaVluUnVVMmx0Y0dGdUlpazdDaUFnWTI5dWMzUWdiRzloWkQxa2IyTjFiV1Z1ZEM1blpYUkZiR1Z0Wlc1MFFubEpaQ2dpWm05eWJVeHZZV1JwYm1jaUtUc0tJQ0JpZEc0dVpHbHpZV0pzWldROWRISjFaVHNnYkc5aFpDNXpkSGxzWlM1a2FYTndiR0Y1UFNKaWJHOWpheUk3Q2dvZ0lHTnZibk4wSUdWa2FYUkpaQ0E5SUdSdlkzVnRaVzUwTG1kbGRFVnNaVzFsYm5SQ2VVbGtLQ0psWkdsMFNXUWlLUzUyWVd4MVpUc0tJQ0JqYjI1emRDQndZWGxzYjJGa0lEMGdld29nSUNBZ2RXbGtPaUJqZFhKeVpXNTBWV2xrTEFvZ0lDQWdhV1JUWlhKMmFYTTZJQ0pHV0MwaUswUmhkR1V1Ym05M0tDa3NDaUFnSUNCdVlXMWhVR1ZzWVc1bloyRnVPaUJrYjJOMWJXVnVkQzVuWlhSRmJHVnRaVzUwUW5sSlpDZ2libUZ0WVZCbGJHRnVaMmRoYmlJcExuWmhiSFZsTG5SeWFXMG9LU3dLSUNBZ0lHNXZTSEE2SUdSdlkzVnRaVzUwTG1kbGRFVnNaVzFsYm5SQ2VVbGtLQ0p1YjBod0lpa3VkbUZzZFdVdWRISnBiU2dwTEFvZ0lDQWdkR2x3WlVod09pQmtiMk4xYldWdWRDNW5aWFJGYkdWdFpXNTBRbmxKWkNnaWRHbHdaVWh3SWlrdWRtRnNkV1V1ZEhKcGJTZ3BMQW9nSUNBZ2FXMWxhVG9nWkc5amRXMWxiblF1WjJWMFJXeGxiV1Z1ZEVKNVNXUW9JbWx0WldraUtTNTJZV3gxWlM1MGNtbHRLQ2tzQ2lBZ0lDQnJaWEoxYzJGcllXNDZJR1J2WTNWdFpXNTBMbWRsZEVWc1pXMWxiblJDZVVsa0tDSnJaWEoxYzJGcllXNGlLUzUyWVd4MVpTNTBjbWx0S0Nrc0NpQWdJQ0JyWld4bGJtZHJZWEJoYmpvZ1pHOWpkVzFsYm5RdVoyVjBSV3hsYldWdWRFSjVTV1FvSW10bGJHVnVaMnRoY0dGdUlpa3VkbUZzZFdVdWRISnBiU2dwTEFvZ0lDQWdZbWxoZVdFNklIQmhjbk5sU1c1MEtHUnZZM1Z0Wlc1MExtZGxkRVZzWlcxbGJuUkNlVWxrS0NKaWFXRjVZU0lwTG5aaGJIVmxLWHg4TUN3S0lDQWdJR1J3T2lCd1lYSnpaVWx1ZENoa2IyTjFiV1Z1ZEM1blpYUkZiR1Z0Wlc1MFFubEpaQ2dpWkhBaUtTNTJZV3gxWlNsOGZEQXNDaUFnSUNCemRHRjBkWE02SUdSdlkzVnRaVzUwTG1kbGRFVnNaVzFsYm5SQ2VVbGtLQ0p6ZEdGMGRYTWlLUzUyWVd4MVpTd0tJQ0FnSUdOaGRHRjBZVzQ2SUdSdlkzVnRaVzUwTG1kbGRFVnNaVzFsYm5SQ2VVbGtLQ0pqWVhSaGRHRnVJaWt1ZG1Gc2RXVXVkSEpwYlNncExBb2dJQ0FnZEdWcmJtbHphVG9nWkc5amRXMWxiblF1WjJWMFJXeGxiV1Z1ZEVKNVNXUW9JblJsYTI1cGMya2lLUzUyWVd4MVpTNTBjbWx0S0Nrc0NpQWdJQ0IxY0dSaGRHVmtRWFE2SUhObGNuWmxjbFJwYldWemRHRnRjQ2dwQ2lBZ2ZUc0tJQ0JwWmlod1lYbHNiMkZrTG5OMFlYUjFjejA5UFNkelpXeGxjMkZwSnlCOGZDQndZWGxzYjJGa0xuTjBZWFIxY3owOVBTZGthV0Z0WW1sc0p5bDdDaUFnSUNCd1lYbHNiMkZrTG5SaGJtZG5ZV3hUWld4bGMyRnBJRDBnYzJWeWRtVnlWR2x0WlhOMFlXMXdLQ2s3Q2lBZ2ZRb0tJQ0IwY25sN0NpQWdJQ0JwWmlobFpHbDBTV1FwZXdvZ0lDQWdJQ0JoZDJGcGRDQjFjR1JoZEdWRWIyTW9aRzlqS0dSaUxDSnpaWEoyYVhNaUxHVmthWFJKWkNrc0lIQmhlV3h2WVdRcE93b2dJQ0FnSUNCemFHOTNUWE5uS0NKRVlYUmhJSE5sY25acGN5QmlaWEpvWVhOcGJDQmthWFZ3WkdGMFpTRWlLVHNLSUNBZ0lIMWxiSE5sZXdvZ0lDQWdJQ0J3WVhsc2IyRmtMblJoYm1kbllXeE5ZWE4xYXlBOUlITmxjblpsY2xScGJXVnpkR0Z0Y0NncE93b2dJQ0FnSUNCd1lYbHNiMkZrTG1OeVpXRjBaV1JCZENBOUlITmxjblpsY2xScGJXVnpkR0Z0Y0NncE93b2dJQ0FnSUNCaGQyRnBkQ0JoWkdSRWIyTW9ZMjlzYkdWamRHbHZiaWhrWWl3aWMyVnlkbWx6SWlrc0lIQmhlV3h2WVdRcE93b2dJQ0FnSUNCemFHOTNUWE5uS0NKVFpYSjJhWE1nWW1GeWRTQmlaWEpvWVhOcGJDQmthWFJoYldKaGFHdGhiaUVpS1RzS0lDQWdJSDBLSUNBZ0lHTnNiM05sVFc5a1lXd29LVHNLSUNBZ0lHRjNZV2wwSUd4dllXUlRaWEoyYVhNb0tUc0tJQ0I5WTJGMFkyZ29aWEp5S1hzS0lDQWdJSE5vYjNkTmMyY29Ja2RoWjJGc0lITnBiWEJoYmpvZ0lpdGxjbkl1YldWemMyRm5aU2s3Q2lBZ2ZXWnBibUZzYkhsN0NpQWdJQ0JpZEc0dVpHbHpZV0pzWldROVptRnNjMlU3SUd4dllXUXVjM1I1YkdVdVpHbHpjR3hoZVQwaWJtOXVaU0k3Q2lBZ2ZRcDlLVHNLQ25kcGJtUnZkeTVsWkdsMFUyVnlkbWx6SUQwZ1lYTjVibU1vYVdRcFBUNTdDaUFnWTI5dWMzUWdhWFJsYlNBOUlHRnNiRVJoZEdFdVptbHVaQ2hrUFQ1a0xtUnZZMGxrUFQwOWFXUXBPd29nSUdsbUtDRnBkR1Z0S1NCeVpYUjFjbTQ3Q2lBZ1pHOWpkVzFsYm5RdVoyVjBSV3hsYldWdWRFSjVTV1FvSW0xdlpHRnNWR2wwYkdVaUtTNXBibTVsY2xSbGVIUTlJa1ZrYVhRZ1UyVnlkbWx6SWpzS0lDQmtiMk4xYldWdWRDNW5aWFJGYkdWdFpXNTBRbmxKWkNnaVpXUnBkRWxrSWlrdWRtRnNkV1U5YVdRN0NpQWdaRzlqZFcxbGJuUXVaMlYwUld4bGJXVnVkRUo1U1dRb0ltNWhiV0ZRWld4aGJtZG5ZVzRpS1M1MllXeDFaVDFwZEdWdExtNWhiV0ZRWld4aGJtZG5ZVzU4ZkNJaU93b2dJR1J2WTNWdFpXNTBMbWRsZEVWc1pXMWxiblJDZVVsa0tDSnViMGh3SWlrdWRtRnNkV1U5YVhSbGJTNXViMGh3Zkh3aUlqc0tJQ0JrYjJOMWJXVnVkQzVuWlhSRmJHVnRaVzUwUW5sSlpDZ2lkR2x3WlVod0lpa3VkbUZzZFdVOWFYUmxiUzUwYVhCbFNIQjhmQ0lpT3dvZ0lHUnZZM1Z0Wlc1MExtZGxkRVZzWlcxbGJuUkNlVWxrS0NKcGJXVnBJaWt1ZG1Gc2RXVTlhWFJsYlM1cGJXVnBmSHdpSWpzS0lDQmtiMk4xYldWdWRDNW5aWFJGYkdWdFpXNTBRbmxKWkNnaWEyVnlkWE5oYTJGdUlpa3VkbUZzZFdVOWFYUmxiUzVyWlhKMWMyRnJZVzU4ZkNJaU93b2dJR1J2WTNWdFpXNTBMbWRsZEVWc1pXMWxiblJDZVVsa0tDSnJaV3hsYm1kcllYQmhiaUlwTG5aaGJIVmxQV2wwWlcwdWEyVnNaVzVuYTJGd1lXNThmQ0lpT3dvZ0lHUnZZM1Z0Wlc1MExtZGxkRVZzWlcxbGJuUkNlVWxrS0NKaWFXRjVZU0lwTG5aaGJIVmxQV2wwWlcwdVltbGhlV0Y4ZkNJaU93b2dJR1J2WTNWdFpXNTBMbWRsZEVWc1pXMWxiblJDZVVsa0tDSmtjQ0lwTG5aaGJIVmxQV2wwWlcwdVpIQjhmQ0lpT3dvZ0lHUnZZM1Z0Wlc1MExtZGxkRVZzWlcxbGJuUkNlVWxrS0NKemRHRjBkWE1pS1M1MllXeDFaVDFwZEdWdExuTjBZWFIxYzN4OEltMWhjM1ZySWpzS0lDQmtiMk4xYldWdWRDNW5aWFJGYkdWdFpXNTBRbmxKWkNnaVkyRjBZWFJoYmlJcExuWmhiSFZsUFdsMFpXMHVZMkYwWVhSaGJueDhJaUk3Q2lBZ1pHOWpkVzFsYm5RdVoyVjBSV3hsYldWdWRFSjVTV1FvSW5SbGEyNXBjMmtpS1M1MllXeDFaVDFwZEdWdExuUmxhMjVwYzJsOGZDSWlPd29nSUM4dklITmxkQ0JqYUdWamEyeHBjM1FLSUNCamIyNXpkQ0JyWld4eklEMGdLR2wwWlcwdWEyVnNaVzVuYTJGd1lXNThmQ0lpS1M1emNHeHBkQ2dpTENJcExtMWhjQ2h6UFQ1ekxuUnlhVzBvS1NrN0NpQWdaRzlqZFcxbGJuUXVjWFZsY25sVFpXeGxZM1J2Y2tGc2JDZ2lMbXRsYkNJcExtWnZja1ZoWTJnb1l6MCtleUJqTG1Ob1pXTnJaV1FnUFNCclpXeHpMbWx1WTJ4MVpHVnpLR011ZG1Gc2RXVXBPeUI5S1RzS0lDQmtiMk4xYldWdWRDNW5aWFJGYkdWdFpXNTBRbmxKWkNnaVptOXliVTF2WkdGc0lpa3VjM1I1YkdVdVpHbHpjR3hoZVQwaVpteGxlQ0k3Q24wN0NncDNhVzVrYjNjdWFHRndkWE5UWlhKMmFYTWdQU0JoYzNsdVl5aHBaQ2s5UG5zS0lDQnBaaWdoWTI5dVptbHliU2dpV1dGcmFXNGdhR0Z3ZFhNZ1pHRjBZU0J6WlhKMmFYTWdhVzVwUHlJcEtTQnlaWFIxY200N0NpQWdkSEo1ZXdvZ0lDQWdZWGRoYVhRZ1pHVnNaWFJsUkc5aktHUnZZeWhrWWl3aWMyVnlkbWx6SWl4cFpDa3BPd29nSUNBZ2MyaHZkMDF6WnlnaVJHRjBZU0JrYVdoaGNIVnpJaWs3Q2lBZ0lDQmhkMkZwZENCc2IyRmtVMlZ5ZG1sektDazdDaUFnZldOaGRHTm9LR1Z5Y2lsN0lITm9iM2ROYzJjb0lrZGhaMkZzSUdoaGNIVnpPaUFpSzJWeWNpNXRaWE56WVdkbEtUc2dmUXA5T3dvS2QybHVaRzkzTG5WaVlXaFRkR0YwZFhNZ1BTQmhjM2x1WXlocFpDeHVaWGRUZEdGMGRYTXBQVDU3Q2lBZ2RISjVld29nSUNBZ1kyOXVjM1FnZFhCa1lYUmxJRDBnZXlCemRHRjBkWE02Ym1WM1UzUmhkSFZ6TENCMWNHUmhkR1ZrUVhRNmMyVnlkbVZ5VkdsdFpYTjBZVzF3S0NrZ2ZUc0tJQ0FnSUdsbUtHNWxkMU4wWVhSMWN6MDlQU2R6Wld4bGMyRnBKeUI4ZkNCdVpYZFRkR0YwZFhNOVBUMG5aR2xoYldKcGJDY3Bld29nSUNBZ0lDQjFjR1JoZEdVdWRHRnVaMmRoYkZObGJHVnpZV2tnUFNCelpYSjJaWEpVYVcxbGMzUmhiWEFvS1RzS0lDQWdJSDBLSUNBZ0lHRjNZV2wwSUhWd1pHRjBaVVJ2WXloa2IyTW9aR0lzSW5ObGNuWnBjeUlzYVdRcExDQjFjR1JoZEdVcE93b2dJQ0FnWVhkaGFYUWdiRzloWkZObGNuWnBjeWdwT3dvZ0lIMWpZWFJqYUNobGNuSXBleUJ6YUc5M1RYTm5LQ0pIWVdkaGJDQjFjR1JoZEdVZ2MzUmhkSFZ6T2lBaUsyVnljaTV0WlhOellXZGxLVHNnZlFwOU93b0tQQzl6WTNKcGNIUStDand2WW05a2VUNEtQQzlvZEcxc1Bnbz0iIGNsYXNzPSJhY3RpdmUiPjxzcGFuPvCflKc8L3NwYW4+U2VydmlzPC9hPgogIDxhIGhyZWY9ImxhcG9yYW4uaHRtbCI+PHNwYW4+8J+Tijwvc3Bhbj5MYXBvcmFuPC9hPgogIDxhIGhyZWY9InBlcnBhbmphbmdhbi5odG1sIj48c3Bhbj7wn5GkPC9zcGFuPkFrdW48L2E+CjwvZGl2PgoKPGRpdiBpZD0icG9wdXBNc2ciPjxkaXYgY2xhc3M9ImJveCI+PGgzIHN0eWxlPSJjb2xvcjojRkZDMTA3OyI+Rml4enk8L2gzPjxwIGlkPSJwb3B1cFBlc2FuIiBzdHlsZT0ibWFyZ2luOjE1cHggMDtjb2xvcjojZmZmO3doaXRlLXNwYWNlOnByZS1saW5lO2ZvbnQtc2l6ZToxM3B4OyI+PC9wPjxidXR0b24gb25jbGljaz0iZG9jdW1lbnQuZ2V0RWxlbWVudEJ5SWQoJ3BvcHVwTXNnJykuc3R5bGUuZGlzcGxheT0nbm9uZSciIHN0eWxlPSJwYWRkaW5nOjEwcHggMjRweDtib3JkZXI6bm9uZTtib3JkZXItcmFkaXVzOjEwcHg7YmFja2dyb3VuZDojRkZDMTA3O2NvbG9yOiMxMTE7Zm9udC13ZWlnaHQ6Ym9sZDtjdXJzb3I6cG9pbnRlcjsiPk9LPC9idXR0b24+PC9kaXY+PC9kaXY+Cgo8c2NyaXB0IHR5cGU9Im1vZHVsZSI+CmltcG9ydCB7IGluaXRpYWxpemVBcHAgfSBmcm9tICJodHRwczovL3d3dy5nc3RhdGljLmNvbS9maXJlYmFzZWpzLzExLjEwLjAvZmlyZWJhc2UtYXBwLmpzIjsKaW1wb3J0IHsgZ2V0QXV0aCwgb25BdXRoU3RhdGVDaGFuZ2VkIH0gZnJvbSAiaHR0cHM6Ly93d3cuZ3N0YXRpYy5jb20vZmlyZWJhc2Vqcy8xMS4xMC4wL2ZpcmViYXNlLWF1dGguanMiOwppbXBvcnQgeyBnZXRGaXJlc3RvcmUsIGNvbGxlY3Rpb24sIGFkZERvYywgZG9jLCBnZXREb2NzLCB1cGRhdGVEb2MsIGRlbGV0ZURvYywgcXVlcnksIHdoZXJlLCBvcmRlckJ5LCBzZXJ2ZXJUaW1lc3RhbXAsIGdldERvYyB9IGZyb20gImh0dHBzOi8vd3d3LmdzdGF0aWMuY29tL2ZpcmViYXNlanMvMTEuMTAuMC9maXJlYmFzZS1maXJlc3RvcmUuanMiOwoKY29uc3QgZmlyZWJhc2VDb25maWcgPSB7CiAgYXBpS2V5OiAiQUl6YVN5Q3dNYkpzdU9SaElxNFFDbXA0YzFyNk9zakFVbGZ4VTVZIiwKICBhdXRoRG9tYWluOiAiZml4enktZjA1NmYuZmlyZWJhc2VhcHAuY29tIiwKICBwcm9qZWN0SWQ6ICJmaXh6eS1mMDU2ZiIsCiAgc3RvcmFnZUJ1Y2tldDogImZpeHp5LWYwNTZmLmZpcmViYXNlc3RvcmFnZS5hcHAiLAogIG1lc3NhZ2luZ1NlbmRlcklkOiAiODM4MDgxNTIxMDMxIiwKICBhcHBJZDogIjE6ODM4MDgxNTIxMDMxOndlYjo1MGZkZWU5MDliNTY0NjBiMDU1ZjIyIgp9Owpjb25zdCBhcHAgPSBpbml0aWFsaXplQXBwKGZpcmViYXNlQ29uZmlnKTsKY29uc3QgYXV0aCA9IGdldEF1dGgoYXBwKTsKY29uc3QgZGIgPSBnZXRGaXJlc3RvcmUoYXBwKTsKCmxldCBjdXJyZW50VWlkID0gbnVsbDsKbGV0IGFsbERhdGEgPSBbXTsKbGV0IGFjdGl2ZUZpbHRlciA9IG5ldyBVUkxTZWFyY2hQYXJhbXMod2luZG93LmxvY2F0aW9uLnNlYXJjaCkuZ2V0KCdmaWx0ZXInKSB8fCAnc2VtdWEnOwoKY29uc3QgbG9hZGluZ1NjcmVlbiA9IGRvY3VtZW50LmdldEVsZW1lbnRCeUlkKCJsb2FkaW5nU2NyZWVuIik7CmNvbnN0IG1haW5Db250ZW50ID0gZG9jdW1lbnQuZ2V0RWxlbWVudEJ5SWQoIm1haW5Db250ZW50Iik7CmNvbnN0IGxpc3RFbCA9IGRvY3VtZW50LmdldEVsZW1lbnRCeUlkKCJsaXN0U2VydmlzIik7CmNvbnN0IGVtcHR5RWwgPSBkb2N1bWVudC5nZXRFbGVtZW50QnlJZCgiZW1wdHlTdGF0ZSIpOwpjb25zdCBzZWFyY2hJbnB1dCA9IGRvY3VtZW50LmdldEVsZW1lbnRCeUlkKCJzZWFyY2hJbnB1dCIpOwoKZnVuY3Rpb24gc2hvd01zZyhwZXNhbil7IGRvY3VtZW50LmdldEVsZW1lbnRCeUlkKCJwb3B1cFBlc2FuIikuaW5uZXJUZXh0PXBlc2FuOyBkb2N1bWVudC5nZXRFbGVtZW50QnlJZCgicG9wdXBNc2ciKS5zdHlsZS5kaXNwbGF5PSJmbGV4IjsgfQoKLy8gQXV0aApvbkF1dGhTdGF0ZUNoYW5nZWQoYXV0aCwgYXN5bmModXNlcik9PnsKICBpZih1c2VyKXsKICAgIGN1cnJlbnRVaWQgPSB1c2VyLnVpZDsKICAgIGxvYWRpbmdTY3JlZW4uc3R5bGUuZGlzcGxheT0ibm9uZSI7CiAgICBtYWluQ29udGVudC5zdHlsZS5kaXNwbGF5PSJibG9jayI7CiAgICBzZXR1cEZpbHRlcigpOwogICAgYXdhaXQgbG9hZFNlcnZpcygpOwogIH0gZWxzZSB7CiAgICBjb25zdCB1aWQgPSBsb2NhbFN0b3JhZ2UuZ2V0SXRlbSgiZml4enlfdWlkIik7CiAgICBpZih1aWQpewogICAgICBjdXJyZW50VWlkID0gdWlkOwogICAgICBsb2FkaW5nU2NyZWVuLnN0eWxlLmRpc3BsYXk9Im5vbmUiOwogICAgICBtYWluQ29udGVudC5zdHlsZS5kaXNwbGF5PSJibG9jayI7CiAgICAgIHNldHVwRmlsdGVyKCk7CiAgICAgIGF3YWl0IGxvYWRTZXJ2aXMoKTsKICAgIH0gZWxzZSB7CiAgICAgIHdpbmRvdy5sb2NhdGlvbi5ocmVmPSJsb2dpbi5odG1sIjsKICAgIH0KICB9Cn0pOwoKZnVuY3Rpb24gc2V0dXBGaWx0ZXIoKXsKICBpZihhY3RpdmVGaWx0ZXIgIT09ICdzZW11YScpewogICAgZG9jdW1lbnQucXVlcnlTZWxlY3RvckFsbCgnLmNoaXAnKS5mb3JFYWNoKGM9PnsKICAgICAgYy5jbGFzc0xpc3QucmVtb3ZlKCdhY3RpdmUnKTsKICAgICAgaWYoYy5kYXRhc2V0LmZpbHRlcj09PWFjdGl2ZUZpbHRlcikgYy5jbGFzc0xpc3QuYWRkKCdhY3RpdmUnKTsKICAgIH0pOwogIH0KICBkb2N1bWVudC5xdWVyeVNlbGVjdG9yQWxsKCcuY2hpcCcpLmZvckVhY2goY2hpcD0+ewogICAgY2hpcC5hZGRFdmVudExpc3RlbmVyKCdjbGljaycsKCk9PnsKICAgICAgZG9jdW1lbnQucXVlcnlTZWxlY3RvckFsbCgnLmNoaXAnKS5mb3JFYWNoKGM9PmMuY2xhc3NMaXN0LnJlbW92ZSgnYWN0aXZlJykpOwogICAgICBjaGlwLmNsYXNzTGlzdC5hZGQoJ2FjdGl2ZScpOwogICAgICBhY3RpdmVGaWx0ZXIgPSBjaGlwLmRhdGFzZXQuZmlsdGVyOwogICAgICByZW5kZXJMaXN0KCk7CiAgICB9KTsKICB9KTsKICBzZWFyY2hJbnB1dC5hZGRFdmVudExpc3RlbmVyKCdpbnB1dCcsIHJlbmRlckxpc3QpOwp9Cgphc3luYyBmdW5jdGlvbiBsb2FkU2VydmlzKCl7CiAgaWYoIWN1cnJlbnRVaWQpIHJldHVybjsKICB0cnl7CiAgICBsb2FkaW5nU2NyZWVuLnN0eWxlLmRpc3BsYXk9ImZsZXgiOwogICAgY29uc3QgcSA9IHF1ZXJ5KGNvbGxlY3Rpb24oZGIsInNlcnZpcyIpLCB3aGVyZSgidWlkIiwiPT0iLGN1cnJlbnRVaWQpKTsKICAgIGNvbnN0IHNuYXAgPSBhd2FpdCBnZXREb2NzKHEpOwogICAgYWxsRGF0YSA9IFtdOwogICAgc25hcC5mb3JFYWNoKGQ9PnsKICAgICAgY29uc3QgZGF0YSA9IGQuZGF0YSgpOwogICAgICBkYXRhLmRvY0lkID0gZC5pZDsKICAgICAgLy8gaGFuZGxlIHRpbWVzdGFtcAogICAgICBkYXRhLl90YW5nZ2FsTWFzdWsgPSBkYXRhLnRhbmdnYWxNYXN1az8udG9EYXRlID8gZGF0YS50YW5nZ2FsTWFzdWsudG9EYXRlKCkgOiAoZGF0YS5jcmVhdGVkQXQ/LnRvRGF0ZSA/IGRhdGEuY3JlYXRlZEF0LnRvRGF0ZSgpIDogbmV3IERhdGUoKSk7CiAgICAgIGFsbERhdGEucHVzaChkYXRhKTsKICAgIH0pOwogICAgLy8gc29ydCB0ZXJiYXJ1IGR1bHUKICAgIGFsbERhdGEuc29ydCgoYSxiKT0+IGIuX3RhbmdnYWxNYXN1ayAtIGEuX3RhbmdnYWxNYXN1ayk7CiAgICBsb2FkaW5nU2NyZWVuLnN0eWxlLmRpc3BsYXk9Im5vbmUiOwogICAgbWFpbkNvbnRlbnQuc3R5bGUuZGlzcGxheT0iYmxvY2siOwogICAgZG9jdW1lbnQuZ2V0RWxlbWVudEJ5SWQoInRvdGFsSW5mbyIpLmlubmVyVGV4dCA9IGAke2FsbERhdGEubGVuZ3RofSBkYXRhIHNlcnZpc2A7CiAgICByZW5kZXJMaXN0KCk7CiAgfWNhdGNoKGVycil7CiAgICBjb25zb2xlLmVycm9yKGVycik7CiAgICBsb2FkaW5nU2NyZWVuLnN0eWxlLmRpc3BsYXk9Im5vbmUiOwogICAgbWFpbkNvbnRlbnQuc3R5bGUuZGlzcGxheT0iYmxvY2siOwogICAgc2hvd01zZygiR2FnYWwgbG9hZDogIitlcnIubWVzc2FnZSk7CiAgfQp9CndpbmRvdy5sb2FkU2VydmlzID0gbG9hZFNlcnZpczsKCmZ1bmN0aW9uIHJlbmRlckxpc3QoKXsKICBjb25zdCBzZWFyY2ggPSBzZWFyY2hJbnB1dC52YWx1ZS50b0xvd2VyQ2FzZSgpOwogIGxldCBmaWx0ZXJlZCA9IGFsbERhdGEuZmlsdGVyKGl0ZW09PnsKICAgIGNvbnN0IG1hdGNoRmlsdGVyID0gYWN0aXZlRmlsdGVyPT09J3NlbXVhJyB8fCBpdGVtLnN0YXR1cz09PWFjdGl2ZUZpbHRlcjsKICAgIGNvbnN0IHRleHQgPSBgJHtpdGVtLm5hbWFQZWxhbmdnYW59ICR7aXRlbS5ub0hwfSAke2l0ZW0udGlwZUhwfSAke2l0ZW0ua2VydXNha2FufWAudG9Mb3dlckNhc2UoKTsKICAgIGNvbnN0IG1hdGNoU2VhcmNoID0gIXNlYXJjaCB8fCB0ZXh0LmluY2x1ZGVzKHNlYXJjaCk7CiAgICByZXR1cm4gbWF0Y2hGaWx0ZXIgJiYgbWF0Y2hTZWFyY2g7CiAgfSk7CgogIGxpc3RFbC5pbm5lckhUTUw9IiI7CiAgaWYoZmlsdGVyZWQubGVuZ3RoPT09MCl7CiAgICBlbXB0eUVsLnN0eWxlLmRpc3BsYXk9ImJsb2NrIjsKICAgIHJldHVybjsKICB9CiAgZW1wdHlFbC5zdHlsZS5kaXNwbGF5PSJub25lIjsKCiAgZmlsdGVyZWQuZm9yRWFjaChpdGVtPT57CiAgICBjb25zdCBzaXNhID0gKHBhcnNlSW50KGl0ZW0uYmlheWEpfHwwKSAtIChwYXJzZUludChpdGVtLmRwKXx8MCk7CiAgICBjb25zdCB0Z2wgPSBpdGVtLl90YW5nZ2FsTWFzdWsudG9Mb2NhbGVEYXRlU3RyaW5nKCJpZC1JRCIse2RheToibnVtZXJpYyIsbW9udGg6InNob3J0Iixob3VyOiIyLWRpZ2l0IixtaW51dGU6IjItZGlnaXQifSk7CiAgICBjb25zdCBzdGF0dXNDbGFzcyA9IGBzdGF0dXMtJHtpdGVtLnN0YXR1c31gOwogICAgY29uc3QgZGl2ID0gZG9jdW1lbnQuY3JlYXRlRWxlbWVudCgiZGl2Iik7CiAgICBkaXYuY2xhc3NOYW1lPSJjYXJkIjsKICAgIGRpdi5pbm5lckhUTUw9YAogICAgICA8ZGl2IGNsYXNzPSJjYXJkLXRvcCI+CiAgICAgICAgPGRpdj4KICAgICAgICAgIDxoMz4ke2l0ZW0ubmFtYVBlbGFuZ2dhbn08L2gzPgogICAgICAgICAgPGRpdiBzdHlsZT0iZm9udC1zaXplOjExcHg7Y29sb3I6Izg4ODttYXJnaW4tdG9wOjJweDsiPiR7aXRlbS50aXBlSHB9IOKAoiAke3RnbH08L2Rpdj4KICAgICAgICA8L2Rpdj4KICAgICAgICA8c3BhbiBjbGFzcz0iJHtzdGF0dXNDbGFzc30iPiR7aXRlbS5zdGF0dXMudG9VcHBlckNhc2UoKX08L3NwYW4+CiAgICAgIDwvZGl2PgogICAgICA8ZGl2IGNsYXNzPSJjYXJkLWluZm8iPgogICAgICAgIDxkaXY+8J+TniA8Yj4ke2l0ZW0ubm9IcH08L2I+ICR7aXRlbS5pbWVpP2DigKIgSU1FSTogJHtpdGVtLmltZWl9YDonJ308L2Rpdj4KICAgICAgICA8ZGl2PvCflKcgPGI+JHtpdGVtLmtlcnVzYWthbn08L2I+PC9kaXY+CiAgICAgICAgJHtpdGVtLmtlbGVuZ2thcGFuP2A8ZGl2PvCfk6YgS2VsZW5na2FwYW46ICR7aXRlbS5rZWxlbmdrYXBhbn08L2Rpdj5gOicnfQogICAgICAgIDxkaXY+8J+SsCBCaWF5YTogPGI+UnAgJHsocGFyc2VJbnQoaXRlbS5iaWF5YSl8fDApLnRvTG9jYWxlU3RyaW5nKCJpZC1JRCIpfTwvYj4gJHtpdGVtLmRwP2DigKIgRFAgUnAgJHsocGFyc2VJbnQoaXRlbS5kcCl8fDApLnRvTG9jYWxlU3RyaW5nKCJpZC1JRCIpfSDigKIgU2lzYSBScCAke3Npc2EudG9Mb2NhbGVTdHJpbmcoImlkLUlEIil9YDonJ308L2Rpdj4KICAgICAgICAke2l0ZW0udGVrbmlzaT9gPGRpdj7wn5Go4oCN8J+UpyBUZWtuaXNpOiAke2l0ZW0udGVrbmlzaX08L2Rpdj5gOicnfQogICAgICAgICR7aXRlbS5jYXRhdGFuP2A8ZGl2IHN0eWxlPSJtYXJnaW4tdG9wOjZweDtiYWNrZ3JvdW5kOiMyNTI1MjU7cGFkZGluZzo4cHg7Ym9yZGVyLXJhZGl1czo4cHg7Zm9udC1zaXplOjExcHg7Ij4ke2l0ZW0uY2F0YXRhbn08L2Rpdj5gOicnfQogICAgICA8L2Rpdj4KICAgICAgPGRpdiBjbGFzcz0iY2FyZC1hY3Rpb25zIj4KICAgICAgICA8YnV0dG9uIGNsYXNzPSJidG4td2EiIG9uY2xpY2s9IndhUGVsYW5nZ2FuKCcke2l0ZW0ubm9IcH0nLCcke2l0ZW0ubmFtYVBlbGFuZ2dhbn0nLCcke2l0ZW0udGlwZUhwfScsJyR7aXRlbS5zdGF0dXN9JykiPldBPC9idXR0b24+CiAgICAgICAgPGJ1dHRvbiBjbGFzcz0iYnRuLWVkaXQiIG9uY2xpY2s9ImVkaXRTZXJ2aXMoJyR7aXRlbS5kb2NJZH0nKSI+RWRpdDwvYnV0dG9uPgogICAgICAgICR7aXRlbS5zdGF0dXMhPT0nc2VsZXNhaScgJiYgaXRlbS5zdGF0dXMhPT0nZGlhbWJpbCcgPyBgPGJ1dHRvbiBjbGFzcz0iYnRuLXNlbGVzYWkiIG9uY2xpY2s9InViYWhTdGF0dXMoJyR7aXRlbS5kb2NJZH0nLCdzZWxlc2FpJykiPlNlbGVzYWk8L2J1dHRvbj5gIDogJyd9CiAgICAgICAgJHtpdGVtLnN0YXR1cz09PSdzZWxlc2FpJyA/IGA8YnV0dG9uIGNsYXNzPSJidG4tc2VsZXNhaSIgb25jbGljaz0idWJhaFN0YXR1cygnJHtpdGVtLmRvY0lkfScsJ2RpYW1iaWwnKSI+RGlhbWJpbDwvYnV0dG9uPmAgOiAnJ30KICAgICAgICA8YnV0dG9uIGNsYXNzPSJidG4taGFwdXMiIG9uY2xpY2s9ImhhcHVzU2VydmlzKCcke2l0ZW0uZG9jSWR9JykiPkhhcHVzPC9idXR0b24+CiAgICAgIDwvZGl2PgogICAgYDsKICAgIGxpc3RFbC5hcHBlbmRDaGlsZChkaXYpOwogIH0pOwp9Cgp3aW5kb3cud2FQZWxhbmdnYW4gPSAobm8sbmFtYSx0aXBlLHN0YXR1cyk9PnsKICBsZXQgaHAgPSBuby5yZXBsYWNlKC9bXjAtOV0vZywiIik7CiAgaWYoaHAuc3RhcnRzV2l0aCgiMCIpKSBocCA9ICI2MiIraHAuc3Vic3RyaW5nKDEpOwogIGNvbnN0IHBlc2FuID0gYEhhbG8gJHtuYW1hfSwgSFAgJHt0aXBlfSBzdGF0dXMgc2VydmlzIGRpIEZpeHp5OiAke3N0YXR1cy50b1VwcGVyQ2FzZSgpfS4gSW5mbyBsZWJpaCBsYW5qdXQgaHVidW5naSBrYW1pLmA7CiAgd2luZG93Lm9wZW4oYGh0dHBzOi8vd2EubWUvJHtocH0/dGV4dD0ke2VuY29kZVVSSUNvbXBvbmVudChwZXNhbil9YCwiX2JsYW5rIik7Cn07Cgp3aW5kb3cub3BlbkFkZE1vZGFsID0gKCk9PnsKICBkb2N1bWVudC5nZXRFbGVtZW50QnlJZCgibW9kYWxUaXRsZSIpLmlubmVyVGV4dD0iU2VydmlzIEJhcnUiOwogIGRvY3VtZW50LmdldEVsZW1lbnRCeUlkKCJzZXJ2aXNGb3JtIikucmVzZXQoKTsKICBkb2N1bWVudC5nZXRFbGVtZW50QnlJZCgiZWRpdElkIikudmFsdWU9IiI7CiAgZG9jdW1lbnQuZ2V0RWxlbWVudEJ5SWQoInN0YXR1cyIpLnZhbHVlPSJtYXN1ayI7CiAgZG9jdW1lbnQuZ2V0RWxlbWVudEJ5SWQoImtlbGVuZ2thcGFuIikudmFsdWU9IiI7CiAgZG9jdW1lbnQucXVlcnlTZWxlY3RvckFsbCgiLmtlbCIpLmZvckVhY2goYz0+Yy5jaGVja2VkPWZhbHNlKTsKICBkb2N1bWVudC5nZXRFbGVtZW50QnlJZCgiZm9ybU1vZGFsIikuc3R5bGUuZGlzcGxheT0iZmxleCI7Cn07CndpbmRvdy5jbG9zZU1vZGFsID0gKCk9PiBkb2N1bWVudC5nZXRFbGVtZW50QnlJZCgiZm9ybU1vZGFsIikuc3R5bGUuZGlzcGxheT0ibm9uZSI7Cgpkb2N1bWVudC5xdWVyeVNlbGVjdG9yQWxsKCIua2VsIikuZm9yRWFjaChjYj0+ewogIGNiLmFkZEV2ZW50TGlzdGVuZXIoImNoYW5nZSIsKCk9PnsKICAgIGNvbnN0IHZhbHMgPSBBcnJheS5mcm9tKGRvY3VtZW50LnF1ZXJ5U2VsZWN0b3JBbGwoIi5rZWw6Y2hlY2tlZCIpKS5tYXAoYz0+Yy52YWx1ZSk7CiAgICBkb2N1bWVudC5nZXRFbGVtZW50QnlJZCgia2VsZW5na2FwYW4iKS52YWx1ZSA9IHZhbHMuam9pbigiLCAiKTsKICB9KTsKfSk7Cgpkb2N1bWVudC5nZXRFbGVtZW50QnlJZCgic2VydmlzRm9ybSIpLmFkZEV2ZW50TGlzdGVuZXIoInN1Ym1pdCIsIGFzeW5jKGUpPT57CiAgZS5wcmV2ZW50RGVmYXVsdCgpOwogIGNvbnN0IGJ0bj1kb2N1bWVudC5nZXRFbGVtZW50QnlJZCgiYnRuU2ltcGFuIik7CiAgY29uc3QgbG9hZD1kb2N1bWVudC5nZXRFbGVtZW50QnlJZCgiZm9ybUxvYWRpbmciKTsKICBidG4uZGlzYWJsZWQ9dHJ1ZTsgbG9hZC5zdHlsZS5kaXNwbGF5PSJibG9jayI7CgogIGNvbnN0IGVkaXRJZCA9IGRvY3VtZW50LmdldEVsZW1lbnRCeUlkKCJlZGl0SWQiKS52YWx1ZTsKICBjb25zdCBwYXlsb2FkID0gewogICAgdWlkOiBjdXJyZW50VWlkLAogICAgaWRTZXJ2aXM6ICJGWC0iK0RhdGUubm93KCksCiAgICBuYW1hUGVsYW5nZ2FuOiBkb2N1bWVudC5nZXRFbGVtZW50QnlJZCgibmFtYVBlbGFuZ2dhbiIpLnZhbHVlLnRyaW0oKSwKICAgIG5vSHA6IGRvY3VtZW50LmdldEVsZW1lbnRCeUlkKCJub0hwIikudmFsdWUudHJpbSgpLAogICAgdGlwZUhwOiBkb2N1bWVudC5nZXRFbGVtZW50QnlJZCgidGlwZUhwIikudmFsdWUudHJpbSgpLAogICAgaW1laTogZG9jdW1lbnQuZ2V0RWxlbWVudEJ5SWQoImltZWkiKS52YWx1ZS50cmltKCksCiAgICBrZXJ1c2FrYW46IGRvY3VtZW50LmdldEVsZW1lbnRCeUlkKCJrZXJ1c2FrYW4iKS52YWx1ZS50cmltKCksCiAgICBrZWxlbmdrYXBhbjogZG9jdW1lbnQuZ2V0RWxlbWVudEJ5SWQoImtlbGVuZ2thcGFuIikudmFsdWUudHJpbSgpLAogICAgYmlheWE6IHBhcnNlSW50KGRvY3VtZW50LmdldEVsZW1lbnRCeUlkKCJiaWF5YSIpLnZhbHVlKXx8MCwKICAgIGRwOiBwYXJzZUludChkb2N1bWVudC5nZXRFbGVtZW50QnlJZCgiZHAiKS52YWx1ZSl8fDAsCiAgICBzdGF0dXM6IGRvY3VtZW50LmdldEVsZW1lbnRCeUlkKCJzdGF0dXMiKS52YWx1ZSwKICAgIGNhdGF0YW46IGRvY3VtZW50LmdldEVsZW1lbnRCeUlkKCJjYXRhdGFuIikudmFsdWUudHJpbSgpLAogICAgdGVrbmlzaTogZG9jdW1lbnQuZ2V0RWxlbWVudEJ5SWQoInRla25pc2kiKS52YWx1ZS50cmltKCksCiAgICB1cGRhdGVkQXQ6IHNlcnZlclRpbWVzdGFtcCgpCiAgfTsKICBpZihwYXlsb2FkLnN0YXR1cz09PSdzZWxlc2FpJyB8fCBwYXlsb2FkLnN0YXR1cz09PSdkaWFtYmlsJyl7CiAgICBwYXlsb2FkLnRhbmdnYWxTZWxlc2FpID0gc2VydmVyVGltZXN0YW1wKCk7CiAgfQoKICB0cnl7CiAgICBpZihlZGl0SWQpewogICAgICBhd2FpdCB1cGRhdGVEb2MoZG9jKGRiLCJzZXJ2aXMiLGVkaXRJZCksIHBheWxvYWQpOwogICAgICBzaG93TXNnKCJEYXRhIHNlcnZpcyBiZXJoYXNpbCBkaXVwZGF0ZSEiKTsKICAgIH1lbHNlewogICAgICBwYXlsb2FkLnRhbmdnYWxNYXN1ayA9IHNlcnZlclRpbWVzdGFtcCgpOwogICAgICBwYXlsb2FkLmNyZWF0ZWRBdCA9IHNlcnZlclRpbWVzdGFtcCgpOwogICAgICBhd2FpdCBhZGREb2MoY29sbGVjdGlvbihkYiwic2VydmlzIiksIHBheWxvYWQpOwogICAgICBzaG93TXNnKCJTZXJ2aXMgYmFydSBiZXJoYXNpbCBkaXRhbWJhaGthbiEiKTsKICAgIH0KICAgIGNsb3NlTW9kYWwoKTsKICAgIGF3YWl0IGxvYWRTZXJ2aXMoKTsKICB9Y2F0Y2goZXJyKXsKICAgIHNob3dNc2coIkdhZ2FsIHNpbXBhbjogIitlcnIubWVzc2FnZSk7CiAgfWZpbmFsbHl7CiAgICBidG4uZGlzYWJsZWQ9ZmFsc2U7IGxvYWQuc3R5bGUuZGlzcGxheT0ibm9uZSI7CiAgfQp9KTsKCndpbmRvdy5lZGl0U2VydmlzID0gYXN5bmMoaWQpPT57CiAgY29uc3QgaXRlbSA9IGFsbERhdGEuZmluZChkPT5kLmRvY0lkPT09aWQpOwogIGlmKCFpdGVtKSByZXR1cm47CiAgZG9jdW1lbnQuZ2V0RWxlbWVudEJ5SWQoIm1vZGFsVGl0bGUiKS5pbm5lclRleHQ9IkVkaXQgU2VydmlzIjsKICBkb2N1bWVudC5nZXRFbGVtZW50QnlJZCgiZWRpdElkIikudmFsdWU9aWQ7CiAgZG9jdW1lbnQuZ2V0RWxlbWVudEJ5SWQoIm5hbWFQZWxhbmdnYW4iKS52YWx1ZT1pdGVtLm5hbWFQZWxhbmdnYW58fCIiOwogIGRvY3VtZW50LmdldEVsZW1lbnRCeUlkKCJub0hwIikudmFsdWU9aXRlbS5ub0hwfHwiIjsKICBkb2N1bWVudC5nZXRFbGVtZW50QnlJZCgidGlwZUhwIikudmFsdWU9aXRlbS50aXBlSHB8fCIiOwogIGRvY3VtZW50LmdldEVsZW1lbnRCeUlkKCJpbWVpIikudmFsdWU9aXRlbS5pbWVpfHwiIjsKICBkb2N1bWVudC5nZXRFbGVtZW50QnlJZCgia2VydXNha2FuIikudmFsdWU9aXRlbS5rZXJ1c2FrYW58fCIiOwogIGRvY3VtZW50LmdldEVsZW1lbnRCeUlkKCJrZWxlbmdrYXBhbiIpLnZhbHVlPWl0ZW0ua2VsZW5na2FwYW58fCIiOwogIGRvY3VtZW50LmdldEVsZW1lbnRCeUlkKCJiaWF5YSIpLnZhbHVlPWl0ZW0uYmlheWF8fCIiOwogIGRvY3VtZW50LmdldEVsZW1lbnRCeUlkKCJkcCIpLnZhbHVlPWl0ZW0uZHB8fCIiOwogIGRvY3VtZW50LmdldEVsZW1lbnRCeUlkKCJzdGF0dXMiKS52YWx1ZT1pdGVtLnN0YXR1c3x8Im1hc3VrIjsKICBkb2N1bWVudC5nZXRFbGVtZW50QnlJZCgiY2F0YXRhbiIpLnZhbHVlPWl0ZW0uY2F0YXRhbnx8IiI7CiAgZG9jdW1lbnQuZ2V0RWxlbWVudEJ5SWQoInRla25pc2kiKS52YWx1ZT1pdGVtLnRla25pc2l8fCIiOwogIC8vIHNldCBjaGVja2xpc3QKICBjb25zdCBrZWxzID0gKGl0ZW0ua2VsZW5na2FwYW58fCIiKS5zcGxpdCgiLCIpLm1hcChzPT5zLnRyaW0oKSk7CiAgZG9jdW1lbnQucXVlcnlTZWxlY3RvckFsbCgiLmtlbCIpLmZvckVhY2goYz0+eyBjLmNoZWNrZWQgPSBrZWxzLmluY2x1ZGVzKGMudmFsdWUpOyB9KTsKICBkb2N1bWVudC5nZXRFbGVtZW50QnlJZCgiZm9ybU1vZGFsIikuc3R5bGUuZGlzcGxheT0iZmxleCI7Cn07Cgp3aW5kb3cuaGFwdXNTZXJ2aXMgPSBhc3luYyhpZCk9PnsKICBpZighY29uZmlybSgiWWFraW4gaGFwdXMgZGF0YSBzZXJ2aXMgaW5pPyIpKSByZXR1cm47CiAgdHJ5ewogICAgYXdhaXQgZGVsZXRlRG9jKGRvYyhkYiwic2VydmlzIixpZCkpOwogICAgc2hvd01zZygiRGF0YSBkaWhhcHVzIik7CiAgICBhd2FpdCBsb2FkU2VydmlzKCk7CiAgfWNhdGNoKGVycil7IHNob3dNc2coIkdhZ2FsIGhhcHVzOiAiK2Vyci5tZXNzYWdlKTsgfQp9OwoKd2luZG93LnViYWhTdGF0dXMgPSBhc3luYyhpZCxuZXdTdGF0dXMpPT57CiAgdHJ5ewogICAgY29uc3QgdXBkYXRlID0geyBzdGF0dXM6bmV3U3RhdHVzLCB1cGRhdGVkQXQ6c2VydmVyVGltZXN0YW1wKCkgfTsKICAgIGlmKG5ld1N0YXR1cz09PSdzZWxlc2FpJyB8fCBuZXdTdGF0dXM9PT0nZGlhbWJpbCcpewogICAgICB1cGRhdGUudGFuZ2dhbFNlbGVzYWkgPSBzZXJ2ZXJUaW1lc3RhbXAoKTsKICAgIH0KICAgIGF3YWl0IHVwZGF0ZURvYyhkb2MoZGIsInNlcnZpcyIsaWQpLCB1cGRhdGUpOwogICAgYXdhaXQgbG9hZFNlcnZpcygpOwogIH1jYXRjaChlcnIpeyBzaG93TXNnKCJHYWdhbCB1cGRhdGUgc3RhdHVzOiAiK2Vyci5tZXNzYWdlKTsgfQp9OwoKPC9zY3JpcHQ+CjwvYm9keT4KPC9odG1sPgo=" class="active"><span>🔧</span>Servis</a>
+  <a href="laporan.html"><span>📊</span>Laporan</a>
+  <a href="perpanjangan.html"><span>👤</span>Akun</a>
+</div>
+
+<div id="popupMsg"><div class="box"><h3 style="color:#FFC107;">Fixzy</h3><p id="popupPesan" style="margin:15px 0;color:#fff;white-space:pre-line;font-size:13px;"></p><button onclick="document.getElementById('popupMsg').style.display='none'" style="padding:10px 24px;border:none;border-radius:10px;background:#FFC107;color:#111;font-weight:bold;cursor:pointer;">OK</button></div></div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js";
+import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-auth.js";
+import { getFirestore, collection, addDoc, doc, getDocs, updateDoc, deleteDoc, query, where, serverTimestamp, setDoc, getDoc, runTransaction } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js";
+
+/*
+ * SUMBER PRODUK & STOK — FIREBASE
+ *
+ * Semua produk/stok sekarang disimpan di Firestore collection "stok".
+ * Format data:
+ * uid, kode, nama, harga, sisa, merk, kategori, status, updatedAt, createdAt
+ *
+ * Upload CSV/Spreadsheet digunakan untuk migrasi stok awal.
+ * Setelah migrasi selesai, Google Sheets tidak diperlukan lagi untuk penjualan.
+ */
+const STOCK_COLLECTION = "stok";
+
+let stockProducts = [];
+let stockLoaded = false;
+
+const firebaseConfig = {
+  apiKey: "AIzaSyCwMbJsuORhIq4QCmp4c1r6OsjAUlfxU5Y",
+  authDomain: "fixzy-f056f.firebaseapp.com",
+  projectId: "fixzy-f056f",
+  storageBucket: "fixzy-f056f.firebasestorage.app",
+  messagingSenderId: "838081521031",
+  appId: "1:838081521031:web:50fdee909b56460b055f22"
+};
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+
+let currentUid = null;
+let allData = [];
+let allSales = [];
+let activeFilter = new URLSearchParams(window.location.search).get('filter') || 'semua';
+let activeSalesFilter = 'semua';
+let activeMode = 'servis';
+
+const loadingScreen = document.getElementById("loadingScreen");
+const mainContent = document.getElementById("mainContent");
+const listEl = document.getElementById("listServis");
+const emptyEl = document.getElementById("emptyState");
+const searchInput = document.getElementById("searchInput");
+const debugLoading = document.getElementById("debugLoading");
+
+function showMsg(pesan){
+  document.getElementById("popupPesan").innerText=pesan;
+  document.getElementById("popupMsg").style.display="flex";
+}
+
+function money(n){
+  return (parseInt(n)||0).toLocaleString("id-ID");
+}
+
+onAuthStateChanged(auth, async(user)=>{
+  if(user){
+    currentUid = user.uid;
+    debugLoading.innerText = "Auth OK: "+user.uid;
+    loadingScreen.style.display="none";
+    mainContent.style.display="block";
+    setupFilter();
+    setupSalesFilter();
+    await Promise.all([loadServis(), loadPenjualan(), loadStockProducts()]);
+  }else{
+    debugLoading.innerText = "Auth null, redirect ke login...";
+    setTimeout(()=>{ window.location.href="login.html"; },1000);
+  }
+});
+
+function setupFilter(){
+  if(activeFilter !== 'semua'){
+    document.querySelectorAll('#filterChips .chip').forEach(c=>{
+      c.classList.remove('active');
+      if(c.dataset.filter===activeFilter) c.classList.add('active');
+    });
+  }
+
+  document.querySelectorAll('#filterChips .chip').forEach(chip=>{
+    chip.addEventListener('click',()=>{
+      document.querySelectorAll('#filterChips .chip').forEach(c=>c.classList.remove('active'));
+      chip.classList.add('active');
+      activeFilter = chip.dataset.filter;
+      renderList();
+    });
+  });
+
+  searchInput.addEventListener('input', renderList);
+}
+
+function setupSalesFilter(){
+  document.querySelectorAll('#filterPenjualan .chip').forEach(chip=>{
+    chip.addEventListener('click',()=>{
+      document.querySelectorAll('#filterPenjualan .chip').forEach(c=>c.classList.remove('active'));
+      chip.classList.add('active');
+      activeSalesFilter = chip.dataset.salesFilter;
+      renderPenjualan();
+    });
+  });
+
+  document.getElementById("searchPenjualan").addEventListener("input", renderPenjualan);
+}
+
+window.setMode = function(mode){
+  activeMode = mode;
+  const isServis = mode === 'servis';
+
+  document.getElementById("modeServis").classList.toggle("active",isServis);
+  document.getElementById("modePenjualan").classList.toggle("active",!isServis);
+  document.getElementById("servisSection").classList.toggle("section-hidden",!isServis);
+  document.getElementById("penjualanSection").classList.toggle("section-hidden",isServis);
+
+  document.getElementById("pageTitle").innerText = isServis ? "Data Servis" : "Data Penjualan";
+  document.getElementById("quickAddBtn").onclick = isServis ? openAddModal : openPenjualanModal;
+  document.getElementById("totalInfo").innerText = isServis
+    ? `${allData.length} data servis`
+    : `${allSales.length} transaksi penjualan`;
+  if(!isServis) loadStockProducts();
+};
+
+async function loadServis(){
+  if(!currentUid) return;
+
+  try{
+    const q = query(collection(db,"servis"),where("uid","==",currentUid));
+    const snap = await getDocs(q);
+
+    allData=[];
+    snap.forEach(d=>{
+      const data=d.data();
+      data.docId=d.id;
+      data._tanggalMasuk=data.tanggalMasuk?.toDate ? data.tanggalMasuk.toDate()
+        : (data.createdAt?.toDate ? data.createdAt.toDate() : new Date());
+      allData.push(data);
+    });
+
+    allData.sort((a,b)=>b._tanggalMasuk-a._tanggalMasuk);
+    renderList();
+    if(activeMode==='servis'){
+      document.getElementById("totalInfo").innerText=`${allData.length} data servis`;
+    }
+  }catch(err){
+    console.error("Gagal load servis:",err);
+    if(err.code==='permission-denied'){
+      showMsg("Data servis tidak bisa dibaca. Cek Firebase Rules.");
+    }
+    emptyEl.style.display="block";
+  }
+}
+window.loadServis=loadServis;
+
+function renderList(){
+  const search=(searchInput.value||"").toLowerCase();
+
+  const filtered=allData.filter(item=>{
+    const matchFilter=activeFilter==='semua'||item.status===activeFilter;
+    const text=`${item.namaPelanggan||''} ${item.noHp||''} ${item.tipeHp||''} ${item.kerusakan||''}`.toLowerCase();
+    return matchFilter && (!search||text.includes(search));
+  });
+
+  listEl.innerHTML="";
+
+  if(filtered.length===0){
+    emptyEl.style.display="block";
+    if(allData.length===0){
+      document.getElementById("debugInfo").innerText=`Tidak ada data servis untuk UID:\n${currentUid}`;
+    }
+    return;
+  }
+
+  emptyEl.style.display="none";
+
+  filtered.forEach(item=>{
+    const biaya=parseInt(item.biaya)||0;
+    const dp=parseInt(item.dp)||0;
+    const sisa=biaya-dp;
+    const tgl=item._tanggalMasuk.toLocaleDateString("id-ID",{day:"numeric",month:"short",hour:"2-digit",minute:"2-digit"});
+    const statusClass=`status-${item.status}`;
+
+    const div=document.createElement("div");
+    div.className="card";
+    div.innerHTML=`
+      <div class="card-top">
+        <div>
+          <h3>${item.namaPelanggan||'-'}</h3>
+          <div style="font-size:11px;color:#888;margin-top:2px;">${item.tipeHp||'-'} • ${tgl}</div>
+        </div>
+        <span class="${statusClass}">${(item.status||'').toUpperCase()}</span>
+      </div>
+      <div class="card-info">
+        <div>📞 <b>${item.noHp||'-'}</b> ${item.imei?`• IMEI: ${item.imei}`:''}</div>
+        <div>🔧 <b>${item.kerusakan||'-'}</b></div>
+        ${item.kelengkapan?`<div>📦 Kelengkapan: ${item.kelengkapan}</div>`:''}
+        <div>💰 Biaya: <b>Rp ${money(biaya)}</b> ${dp?`• DP Rp ${money(dp)} • Sisa Rp ${money(sisa)}`:''}</div>
+        ${item.teknisi?`<div>👨‍🔧 Teknisi: ${item.teknisi}</div>`:''}
+        ${item.catatan?`<div style="margin-top:6px;background:#252525;padding:8px;border-radius:8px;font-size:11px;">${item.catatan}</div>`:''}
+      </div>
+      <div class="card-actions">
+        <button class="btn-wa" onclick="waPelanggan('${item.noHp||''}','${item.namaPelanggan||''}','${item.tipeHp||''}','${item.status||''}')">WA</button>
+        <button class="btn-edit" onclick="editServis('${item.docId}')">Edit</button>
+        ${item.status!=='selesai'&&item.status!=='diambil'&&item.status!=='batal'
+          ?`<button class="btn-selesai" onclick="ubahStatus('${item.docId}','selesai')">Selesai</button>`:''}
+        ${item.status==='selesai'
+          ?`<button class="btn-selesai" onclick="ubahStatus('${item.docId}','diambil')">Diambil</button>`:''}
+        ${item.status!=='batal'&&item.status!=='diambil'
+          ?`<button class="btn-hapus" onclick="ubahStatus('${item.docId}','batal')">Batal</button>`:''}
+        <button class="btn-hapus" onclick="hapusServis('${item.docId}')">Hapus</button>
+      </div>
+    `;
+    listEl.appendChild(div);
+  });
+}
+
+window.waPelanggan=(no,nama,tipe,status)=>{
+  let hp=(no||"").replace(/[^0-9]/g,"");
+  if(hp.startsWith("0")) hp="62"+hp.substring(1);
+  if(!hp) return;
+  const pesan=`Halo ${nama}, HP ${tipe} status servis di Fixzy: ${String(status).toUpperCase()}. Info lebih lanjut hubungi kami.`;
+  window.open(`https://wa.me/${hp}?text=${encodeURIComponent(pesan)}`,"_blank");
+};
+
+window.openAddModal=()=>{
+  document.getElementById("modalTitle").innerText="Servis Baru";
+  document.getElementById("servisForm").reset();
+  document.getElementById("editId").value="";
+  document.getElementById("status").value="masuk";
+  document.getElementById("kelengkapan").value="";
+  document.querySelectorAll(".kel").forEach(c=>c.checked=false);
+  document.getElementById("formModal").style.display="flex";
+};
+
+window.closeModal=()=>document.getElementById("formModal").style.display="none";
+
+document.querySelectorAll(".kel").forEach(cb=>{
+  cb.addEventListener("change",()=>{
+    const vals=Array.from(document.querySelectorAll(".kel:checked")).map(c=>c.value);
+    document.getElementById("kelengkapan").value=vals.join(", ");
+  });
+});
+
+document.getElementById("servisForm").addEventListener("submit",async(e)=>{
+  e.preventDefault();
+  if(!currentUid){showMsg("Sesi habis, login ulang");return;}
+
+  const btn=document.getElementById("btnSimpan");
+  const load=document.getElementById("formLoading");
+  btn.disabled=true;load.style.display="block";
+
+  const editId=document.getElementById("editId").value;
+  const payload={
+    uid:currentUid,
+    idServis:editId ? undefined : "FX-"+Date.now(),
+    namaPelanggan:document.getElementById("namaPelanggan").value.trim(),
+    noHp:document.getElementById("noHp").value.trim(),
+    tipeHp:document.getElementById("tipeHp").value.trim(),
+    imei:document.getElementById("imei").value.trim(),
+    kerusakan:document.getElementById("kerusakan").value.trim(),
+    kelengkapan:document.getElementById("kelengkapan").value.trim(),
+    biaya:parseInt(document.getElementById("biaya").value)||0,
+    dp:parseInt(document.getElementById("dp").value)||0,
+    status:document.getElementById("status").value,
+    catatan:document.getElementById("catatan").value.trim(),
+    teknisi:document.getElementById("teknisi").value.trim(),
+    updatedAt:serverTimestamp()
+  };
+  if(payload.idServis===undefined) delete payload.idServis;
+  if(payload.status==='selesai'||payload.status==='diambil') payload.tanggalSelesai=serverTimestamp();
+
+  try{
+    if(editId){
+      await updateDoc(doc(db,"servis",editId),payload);
+      showMsg("Data servis berhasil diupdate!");
+    }else{
+      payload.idServis="FX-"+Date.now();
+      payload.tanggalMasuk=serverTimestamp();
+      payload.createdAt=serverTimestamp();
+      await addDoc(collection(db,"servis"),payload);
+      showMsg("Servis baru berhasil ditambahkan!");
+    }
+    closeModal();
+    await loadServis();
+  }catch(err){
+    console.error(err);
+    showMsg(err.code==='permission-denied'
+      ?"Gagal simpan servis: Permission denied. Cek Firebase Rules."
+      :"Gagal simpan: "+err.message);
+  }finally{
+    btn.disabled=false;load.style.display="none";
+  }
+});
+
+window.editServis=async(id)=>{
+  const item=allData.find(d=>d.docId===id);
+  if(!item)return;
+
+  document.getElementById("modalTitle").innerText="Edit Servis";
+  document.getElementById("editId").value=id;
+  document.getElementById("namaPelanggan").value=item.namaPelanggan||"";
+  document.getElementById("noHp").value=item.noHp||"";
+  document.getElementById("tipeHp").value=item.tipeHp||"";
+  document.getElementById("imei").value=item.imei||"";
+  document.getElementById("kerusakan").value=item.kerusakan||"";
+  document.getElementById("kelengkapan").value=item.kelengkapan||"";
+  document.getElementById("biaya").value=item.biaya||"";
+  document.getElementById("dp").value=item.dp||"";
+  document.getElementById("status").value=item.status||"masuk";
+  document.getElementById("catatan").value=item.catatan||"";
+  document.getElementById("teknisi").value=item.teknisi||"";
+
+  const kels=(item.kelengkapan||"").split(",").map(s=>s.trim());
+  document.querySelectorAll(".kel").forEach(c=>c.checked=kels.includes(c.value));
+  document.getElementById("formModal").style.display="flex";
+};
+
+window.hapusServis=async(id)=>{
+  if(!confirm("Yakin hapus data servis ini?"))return;
+  try{
+    await deleteDoc(doc(db,"servis",id));
+    showMsg("Data servis dihapus");
+    await loadServis();
+  }catch(err){showMsg("Gagal hapus: "+err.message);}
+};
+
+window.ubahStatus=async(id,newStatus)=>{
+  try{
+    const update={status:newStatus,updatedAt:serverTimestamp()};
+    if(newStatus==='selesai'||newStatus==='diambil') update.tanggalSelesai=serverTimestamp();
+    if(newStatus==='batal') update.tanggalBatal=serverTimestamp();
+
+    await updateDoc(doc(db,"servis",id),update);
+    await loadServis();
+  }catch(err){showMsg("Gagal update status: "+err.message);}
+};
+
+/* =========================
+   PENJUALAN
+   ========================= */
+
+
+function parseCsvLine(line){
+  const cells=[];
+  let s="";
+  let quoted=false;
+  for(const ch of line){
+    if(ch === '"'){ quoted=!quoted; continue; }
+    if(ch === "," && !quoted){ cells.push(s.trim()); s=""; }
+    else s += ch;
+  }
+  cells.push(s.trim());
+  return cells;
+}
+
+async function loadStockProducts(){
+  const select=document.getElementById("salesProdukSelect");
+  const info=document.getElementById("salesStockInfo");
+
+  try{
+    select.innerHTML='<option value="">Memuat daftar produk...</option>';
+    const q=query(collection(db,STOCK_COLLECTION),where("uid","==",currentUid));
+    const snap=await getDocs(q);
+
+    stockProducts=[];
+    snap.forEach(d=>{
+      const x=d.data()||{};
+      const item={
+        docId:d.id,
+        kode:String(x.kode||d.id).trim(),
+        nama:String(x.nama||"").trim(),
+        harga:Number(x.harga)||0,
+        sisa:Number(x.sisa??x.stok??0)||0,
+        merk:String(x.merk||"").trim(),
+        kategori:String(x.kategori||"").trim(),
+        status:String(x.status||"tersedia").trim()
+      };
+      if(item.nama) stockProducts.push(item);
+    });
+
+    stockProducts.sort((a,b)=>a.nama.localeCompare(b.nama,"id"));
+    select.innerHTML='<option value="">-- Pilih produk --</option>';
+
+    stockProducts.forEach((p,index)=>{
+      const opt=document.createElement("option");
+      opt.value=String(index);
+      opt.textContent=`${p.nama} • Stok ${p.sisa} • Rp ${money(p.harga)}`;
+      opt.disabled=p.sisa<=0 || p.status==="nonaktif" || p.status==="habis";
+      select.appendChild(opt);
+    });
+
+    stockLoaded=true;
+    const aktif=stockProducts.filter(p=>p.sisa>0 && p.status!=="nonaktif" && p.status!=="habis").length;
+    info.innerText=`${stockProducts.length} produk di Firebase. ${aktif} produk tersedia untuk dijual.`;
+    const summary=document.getElementById("stockSummary");
+    if(summary) summary.innerText=`Stok Firebase: ${stockProducts.length} produk • ${aktif} siap dijual`;
+  }catch(err){
+    console.error("Gagal memuat stok Firebase:",err);
+    stockLoaded=false;
+    select.innerHTML='<option value="">Stok Firebase belum tersedia</option>';
+    info.innerText="Gagal membaca stok Firebase. Cek Firebase Rules collection stok.";
+    const summary=document.getElementById("stockSummary");
+    if(summary) summary.innerText="Stok Firebase: gagal dibaca";
+  }
+}
+
+function getSelectedStockProduct(){
+  const idx=document.getElementById("salesProdukSelect").value;
+  if(idx==="") return null;
+  return stockProducts[Number(idx)] || null;
+}
+
+function updateSelectedProduct(){
+  const p=getSelectedStockProduct();
+  const qty=document.getElementById("salesQty");
+  const harga=document.getElementById("salesHarga");
+  const info=document.getElementById("salesStockInfo");
+
+  if(!p){
+    harga.value="";
+    qty.max="";
+    info.innerText="Pilih produk untuk melihat stok yang tersedia.";
+    updateSalesTotal();
+    return;
+  }
+
+  harga.value=p.harga;
+  qty.max=Math.max(0,Math.floor(p.sisa));
+  if((parseInt(qty.value)||1) > p.sisa) qty.value=Math.max(1,Math.floor(p.sisa));
+
+  info.innerHTML=
+    `Kode: <b>${p.kode||"-"}</b> • Merk: <b>${p.merk||"-"}</b> • `+
+    `Stok tersedia: <b style="color:#FFC107">${p.sisa}</b>`;
+
+  updateSalesTotal();
+}
+
+async function kurangiStokFirebase(product,qty){
+  if(!product || !product.docId) throw new Error("Produk stok tidak ditemukan di Firebase.");
+  const qtyNum=Number(qty)||0;
+  if(qtyNum<=0) throw new Error("Jumlah stok tidak valid.");
+
+  const ref=doc(db,STOCK_COLLECTION,product.docId);
+  await runTransaction(db,async(transaction)=>{
+    const snap=await transaction.get(ref);
+    if(!snap.exists()) throw new Error("Data produk sudah tidak ada di Firebase.");
+    const data=snap.data()||{};
+    const stokLama=Number(data.sisa??data.stok??0)||0;
+    if(stokLama<qtyNum) throw new Error(`Stok ${data.nama||product.nama} tinggal ${stokLama}.`);
+    const stokBaru=stokLama-qtyNum;
+    transaction.update(ref,{sisa:stokBaru,stok:stokBaru,status:stokBaru>0?"tersedia":"habis",updatedAt:serverTimestamp()});
+  });
+}
+
+async function tambahKembaliStokFirebase(product,qty){
+  if(!product || !product.docId) return;
+  const qtyNum=Number(qty)||0;
+  if(qtyNum<=0)return;
+  const ref=doc(db,STOCK_COLLECTION,product.docId);
+  await runTransaction(db,async(transaction)=>{
+    const snap=await transaction.get(ref);
+    if(!snap.exists()) return;
+    const data=snap.data()||{};
+    const stokBaru=(Number(data.sisa??data.stok??0)||0)+qtyNum;
+    transaction.update(ref,{sisa:stokBaru,stok:stokBaru,status:"tersedia",updatedAt:serverTimestamp()});
+  });
+}
+
+function normalizeHeader(h){
+  return String(h||"").toLowerCase().trim().replace(/[^a-z0-9]+/g,"");
+}
+
+function mapStockRow(row){
+  const get=(names)=>{
+    for(const n of names){
+      const key=normalizeHeader(n);
+      if(Object.prototype.hasOwnProperty.call(row,key)) return row[key];
+    }
+    return "";
+  };
+  const kode=String(get(["kode","kodeproduk","code","sku","id"])||"").trim();
+  const nama=String(get(["nama","namaproduk","produk","product","barang"])||"").trim();
+  const harga=Number(String(get(["harga","hargajual","hargatunai","price"])||0).replace(/[^0-9.-]/g,""))||0;
+  const sisa=Number(String(get(["stok","sisa","stoktersedia","qty","jumlah"])||0).replace(/[^0-9.-]/g,""))||0;
+  const merk=String(get(["merk","brand"])||"").trim();
+  const kategori=String(get(["kategori","category","jenis"])||"").trim();
+  let status=String(get(["status"])||"").trim().toLowerCase();
+  if(!status) status=sisa>0?"tersedia":"habis";
+  return {kode,nama,harga,sisa,merk,kategori,status};
+}
+
+function csvToObjects(text){
+  const lines=[]; let row=[]; let cell=""; let quoted=false;
+  for(let i=0;i<text.length;i++){
+    const ch=text[i], next=text[i+1];
+    if(ch==='"'){
+      if(quoted && next==='"'){cell+='"';i++;}
+      else quoted=!quoted;
+    }else if(ch===',' && !quoted){row.push(cell);cell="";}
+    else if((ch==='\n'||ch==='\r') && !quoted){
+      if(ch==='\r' && next==='\n')i++;
+      row.push(cell);cell="";
+      if(row.some(v=>String(v).trim()!=="")){lines.push(row);}
+      row=[];
+    }else cell+=ch;
+  }
+  row.push(cell); if(row.some(v=>String(v).trim()!==""))lines.push(row);
+  if(lines.length<2)return [];
+  const headers=lines[0].map(normalizeHeader);
+  return lines.slice(1).map(r=>{
+    const o={}; headers.forEach((h,i)=>{if(h)o[h]=r[i]??"";}); return o;
+  });
+}
+
+async function readStockFile(file){
+  const name=file.name.toLowerCase();
+  if(name.endsWith(".json")){
+    const raw=JSON.parse(await file.text());
+    const arr=Array.isArray(raw)?raw:(Array.isArray(raw.data)?raw.data:[]);
+    return arr.map(x=>{const o={};Object.keys(x||{}).forEach(k=>o[normalizeHeader(k)]=x[k]);return o;});
+  }
+  if(name.endsWith(".xlsx")||name.endsWith(".xls")){
+    if(!window.XLSX) throw new Error("Pembaca Excel belum dimuat. Gunakan CSV atau refresh halaman lalu coba lagi.");
+    const buf=await file.arrayBuffer();
+    const wb=XLSX.read(buf,{type:"array"});
+    const ws=wb.Sheets[wb.SheetNames[0]];
+    return XLSX.utils.sheet_to_json(ws,{defval:""}).map(x=>{const o={};Object.keys(x).forEach(k=>o[normalizeHeader(k)]=x[k]);return o;});
+  }
+  return csvToObjects(await file.text());
+}
+
+window.openStockManager=(mode="upload")=>{
+  document.getElementById("stockManagerModal").style.display="flex";
+  document.getElementById("stockUploadPanel").style.display=mode==="upload"?"block":"none";
+  document.getElementById("stockManualPanel").style.display=mode==="manual"?"block":"none";
+  document.getElementById("stockManagerTitle").innerText=mode==="upload"?"Upload Stok ke Firebase":"Tambah / Update Stok";
+  document.getElementById("stockImportInfo").innerText="";
+  document.getElementById("stockManualInfo").innerText="";
+  if(mode==="manual"){
+    document.getElementById("stockKode").value="";
+    document.getElementById("stockNama").value="";
+    document.getElementById("stockHarga").value="";
+    document.getElementById("stockQty").value="1";
+    document.getElementById("stockMerk").value="";
+    document.getElementById("stockKategori").value="";
+    document.getElementById("stockStatus").value="tersedia";
+    document.querySelector('input[name="stockAction"][value="set"]').checked=true;
+  }
+};
+window.closeStockManager=()=>document.getElementById("stockManagerModal").style.display="none";
+
+window.importStockFile=async()=>{
+  if(!currentUid){showMsg("Sesi habis, login ulang");return;}
+  const file=document.getElementById("stockFile").files[0];
+  const btn=document.getElementById("btnImportStock");
+  const info=document.getElementById("stockImportInfo");
+  if(!file){info.innerText="Pilih file CSV, XLSX, XLS, atau JSON terlebih dahulu.";return;}
+  btn.disabled=true; info.innerText="Membaca file...";
+  try{
+    const rows=await readStockFile(file);
+    const products=rows.map(mapStockRow).filter(p=>p.nama);
+    if(!products.length) throw new Error("Tidak ada produk valid. Pastikan kolom nama produk tersedia.");
+    let dibuat=0,diupdate=0,gagal=0;
+    const existingSnap=await getDocs(query(collection(db,STOCK_COLLECTION),where("uid","==",currentUid)));
+    const byKode=new Map();
+    existingSnap.forEach(d=>{const x=d.data()||{};if(x.kode)byKode.set(String(x.kode).trim(),d.id);});
+
+    for(const p of products){
+      try{
+        const kode=p.kode || ("AUTO-"+Date.now()+"-"+Math.random().toString(36).slice(2,7));
+        const existingId=byKode.get(kode);
+        const ref=existingId?doc(db,STOCK_COLLECTION,existingId):doc(collection(db,STOCK_COLLECTION));
+        const data={uid:currentUid,kode,nama:p.nama,harga:p.harga,sisa:p.sisa,stok:p.sisa,merk:p.merk,kategori:p.kategori,status:p.status||((p.sisa>0)?"tersedia":"habis"),updatedAt:serverTimestamp()};
+        if(!existingId)data.createdAt=serverTimestamp();
+        await setDoc(ref,data,{merge:true});
+        if(existingId)diupdate++; else dibuat++;
+      }catch(e){console.error(e);gagal++;}
+    }
+    await loadStockProducts();
+    info.innerText=`Selesai.\nProduk baru: ${dibuat}\nProduk diupdate: ${diupdate}\nGagal: ${gagal}`;
+    showMsg(`Upload stok selesai. ${dibuat} produk baru, ${diupdate} produk diupdate.`);
+  }catch(err){
+    console.error(err); info.innerText="Gagal upload: "+err.message;
+  }finally{btn.disabled=false;}
+};
+
+window.saveManualStock=async()=>{
+  if(!currentUid){showMsg("Sesi habis, login ulang");return;}
+  const btn=document.getElementById("btnSaveStock");
+  const info=document.getElementById("stockManualInfo");
+  const kode=document.getElementById("stockKode").value.trim();
+  const nama=document.getElementById("stockNama").value.trim();
+  const harga=Number(document.getElementById("stockHarga").value)||0;
+  const qty=Number(document.getElementById("stockQty").value)||0;
+  const merk=document.getElementById("stockMerk").value.trim();
+  const kategori=document.getElementById("stockKategori").value.trim();
+  const status=document.getElementById("stockStatus").value;
+  const action=document.querySelector('input[name="stockAction"]:checked')?.value||"set";
+  if(!kode||!nama){info.innerText="Kode dan nama produk wajib diisi.";return;}
+  btn.disabled=true; info.innerText="Menyimpan ke Firebase...";
+  try{
+    const q=query(collection(db,STOCK_COLLECTION),where("uid","==",currentUid),where("kode","==",kode));
+    const snap=await getDocs(q);
+    let ref,old={};
+    if(!snap.empty){ref=snap.docs[0].ref;old=snap.docs[0].data()||{};}
+    else ref=doc(collection(db,STOCK_COLLECTION));
+    const stokFinal=action==="add" ? (Number(old.sisa??old.stok??0)||0)+qty : qty;
+    await setDoc(ref,{uid:currentUid,kode,nama,harga,sisa:stokFinal,stok:stokFinal,merk,kategori,status:stokFinal>0?status:"habis",updatedAt:serverTimestamp(),...(snap.empty?{createdAt:serverTimestamp()}:{} )},{merge:true});
+    await loadStockProducts();
+    info.innerText=snap.empty?"Produk baru berhasil disimpan.":`Produk diperbarui. Stok sekarang: ${stokFinal}`;
+    showMsg(snap.empty?"Stok baru berhasil ditambahkan ke Firebase.":`Stok ${nama} berhasil diperbarui. Stok sekarang ${stokFinal}.`);
+  }catch(err){console.error(err);info.innerText="Gagal simpan: "+err.message;}
+  finally{btn.disabled=false;}
+};
+
+async function loadPenjualan(){
+  if(!currentUid)return;
+
+  try{
+    const q=query(collection(db,"penjualan"),where("uid","==",currentUid));
+    const snap=await getDocs(q);
+
+    allSales=[];
+    snap.forEach(d=>{
+      const data=d.data();
+      data.docId=d.id;
+      data._tanggal=data.tanggal?.toDate ? data.tanggal.toDate()
+        : (data.createdAt?.toDate ? data.createdAt.toDate() : new Date());
+      allSales.push(data);
+    });
+
+    allSales.sort((a,b)=>b._tanggal-a._tanggal);
+    renderPenjualan();
+
+    if(activeMode==='penjualan'){
+      document.getElementById("totalInfo").innerText=`${allSales.length} transaksi penjualan`;
+    }
+  }catch(err){
+    console.error("Gagal load penjualan:",err);
+    if(err.code==='permission-denied'){
+      showMsg("Data penjualan belum bisa dibaca. Tambahkan izin collection 'penjualan' pada Firebase Rules.");
+    }
+    renderPenjualan();
+  }
+}
+window.loadPenjualan=loadPenjualan;
+
+function renderPenjualan(){
+  const search=(document.getElementById("searchPenjualan").value||"").toLowerCase();
+
+  const filtered=allSales.filter(item=>{
+    const matchFilter=activeSalesFilter==='semua'||item.status===activeSalesFilter;
+    const text=`${item.namaPelanggan||''} ${item.noHp||''} ${item.produk||''} ${item.pembayaran||''}`.toLowerCase();
+    return matchFilter && (!search||text.includes(search));
+  });
+
+  const el=document.getElementById("listPenjualan");
+  const empty=document.getElementById("emptyPenjualan");
+  el.innerHTML="";
+
+  if(filtered.length===0){
+    empty.style.display="block";
+    return;
+  }
+  empty.style.display="none";
+
+  filtered.forEach(item=>{
+    const tgl=item._tanggal.toLocaleDateString("id-ID",{day:"numeric",month:"short",hour:"2-digit",minute:"2-digit"});
+    const total=parseInt(item.total)||0;
+    const statusClass=`status-jual-${item.status||'selesai'}`;
+
+    const div=document.createElement("div");
+    div.className="card";
+    div.innerHTML=`
+      <div class="card-top">
+        <div>
+          <h3>${item.produk||'-'}</h3>
+          <div style="font-size:11px;color:#888;margin-top:2px;">${item.namaPelanggan||'Pelanggan umum'} • ${tgl}</div>
+        </div>
+        <span class="${statusClass}">${(item.status||'selesai').toUpperCase()}</span>
+      </div>
+      <div class="card-info">
+        ${item.noHp?`<div>📞 <b>${item.noHp}</b></div>`:''}
+        <div>📦 Qty: <b>${item.qty||1}</b> × Rp ${money(item.harga)}</div>
+        <div>💰 Total: <b>Rp ${money(total)}</b></div>
+        <div>💳 Pembayaran: <b>${item.pembayaran||'-'}</b></div>
+        ${item.diskon?`<div>🏷️ Diskon: Rp ${money(item.diskon)}</div>`:''}
+        ${item.catatan?`<div style="margin-top:6px;background:#252525;padding:8px;border-radius:8px;font-size:11px;">${item.catatan}</div>`:''}
+      </div>
+      <div class="card-actions">
+        ${item.noHp?`<button class="btn-wa" onclick="waPenjualan('${item.noHp||''}','${item.namaPelanggan||''}','${item.produk||''}',${total})">WA</button>`:''}
+        <button class="btn-nota" onclick="notaPenjualan('${item.docId}')">Nota</button>
+        <button class="btn-edit" onclick="editPenjualan('${item.docId}')">Edit</button>
+        ${item.status!=='batal'?`<button class="btn-selesai" onclick="ubahStatusPenjualan('${item.docId}','selesai')">Selesai</button>`:''}
+        ${item.status!=='batal'?`<button class="btn-hapus" onclick="ubahStatusPenjualan('${item.docId}','batal')">Batal</button>`:''}
+        <button class="btn-hapus" onclick="hapusPenjualan('${item.docId}')">Hapus</button>
+      </div>
+    `;
+    el.appendChild(div);
+  });
+}
+
+function updateSalesTotal(){
+  const qty=parseInt(document.getElementById("salesQty").value)||0;
+  const harga=parseInt(document.getElementById("salesHarga").value)||0;
+  const diskon=parseInt(document.getElementById("salesDiskon").value)||0;
+  const total=Math.max(0,(qty*harga)-diskon);
+  document.getElementById("salesTotal").innerText=`Rp ${money(total)}`;
+  return total;
+}
+
+document.getElementById("salesProdukSelect").addEventListener("change",updateSelectedProduct);
+
+["salesQty","salesHarga","salesDiskon"].forEach(id=>{
+  document.getElementById(id).addEventListener("input",updateSalesTotal);
+});
+
+document.getElementById("salesBayar").addEventListener("change",()=>{
+  const bayar=document.getElementById("salesBayar").value;
+  if(bayar==="Piutang") document.getElementById("salesStatus").value="piutang";
+});
+
+window.openPenjualanModal=()=>{
+  document.getElementById("salesModalTitle").innerText="Penjualan Baru";
+  document.getElementById("penjualanForm").reset();
+  document.getElementById("salesEditId").value="";
+  document.getElementById("salesProdukSelect").value="";
+  document.getElementById("salesQty").value=1;
+  document.getElementById("salesDiskon").value=0;
+  document.getElementById("salesBayar").value="Cash";
+  document.getElementById("salesStatus").value="selesai";
+  updateSalesTotal();
+  document.getElementById("formPenjualanModal").style.display="flex";
+};
+
+window.closePenjualanModal=()=>{
+  document.getElementById("formPenjualanModal").style.display="none";
+};
+
+document.getElementById("penjualanForm").addEventListener("submit",async(e)=>{
+  e.preventDefault();
+  if(!currentUid){showMsg("Sesi habis, login ulang");return;}
+
+  const btn=document.getElementById("btnSimpanPenjualan");
+  const load=document.getElementById("salesFormLoading");
+  btn.disabled=true;load.style.display="block";
+
+  const editId=document.getElementById("salesEditId").value;
+  const product=getSelectedStockProduct();
+  const qty=parseInt(document.getElementById("salesQty").value)||0;
+  const harga=parseInt(document.getElementById("salesHarga").value)||0;
+  const diskon=parseInt(document.getElementById("salesDiskon").value)||0;
+  const total=Math.max(0,(qty*harga)-diskon);
+  const status=document.getElementById("salesStatus").value;
+
+  if(!editId && !product){
+    showMsg("Pilih produk dari daftar stok spreadsheet.");
+    btn.disabled=false;load.style.display="none";
+    return;
+  }
+
+  if(!editId && product && qty > Number(product.sisa)){
+    showMsg(`Stok ${product.nama} hanya ${product.sisa}. Jumlah penjualan tidak boleh melebihi stok.`);
+    btn.disabled=false;load.style.display="none";
+    return;
+  }
+
+  const payload={
+    uid:currentUid,
+    idPenjualan:editId ? undefined : "PJ-"+Date.now(),
+    namaPelanggan:document.getElementById("salesNama").value.trim(),
+    noHp:document.getElementById("salesNoHp").value.trim(),
+    produk:product ? product.nama : "",
+    kodeProduk:product ? product.kode : "",
+    merkProduk:product ? product.merk : "",
+    qty,
+    harga,
+    diskon,
+    total,
+    pembayaran:document.getElementById("salesBayar").value,
+    status,
+    catatan:document.getElementById("salesCatatan").value.trim(),
+    updatedAt:serverTimestamp()
+  };
+  if(payload.idPenjualan===undefined)delete payload.idPenjualan;
+
+  try{
+    /*
+     * Transaksi baru yang bukan BATAL akan mengurangi stok.
+     * Untuk EDIT, stok tidak otomatis dikurangi lagi agar tidak terjadi
+     * pengurangan ganda. Koreksi stok dilakukan lewat transaksi baru.
+     */
+    if(!editId && status!=="batal"){
+      await kurangiStokFirebase(product,qty);
+    }
+
+    if(editId){
+      await updateDoc(doc(db,"penjualan",editId),payload);
+      showMsg("Data penjualan berhasil diupdate!");
+    }else{
+      payload.idPenjualan="PJ-"+Date.now();
+      payload.tanggal=serverTimestamp();
+      payload.createdAt=serverTimestamp();
+      payload.stokDikurangi=status!=="batal";
+      await addDoc(collection(db,"penjualan"),payload);
+      showMsg("Penjualan berhasil ditambahkan dan stok Firebase dikurangi.");
+    }
+
+    closePenjualanModal();
+    await loadPenjualan();
+    await loadStockProducts();
+  }catch(err){
+    console.error(err);
+    showMsg(err.code==='permission-denied'
+      ?"Gagal simpan penjualan: Permission denied. Tambahkan izin collection 'penjualan' pada Firebase Rules."
+      :"Gagal simpan penjualan: "+err.message);
+  }finally{
+    btn.disabled=false;load.style.display="none";
+  }
+});
+
+window.editPenjualan=async(id)=>{
+  const item=allSales.find(d=>d.docId===id);
+  if(!item)return;
+
+  document.getElementById("salesModalTitle").innerText="Edit Penjualan";
+  document.getElementById("salesEditId").value=id;
+  document.getElementById("salesNama").value=item.namaPelanggan||"";
+  document.getElementById("salesNoHp").value=item.noHp||"";
+  const idx=stockProducts.findIndex(p =>
+    (item.kodeProduk && p.kode===item.kodeProduk) ||
+    (!item.kodeProduk && p.nama===item.produk)
+  );
+  document.getElementById("salesProdukSelect").value=idx>=0?String(idx):"";
+  updateSelectedProduct();
+  document.getElementById("salesQty").value=item.qty||1;
+  document.getElementById("salesHarga").value=item.harga||0;
+  document.getElementById("salesDiskon").value=item.diskon||0;
+  document.getElementById("salesBayar").value=item.pembayaran||"Cash";
+  document.getElementById("salesStatus").value=item.status||"selesai";
+  document.getElementById("salesCatatan").value=item.catatan||"";
+  updateSalesTotal();
+  document.getElementById("formPenjualanModal").style.display="flex";
+};
+
+window.ubahStatusPenjualan=async(id,newStatus)=>{
+  try{
+    const item=allSales.find(d=>d.docId===id);
+    if(!item) throw new Error("Transaksi tidak ditemukan.");
+
+    // Jika transaksi yang stoknya sudah dikurangi dibatalkan, kembalikan stok.
+    if(newStatus==="batal" && item.status!=="batal" && item.stokDikurangi){
+      const product=stockProducts.find(p=>(item.kodeProduk&&p.kode===item.kodeProduk)||(!item.kodeProduk&&p.nama===item.produk));
+      if(product) await tambahKembaliStokFirebase(product,Number(item.qty)||1);
+      await updateDoc(doc(db,"penjualan",id),{status:newStatus,stokDikurangi:false,tanggalBatal:serverTimestamp(),updatedAt:serverTimestamp()});
+    }else{
+      await updateDoc(doc(db,"penjualan",id),{
+        status:newStatus,
+        updatedAt:serverTimestamp(),
+        ...(newStatus==="batal"?{tanggalBatal:serverTimestamp()}: {})
+      });
+    }
+    await loadPenjualan();
+    await loadStockProducts();
+  }catch(err){showMsg("Gagal update penjualan: "+err.message);}
+};
+
+window.hapusPenjualan=async(id)=>{
+  if(!confirm("Yakin hapus transaksi penjualan ini?"))return;
+  try{
+    await deleteDoc(doc(db,"penjualan",id));
+    showMsg("Transaksi penjualan dihapus");
+    await loadPenjualan();
+  }catch(err){showMsg("Gagal hapus penjualan: "+err.message);}
+};
+
+
+/* =========================
+   CETAK NOTA PENJUALAN
+   ========================= */
+function escNota(v){
+  return String(v ?? "")
+    .replace(/&/g,"&amp;")
+    .replace(/</g,"&lt;")
+    .replace(/>/g,"&gt;")
+    .replace(/"/g,"&quot;")
+    .replace(/'/g,"&#039;");
+}
+
+window.notaPenjualan=(id)=>{
+  const item=allSales.find(d=>d.docId===id);
+  if(!item){
+    showMsg("Data penjualan tidak ditemukan.");
+    return;
+  }
+
+  const qty=parseInt(item.qty)||1;
+  const harga=parseInt(item.harga)||0;
+  const diskon=parseInt(item.diskon)||0;
+  const total=Math.max(0,(qty*harga)-diskon);
+  const tanggal=item._tanggal instanceof Date
+    ? item._tanggal
+    : new Date();
+
+  const nomor=item.idPenjualan || ("PJ-"+String(id).slice(0,8).toUpperCase());
+  const status=String(item.status||"selesai").toUpperCase();
+
+  const notaHtml=`
+    <div style="text-align:center;border-bottom:1px dashed #111;padding-bottom:8px;margin-bottom:8px">
+      <div style="font-size:20px;font-weight:800;letter-spacing:1px">FIXZY</div>
+      <div style="font-size:11px;font-weight:700">PEMBUKUAN SERVIS HP & PENJUALAN</div>
+      <div style="font-size:10px">Nota Penjualan</div>
+    </div>
+
+    <table style="width:100%;border-collapse:collapse;font-size:10px;margin-bottom:8px">
+      <tr><td>No. Nota</td><td style="text-align:right;font-weight:700">${escNota(nomor)}</td></tr>
+      <tr><td>Tanggal</td><td style="text-align:right">${escNota(tanggal.toLocaleString("id-ID"))}</td></tr>
+      <tr><td>Pelanggan</td><td style="text-align:right">${escNota(item.namaPelanggan||"Umum")}</td></tr>
+      ${item.noHp?`<tr><td>WhatsApp</td><td style="text-align:right">${escNota(item.noHp)}</td></tr>`:""}
+    </table>
+
+    <div style="border-top:1px dashed #111;border-bottom:1px dashed #111;padding:7px 0;margin-bottom:7px">
+      <div style="font-weight:800;margin-bottom:3px">${escNota(item.produk||"-")}</div>
+      ${item.kodeProduk?`<div style="font-size:10px">Kode: ${escNota(item.kodeProduk)}</div>`:""}
+      ${item.merkProduk?`<div style="font-size:10px">Merk: ${escNota(item.merkProduk)}</div>`:""}
+      <table style="width:100%;border-collapse:collapse;margin-top:5px">
+        <tr>
+          <td>${qty} x Rp ${money(harga)}</td>
+          <td style="text-align:right">Rp ${money(qty*harga)}</td>
+        </tr>
+        ${diskon?`<tr><td>Diskon</td><td style="text-align:right">- Rp ${money(diskon)}</td></tr>`:""}
+      </table>
+    </div>
+
+    <table style="width:100%;border-collapse:collapse;font-size:11px">
+      <tr>
+        <td style="font-weight:800;font-size:14px">TOTAL</td>
+        <td style="text-align:right;font-weight:800;font-size:14px">Rp ${money(total)}</td>
+      </tr>
+      <tr><td>Pembayaran</td><td style="text-align:right">${escNota(item.pembayaran||"-")}</td></tr>
+      <tr><td>Status</td><td style="text-align:right;font-weight:800">${escNota(status)}</td></tr>
+    </table>
+
+    ${item.catatan?`
+      <div style="margin-top:8px;border-top:1px dashed #111;padding-top:7px;font-size:10px">
+        Catatan: ${escNota(item.catatan)}
+      </div>`:""}
+
+    <div style="text-align:center;border-top:1px dashed #111;margin-top:10px;padding-top:8px;font-size:10px">
+      Terima kasih sudah berbelanja di FIXZY<br>
+      Simpan nota ini sebagai bukti transaksi.
+    </div>
+  `;
+
+  const win=window.open("","_blank","width=420,height=700");
+  if(!win){
+    showMsg("Popup nota diblokir browser. Izinkan popup untuk halaman Fixzy.");
+    return;
+  }
+
+  win.document.open();
+  win.document.write(`
+    <!DOCTYPE html>
+    <html lang="id">
+    <head>
+      <meta charset="UTF-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      <title>Nota ${escNota(nomor)} - FIXZY</title>
+      <style>
+        *{box-sizing:border-box}
+        body{margin:0;background:#eee;font-family:Arial,sans-serif}
+        .paper{width:80mm;min-height:100mm;margin:10px auto;background:#fff;padding:5mm;color:#111}
+        .actions{position:fixed;top:10px;right:10px;display:flex;gap:6px}
+        button{border:0;border-radius:8px;padding:10px 14px;font-weight:700;cursor:pointer}
+        .print{background:#FFC107}
+        .close{background:#222;color:#fff}
+        @media print{
+          body{background:#fff}
+          .paper{width:80mm;margin:0;padding:5mm;min-height:0}
+          .actions{display:none}
+        }
+      </style>
+    </head>
+    <body>
+      <div class="actions">
+        <button class="print" onclick="window.print()">🖨️ Cetak</button>
+        <button class="close" onclick="window.close()">Tutup</button>
+      </div>
+      <div class="paper">${notaHtml}</div>
+    </body>
+    </html>
+  `);
+  win.document.close();
+  win.focus();
+};
+
+window.waPenjualan=(no,nama,produk,total)=>{
+  let hp=(no||"").replace(/[^0-9]/g,"");
+  if(hp.startsWith("0"))hp="62"+hp.substring(1);
+  if(!hp)return;
+  const item=allSales.find(d=>
+    String(d.noHp||"").replace(/[^0-9]/g,"")===String(no||"").replace(/[^0-9]/g,"") &&
+    String(d.produk||"")===String(produk||"") &&
+    (parseInt(d.total)||0)===Number(total)
+  );
+  const pesan=item
+    ? `*FIXZY - NOTA PENJUALAN*\nNo. Nota: ${item.idPenjualan||"-"}\nPelanggan: ${item.namaPelanggan||"Umum"}\nProduk: ${item.produk||"-"}\nQty: ${item.qty||1} x Rp ${money(item.harga)}${item.diskon?`\nDiskon: Rp ${money(item.diskon)}`:""}\n*TOTAL: Rp ${money(item.total)}*\nPembayaran: ${item.pembayaran||"-"}\nStatus: ${String(item.status||"selesai").toUpperCase()}\n\nTerima kasih sudah berbelanja di FIXZY.`
+    : `Halo ${nama||'Kak'}, terima kasih sudah belanja di Fixzy.\nProduk: ${produk}\nTotal: Rp ${money(total)}`;
+  window.open(`https://wa.me/${hp}?text=${encodeURIComponent(pesan)}`,"_blank");
+};
+
+setMode('servis');
+</script>
+</body>
+</html>
