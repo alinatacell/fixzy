@@ -125,13 +125,8 @@ body{width:100%;}
   .filter-chips{margin-bottom:18px;}
 
   /* Cards become a responsive grid on desktop */
-  #serviceList{
-    display:grid;
-    grid-template-columns:repeat(auto-fit,minmax(320px,1fr));
-    gap:14px;
-    align-items:start;
-  }
-  #serviceList .card{margin-bottom:0;min-width:0;padding:18px;}
+  #serviceList{display:block;}
+  #serviceList .card{margin-bottom:0;min-width:0;padding:0;}
   .card-top h3{font-size:15px;}
   .card-info{font-size:13px;}
   .card-actions button{font-size:12px;padding:10px;}
@@ -155,9 +150,9 @@ body{width:100%;}
 }
 
 /* Large desktop */
-@media (min-width: 1200px){
+@media (min-width:1200px){
   .container{padding-left:40px;padding-right:40px;}
-  #serviceList{grid-template-columns:repeat(3,minmax(0,1fr));}
+  #serviceList{display:block;}
 }
 
 
@@ -322,7 +317,7 @@ html.mobile-device #listServis .card{width:100% !important; margin-bottom:12px !
 
 <div id="loadingScreen">
   <div class="spinner"></div>
-  <p style="color:#FFC107;font-weight:600;font-size:14px;">Memuat Data Penjualan...</p>
+  <p style="color:#FFC107;font-weight:600;font-size:14px;">Memuat Data Servis...</p>
   <p id="debugLoading" style="color:#666;font-size:11px;margin-top:8px;"></p>
 </div>
 
@@ -331,13 +326,19 @@ html.mobile-device #listServis .card{width:100% !important; margin-bottom:12px !
     <div class="header-left">
       <button class="back" onclick="location.href='dashboard.html'">‹</button>
       <div>
-        <h2 id="pageTitle">Penjualan</h2>
+        <h2 id="pageTitle">Servis & Penjualan</h2>
         <p id="totalInfo">0 data</p>
       </div>
     </div>
     <button class="back" id="quickAddBtn" onclick="openAddModal()" style="background:#FFC107;color:#111;font-weight:800;">+</button>
   </div>
-<div id="servisSection" class="section-hidden" style="display:none!important;">
+
+  <div class="mode-switch">
+    <button class="mode-btn active" id="modeServis" onclick="setMode('servis')">🔧 SERVIS HP</button>
+    <button class="mode-btn" id="modePenjualan" onclick="setMode('penjualan')">🛒 PENJUALAN</button>
+  </div>
+
+  <div id="servisSection">
     <div class="search-box">
       <input type="text" id="searchInput" placeholder="Cari nama, HP, tipe HP...">
       <button class="btn-secondary" onclick="loadServis()">↻</button>
@@ -1403,7 +1404,45 @@ window.notaPenjualan=(id)=>{
           .paper{width:80mm;margin:0;padding:5mm;min-height:0}
           .actions{display:none}
         }
-      </style>
+      
+/* MODERN EXCEL-LIKE TABLE - NO GRID */
+#listServis,#listPenjualan{
+  width:100%;overflow-x:auto;background:#151515;
+  border:1px solid #2b2b2b;border-radius:16px;
+  box-shadow:0 10px 30px rgba(0,0,0,.18);
+}
+.data-table{width:100%;border-collapse:separate;border-spacing:0;min-width:900px;font-size:12px}
+.data-table th{
+  position:sticky;top:0;z-index:2;background:#202020;color:#FFC107;
+  font-weight:700;text-align:left;padding:12px 10px;
+  border-bottom:1px solid #383838;border-right:1px solid #292929;white-space:nowrap
+}
+.data-table td{
+  padding:10px;color:#ddd;border-bottom:1px solid #292929;
+  border-right:1px solid #242424;vertical-align:middle;white-space:nowrap
+}
+.data-table tbody tr:nth-child(even){background:#181818}
+.data-table tbody tr:hover{background:rgba(255,193,7,.07)}
+.data-table td:last-child,.data-table th:last-child{border-right:0}
+.data-table tbody tr:last-child td{border-bottom:0}
+.table-name{font-weight:700;color:#fff}
+.table-sub{font-size:10px;color:#777;margin-top:2px}
+.table-price{font-weight:700;color:#FFC107}
+.table-actions{display:flex;gap:5px}
+.table-actions button{
+  border:1px solid #383838;background:#252525;color:#ddd;
+  border-radius:8px;padding:7px 9px;cursor:pointer;font-size:11px;font-weight:700
+}
+.table-actions .btn-wa{background:#25D366;color:#fff;border-color:#25D366}
+.table-actions .btn-hapus{color:#ff8a80}
+.table-status{display:inline-block;padding:5px 9px;border-radius:10px;font-size:10px;font-weight:700}
+@media(max-width:767px){
+  #listServis,#listPenjualan{border-radius:12px}
+  .data-table{min-width:820px}
+  .data-table th,.data-table td{padding:9px 8px}
+}
+
+</style>
     </head>
     <body>
       <div class="actions">
