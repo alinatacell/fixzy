@@ -35,7 +35,7 @@ button,input,select{font:inherit}button{cursor:pointer}
 .import-box input:focus{border-color:var(--y)}
 .note{margin-top:8px;font-size:10px;color:#777;line-height:1.55}
 .msg{display:none;margin-top:10px;padding:10px;border-radius:10px;font-size:11px;white-space:pre-line;line-height:1.5}
-.msg.show{display:block}.msg.ok{color:#80ffac;background:rgba(0,217,95,.08);border:1px solid rgba(0,217,95,.22)}.msg.err{color:#ff9ca7;background:rgba(255,77,94,.08);border:1px solid rgba(255,77,94,.22)}.msg.info{color:#ffd96b;background:rgba(255,193,7,.07);border:1px solid rgba(255,193,7,.2)}
+.msg.show{display:block}.msg{overflow-wrap:anywhere}.msg.ok{color:#80ffac;background:rgba(0,217,95,.08);border:1px solid rgba(0,217,95,.22)}.msg.err{color:#ff9ca7;background:rgba(255,77,94,.08);border:1px solid rgba(255,77,94,.22)}.msg.info{color:#ffd96b;background:rgba(255,193,7,.07);border:1px solid rgba(255,193,7,.2)}
 .preview{display:none;margin-top:12px;border:1px solid #303030;border-radius:12px;overflow:auto}
 .preview table{min-width:760px;width:100%;border-collapse:collapse}.preview th,.preview td{padding:9px;border-bottom:1px solid #292929;font-size:10px;text-align:left}.preview th{color:var(--y);background:#222}
 .table-wrap{overflow:auto;border:1px solid #292929;border-radius:12px}
@@ -87,10 +87,10 @@ td{padding:10px;border-bottom:1px solid #292929;font-size:11px;vertical-align:to
     <div class="title">🔗 Import Stok dari Link CSV</div>
     <div class="import-box">
       <input id="csvUrl" placeholder="Paste link CSV di sini... https://docs.google.com/...output=csv">
-      <button class="btn primary" onclick="previewCSV()">CEK & MUAT CSV</button>
+      <button id="csvLoadBtn" class="btn primary" onclick="previewCSV()">CEK & MUAT CSV</button>
     </div>
     <div class="note">
-      Google Sheets harus dipublikasikan sebagai <b>CSV</b>. Google menjelaskan bahwa spreadsheet dapat dipublish ke web dan memilih format CSV; perubahan pada spreadsheet yang dipublish dapat diperbarui otomatis. citeturn0search0turn0search2
+      Google Sheets harus dipublikasikan sebagai <b>CSV</b>. Google menjelaskan bahwa spreadsheet dapat dipublish ke web dan memilih format CSV; perubahan pada spreadsheet yang dipublish dapat diperbarui otomatis.
       <br><br>
       Setelah CSV terbaca, data akan ditampilkan sebagai preview. Klik <b>SIMPAN KE FIREBASE</b> untuk memasukkannya ke koleksi stok.
     </div>
@@ -269,25 +269,105 @@ function normalizeCSV(rows){
 
 async function previewCSV(){
   clearMsg();
-  const url=$("csvUrl").value.trim();
-  if(!url){msg("Paste link CSV terlebih dahulu.","err");return}
-  if(!/^https?:\/\//i.test(url)){msg("Link tidak valid. Harus diawali http:// atau https://","err");return}
-  showLoading(true,"Membaca CSV...");
+  let url=$("csvUrl").value.trim();
+
+  if(!url){
+    msg("Paste link Google Sheets / CSV terlebih dahulu.","err");
+    return;
+  }
+
+  if(!/^https?:\/\//i.test(url)){
+    msg("Link tidak valid. Harus diawali http:// atau https://","err");
+    return;
+  }
+
+  // Otomatis ubah link Google Sheets menjadi endpoint CSV.
+  // Mendukung:
+  // https://docs.google.com/spreadsheets/d/e/2PACX.../...
+  // https://docs.google.com/spreadsheets/d/ID/edit
+  // https://docs.google.com/spreadsheets/d/ID/edit#gid=123
+  if(/docs\.google\.com\/spreadsheets\/d\/e\//i.test(url)){
+    const m=url.match(/\/spreadsheets\/d\/e\/([^/]+)/i);
+    if(m){
+      url=`https://docs.google.com/spreadsheets/d/e/${m[1]}/pub?output=csv`;
+    }
+  }else if(/docs\.google\.com\/spreadsheets\/d\/[^/]+/i.test(url) &&
+           !/[?&]output=csv/i.test(url) &&
+           !/\/export\?/i.test(url)){
+    const m=url.match(/\/spreadsheets\/d\/([^/]+)/i);
+    if(m){
+      const gid=(url.match(/[?#&]gid=(\d+)/i)||[])[1]||"0";
+      url=`https://docs.google.com/spreadsheets/d/${m[1]}/export?format=csv&gid=${gid}`;
+    }
+  }
+
+  // Tampilkan endpoint yang benar agar mudah dicek.
+  $("csvUrl").value=url;
+
+  showLoading(true,"Membaca data CSV...");
+  const csvBtn=$("csvLoadBtn");
+  if(csvBtn){csvBtn.disabled=true;csvBtn.textContent="MEMBACA CSV...";}
+
   try{
-    const res=await fetch(url,{cache:"no-store"});
-    if(!res.ok)throw Error("HTTP "+res.status);
+    const res=await fetch(url,{
+      method:"GET",
+      mode:"cors",
+      cache:"no-store",
+      redirect:"follow"
+    });
+
+    if(!res.ok) throw Error("Server CSV mengembalikan HTTP "+res.status);
+
     const text=await res.text();
-    if(!text || text.trim().startsWith("<!DOCTYPE") || text.trim().startsWith("<html"))throw Error("Link tidak mengembalikan CSV. Pastikan Google Sheet sudah Publish to web → CSV.");
+
+    if(!text || text.trim().length<2){
+      throw Error("CSV kosong.");
+    }
+
+    const first=text.trim().slice(0,200).toLowerCase();
+
+    if(first.startsWith("<!doctype") || first.startsWith("<html") || first.includes("<html")){
+      throw Error("Link belum menghasilkan CSV. Pastikan Google Sheet sudah Publish to web dan formatnya CSV.");
+    }
+
     const parsed=parseCSV(text);
+
+    if(!parsed.length || parsed[0].length<1){
+      throw Error("Format CSV tidak terbaca.");
+    }
+
     csvRows=normalizeCSV(parsed);
     renderPreview();
-    msg(`CSV berhasil dibaca: ${csvRows.length} produk siap diimpor. Tidak ada data yang dikirim ke Firebase sebelum tombol SIMPAN ditekan.`,"ok");
+
+    msg(
+      `BERHASIL. ${csvRows.length} produk terbaca dari CSV.\\n\\nData belum masuk Firebase. Klik "SIMPAN HASIL CSV KE FIREBASE" untuk mengimpor.`,
+      "ok"
+    );
+
     $("saveCsvBtn").style.display="block";
+
   }catch(e){
-    console.error(e);
-    $("preview").style.display="none";$("saveCsvBtn").style.display="none";
-    msg("Gagal membaca CSV:\n"+e.message+"\n\nUntuk Google Sheets, gunakan File → Share → Publish to web → pilih sheet → CSV, lalu paste link hasilnya.","err");
-  }finally{showLoading(false)}
+    console.error("CSV IMPORT ERROR:",e);
+
+    $("preview").style.display="none";
+    $("saveCsvBtn").style.display="none";
+
+    let detail=e?.message||String(e);
+
+    if(/Failed to fetch|NetworkError|Load failed/i.test(detail)){
+      detail=
+        "Browser menolak koneksi CSV atau link belum bisa diakses.\\n\\n"+
+        "Untuk Google Sheets, gunakan File → Share → Publish to web → pilih sheet → CSV.\\n"+
+        "Pastikan spreadsheet dapat diakses tanpa login.";
+    }
+
+    msg("GAGAL MEMBACA CSV:\\n"+detail,"err");
+
+  }finally{
+    showLoading(false);
+    const csvBtn=$("csvLoadBtn");
+    if(csvBtn){csvBtn.disabled=false;csvBtn.textContent="CEK & MUAT CSV";}
+  }
 }
 
 function renderPreview(){
@@ -405,6 +485,17 @@ window.deleteProduct=async id=>{
 }
 window.resetFilter=()=>{$("search").value="";$("cat").value="";$("status").value="";render()};
 $("search").addEventListener("input",render);$("cat").addEventListener("change",render);$("status").addEventListener("change",render);
+
+
+// Fungsi yang dipanggil oleh onclick HTML harus diekspos ke window
+// karena script utama menggunakan type="module".
+window.previewCSV = previewCSV;
+window.saveCSVToFirebase = saveCSVToFirebase;
+window.loadProducts = loadProducts;
+window.openManual = openManual;
+window.closeManual = closeManual;
+window.resetFilter = resetFilter;
+
 
 onAuthStateChanged(auth,async user=>{
   if(user){uid=user.uid;await loadProducts()}
