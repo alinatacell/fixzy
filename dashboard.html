@@ -709,6 +709,73 @@ body.theme-light .pro-subitem:hover{background:#e8e8e8}
   .pro-menu-item{min-height:58px}
 }
 </style>
+
+<style id="fixzy-minimal-pro-v6">
+.fx-minimal-drawer{
+  width:min(340px,88vw)!important;
+  padding:0!important;
+  overflow:hidden!important;
+  background:#fff!important;
+  border-radius:18px!important;
+  border:1px solid #e5e5e5!important;
+  box-shadow:0 18px 55px rgba(0,0,0,.22)!important;
+}
+.fxm-head{
+  height:64px;display:flex;align-items:center;justify-content:space-between;
+  padding:0 17px;border-bottom:1px solid #ededed;background:#fff;
+}
+.fxm-head strong{display:block;font-size:18px;color:#171717;line-height:1}
+.fxm-head span{display:block;margin-top:5px;font-size:10px;color:#8a8a8a}
+.fxm-close{
+  width:34px;height:34px;border:0;border-radius:10px;background:#f3f3f3;
+  color:#333;font-size:21px;line-height:1;cursor:pointer;
+}
+.fxm-close:hover{background:#FFC107}
+.fxm-nav{padding:7px 9px 10px}
+.fxm-row{
+  width:100%;min-height:48px;display:flex;align-items:center;gap:11px;
+  border:0;border-radius:10px;background:transparent;color:#292929;
+  padding:0 10px;text-align:left;font:600 12px inherit;cursor:pointer;
+}
+.fxm-row:hover{background:#f6f6f6}
+.fxm-ico{
+  width:24px;flex:none;text-align:center;color:#666;font-size:17px;
+}
+.fxm-row:hover .fxm-ico{color:#d59600}
+.fxm-toggle i{
+  margin-left:auto;font-style:normal;color:#999;font-size:15px;
+  transition:transform .16s ease;
+}
+.fxm-section.open>.fxm-toggle i{transform:rotate(180deg);color:#c88d00}
+.fxm-drop{
+  display:none;margin:0 0 4px 35px;padding:2px 0 3px;
+  border-left:1px solid #e6e6e6;
+}
+.fxm-section.open>.fxm-drop{display:block}
+.fxm-drop button{
+  width:100%;height:36px;border:0;border-radius:7px;background:transparent;
+  color:#666;text-align:left;padding:0 10px;font:500 11px inherit;cursor:pointer;
+}
+.fxm-drop button:hover{background:#f7f7f7;color:#b67b00}
+body.dark .fx-minimal-drawer,
+body.theme-dark .fx-minimal-drawer{
+  background:#171717!important;border-color:#2c2c2c!important;
+}
+body.dark .fxm-head,body.theme-dark .fxm-head{
+  background:#171717;border-color:#2b2b2b;
+}
+body.dark .fxm-head strong,body.theme-dark .fxm-head strong,
+body.dark .fxm-row,body.theme-dark .fxm-row{color:#eee}
+body.dark .fxm-head span,body.theme-dark .fxm-head span,
+body.dark .fxm-drop button,body.theme-dark .fxm-drop button{color:#929292}
+body.dark .fxm-row:hover,body.theme-dark .fxm-row:hover,
+body.dark .fxm-drop button:hover,body.theme-dark .fxm-drop button:hover{background:#222}
+body.dark .fxm-drop,body.theme-dark .fxm-drop{border-color:#333}
+body.dark .fxm-close,body.theme-dark .fxm-close{background:#242424;color:#ddd}
+@media(max-width:480px){
+  .fx-minimal-drawer{width:calc(100vw - 18px)!important;border-radius:16px!important}
+}
+</style>
 </head>
 <body>
 <div id="loadingScreen">
@@ -756,76 +823,70 @@ body.theme-light .pro-subitem:hover{background:#e8e8e8}
 <button class="drawer-close" onclick="closeDrawer()">✕</button>
 </div>
 
-<div class="drawer-menu pro-drawer">
-  <div class="pro-menu-head">
+
+<div class="drawer-menu fx-minimal-drawer">
+  <div class="fxm-head">
     <div>
-      <div class="pro-menu-title">Menu Fixzy</div>
-      <div class="pro-menu-sub">Kelola aplikasi dengan cepat</div>
+      <strong>Fixzy</strong>
+      <span>Menu utama</span>
     </div>
-    <button class="pro-close" type="button" onclick="closeDrawer()">×</button>
+    <button class="fxm-close" type="button" onclick="closeDrawer()">×</button>
   </div>
 
-  <div class="pro-menu-list">
-    <button class="pro-menu-item" type="button" onclick="location.href='dashboard.html'">
-      <span class="pro-icon">⌂</span><span class="pro-text"><b>Dashboard</b><small>Ringkasan usaha</small></span>
-      <span class="pro-arrow">›</span>
+  <nav class="fxm-nav">
+    <button class="fxm-row" type="button" onclick="location.href='dashboard.html'">
+      <span class="fxm-ico">⌂</span><span>Dashboard</span>
     </button>
 
-    <button class="pro-menu-item" type="button" onclick="location.reload()">
-      <span class="pro-icon">↻</span><span class="pro-text"><b>Refresh Halaman</b><small>Muat ulang data terbaru</small></span>
-      <span class="pro-arrow">›</span>
-    </button>
-
-    <button class="pro-menu-item" type="button" onclick="alert('Fitur APK Instal siap dihubungkan ke file APK Fixzy.')">
-      <span class="pro-icon">▣</span><span class="pro-text"><b>APK Instal</b><small>Pasang Fixzy di HP</small></span>
-      <span class="pro-arrow">›</span>
-    </button>
-
-    <div class="pro-menu-group">
-      <button class="pro-menu-item pro-group-toggle" type="button" onclick="toggleProGroup(this)">
-        <span class="pro-icon">◐</span><span class="pro-text"><b>Tampilan</b><small>Tema Auto, Light, Dark</small></span>
-        <span class="pro-arrow">⌄</span>
+    <div class="fxm-section">
+      <button class="fxm-row fxm-toggle" type="button" onclick="toggleFxMenu(this)">
+        <span class="fxm-ico">▤</span><span>Transaksi</span><i>⌄</i>
       </button>
-      <div class="pro-submenu">
-        <select id="themeSelect" class="pro-theme-select" aria-label="Pilih tema" onchange="setTheme(this.value)">
-          <option value="auto">◐ Auto</option>
-          <option value="light">☀ Light</option>
-          <option value="dark">● Dark</option>
-        </select>
+      <div class="fxm-drop">
+        <button type="button" onclick="location.href='nota.html'">Nota Servis &amp; Belanja</button>
+        <button type="button" onclick="location.href='servis.html'">Data Servis &amp; Penjualan</button>
       </div>
     </div>
 
-    <div class="pro-menu-group">
-      <button class="pro-menu-item pro-group-toggle" type="button" onclick="toggleProGroup(this)">
-        <span class="pro-icon">▦</span><span class="pro-text"><b>Data & Transaksi</b><small>Semua data Fixzy</small></span>
-        <span class="pro-arrow">⌄</span>
+    <div class="fxm-section">
+      <button class="fxm-row fxm-toggle" type="button" onclick="toggleFxMenu(this)">
+        <span class="fxm-ico">▦</span><span>Produk</span><i>⌄</i>
       </button>
-      <div class="pro-submenu">
-        <button class="pro-subitem" type="button" onclick="location.href='nota.html'">🧾 <span>Nota Servis & Belanja</span></button>
-        <button class="pro-subitem" type="button" onclick="location.href='servis.html'">🔧 <span>Data Servis & Penjualan</span></button>
-        <button class="pro-subitem" type="button" onclick="location.href='stock.html'">📦 <span>Data Produk</span></button>
-        <button class="pro-subitem" type="button" onclick="location.href='tagihan.html'">💳 <span>Data Tagihan</span></button>
+      <div class="fxm-drop">
+        <button type="button" onclick="location.href='stock.html'">Data Produk</button>
+        <button type="button" onclick="location.href='produk.html'">Tambah Produk</button>
       </div>
     </div>
 
-    <div class="pro-menu-group">
-      <button class="pro-menu-item pro-group-toggle" type="button" onclick="toggleProGroup(this)">
-        <span class="pro-icon">⚙</span><span class="pro-text"><b>Pengaturan</b><small>Akun dan aplikasi</small></span>
-        <span class="pro-arrow">⌄</span>
+    <button class="fxm-row" type="button" onclick="location.href='tagihan.html'">
+      <span class="fxm-ico">◫</span><span>Data Tagihan</span>
+    </button>
+
+    <div class="fxm-section">
+      <button class="fxm-row fxm-toggle" type="button" onclick="toggleFxMenu(this)">
+        <span class="fxm-ico">◐</span><span>Tampilan</span><i>⌄</i>
       </button>
-      <div class="pro-submenu">
-        <button class="pro-subitem" type="button" onclick="location.href='akun.html'">👤 <span>Profil Konter</span></button>
-        <button class="pro-subitem" type="button" onclick="showAboutFixzy()">ⓘ <span>Tentang Fixzy</span></button>
-        <button class="pro-subitem logout" type="button" onclick="logoutFixzy()">⇥ <span>Logout</span></button>
+      <div class="fxm-drop fxm-theme-drop">
+        <button type="button" onclick="setTheme('auto')">◐ &nbsp;Auto</button>
+        <button type="button" onclick="setTheme('light')">☀ &nbsp;Light</button>
+        <button type="button" onclick="setTheme('dark')">● &nbsp;Dark</button>
       </div>
     </div>
-  </div>
 
-  <div class="pro-menu-footer">
-    <span class="pro-status-dot"></span>
-    <span>Fixzy • Sistem Pembukuan</span>
-  </div>
+    <button class="fxm-row" type="button" onclick="location.reload()">
+      <span class="fxm-ico">↻</span><span>Refresh Halaman</span>
+    </button>
+
+    <button class="fxm-row" type="button" onclick="alert('Fitur APK Instal siap dihubungkan ke APK Fixzy.')">
+      <span class="fxm-ico">▣</span><span>APK Instal</span>
+    </button>
+
+    <button class="fxm-row" type="button" onclick="showAboutFixzy()">
+      <span class="fxm-ico">ⓘ</span><span>About Fixzy</span>
+    </button>
+  </nav>
 </div>
+
 
 <div class="drawer-footer">
 <a class="drawer-item logout" href="#" onclick="logout(); return false;"><span class="icon">🚪</span> Logout</a>
@@ -1173,6 +1234,14 @@ function logoutFixzy(){
   if(typeof closeDrawer==='function') closeDrawer();
   if(typeof logout==='function') return logout();
   if(confirm('Keluar dari akun Fixzy?')) location.href='login.html';
+}
+</script>
+
+<script id="fixzy-minimal-pro-js-v6">
+function toggleFxMenu(btn){
+  const section=btn.closest('.fxm-section');
+  if(!section) return;
+  section.classList.toggle('open');
 }
 </script>
 </body>
