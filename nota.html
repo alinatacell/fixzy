@@ -193,6 +193,15 @@ html.mobile-device #formModal .input-box select{width:100% !important;}
 html.mobile-device #listServis{display:block !important;}
 html.mobile-device #listServis .card{width:100% !important; margin-bottom:12px !important;}
 
+
+/* COMPACT SERVICE CONTROLS */
+.service-controls{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px;}
+.service-controls select{width:100%;min-width:0;height:38px;padding:0 10px;border-radius:10px;border:1px solid #333;background:#252525;color:#fff;font-size:11px;font-weight:700;outline:none;cursor:pointer;}
+.service-controls select:focus{border-color:#FFC107;}
+.service-controls .status-select{color:#FFC107;}
+.service-controls .action-select{color:#fff;}
+@media (max-width:767px){.service-controls{grid-template-columns:1fr 1fr;gap:7px}.service-controls select{height:36px;font-size:10px;padding:0 8px}}
+
 /* ================================
    FIXZY: SERVIS + PENJUALAN
    ================================ */
@@ -792,16 +801,19 @@ function renderList(){
         ${item.teknisi?`<div>👨‍🔧 Teknisi: ${item.teknisi}</div>`:''}
         ${item.catatan?`<div style="margin-top:6px;background:#252525;padding:8px;border-radius:8px;font-size:11px;">${item.catatan}</div>`:''}
       </div>
-      <div class="card-actions">
-        <button class="btn-wa" onclick="waPelanggan('${item.noHp||''}','${item.namaPelanggan||''}','${item.tipeHp||''}','${item.status||''}')">WA</button>
-        <button class="btn-edit" onclick="editServis('${item.docId}')">Edit</button>
-        ${item.status!=='selesai'&&item.status!=='diambil'&&item.status!=='batal'
-          ?`<button class="btn-selesai" onclick="ubahStatus('${item.docId}','selesai')">Selesai</button>`:''}
-        ${item.status==='selesai'
-          ?`<button class="btn-selesai" onclick="ubahStatus('${item.docId}','diambil')">Diambil</button>`:''}
-        ${item.status!=='batal'&&item.status!=='diambil'
-          ?`<button class="btn-hapus" onclick="ubahStatus('${item.docId}','batal')">Batal</button>`:''}
-        <button class="btn-hapus" onclick="hapusServis('${item.docId}')">Hapus</button>
+      <div class="service-controls">
+        <select class="status-select" aria-label="Ubah status servis" onchange="ubahStatus('${item.docId}',this.value);">
+          <option value="masuk" ${item.status==='masuk'?'selected':''}>Masuk</option>
+          <option value="proses" ${item.status==='proses'?'selected':''}>Proses</option>
+          <option value="selesai" ${item.status==='selesai'?'selected':''}>Selesai</option>
+          <option value="diambil" ${item.status==='diambil'?'selected':''}>Diambil</option>
+        </select>
+        <select class="action-select" aria-label="Aksi servis" onchange="aksiServis('${item.docId}',this.value);this.value='';">
+          <option value="">Aksi</option>
+          <option value="edit">Edit</option>
+          <option value="batal">Batal</option>
+          <option value="hapus">Hapus</option>
+        </select>
       </div>
     `;
     listEl.appendChild(div);
@@ -907,6 +919,12 @@ window.editServis=async(id)=>{
   const kels=(item.kelengkapan||"").split(",").map(s=>s.trim());
   document.querySelectorAll(".kel").forEach(c=>c.checked=kels.includes(c.value));
   document.getElementById("formModal").style.display="flex";
+};
+
+window.aksiServis=async(id,aksi)=>{
+  if(aksi==='edit'){ editServis(id); return; }
+  if(aksi==='batal'){ ubahStatus(id,'batal'); return; }
+  if(aksi==='hapus'){ hapusServis(id); return; }
 };
 
 window.hapusServis=async(id)=>{
