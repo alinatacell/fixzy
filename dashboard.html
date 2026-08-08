@@ -248,7 +248,7 @@ function normalizeCSV(rows){
     if(!nama && !kode)continue;
     const modal=num(pick(o,["harga modal","harga tunai","modal","harga","buy price","cost","harga beli"]));
     const jual=num(pick(o,["harga jual","jual","selling price","price"]));
-    const sisa=num(pick(o,["sisa","stok","stock","qty","jumlah","jumlah stok","saldo"]));
+    const sisa=num(pick(o,["sisa","sisa stock","sisa stok","stok","stock","qty","jumlah","jumlah stok","stock akhir","saldo"]));
     const kategori=pick(o,["kategori","category","jenis"])||"LAINNYA";
     const merk=pick(o,["merk","brand","supplier"]);
     const catatan=pick(o,["catatan","keterangan","note"]);
@@ -272,7 +272,7 @@ async function previewCSV(){
   let url=$("csvUrl").value.trim();
 
   if(!url){
-    msg("Paste link Google Sheets / CSV terlebih dahulu.","err");
+    msg("Paste link Google Sheets terlebih dahulu.","err");
     return;
   }
 
@@ -281,32 +281,60 @@ async function previewCSV(){
     return;
   }
 
-  // Otomatis ubah link Google Sheets menjadi endpoint CSV.
-  // Mendukung:
-  // https://docs.google.com/spreadsheets/d/e/2PACX.../...
-  // https://docs.google.com/spreadsheets/d/ID/edit
-  // https://docs.google.com/spreadsheets/d/ID/edit#gid=123
-  if(/docs\.google\.com\/spreadsheets\/d\/e\//i.test(url)){
-    const m=url.match(/\/spreadsheets\/d\/e\/([^/]+)/i);
-    if(m){
-      url=`https://docs.google.com/spreadsheets/d/e/${m[1]}/pub?output=csv`;
+  /*
+   * GOOGLE SHEETS → CSV
+   *
+   * Link yang ditempel boleh berupa:
+   * 1. .../pubhtml?gid=123&single=true
+   * 2. .../pub?gid=123&single=true
+   * 3. .../d/ID/edit#gid=123
+   * 4. .../d/e/2PACX.../pubhtml?gid=123&single=true
+   *
+   * GID WAJIB dipertahankan karena spreadsheet A Yudi
+   * memakai sheet tertentu (contoh gid=2070671735).
+   */
+  try{
+    const u=new URL(url);
+    const host=u.hostname.toLowerCase();
+
+    if(host==="docs.google.com" && u.pathname.includes("/spreadsheets/")){
+      const gid=u.searchParams.get("gid") || (url.match(/[#&?]gid=(\d+)/i)||[])[1] || "0";
+
+      // ID publish /d/e/...
+      const pubMatch=u.pathname.match(/\/spreadsheets\/d\/e\/([^/]+)/i);
+
+      if(pubMatch){
+        url=
+          "https://docs.google.com/spreadsheets/d/e/"+
+          pubMatch[1]+
+          "/pub?gid="+encodeURIComponent(gid)+
+          "&single=true&output=csv";
+      }else{
+        // ID spreadsheet biasa /d/ID/...
+        const idMatch=u.pathname.match(/\/spreadsheets\/d\/([^/]+)/i);
+
+        if(idMatch){
+          url=
+            "https://docs.google.com/spreadsheets/d/"+
+            idMatch[1]+
+            "/export?format=csv&gid="+encodeURIComponent(gid);
+        }
+      }
     }
-  }else if(/docs\.google\.com\/spreadsheets\/d\/[^/]+/i.test(url) &&
-           !/[?&]output=csv/i.test(url) &&
-           !/\/export\?/i.test(url)){
-    const m=url.match(/\/spreadsheets\/d\/([^/]+)/i);
-    if(m){
-      const gid=(url.match(/[?#&]gid=(\d+)/i)||[])[1]||"0";
-      url=`https://docs.google.com/spreadsheets/d/${m[1]}/export?format=csv&gid=${gid}`;
-    }
+  }catch(e){
+    msg("Link Google Sheets tidak valid.","err");
+    return;
   }
 
-  // Tampilkan endpoint yang benar agar mudah dicek.
   $("csvUrl").value=url;
 
-  showLoading(true,"Membaca data CSV...");
+  showLoading(true,"Membaca CSV...");
+
   const csvBtn=$("csvLoadBtn");
-  if(csvBtn){csvBtn.disabled=true;csvBtn.textContent="MEMBACA CSV...";}
+  if(csvBtn){
+    csvBtn.disabled=true;
+    csvBtn.textContent="MEMBACA CSV...";
+  }
 
   try{
     const res=await fetch(url,{
@@ -316,7 +344,9 @@ async function previewCSV(){
       redirect:"follow"
     });
 
-    if(!res.ok) throw Error("Server CSV mengembalikan HTTP "+res.status);
+    if(!res.ok){
+      throw Error("HTTP "+res.status);
+    }
 
     const text=await res.text();
 
@@ -324,49 +354,67 @@ async function previewCSV(){
       throw Error("CSV kosong.");
     }
 
-    const first=text.trim().slice(0,200).toLowerCase();
+    const first=text.trim().slice(0,300).toLowerCase();
 
     if(first.startsWith("<!doctype") || first.startsWith("<html") || first.includes("<html")){
-      throw Error("Link belum menghasilkan CSV. Pastikan Google Sheet sudah Publish to web dan formatnya CSV.");
+      throw Error(
+        "Google tidak mengirim CSV. Pastikan spreadsheet sudah Publish to web dan sheet yang dipilih adalah sheet stok."
+      );
     }
 
     const parsed=parseCSV(text);
 
-    if(!parsed.length || parsed[0].length<1){
-      throw Error("Format CSV tidak terbaca.");
+    if(!parsed.length){
+      throw Error("Tidak ada baris CSV yang terbaca.");
     }
 
+    /*
+     * Normalisasi lebih toleran:
+     * Kode / nama produk / stock awal / harga / harga sabtu /
+     * terjual / sisa stock / merk / status.
+     */
     csvRows=normalizeCSV(parsed);
+
     renderPreview();
 
     msg(
-      `BERHASIL. ${csvRows.length} produk terbaca dari CSV.\\n\\nData belum masuk Firebase. Klik "SIMPAN HASIL CSV KE FIREBASE" untuk mengimpor.`,
+      "BERHASIL MEMBACA CSV\\n"+
+      csvRows.length+" produk ditemukan.\\n\\n"+
+      "Data belum masuk Firebase. Klik SIMPAN HASIL CSV KE FIREBASE.",
       "ok"
     );
 
     $("saveCsvBtn").style.display="block";
 
   }catch(e){
-    console.error("CSV IMPORT ERROR:",e);
+    console.error("CSV ERROR:",e);
 
     $("preview").style.display="none";
     $("saveCsvBtn").style.display="none";
 
-    let detail=e?.message||String(e);
+    let detail=e && e.message ? e.message : String(e);
 
     if(/Failed to fetch|NetworkError|Load failed/i.test(detail)){
       detail=
-        "Browser menolak koneksi CSV atau link belum bisa diakses.\\n\\n"+
-        "Untuk Google Sheets, gunakan File → Share → Publish to web → pilih sheet → CSV.\\n"+
-        "Pastikan spreadsheet dapat diakses tanpa login.";
+        "Browser tidak dapat mengambil CSV dari Google.\\n\\n"+
+        "Pastikan Google Sheet sudah Publish to web dan bisa dibuka tanpa login.";
     }
 
-    msg("GAGAL MEMBACA CSV:\\n"+detail,"err");
+    msg(
+      "GAGAL MEMBACA CSV\\n\\n"+
+      detail+
+      "\\n\\nURL CSV yang digunakan:\\n"+
+      url,
+      "err"
+    );
 
   }finally{
     showLoading(false);
-    const csvBtn=$("csvLoadBtn");
-    if(csvBtn){csvBtn.disabled=false;csvBtn.textContent="CEK & MUAT CSV";}
+
+    if(csvBtn){
+      csvBtn.disabled=false;
+      csvBtn.textContent="CEK & MUAT CSV";
+    }
   }
 }
 
