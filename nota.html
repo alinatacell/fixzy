@@ -1038,29 +1038,62 @@ function parseCsvLine(line){
   return cells;
 }
 
+function stockNumber(value){
+  if(value===null || value===undefined || value==="") return 0;
+  if(typeof value === "number") return Number.isFinite(value)?value:0;
+  let s=String(value).trim().toLowerCase();
+  if(!s) return 0;
+  s=s.replace(/rp/g,"").replace(/pcs?/g,"").replace(/\s/g,"");
+  // Data Firebase stok FIXZY memakai field: sisa (utama), dan stok sebagai mirror.
+  // Dukung juga angka Indonesia seperti 1.500 dan 1.500,50.
+  if(s.includes(",") && s.includes(".")){
+    if(s.lastIndexOf(",") > s.lastIndexOf(".")) s=s.replace(/\./g,"").replace(",",".");
+    else s=s.replace(/,/g,"");
+  }else if(s.includes(".")){
+    const parts=s.split(".");
+    if(parts.length===2 && parts[1].length!==3) s=s.replace(/\./g,"");
+    else s=s.replace(/\./g,"");
+  }else if(s.includes(",")){
+    s=s.replace(/,/g,"");
+  }
+  const n=Number(s.replace(/[^0-9.-]/g,""));
+  return Number.isFinite(n)?n:0;
+}
+
+function firebaseStockValue(x){
+  // Struktur yang dipakai halaman stock(5).html:
+  // sisa = stok aktif; stok = mirror.
+  if(Object.prototype.hasOwnProperty.call(x,"sisa")) return x.sisa;
+  if(Object.prototype.hasOwnProperty.call(x,"stok")) return x.stok;
+  return 0;
+}
+
 async function loadStockProducts(){
   const select=document.getElementById("salesProdukSelect");
   const info=document.getElementById("salesStockInfo");
 
   try{
-    select.innerHTML='<option value="">Memuat daftar produk...</option>';
+    select.innerHTML='<option value="">Memuat produk Firebase...</option>';
     const q=query(collection(db,STOCK_COLLECTION),where("uid","==",currentUid));
     const snap=await getDocs(q);
 
     stockProducts=[];
     snap.forEach(d=>{
       const x=d.data()||{};
+      const sisa=stockNumber(firebaseStockValue(x));
+      const hargaModal=stockNumber(x.hargaModal);
+      const hargaJual=stockNumber(x.hargaJual ?? x.harga);
       const item={
         docId:d.id,
-        kode:String(x.kode||d.id).trim(),
+        kode:String(x.kode||"").trim(),
         nama:String(x.nama||"").trim(),
-        harga:Number(x.hargaJual??x.harga??0)||0,
-        hargaJual:Number(x.hargaJual??x.harga??0)||0,
-        hargaModal:Number(x.hargaModal??x.modal??0)||0,
-        sisa:Number(x.sisa??x.stok??0)||0,
-        merk:String(x.merk||x.brand||"").trim(),
+        harga:hargaJual,
+        hargaJual,
+        hargaModal,
+        sisa,
+        merk:String(x.merk||"").trim(),
         kategori:String(x.kategori||"").trim(),
-        status:String(x.status||"tersedia").trim()
+        status:String(x.status|| (sisa>0?"tersedia":"habis")).trim().toLowerCase()
       };
       if(item.nama) stockProducts.push(item);
     });
@@ -1078,7 +1111,8 @@ async function loadStockProducts(){
 
     stockLoaded=true;
     const aktif=stockProducts.filter(p=>p.sisa>0 && p.status!=="nonaktif" && p.status!=="habis").length;
-    info.innerText=`${stockProducts.length} produk di Firebase. ${aktif} produk tersedia untuk dijual.`;
+    const nol=stockProducts.filter(p=>p.sisa<=0).length;
+    info.innerText=`${stockProducts.length} produk Firebase • ${aktif} tersedia • ${nol} stok 0.`;
     const summary=document.getElementById("stockSummary");
     if(summary) summary.innerText=`Stok Firebase: ${stockProducts.length} produk • ${aktif} siap dijual`;
   }catch(err){
@@ -1118,6 +1152,8 @@ function updateSelectedProduct(){
   info.innerHTML=
     `Kode: <b>${p.kode||"-"}</b> • Merk: <b>${p.merk||"-"}</b> • `+
     `Stok tersedia: <b style="color:#FFC107">${p.sisa}</b>`;
+
+  // Nilai ini berasal langsung dari Firebase collection "stok" field "sisa".
 
   updateSalesTotal();
 }
@@ -1230,7 +1266,7 @@ async function syncServiceStock(oldProducts,newProducts,oldConsumed,newConsumed)
       const [id,d]=entries[i],snap=snaps[i];
       if(!snap.exists())throw new Error("Produk stok tidak ditemukan di Firebase.");
       const data=snap.data()||{};
-      const stokLama=Number(data.sisa??data.stok??0)||0;
+      const stokLama=stockNumber(firebaseStockValue(data));
       const stokBaru=stokLama+d;
       if(stokBaru<0)throw new Error(`Stok ${data.nama||id} tidak cukup untuk produk yang dipakai.`);
       updates.push([snap.ref,stokBaru]);
@@ -1251,7 +1287,7 @@ async function kurangiStokFirebase(product,qty){
     const snap=await transaction.get(ref);
     if(!snap.exists()) throw new Error("Data produk sudah tidak ada di Firebase.");
     const data=snap.data()||{};
-    const stokLama=Number(data.sisa??data.stok??0)||0;
+    const stokLama=stockNumber(firebaseStockValue(data));
     if(stokLama<qtyNum) throw new Error(`Stok ${data.nama||product.nama} tinggal ${stokLama}.`);
     const stokBaru=stokLama-qtyNum;
     transaction.update(ref,{sisa:stokBaru,stok:stokBaru,status:stokBaru>0?"tersedia":"habis",updatedAt:serverTimestamp()});
@@ -1267,7 +1303,7 @@ async function tambahKembaliStokFirebase(product,qty){
     const snap=await transaction.get(ref);
     if(!snap.exists()) return;
     const data=snap.data()||{};
-    const stokBaru=(Number(data.sisa??data.stok??0)||0)+qtyNum;
+    const stokBaru=stockNumber(firebaseStockValue(data))+qtyNum;
     transaction.update(ref,{sisa:stokBaru,stok:stokBaru,status:"tersedia",updatedAt:serverTimestamp()});
   });
 }
@@ -1287,7 +1323,7 @@ function mapStockRow(row){
   const kode=String(get(["kode","kodeproduk","code","sku","id"])||"").trim();
   const nama=String(get(["nama","namaproduk","produk","product","barang"])||"").trim();
   const harga=Number(String(get(["harga","hargajual","hargatunai","price"])||0).replace(/[^0-9.-]/g,""))||0;
-  const sisa=Number(String(get(["stok","sisa","stoktersedia","qty","jumlah"])||0).replace(/[^0-9.-]/g,""))||0;
+  const sisa=stockNumber(get(["stok","stok tersedia","stoktersedia","sisa","sisa stok","sisastok","stok akhir","stokakhir","jumlah stok","jumlahstok","qty","jumlah","stock"]));
   const merk=String(get(["merk","brand"])||"").trim();
   const kategori=String(get(["kategori","category","jenis"])||"").trim();
   let status=String(get(["status"])||"").trim().toLowerCase();
