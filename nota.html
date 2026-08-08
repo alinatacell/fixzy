@@ -165,7 +165,40 @@ textarea{min-height:75px;resize:vertical}
         </div>
       </section>
 
+      <section class="card">
+        <div class="card-head">Sparepart</div>
+        <div class="card-body">
+          <div class="radio-row">
+            <button id="modeProduk" class="mode active" type="button" onclick="ubahModeSparepart('produk')">📦 Dari Daftar Produk</button>
+            <button id="modeManual" class="mode" type="button" onclick="ubahModeSparepart('manual')">✍️ Tulis Manual</button>
+          </div>
 
+          <div id="produkBox">
+            <div class="grid">
+              <div class="field full">
+                <label>Pilih Produk</label>
+                <select id="produkSelect">
+                  <option value="">Memuat daftar produk...</option>
+                </select>
+              </div>
+              <div class="field"><label>Jumlah</label><input id="produkQty" type="number" min="1" value="1"></div>
+            </div>
+            <button class="add" type="button" onclick="tambahProduk()">＋ Tambahkan Produk</button>
+          </div>
+
+          <div id="manualBox" class="hidden">
+            <div class="grid">
+              <div class="field"><label>Nama Sparepart</label><input id="manualNama" placeholder="Nama sparepart"></div>
+              <div class="field"><label>Jumlah</label><input id="manualQty" type="number" min="1" value="1"></div>
+              <div class="field"><label>Harga Modal</label><input id="manualModal" type="number" min="0" value="0"></div>
+              <div class="field"><label>Harga Jual</label><input id="manualJual" type="number" min="0" value="0"></div>
+            </div>
+            <button class="add" type="button" onclick="tambahManual()">＋ Tambahkan Manual</button>
+          </div>
+
+          <div id="sparepartList" class="item-list" style="margin-top:12px"></div>
+        </div>
+      </section>
 <section class="card">
         <div class="card-head">Pembayaran & Status</div>
         <div class="card-body">
@@ -481,7 +514,7 @@ function loadDraft(){
   if(jenis==="servis")return {
     jenis:"servis",nomorNota:nomor("servis"),tanggal:nowLocal(),
     pelanggan:{nama:"",wa:"",alamat:""},hp:{merk:"",tipe:"",imei:""},keluhan:"",
-    kelengkapan:[],sandi:"",pola:"",teknisi:"",absen:1,sparepart:[],dp:0,status:"Menunggu",catatan:""
+    kelengkapan:[],sandi:"",pola:"",sparepart:[],dp:0,status:"Menunggu",catatan:""
   };
   return {
     jenis:"penjualan",nomorNota:nomor("penjualan"),tanggal:nowLocal(),
@@ -520,13 +553,11 @@ function muatKeForm(d){
     document.getElementById("dp").value=Number(d.dp)||0;
     document.getElementById("statusServis").value=d.status||"Menunggu";
     document.getElementById("catatanServis").value=d.catatan||"";
-    data.servis.sparepart=[];
+    data.servis.sparepart=Array.isArray(d.sparepart)?d.sparepart:[];
     data.servis.kelengkapan=Array.isArray(d.kelengkapan)?d.kelengkapan:[];
     renderChecklist(data.servis.kelengkapan);
     document.getElementById("sandi").value=d.sandi||"";
     renderPattern(d.pola||"");
-    document.getElementById("teknisi").value=d.teknisi||"";
-    document.getElementById("absen").value=d.absen??1;
   }else{
     document.getElementById("diskon").value=Number(d.diskon)||0;
     document.getElementById("dibayar").value=Number(d.dibayar)||0;
@@ -549,9 +580,7 @@ function kumpulkan(calculate=true){
       kelengkapan:ambilChecklist(),
       sandi:document.getElementById("sandi").value,
       pola:ambilPola(),
-      teknisi:document.getElementById("teknisi").value.trim(),
-      absen:Number(document.getElementById("absen").value)||0,
-      sparepart:[],
+      sparepart:data.servis.sparepart,
       dp:Number(document.getElementById("dp").value)||0,
       status:document.getElementById("statusServis").value,
       catatan:document.getElementById("catatanServis").value.trim()
@@ -700,7 +729,7 @@ function buildPrint(d){
       <div style="text-align:right"><h2 style="margin:0">${d.jenis==="servis"?"NOTA SERVIS":"NOTA PENJUALAN"}</h2><div>${esc(d.nomorNota)}</div><div>${esc(d.tanggal)}</div></div>
     </div>
     <p>Pelanggan: <b>${esc(d.pelanggan.nama||"Umum")}</b> &nbsp; ${esc(d.pelanggan.wa||"")}</p>
-    ${d.jenis==="servis"?`<p>HP: ${esc(d.hp.merk)} ${esc(d.hp.tipe)} &nbsp; IMEI: ${esc(d.hp.imei||"-")}</p><p>Keluhan: ${esc(d.keluhan||"-")}</p><p>Alamat: ${esc(d.pelanggan.alamat||"-")}</p><p>Kelengkapan: ${esc((d.kelengkapan||[]).join(", ")||"-")}</p><p>Sandi: ${esc(d.sandi||"-")} &nbsp; Pola: ${esc(d.pola||"-")}</p><p>Teknisi: ${esc(d.teknisi||"-")} &nbsp; Absen: ${esc(d.absen??0)}</p>`:""}
+    ${d.jenis==="servis"?`<p>HP: ${esc(d.hp.merk)} ${esc(d.hp.tipe)} &nbsp; IMEI: ${esc(d.hp.imei||"-")}</p><p>Keluhan: ${esc(d.keluhan||"-")}</p><p>Alamat: ${esc(d.pelanggan.alamat||"-")}</p><p>Kelengkapan: ${esc((d.kelengkapan||[]).join(", ")||"-")}</p><p>Sandi: ${esc(d.sandi||"-")} &nbsp; Pola: ${esc(d.pola||"-")}</p>`:""}
     <table style="width:100%;border-collapse:collapse;margin-top:15px"><thead><tr><th style="text-align:left;border-bottom:1px solid #333">No</th><th style="text-align:left;border-bottom:1px solid #333">Item</th><th style="border-bottom:1px solid #333">Qty</th><th style="text-align:right;border-bottom:1px solid #333">Harga</th><th style="text-align:right;border-bottom:1px solid #333">Total</th></tr></thead><tbody>${rows}</tbody></table>
     <div style="margin-left:auto;width:320px;margin-top:18px">${summary}</div>
     <p>Status: <b>${esc(d.status||"")}</b></p><p>${esc(d.catatan||"")}</p>
@@ -732,32 +761,15 @@ function simpan(cetak){
     if(idx>=0)list[idx]=d;else list.push(d);
     localStorage.setItem(key,JSON.stringify(list));
 
-    // Transaksi sudah tersimpan, jadi draft input dikosongkan.
-    localStorage.removeItem(jenis==="servis"?STORAGE.draftServis:STORAGE.draftPenjualan);
+    // Draft juga disimpan supaya data tidak hilang jika halaman ditutup.
+    localStorage.setItem(jenis==="servis"?STORAGE.draftServis:STORAGE.draftPenjualan,JSON.stringify(d));
 
-    // Siapkan tampilan cetak sebelum form dibersihkan.
+    // Siapkan tampilan cetak.
     document.getElementById("printNota").innerHTML=buildPrint(d);
     tutupPopup();
-    if(cetak){
-      toast("Tersimpan. Menyiapkan cetak...");
-      setTimeout(()=>window.print(),300);
-    }else{
-      toast("Transaksi berhasil disimpan.");
-    }
-    resetNotaSetelahSimpan();
+    toast(cetak?"Tersimpan. Menyiapkan cetak...":"Transaksi berhasil disimpan.");
+    if(cetak)setTimeout(()=>window.print(),300);
   }catch(e){alert("Gagal menyimpan: "+e.message)}
-}
-function resetNotaSetelahSimpan(){
-  const baru=jenis==="servis"
-    ? {jenis:"servis",nomorNota:nomor("servis"),tanggal:nowLocal(),pelanggan:{nama:"",wa:"",alamat:""},hp:{merk:"",tipe:"",imei:""},keluhan:"",kelengkapan:[],sandi:"",pola:"",teknisi:"",absen:1,sparepart:[],dp:0,status:"Menunggu",catatan:""}
-    : {jenis:"penjualan",nomorNota:nomor("penjualan"),tanggal:nowLocal(),pelanggan:{nama:"",wa:""},items:[],diskon:0,dibayar:0,metode:"Tunai",status:"Selesai",catatan:""};
-  data={servis:{sparepart:[],kelengkapan:[]},penjualan:{items:[]}};
-  muatKeForm(baru);
-  renderChecklist([]);
-  renderPattern("");
-  renderSemua();
-  document.getElementById("printNota").innerHTML="";
-  window.scrollTo({top:0,behavior:"smooth"});
 }
 function simpanDanCetak(){simpan(true)}
 function batal(){
