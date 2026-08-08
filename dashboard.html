@@ -1111,7 +1111,33 @@ async function tambahKembaliStokFirebase(product,qty){
 }
 
 function normalizeHeader(h){
-  return String(h||"").toLowerCase().trim().replace(/[^a-z0-9]+/g,"");
+  return String(h||"")
+    .replace(/^\uFEFF/,'')
+    .toLowerCase()
+    .trim()
+    .replace(/[àáâãäå]/g,"a")
+    .replace(/[èéêë]/g,"e")
+    .replace(/[ìíîï]/g,"i")
+    .replace(/[òóôõö]/g,"o")
+    .replace(/[ùúûü]/g,"u")
+    .replace(/[^a-z0-9]+/g,"");
+}
+
+function cleanNumber(v){
+  if(v===null || v===undefined || v==="") return 0;
+  let x=String(v).trim().replace(/rp/ig,"").replace(/\s/g,"");
+  // Support Indonesian formats: 150.000 / 150,000 / 150000
+  if(x.includes(",") && x.includes(".")){
+    if(x.lastIndexOf(",") > x.lastIndexOf(".")) x=x.replace(/\./g,"").replace(",",".");
+    else x=x.replace(/,/g,"");
+  }else if(x.includes(".")){
+    x=x.replace(/\./g,"");
+  }else if(x.includes(",")){
+    const parts=x.split(",");
+    x=parts.length===2 && parts[1].length<=2 ? parts.join(".") : x.replace(/,/g,"");
+  }
+  const n=Number(String(x).replace(/[^0-9.-]/g,""));
+  return Number.isFinite(n)?n:0;
 }
 
 function mapStockRow(row){
@@ -1122,29 +1148,46 @@ function mapStockRow(row){
     }
     return "";
   };
-  const kode=String(get(["kode","kodeproduk","code","sku","id"])||"").trim();
-  const nama=String(get(["nama","namaproduk","produk","product","barang"])||"").trim();
-  const harga=Number(String(get(["harga","hargajual","hargatunai","price"])||0).replace(/[^0-9.-]/g,""))||0;
-  const sisa=Number(String(get(["stok","sisa","stoktersedia","qty","jumlah"])||0).replace(/[^0-9.-]/g,""))||0;
-  const merk=String(get(["merk","brand"])||"").trim();
-  const kategori=String(get(["kategori","category","jenis"])||"").trim();
-  let status=String(get(["status"])||"").trim().toLowerCase();
+  const kode=String(get([
+    "kode","kodeproduk","kodebarang","kodeitem","code","sku","id","productcode"
+  ])||"").trim();
+  const nama=String(get([
+    "nama","nama produk","namaproduk","nama barang","namabarang","barang","produk","product","item","deskripsi"
+  ])||"").trim();
+  const harga=cleanNumber(get([
+    "harga","harga jual","hargajual","harga tunai","hargatunai","harga jual cash","price"
+  ]));
+  const sisa=cleanNumber(get([
+    "stok","stok tersedia","stoktersedia","sisa","sisa stok","sisastok","stok akhir","stokakhir","qty","jumlah","jumlah stok","jumlahstok","stock"
+  ]));
+  const merk=String(get(["merk","brand","merek"])||"").trim();
+  const kategori=String(get(["kategori","category","jenis","tipe"])||"").trim();
+  let status=String(get(["status","kondisi"])||"").trim().toLowerCase();
   if(!status) status=sisa>0?"tersedia":"habis";
+  if(["aktif","active","ready","tersedia","available"].includes(status)) status="tersedia";
+  if(["non aktif","nonaktif","inactive","disable","disabled"].includes(status)) status="nonaktif";
+  if(["habis","kosong","empty","soldout"].includes(status)) status="habis";
   return {kode,nama,harga,sisa,merk,kategori,status};
 }
 
 function csvToObjects(text){
+  text=String(text||"").replace(/^\uFEFF/,'');
+  // Detect comma or semicolon CSV automatically.
+  const firstLine=(text.split(/\r?\n/).find(x=>x.trim())||"");
+  const comma=(firstLine.match(/,/g)||[]).length;
+  const semi=(firstLine.match(/;/g)||[]).length;
+  const delimiter=semi>comma?';':',';
   const lines=[]; let row=[]; let cell=""; let quoted=false;
   for(let i=0;i<text.length;i++){
     const ch=text[i], next=text[i+1];
     if(ch==='"'){
       if(quoted && next==='"'){cell+='"';i++;}
       else quoted=!quoted;
-    }else if(ch===',' && !quoted){row.push(cell);cell="";}
+    }else if(ch===delimiter && !quoted){row.push(cell);cell="";}
     else if((ch==='\n'||ch==='\r') && !quoted){
       if(ch==='\r' && next==='\n')i++;
       row.push(cell);cell="";
-      if(row.some(v=>String(v).trim()!=="")){lines.push(row);}
+      if(row.some(v=>String(v).trim()!==""))lines.push(row);
       row=[];
     }else cell+=ch;
   }
@@ -1202,8 +1245,12 @@ window.importStockFile=async()=>{
   btn.disabled=true; info.innerText="Membaca file...";
   try{
     const rows=await readStockFile(file);
+    if(!rows.length) throw new Error("File terbaca tetapi tidak memiliki baris data. Pastikan baris pertama adalah header kolom.");
     const products=rows.map(mapStockRow).filter(p=>p.nama);
-    if(!products.length) throw new Error("Tidak ada produk valid. Pastikan kolom nama produk tersedia.");
+    if(!products.length){
+      const sample=Object.keys(rows[0]||{}).join(", ");
+      throw new Error("Tidak ada produk valid. Kolom nama tidak dikenali. Header terbaca: "+(sample||"(kosong)"));
+    }
     let dibuat=0,diupdate=0,gagal=0;
     const existingSnap=await getDocs(query(collection(db,STOCK_COLLECTION),where("uid","==",currentUid)));
     const byKode=new Map();
@@ -1224,7 +1271,11 @@ window.importStockFile=async()=>{
     info.innerText=`Selesai.\nProduk baru: ${dibuat}\nProduk diupdate: ${diupdate}\nGagal: ${gagal}`;
     showMsg(`Upload stok selesai. ${dibuat} produk baru, ${diupdate} produk diupdate.`);
   }catch(err){
-    console.error(err); info.innerText="Gagal upload: "+err.message;
+    console.error(err);
+    const msg=err?.code==='permission-denied'
+      ? "Gagal upload: Permission denied. Firebase Rules untuk collection 'stok' belum mengizinkan akun ini."
+      : "Gagal upload: "+(err?.message||err);
+    info.innerText=msg;
   }finally{btn.disabled=false;}
 };
 
@@ -1253,8 +1304,12 @@ window.saveManualStock=async()=>{
     await loadStockProducts();
     info.innerText=snap.empty?"Produk baru berhasil disimpan.":`Produk diperbarui. Stok sekarang: ${stokFinal}`;
     showMsg(snap.empty?"Stok baru berhasil ditambahkan ke Firebase.":`Stok ${nama} berhasil diperbarui. Stok sekarang ${stokFinal}.`);
-  }catch(err){console.error(err);info.innerText="Gagal simpan: "+err.message;}
-  finally{btn.disabled=false;}
+  }catch(err){
+    console.error(err);
+    info.innerText=err?.code==='permission-denied'
+      ? "Gagal simpan: Permission denied. Firebase Rules untuk collection 'stok' belum mengizinkan akun ini."
+      : "Gagal simpan: "+(err?.message||err);
+  }finally{btn.disabled=false;}
 };
 
 async function loadPenjualan(){
