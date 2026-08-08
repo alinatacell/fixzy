@@ -568,6 +568,36 @@ button,input,textarea,select{
   }
 }
 
+
+/* ===== DASHBOARD BISNIS V3 ===== */
+.business-section{margin-top:4px;margin-bottom:18px}
+.section-title{font-size:16px;font-weight:800;margin:0 0 10px;color:#fff}
+.section-sub{font-size:11px;color:#777;margin-top:-6px;margin-bottom:12px}
+.business-stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
+.biz-stat{background:#1b1b1b;border:1px solid rgba(255,193,7,.10);border-radius:18px;padding:16px;min-width:0}
+.biz-stat .biz-icon{font-size:20px;margin-bottom:8px}
+.biz-stat .biz-label{font-size:10px;color:#999;font-weight:600;letter-spacing:.2px}
+.biz-stat .biz-value{font-size:21px;font-weight:800;color:#FFC107;margin-top:3px;overflow-wrap:anywhere}
+.biz-stat .biz-note{font-size:9px;color:#666;margin-top:4px}
+.summary-card{background:#1b1b1b;border:1px solid rgba(255,193,7,.10);border-radius:20px;padding:17px;margin-bottom:18px}
+.summary-row{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.summary-item{background:#252525;border-radius:13px;padding:12px;min-width:0}
+.summary-item span{display:block;font-size:10px;color:#888}
+.summary-item b{display:block;font-size:15px;color:#fff;margin-top:3px;overflow-wrap:anywhere}
+.summary-item b.yellow{color:#FFC107}
+@media(max-width:767px){
+ .business-stats{grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}
+ .biz-stat{padding:13px}
+ .biz-stat .biz-value{font-size:18px}
+ .summary-row{grid-template-columns:repeat(2,minmax(0,1fr))}
+ .summary-item:last-child{grid-column:1/-1}
+}
+@media(max-width:380px){
+ .business-stats{gap:7px}
+ .biz-stat{padding:10px}
+ .biz-stat .biz-value{font-size:16px}
+}
+
 </style>
 </head>
 <body>
@@ -701,15 +731,28 @@ button,input,textarea,select{
         </div>
       </div>
 
-      <div class="stats">
-        <div class="stat"><h4>TOTAL SERVIS</h4><h2 id="statTotal">0</h2><p>Semua data masuk</p></div>
-        <div class="stat"><h4>BELUM DIAMBIL</h4><h2 id="statProses">0</h2><p>Perlu dikerjakan</p></div>
-        <div class="stat"><h4>SELESAI HARI INI</h4><h2 id="statSelesai">0</h2><p>Sudah beres</p></div>
-        <div class="stat"><h4>PENDAPATAN</h4><h2 id="statPendapatan">Rp 0</h2><p>Bulan ini</p></div>
+      <div class="quick-actions" style="margin-top:-6px;max-width:none;">
+        <a href="stock.html" class="quick-btn secondary">📦 Kelola Stok</a>
+        <a href="servis.html" class="quick-btn secondary">🔧 Kelola Servis</a>
       </div>
 
-      <div style="display:none;" class="desktop-only-info">
-        <p style="color:#666;font-size:12px;text-align:center;margin-top:10px;">Di desktop, sidebar kiri permanen. Di HP, klik ☰ untuk buka menu.</p>
+      <div class="business-section">
+        <div class="section-title">Ringkasan Bisnis</div>
+        <div class="section-sub">Servis, penjualan dan stok diperbarui dari Firebase.</div>
+        <div class="business-stats">
+          <div class="biz-stat"><div class="biz-icon">🔧</div><div class="biz-label">TOTAL SERVIS</div><div class="biz-value" id="statTotal">0</div><div class="biz-note">Semua data servis</div></div>
+          <div class="biz-stat"><div class="biz-icon">⏳</div><div class="biz-label">SERVIS AKTIF</div><div class="biz-value" id="statProses">0</div><div class="biz-note">Belum selesai/diambil</div></div>
+          <div class="biz-stat"><div class="biz-icon">🛒</div><div class="biz-label">TOTAL PENJUALAN</div><div class="biz-value" id="statPenjualan">0</div><div class="biz-note">Transaksi penjualan</div></div>
+          <div class="biz-stat"><div class="biz-icon">📦</div><div class="biz-label">STOK TERSEDIA</div><div class="biz-value" id="statStok">0</div><div class="biz-note">Produk dengan stok</div></div>
+        </div>
+      </div>
+
+      <div class="summary-card">
+        <div class="summary-row">
+          <div class="summary-item"><span>Selesai hari ini</span><b id="statSelesai">0</b></div>
+          <div class="summary-item"><span>Stok kosong</span><b id="statStokKosong">0</b></div>
+          <div class="summary-item"><span>Pendapatan bulan ini</span><b class="yellow" id="statPendapatan">Rp 0</b></div>
+        </div>
       </div>
     </div>
   </div>
@@ -855,28 +898,87 @@ async function loadUser(uid){
       document.getElementById("progressBar").style.background="linear-gradient(90deg,#ff5252,#ff1744)";
     }
     try{
-      const q = query(collection(db,"servis"), where("uid","==",uid));
-      const servSnap = await getDocs(q);
-      let total=0, proses=0, selesaiHariIni=0, pendapatan=0;
-      const todayStr = new Date().toDateString();
+      const uidFilter = where("uid","==",uid);
+      const [servSnap, stokSnap, jualSnap] = await Promise.all([
+        getDocs(query(collection(db,"servis"), uidFilter)),
+        getDocs(query(collection(db,"stok"), uidFilter)).catch(()=>null),
+        getDocs(query(collection(db,"penjualan"), uidFilter)).catch(()=>null)
+      ]);
+
+      let total=0, proses=0, selesaiHariIni=0, pendapatanServis=0;
+      let totalPenjualan=0, pendapatanPenjualan=0;
+      let stokReady=0, stokKosong=0;
+      const now=new Date();
+      const bulan=now.getMonth(), tahun=now.getFullYear();
+      const todayStr=now.toDateString();
+
+      const toDate=(v)=>{
+        if(!v) return null;
+        if(v?.toDate) return v.toDate();
+        if(v instanceof Date) return v;
+        const d=new Date(v);
+        return isNaN(d.getTime())?null:d;
+      };
+      const num=(v)=>{
+        if(typeof v==='number') return v;
+        if(v==null) return 0;
+        const n=parseInt(String(v).replace(/[^0-9-]/g,''),10);
+        return Number.isFinite(n)?n:0;
+      };
+      const isBatal=(v)=>String(v||'').toLowerCase().replace(/\s+/g,'')==='batal';
+      const inThisMonth=(d)=>d && d.getMonth()===bulan && d.getFullYear()===tahun;
+
       servSnap.forEach(d=>{
         total++;
         const s=d.data();
-        if(s.status!=="diambil" && s.status!=="selesai") proses++;
-        if(s.tanggalSelesai){
-          const t = s.tanggalSelesai.toDate ? s.tanggalSelesai.toDate() : new Date(s.tanggalSelesai);
-          if(t.toDateString()===todayStr) selesaiHariIni++;
+        const status=String(s.status||'').toLowerCase();
+        if(status!=='diambil' && status!=='selesai' && status!=='batal') proses++;
+
+        const selesaiAt=toDate(s.tanggalSelesai||s.updatedAt||s.createdAt);
+        if(status==='selesai' && selesaiAt && selesaiAt.toDateString()===todayStr) selesaiHariIni++;
+
+        // Pendapatan servis bulan ini. BATAL tidak dihitung.
+        const tanggalPendapatan=toDate(s.tanggalSelesai||s.updatedAt||s.createdAt);
+        if(!isBatal(status) && inThisMonth(tanggalPendapatan)){
+          pendapatanServis += num(s.biaya);
         }
-        // Status BATAL tidak dihitung sebagai pendapatan.
-        // Jika servis diubah menjadi BATAL, pendapatan otomatis berkurang
-        // saat dashboard memuat ulang data dari Firestore.
-        if(s.status !== "batal" && s.biaya) pendapatan+= parseInt(s.biaya)||0;
       });
+
+      if(stokSnap){
+        stokSnap.forEach(d=>{
+          const s=d.data();
+          const qty=num(s.sisa);
+          if(qty>0) stokReady++;
+          else stokKosong++;
+        });
+      }
+
+      if(jualSnap){
+        jualSnap.forEach(d=>{
+          const s=d.data();
+          const status=String(s.status||'').toLowerCase();
+          if(isBatal(status)) return;
+          totalPenjualan++;
+          const tanggal=toDate(s.tanggal||s.createdAt||s.updatedAt);
+          if(inThisMonth(tanggal)){
+            // Mendukung beberapa nama field dari modul penjualan lama/baru.
+            const totalJual = num(s.total || s.totalHarga || s.jumlahTotal || s.grandTotal || ((num(s.hargaSatuan||s.harga||s.hargaJual))*num(s.jumlah||s.qty||1)-num(s.diskon)));
+            pendapatanPenjualan += Math.max(0,totalJual);
+          }
+        });
+      }
+
       document.getElementById("statTotal").innerText=total;
       document.getElementById("statProses").innerText=proses;
       document.getElementById("statSelesai").innerText=selesaiHariIni;
-      document.getElementById("statPendapatan").innerText="Rp "+pendapatan.toLocaleString("id-ID");
-    }catch(e){ console.log("stats skip",e); }
+      document.getElementById("statPenjualan").innerText=totalPenjualan;
+      document.getElementById("statStok").innerText=stokReady;
+      document.getElementById("statStokKosong").innerText=stokKosong;
+      document.getElementById("statPendapatan").innerText="Rp "+(pendapatanServis+pendapatanPenjualan).toLocaleString("id-ID");
+
+    }catch(e){
+      console.log("dashboard stats skip",e);
+    }
     showMainContent();
     localStorage.setItem("fixzy_last_login_popup","logged_in");
   }catch(err){
