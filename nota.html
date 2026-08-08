@@ -650,6 +650,17 @@ html.mobile-device #listServis .card{width:100% !important; margin-bottom:12px !
   <a href="perpanjangan.html"><span>👤</span>Akun</a>
 </div>
 
+<div id="statusWaPopup" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.78);z-index:99999;align-items:center;justify-content:center;padding:18px;">
+  <div style="width:min(390px,100%);background:#1b1b1b;border:1px solid #FFC107;border-radius:18px;padding:20px;color:#fff;box-shadow:0 15px 40px rgba(0,0,0,.5);">
+    <h3 id="statusWaTitle" style="color:#FFC107;margin:0 0 8px;font-size:17px;">Status Berubah</h3>
+    <div style="font-size:11px;color:#aaa;margin-bottom:12px;">Data servis sudah tersimpan. Kirim informasi terbaru ke WhatsApp pelanggan?</div>
+    <div id="statusWaData" style="background:#111;border-radius:12px;padding:12px;font-size:11px;line-height:1.7;white-space:pre-line;margin-bottom:14px;"></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+      <button type="button" onclick="closeStatusWaPopup()" style="padding:11px;border:1px solid #444;border-radius:10px;background:#292929;color:#fff;font-weight:700;">Tidak</button>
+      <button type="button" onclick="sendStatusWa()" style="padding:11px;border:0;border-radius:10px;background:#FFC107;color:#111;font-weight:800;">💬 Kirim ke WA</button>
+    </div>
+  </div>
+</div>
 <div id="popupMsg"><div class="box"><h3 style="color:#FFC107;">Fixzy</h3><p id="popupPesan" style="margin:15px 0;color:#fff;white-space:pre-line;font-size:13px;"></p><button onclick="document.getElementById('popupMsg').style.display='none'" style="padding:10px 24px;border:none;border-radius:10px;background:#FFC107;color:#111;font-weight:bold;cursor:pointer;">OK</button></div></div>
 
 <script type="module">
@@ -852,16 +863,19 @@ function renderList(){
         ${item.teknisi?`<div>👨‍🔧 Teknisi: ${item.teknisi}</div>`:''}
         ${item.catatan?`<div style="margin-top:6px;background:#252525;padding:8px;border-radius:8px;font-size:11px;">${item.catatan}</div>`:''}
       </div>
-      <div class="card-actions">
-        <button class="btn-wa" onclick="waPelanggan('${item.noHp||''}','${item.namaPelanggan||''}','${item.tipeHp||''}','${item.status||''}')">WA</button>
-        <button class="btn-edit" onclick="editServis('${item.docId}')">Edit</button>
-        ${item.status!=='selesai'&&item.status!=='diambil'&&item.status!=='batal'
-          ?`<button class="btn-selesai" onclick="ubahStatus('${item.docId}','selesai')">Selesai</button>`:''}
-        ${item.status==='selesai'
-          ?`<button class="btn-selesai" onclick="ubahStatus('${item.docId}','diambil')">Diambil</button>`:''}
-        ${item.status!=='batal'&&item.status!=='diambil'
-          ?`<button class="btn-hapus" onclick="ubahStatus('${item.docId}','batal')">Batal</button>`:''}
-        <button class="btn-hapus" onclick="hapusServis('${item.docId}')">Hapus</button>
+      <div class="card-actions" style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+        <select onchange="ubahStatus('${item.docId}',this.value)" style="width:100%;padding:10px;border-radius:10px;background:#252525;color:#FFC107;border:1px solid #333;font-weight:700;">
+          <option value="masuk" ${item.status==='masuk'?'selected':''}>Masuk</option>
+          <option value="proses" ${item.status==='proses'?'selected':''}>Proses</option>
+          <option value="selesai" ${item.status==='selesai'?'selected':''}>Selesai</option>
+          <option value="diambil" ${item.status==='diambil'?'selected':''}>Diambil</option>
+        </select>
+        <select onchange="aksiServis('${item.docId}',this.value);this.value=''" style="width:100%;padding:10px;border-radius:10px;background:#252525;color:#fff;border:1px solid #333;font-weight:700;">
+          <option value="">Aksi</option>
+          <option value="edit">Edit</option>
+          <option value="batal">Batal</option>
+          <option value="hapus">Hapus</option>
+        </select>
       </div>
     `;
     listEl.appendChild(div);
@@ -991,33 +1005,75 @@ window.editServis=async(id)=>{
   document.getElementById("formModal").style.display="flex";
 };
 
+window.aksiServis=async(id,aksi)=>{
+  if(aksi==='edit') return editServis(id);
+  if(aksi==='batal') return ubahStatus(id,'batal');
+  if(aksi==='hapus') return hapusServis(id);
+};
+
+let pendingStatusWa=null;
+window.closeStatusWaPopup=()=>{ pendingStatusWa=null; document.getElementById('statusWaPopup').style.display='none'; };
+window.sendStatusWa=()=>{
+  const p=pendingStatusWa;
+  if(!p)return;
+  let hp=String(p.noHp||'').replace(/[^0-9]/g,'');
+  if(hp.startsWith('0')) hp='62'+hp.slice(1);
+  if(!hp){ closeStatusWaPopup(); showMsg('Nomor WhatsApp pelanggan tidak tersedia.'); return; }
+  const item=p.item||{};
+  const products=Array.isArray(item.produkDipakai)&&item.produkDipakai.length
+    ? '\nProduk dipakai: '+item.produkDipakai.map(x=>`${x.nama||'-'} x ${x.qty||1}`).join(', ') : '';
+  const biaya=Number(item.biaya)||0, dp=Number(item.dp)||0, sisa=Math.max(0,biaya-dp);
+  const pesan=`*FIXZY - UPDATE SERVIS*\nPelanggan: ${item.namaPelanggan||'-'}\nHP: ${item.tipeHp||'-'}\nStatus: *${String(p.newStatus||'').toUpperCase()}*\nKerusakan: ${item.kerusakan||'-'}${products}\nBiaya: Rp ${money(biaya)}\nDP: Rp ${money(dp)}\nSisa: Rp ${money(sisa)}\n\nTerima kasih sudah menggunakan layanan FIXZY.`;
+  closeStatusWaPopup();
+  window.open(`https://wa.me/${hp}?text=${encodeURIComponent(pesan)}`,'_blank');
+};
+
 window.hapusServis=async(id)=>{
   if(!confirm("Yakin hapus data servis ini?"))return;
   try{
+    const item=allData.find(d=>d.docId===id);
+    if(item?.stokProdukDikurangi){
+      await syncServiceStock(item.produkDipakai||[],item.produkDipakai||[],true,false);
+    }
     await deleteDoc(doc(db,"servis",id));
     showMsg("Data servis dihapus");
     await loadServis();
+    await loadStockProducts();
   }catch(err){showMsg("Gagal hapus: "+err.message);}
 };
 
 window.ubahStatus=async(id,newStatus)=>{
   try{
     const item=allData.find(d=>d.docId===id);
+    if(!item) throw new Error('Data servis tidak ditemukan.');
+    const oldStatus=item.status||'masuk';
+    if(oldStatus===newStatus)return;
+
     const update={status:newStatus,updatedAt:serverTimestamp()};
     if(newStatus==='selesai'||newStatus==='diambil') update.tanggalSelesai=serverTimestamp();
     if(newStatus==='batal') update.tanggalBatal=serverTimestamp();
 
-    if(item){
-      const oldConsumed=!!item.stokProdukDikurangi;
-      const newConsumed=newStatus!=="batal";
-      await syncServiceStock(item.produkDipakai||[],item.produkDipakai||[],oldConsumed,newConsumed);
-      update.stokProdukDikurangi=newConsumed;
-    }
+    const oldConsumed=!!item.stokProdukDikurangi;
+    const newConsumed=newStatus!=='batal';
+    await syncServiceStock(item.produkDipakai||[],item.produkDipakai||[],oldConsumed,newConsumed);
+    update.stokProdukDikurangi=newConsumed;
 
-    await updateDoc(doc(db,"servis",id),update);
+    await updateDoc(doc(db,'servis',id),update);
     await loadServis();
     await loadStockProducts();
-  }catch(err){showMsg("Gagal update status: "+err.message);}
+
+    pendingStatusWa={item,newStatus,noHp:item.noHp};
+    document.getElementById('statusWaTitle').innerText='Status Servis Berubah';
+    document.getElementById('statusWaData').innerText=
+      `Pelanggan: ${item.namaPelanggan||'-'}\nHP: ${item.tipeHp||'-'}\nStatus: ${String(newStatus).toUpperCase()}\n`+
+      (Array.isArray(item.produkDipakai)&&item.produkDipakai.length
+        ? `Produk: ${item.produkDipakai.map(p=>`${p.nama||'-'} x ${p.qty||1}`).join(', ')}\n` : '')+
+      `Biaya: Rp ${money(item.biaya)}\nDP: Rp ${money(item.dp)}\nSisa: Rp ${money(Math.max(0,(Number(item.biaya)||0)-(Number(item.dp)||0)))}`;
+    document.getElementById('statusWaPopup').style.display='flex';
+  }catch(err){
+    console.error(err);
+    showMsg(err.code==='permission-denied'?'Gagal update status: Permission denied. Cek Firebase Rules.':'Gagal update status: '+err.message);
+  }
 };
 
 /* =========================
