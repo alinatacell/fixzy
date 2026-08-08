@@ -357,7 +357,7 @@ html.mobile-device #listServis .card{width:100% !important; margin-bottom:12px !
         <p id="totalInfo">0 data</p>
       </div>
     </div>
-    <button class="back" id="quickAddBtn" onclick="openAddModal()" style="background:#FFC107;color:#111;font-weight:800;">+</button>
+    <button class="back" id="quickAddBtn" onclick="window.openAddModal ? window.openAddModal() : (document.getElementById('formModal').style.display='flex')" style="background:#FFC107;color:#111;font-weight:800;">+</button>
   </div>
 
   <div class="mode-switch">
@@ -380,7 +380,7 @@ html.mobile-device #listServis .card{width:100% !important; margin-bottom:12px !
       <div class="chip" data-filter="batal">Batal</div>
     </div>
 
-    <button class="btn-primary" onclick="openAddModal()" style="margin-bottom:16px;">+ TAMBAH SERVIS BARU</button>
+    <button class="btn-primary" onclick="window.openAddModal ? window.openAddModal() : (document.getElementById('formModal').style.display='flex')" style="margin-bottom:16px;">+ TAMBAH SERVIS BARU</button>
 
     <div id="listServis"></div>
 
@@ -702,6 +702,7 @@ let allSales = [];
 let activeFilter = new URLSearchParams(window.location.search).get('filter') || 'semua';
 let activeSalesFilter = 'semua';
 let activeMode = 'servis';
+let accountProfile = { namaKonter:'', namaPemilik:'', whatsapp:'', noWa:'', nomorWa:'' };
 
 const loadingScreen = document.getElementById("loadingScreen");
 const mainContent = document.getElementById("mainContent");
@@ -719,6 +720,28 @@ function money(n){
   return (parseInt(n)||0).toLocaleString("id-ID");
 }
 
+async function loadAccountProfile(){
+  if(!currentUid)return;
+  try{
+    const snap=await getDoc(doc(db,"users",currentUid));
+    if(snap.exists()){
+      const d=snap.data()||{};
+      accountProfile={
+        ...d,
+        namaKonter:d.namaKonter||d.namaToko||d.namaUsaha||d.nama||"",
+        namaPemilik:d.namaPemilik||d.pemilik||"",
+        whatsapp:d.whatsapp||d.noWa||d.nomorWa||d.nomorWhatsApp||d.noHp||d.telepon||""
+      };
+    }
+  }catch(e){
+    console.warn("Profil akun tidak dapat dibaca",e);
+  }
+}
+
+function namaPengirim(){
+  return accountProfile.namaKonter || accountProfile.namaPemilik || "Toko Anda";
+}
+
 onAuthStateChanged(auth, async(user)=>{
   if(user){
     currentUid = user.uid;
@@ -727,6 +750,7 @@ onAuthStateChanged(auth, async(user)=>{
     mainContent.style.display="block";
     setupFilter();
     setupSalesFilter();
+    await loadAccountProfile();
     await Promise.all([loadServis(), loadPenjualan(), loadStockProducts()]);
   }else{
     debugLoading.innerText = "Auth null, redirect ke login...";
@@ -891,15 +915,30 @@ window.waPelanggan=(no,nama,tipe,status)=>{
 };
 
 window.openAddModal=()=>{
-  document.getElementById("modalTitle").innerText="Servis Baru";
-  document.getElementById("servisForm").reset();
-  document.getElementById("editId").value="";
-  document.getElementById("status").value="masuk";
-  document.getElementById("kelengkapan").value="";
-  document.querySelectorAll(".kel").forEach(c=>c.checked=false);
-  clearServiceProducts();
-  addServiceProductRow();
-  document.getElementById("formModal").style.display="flex";
+  try{
+    const modal=document.getElementById("formModal");
+    const form=document.getElementById("servisForm");
+    if(!modal || !form){
+      alert("Form servis tidak ditemukan di halaman.");
+      return;
+    }
+    document.getElementById("modalTitle").innerText="Servis Baru";
+    form.reset();
+    document.getElementById("editId").value="";
+    document.getElementById("status").value="masuk";
+    document.getElementById("kelengkapan").value="";
+    document.querySelectorAll(".kel").forEach(c=>c.checked=false);
+    const list=document.getElementById("serviceProductsList");
+    if(list) list.innerHTML="";
+    if(typeof window.addServiceProductRow === "function") window.addServiceProductRow();
+    modal.style.display="flex";
+    modal.scrollTop=0;
+    setTimeout(()=>document.getElementById("namaPelanggan")?.focus(),50);
+  }catch(err){
+    console.error("FIXZY openAddModal error:",err);
+    const modal=document.getElementById("formModal");
+    if(modal) modal.style.display="flex";
+  }
 };
 
 window.closeModal=()=>document.getElementById("formModal").style.display="none";
@@ -1023,7 +1062,8 @@ window.sendStatusWa=()=>{
   const products=Array.isArray(item.produkDipakai)&&item.produkDipakai.length
     ? '\nProduk dipakai: '+item.produkDipakai.map(x=>`${x.nama||'-'} x ${x.qty||1}`).join(', ') : '';
   const biaya=Number(item.biaya)||0, dp=Number(item.dp)||0, sisa=Math.max(0,biaya-dp);
-  const pesan=`*FIXZY - UPDATE SERVIS*\nPelanggan: ${item.namaPelanggan||'-'}\nHP: ${item.tipeHp||'-'}\nStatus: *${String(p.newStatus||'').toUpperCase()}*\nKerusakan: ${item.kerusakan||'-'}${products}\nBiaya: Rp ${money(biaya)}\nDP: Rp ${money(dp)}\nSisa: Rp ${money(sisa)}\n\nTerima kasih sudah menggunakan layanan FIXZY.`;
+  const sender=namaPengirim();
+  const pesan=`*${sender} - UPDATE SERVIS*\nPelanggan: ${item.namaPelanggan||'-'}\nHP: ${item.tipeHp||'-'}\nStatus: *${String(p.newStatus||'').toUpperCase()}*\nKerusakan: ${item.kerusakan||'-'}${products}\nBiaya: Rp ${money(biaya)}\nDP: Rp ${money(dp)}\nSisa: Rp ${money(sisa)}\n\nTerima kasih sudah menggunakan layanan ${sender}.`;
   closeStatusWaPopup();
   window.open(`https://wa.me/${hp}?text=${encodeURIComponent(pesan)}`,'_blank');
 };
@@ -1063,9 +1103,9 @@ window.ubahStatus=async(id,newStatus)=>{
     await loadStockProducts();
 
     pendingStatusWa={item,newStatus,noHp:item.noHp};
-    document.getElementById('statusWaTitle').innerText='Status Servis Berubah';
+    document.getElementById('statusWaTitle').innerText=`${namaPengirim()} • Status Servis`;
     document.getElementById('statusWaData').innerText=
-      `Pelanggan: ${item.namaPelanggan||'-'}\nHP: ${item.tipeHp||'-'}\nStatus: ${String(newStatus).toUpperCase()}\n`+
+      `Pengirim: ${namaPengirim()}\nPelanggan: ${item.namaPelanggan||'-'}\nHP: ${item.tipeHp||'-'}\nStatus: ${String(newStatus).toUpperCase()}\n`+
       (Array.isArray(item.produkDipakai)&&item.produkDipakai.length
         ? `Produk: ${item.produkDipakai.map(p=>`${p.nama||'-'} x ${p.qty||1}`).join(', ')}\n` : '')+
       `Biaya: Rp ${money(item.biaya)}\nDP: Rp ${money(item.dp)}\nSisa: Rp ${money(Math.max(0,(Number(item.biaya)||0)-(Number(item.dp)||0)))}`;
@@ -1904,8 +1944,8 @@ window.waPenjualan=(no,nama,produk,total)=>{
     (parseInt(d.total)||0)===Number(total)
   );
   const pesan=item
-    ? `*FIXZY - NOTA PENJUALAN*\nNo. Nota: ${item.idPenjualan||"-"}\nPelanggan: ${item.namaPelanggan||"Umum"}\nProduk: ${item.produk||"-"}\nQty: ${item.qty||1} x Rp ${money(item.harga)}${item.diskon?`\nDiskon: Rp ${money(item.diskon)}`:""}\n*TOTAL: Rp ${money(item.total)}*\nPembayaran: ${item.pembayaran||"-"}\nStatus: ${String(item.status||"selesai").toUpperCase()}\n\nTerima kasih sudah berbelanja di FIXZY.`
-    : `Halo ${nama||'Kak'}, terima kasih sudah belanja di Fixzy.\nProduk: ${produk}\nTotal: Rp ${money(total)}`;
+    ? `*${namaPengirim()} - NOTA PENJUALAN*\nNo. Nota: ${item.idPenjualan||"-"}\nPelanggan: ${item.namaPelanggan||"Umum"}\nProduk: ${item.produk||"-"}\nQty: ${item.qty||1} x Rp ${money(item.harga)}${item.diskon?`\nDiskon: Rp ${money(item.diskon)}`:""}\n*TOTAL: Rp ${money(item.total)}*\nPembayaran: ${item.pembayaran||"-"}\nStatus: ${String(item.status||"selesai").toUpperCase()}\n\nTerima kasih sudah berbelanja di ${namaPengirim()}.`
+    : `Halo ${nama||'Kak'}, terima kasih sudah belanja di ${namaPengirim()}.\nProduk: ${produk}\nTotal: Rp ${money(total)}`;
   window.open(`https://wa.me/${hp}?text=${encodeURIComponent(pesan)}`,"_blank");
 };
 
