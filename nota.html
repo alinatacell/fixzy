@@ -1,127 +1,192 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="id">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>FIXZY - Tes Karyawan Firebase</title>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>FIXZY | Nota</title>
 <style>
-*{box-sizing:border-box}body{margin:0;background:#f3f4f6;font-family:Arial,sans-serif;color:#111827}.wrap{max-width:700px;margin:auto;padding:16px}.card{background:#fff;border-radius:16px;padding:16px;margin-bottom:12px;box-shadow:0 4px 18px rgba(0,0,0,.08)}h2{margin:0 0 5px}.sub{color:#64748b;font-size:13px}.status{padding:12px;border-radius:10px;background:#f1f5f9;margin-top:12px;white-space:pre-wrap;word-break:break-word}.ok{background:#dcfce7;color:#166534}.bad{background:#fee2e2;color:#991b1b}.wait{background:#fef3c7;color:#92400e}button{border:0;border-radius:10px;padding:12px 15px;background:#f59e0b;font-weight:800;cursor:pointer;margin:4px 4px 4px 0}.danger{background:#111827;color:#fff}.info{font-size:12px;color:#475569}.row{display:flex;justify-content:space-between;gap:10px;border-bottom:1px solid #e5e7eb;padding:10px 0}.row:last-child{border-bottom:0}.name{font-weight:800}.raw{font-family:monospace;font-size:11px;white-space:pre-wrap;word-break:break-all;background:#0f172a;color:#e2e8f0;padding:12px;border-radius:10px;max-height:280px;overflow:auto}select{width:100%;padding:11px;border:1px solid #cbd5e1;border-radius:10px;margin-top:8px}
+*{box-sizing:border-box}body{margin:0;background:#f4f5f7;font-family:Arial,sans-serif;color:#111827}
+header{background:#111827;color:#fff;padding:14px 16px;display:flex;align-items:center;gap:10px}
+header h1{margin:0;font-size:18px}.grow{flex:1}
+button{border:0;border-radius:9px;padding:10px 13px;font-weight:800;cursor:pointer}
+.primary{background:#ffc107;color:#111}.light{background:#fff;color:#111827}.danger{background:#dc2626;color:#fff}
+main{max-width:900px;margin:auto;padding:14px}
+.card{background:#fff;border:1px solid #e5e7eb;border-radius:14px;padding:15px;margin-bottom:12px}
+.title{font-size:15px;font-weight:900;margin-bottom:12px}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.full{grid-column:1/-1}
+label{display:block;font-size:11px;font-weight:800;color:#4b5563;margin-bottom:5px}
+input,select,textarea{width:100%;padding:11px;border:1px solid #d1d5db;border-radius:9px;background:#fff}
+textarea{min-height:75px;resize:vertical}
+.type{display:flex;gap:8px}.type button{flex:1;border:1px solid #d1d5db;background:#fff}.type button.active{background:#ffc107;border-color:#ffc107}
+.checks{display:flex;flex-wrap:wrap;gap:8px}.check{border:1px solid #d1d5db;border-radius:9px;padding:8px 10px;font-size:12px}
+.pattern{width:180px;margin:auto;display:grid;grid-template-columns:repeat(3,1fr);gap:14px;padding:15px}
+.dot{width:42px;height:42px;border-radius:50%;border:2px solid #9ca3af;background:#fff;margin:auto;display:grid;place-items:center;font-weight:800;cursor:pointer}
+.dot.active{background:#ffc107;border-color:#111827}
+.patternText{text-align:center;font-weight:800;font-size:12px}
+.status{font-size:12px;background:#f9fafb;padding:10px;border-radius:9px;margin-bottom:10px}
+.actions{display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap}
+.toast{position:fixed;bottom:18px;left:50%;transform:translateX(-50%);background:#111827;color:#fff;padding:11px 15px;border-radius:9px;display:none;z-index:50}
+@media(max-width:650px){.grid{grid-template-columns:1fr}.full{grid-column:auto}.actions button{flex:1}.pattern{width:165px;gap:12px}}
+@media print{header,.actions,.no-print{display:none!important}body{background:#fff}.card{border:0}}
 </style>
 </head>
 <body>
-<div class="wrap">
-  <div class="card">
-    <h2>FIXZY — Tes Karyawan Firebase</h2>
-    <div class="sub">File baru khusus untuk mencari masalah. Tidak mengubah data Firebase dan tidak menyimpan apa pun.</div>
-    <div id="authStatus" class="status wait">Memeriksa sesi Firebase...</div>
-  </div>
+<header><h1>🧾 Nota FIXZY</h1><div class="grow"></div><button class="light" onclick="location.reload()">↻ Refresh</button></header>
 
-  <div class="card">
-    <button onclick="testKaryawan()">🔎 TES BACA KARYAWAN</button>
-    <button class="danger" onclick="location.reload()">↻ REFRESH</button>
-    <div id="testStatus" class="status wait">Belum dites.</div>
-  </div>
-
-  <div class="card">
-    <b>Daftar nama yang terbaca</b>
-    <div id="list" class="status wait">Belum ada hasil.</div>
-  </div>
-
-  <div class="card">
-    <b>Data mentah Firebase</b>
-    <div id="raw" class="raw">Belum ada hasil.</div>
-  </div>
+<main>
+<div class="card">
+ <div class="title">Jenis Nota</div>
+ <div class="type">
+  <button id="btnServis" class="active" onclick="setJenis('servis')">🔧 Servis</button>
+  <button id="btnPenjualan" onclick="setJenis('penjualan')">🛒 Penjualan</button>
+ </div>
 </div>
+
+<div class="card">
+ <div class="title">Informasi Nota</div>
+ <div class="status">Akun Firebase: <b id="akun">memeriksa...</b><br>UID: <span id="uidView">-</span></div>
+ <div class="grid">
+  <div><label>NOMOR NOTA</label><input id="nomor" readonly></div>
+  <div><label>TANGGAL</label><input id="tanggal" type="date"></div>
+  <div class="full"><label>TEKNISI / PETUGAS</label><select id="teknisi"><option>Memuat karyawan...</option></select></div>
+  <div><label>NAMA PELANGGAN</label><input id="nama" placeholder="Nama pelanggan"></div>
+  <div><label>NO. HP / WA</label><input id="wa" inputmode="tel" placeholder="08xxxxxxxxxx"></div>
+ </div>
+</div>
+
+<div id="servisBox">
+<div class="card">
+ <div class="title">Data HP</div>
+ <div class="grid">
+  <div class="full"><label>MERK / TIPE / MODEL</label><input id="tipe" placeholder="Contoh: Samsung A05s"></div>
+  <div><label>IMEI</label><input id="imei"></div>
+  <div><label>STATUS</label><select id="status"><option value="masuk">Masuk</option><option value="proses">Proses</option><option value="selesai">Selesai</option><option value="diambil">Diambil</option><option value="batal">Batal</option></select></div>
+  <div class="full"><label>KELUHAN</label><textarea id="keluhan"></textarea></div>
+  <div class="full"><label>KELENGKAPAN</label>
+   <div class="checks">
+    <label class="check"><input type="checkbox" value="SIM Card" class="kel"> SIM Card</label>
+    <label class="check"><input type="checkbox" value="Memory Card" class="kel"> Memory Card</label>
+    <label class="check"><input type="checkbox" value="Case" class="kel"> Case</label>
+    <label class="check"><input type="checkbox" value="Charger" class="kel"> Charger</label>
+   </div>
+  </div>
+  <div class="full"><label>POLA SANDI — 9 DOT</label>
+   <div id="pattern" class="pattern"></div>
+   <div id="patternText" class="patternText">Belum ada</div>
+  </div>
+  <div><label>BIAYA SERVIS</label><input id="biaya" inputmode="numeric" value=""></div>
+  <div><label>DP</label><input id="dp" inputmode="numeric" value=""></div>
+ </div>
+</div>
+</div>
+
+<div id="jualBox" style="display:none">
+<div class="card">
+ <div class="title">Produk Penjualan</div>
+ <div class="grid">
+  <div class="full"><label>PRODUK DARI FIREBASE</label><select id="produk"><option value="">Memuat stok...</option></select></div>
+  <div><label>QTY</label><input id="qty" inputmode="numeric" value="1"></div>
+  <div><label>HARGA</label><input id="harga" inputmode="numeric" value=""></div>
+ </div>
+</div>
+</div>
+
+<div class="card">
+ <div class="title">Pembayaran & Catatan</div>
+ <div class="grid">
+  <div><label>METODE</label><select id="metode"><option>Tunai</option><option>Transfer</option><option>QRIS</option><option>Piutang</option></select></div>
+  <div><label>DIBAYAR</label><input id="dibayar" inputmode="numeric" value=""></div>
+  <div class="full"><label>CATATAN</label><textarea id="catatan"></textarea></div>
+ </div>
+</div>
+
+<div class="card actions">
+ <button class="danger" onclick="batal()">Batal</button>
+ <button class="light" onclick="simpan(false)">Simpan</button>
+ <button class="primary" onclick="simpan(true)">Simpan & Cetak</button>
+</div>
+</main>
+<div id="toast" class="toast"></div>
 
 <script type="module">
 import {initializeApp} from "https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js";
 import {getAuth,onAuthStateChanged} from "https://www.gstatic.com/firebasejs/11.10.0/firebase-auth.js";
-import {getFirestore,collection,getDocs,query,where} from "https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js";
+import {getFirestore,collection,query,where,getDocs,addDoc,serverTimestamp} from "https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js";
 
-const firebaseConfig={
-  apiKey:"AIzaSyCwMbJsuORhIq4QCmp4c1r6OsjAUlfxU5Y",
-  authDomain:"fixzy-f056f.firebaseapp.com",
-  projectId:"fixzy-f056f",
-  storageBucket:"fixzy-f056f.firebasestorage.app",
-  messagingSenderId:"838081521031",
-  appId:"1:838081521031:web:50fdee909b56460b055f22"
+const config={
+ apiKey:"AIzaSyCwMbJsuORhIq4QCmp4c1r6OsjAUlfxU5Y",
+ authDomain:"fixzy-f056f.firebaseapp.com",projectId:"fixzy-f056f",
+ storageBucket:"fixzy-f056f.firebasestorage.app",
+ messagingSenderId:"838081521031",appId:"1:838081521031:web:50fdee909b56460b055f22"
 };
-
-const app=initializeApp(firebaseConfig);
-const auth=getAuth(app);
-const db=getFirestore(app);
-let currentUser=null;
-
+const app=initializeApp(config),auth=getAuth(app),db=getFirestore(app);
+let uid=null,jenis="servis",employees=[],products=[],pattern=[];
 const $=id=>document.getElementById(id);
-function show(id,text,type="wait"){$(id).className="status "+type;$(id).textContent=text}
+function esc(v){return String(v??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]))}
+function toast(t){$("toast").textContent=t;$("toast").style.display="block";setTimeout(()=>$("toast").style.display="none",2600)}
+function nomor(){return "FX-"+new Date().toISOString().replace(/\D/g,"").slice(0,14)}
+function today(){$("tanggal").value=new Date().toISOString().slice(0,10)}
+function setJenis(x){jenis=x;$("btnServis").classList.toggle("active",x==="servis");$("btnPenjualan").classList.toggle("active",x==="penjualan");$("servisBox").style.display=x==="servis"?"block":"none";$("jualBox").style.display=x==="penjualan"?"block":"none"}
+function renderPattern(){
+ $("pattern").innerHTML=Array.from({length:9},(_,i)=>`<div class="dot ${pattern.includes(i+1)?"active":""}" onclick="dot(${i+1})">${i+1}</div>`).join("");
+ $("patternText").textContent=pattern.length?pattern.join("-"):"Belum ada";
+}
+window.dot=n=>{if(!pattern.includes(n))pattern.push(n);renderPattern()}
 
-window.testKaryawan=async function(){
-  if(!currentUser){
-    show("testStatus","❌ TIDAK ADA SESI LOGIN FIREBASE.\nUID belum tersedia.","bad");
-    return;
-  }
+async function loadEmployees(){
+ const snap=await getDocs(query(collection(db,"karyawan"),where("uid","==",uid)));
+ employees=snap.docs.map(d=>({id:d.id,...d.data()})).filter(x=>String(x.status||"aktif").toLowerCase()==="aktif");
+ $("teknisi").innerHTML='<option value="">-- Pilih Teknisi --</option>'+employees.map(x=>`<option value="${esc(x.id)}">${esc(x.nama||"-")}${x.jabatan?" • "+esc(x.jabatan):""}</option>`).join("");
+ if(!employees.length)$("teknisi").innerHTML='<option value="">Tidak ada karyawan aktif</option>';
+}
+async function loadProducts(){
+ const snap=await getDocs(query(collection(db,"stok"),where("uid","==",uid)));
+ products=snap.docs.map(d=>({id:d.id,...d.data()}));
+ $("produk").innerHTML='<option value="">-- Pilih Produk --</option>'+products.map(x=>`<option value="${esc(x.id)}">${esc(x.nama||"-")} • Stok ${Number(x.sisa??x.stok??0)}</option>`).join("");
+}
+$("produk").addEventListener("change",()=>{const p=products.find(x=>x.id===$("produk").value);if(p)$("harga").value=Number(p.hargaJual||0)})
+function num(id){return Number(String($(id).value||"").replace(/[^\d]/g,""))||0}
+async function simpan(cetak){
+ if(!uid){toast("Belum login Firebase.");return}
+ if(!$("teknisi").value){toast("Pilih teknisi terlebih dahulu.");return}
+ const d={
+  uid,tanggal:$("tanggal").value,nomorNota:$("nomor").value,jenis,
+  teknisi:$("teknisi").selectedOptions[0]?.textContent||"",
+  teknisiId:$("teknisi").value,
+  pelanggan:{nama:$("nama").value.trim(),wa:$("wa").value.trim()},
+  metode:$("metode").value,dibayar:num("dibayar"),catatan:$("catatan").value.trim(),
+  createdAt:serverTimestamp(),updatedAt:serverTimestamp()
+ };
+ let col=jenis;
+ if(jenis==="servis"){
+  d.tipe=$("tipe").value.trim();d.imei=$("imei").value.trim();d.keluhan=$("keluhan").value.trim();
+  d.kelengkapan=[...document.querySelectorAll(".kel:checked")].map(x=>x.value);
+  d.pola=pattern.join("-");d.biaya=num("biaya");d.dp=num("dp");
+  d.total=d.biaya;d.sisa=Math.max(0,d.total-d.dp);
+ }else{
+  const p=products.find(x=>x.id===$("produk").value);
+  d.items=p?[{produkId:p.id,nama:p.nama||"",qty:num("qty")||1,harga:num("harga")}]:[];
+  d.total=d.items.reduce((a,x)=>a+x.qty*x.harga,0);d.sisa=Math.max(0,d.total-d.dibayar);
+ }
+ try{
+  toast("Menyimpan ke Firebase...");
+  await addDoc(collection(db,col),d);
+  toast("Berhasil tersimpan di Firebase.");
+  if(cetak)window.print();
+ }catch(e){console.error(e);alert("Gagal menyimpan ke Firebase:\n"+e.message)}
+}
+window.simpan=simpan;
+window.batal=()=>{if(confirm("Batalkan nota?"))location.reload()};
 
-  show("testStatus","⏳ Membaca collection: karyawan ...","wait");
-  $("list").innerHTML="Membaca...";
-  $("raw").textContent="Membaca...";
-
-  const hasil={akun:{uid:currentUser.uid,email:currentUser.email||""},tesUmum:null,tesUid:null};
-
-  // TES 1: baca collection karyawan langsung.
-  try{
-    const snap=await getDocs(collection(db,"karyawan"));
-    hasil.tesUmum={berhasil:true,jumlah:snap.size,docs:[]};
-    snap.forEach(d=>hasil.tesUmum.docs.push({id:d.id,data:d.data()}));
-  }catch(e){
-    hasil.tesUmum={berhasil:false,code:e.code||"",message:e.message||String(e)};
-  }
-
-  // TES 2: baca karyawan milik UID login.
-  try{
-    const snap=await getDocs(query(collection(db,"karyawan"),where("uid","==",currentUser.uid)));
-    hasil.tesUid={berhasil:true,jumlah:snap.size,docs:[]};
-    snap.forEach(d=>hasil.tesUid.docs.push({id:d.id,data:d.data()}));
-  }catch(e){
-    hasil.tesUid={berhasil:false,code:e.code||"",message:e.message||String(e)};
-  }
-
-  const docs=(hasil.tesUid.berhasil&&hasil.tesUid.docs.length?hasil.tesUid.docs:(hasil.tesUmum.berhasil?hasil.tesUmum.docs:[]));
-  const namaKeys=["nama","namaKaryawan","nama_karyawan","name","namaLengkap","nama_lengkap","karyawan"];
-  const names=docs.map(x=>{
-    const d=x.data||{};
-    let nama="";
-    for(const k of namaKeys){if(d[k]!==undefined&&String(d[k]).trim()){nama=String(d[k]);break}}
-    return {id:x.id,nama:nama||"(nama field tidak ditemukan)",data:d};
-  });
-
-  if(!hasil.tesUmum.berhasil && !hasil.tesUid.berhasil){
-    show("testStatus","❌ FIREBASE MENOLAK PEMBACAAN KARYAWAN.\n\nTES UMUM:\n"+hasil.tesUmum.message+"\n\nTES UID:\n"+hasil.tesUid.message,"bad");
-  }else if(hasil.tesUid.berhasil && hasil.tesUid.jumlah>0){
-    show("testStatus","✅ BERHASIL.\nLogin terbaca dan karyawan dengan UID akun ditemukan: "+hasil.tesUid.jumlah+" data.","ok");
-  }else if(hasil.tesUmum.berhasil){
-    show("testStatus","⚠️ Collection karyawan bisa dibaca ("+hasil.tesUmum.jumlah+" data), tetapi query UID menemukan "+(hasil.tesUid.berhasil?hasil.tesUid.jumlah:"ERROR")+" data.\nIni akan menunjukkan apakah field uid pada data karyawan berbeda/tidak ada.","wait");
-  }
-
-  if(names.length){
-    $("list").className="status";
-    $("list").innerHTML=names.map(x=>`<div class="row"><span class="name">${escapeHtml(x.nama)}</span><span>${escapeHtml(x.id)}</span></div>`).join("");
-  }else{
-    show("list","Tidak ada nama karyawan yang berhasil dibaca.","bad");
-  }
-  $("raw").textContent=JSON.stringify(hasil,null,2);
-};
-
-function escapeHtml(v){return String(v??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#039;"}[m]))}
-
-onAuthStateChanged(auth,user=>{
-  currentUser=user||null;
-  if(user){
-    show("authStatus","✅ LOGIN FIREBASE TERDETEKSI\nEmail: "+(user.email||"-")+"\nUID: "+user.uid,"ok");
-    testKaryawan();
-  }else{
-    show("authStatus","❌ BELUM LOGIN FIREBASE\nHalaman ini sengaja tidak mengarahkan ke login agar kita bisa melihat masalahnya dengan jelas.","bad");
-  }
+onAuthStateChanged(auth,async user=>{
+ if(!user){$("akun").textContent="BELUM LOGIN";$("teknisi").innerHTML='<option>Login terlebih dahulu</option>';return}
+ uid=user.uid;$("akun").textContent=user.email||"Login";$("uidView").textContent=uid;
+ $("nomor").value=nomor();today();
+ try{await Promise.all([loadEmployees(),loadProducts()]);}
+ catch(e){console.error(e);alert("Gagal membaca Firebase:\n"+e.message)}
 });
+renderPattern();
 </script>
 </body>
 </html>
