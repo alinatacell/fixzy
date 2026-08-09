@@ -183,6 +183,86 @@ const app=initializeApp(firebaseConfig),auth=getAuth(app),db=getFirestore(app);l
 const $=id=>document.getElementById(id);
 const esc=v=>String(v??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]));
 const money=v=>"Rp "+Number(v||0).toLocaleString("id-ID");
+function readSavedProfile(){
+ try{
+  const keys=["fixzy_user_profile","fixzy_register_profile","fixzy_profile"];
+  for(const key of keys){
+   const raw=localStorage.getItem(key);
+   if(!raw)continue;
+   const p=JSON.parse(raw);
+   if(p&&typeof p==="object"&&Object.keys(p).length)return p;
+  }
+ }catch(e){}
+ return {};
+}
+
+async function loadAccountProfile(user){
+ const cached=readSavedProfile();
+
+ // Firebase users/{uid} tetap sumber utama.
+ let firebase={};
+ try{
+  const snap=await getDoc(doc(db,"users",user.uid));
+  if(snap.exists())firebase=snap.data()||{};
+ }catch(e){
+  console.warn("Profil Firebase tidak terbaca, memakai profil tersimpan:",e);
+ }
+
+ // Nama toko mengikuti field yang memang dipakai dashboard/register.
+ storeName=String(
+   firebase.namaKonter||
+   firebase.namaToko||
+   firebase.namaUsaha||
+   firebase.toko||
+   firebase.namaTokoUsaha||
+   firebase.nama_usaha||
+   firebase.nama_toko||
+   firebase.storeName||
+   firebase.store||
+   cached.namaKonter||
+   cached.namaToko||
+   cached.namaUsaha||
+   cached.toko||
+   cached.namaTokoUsaha||
+   cached.nama_usaha||
+   cached.nama_toko||
+   cached.storeName||
+   cached.store||
+   ""
+ ).trim();
+
+ accountName=String(
+   firebase.namaPemilik||
+   firebase.nama||
+   firebase.namaLengkap||
+   firebase.namaUser||
+   firebase.username||
+   cached.namaPemilik||
+   cached.nama||
+   cached.namaLengkap||
+   cached.namaUser||
+   cached.username||
+   user?.displayName||
+   ""
+ ).trim();
+
+ // Jangan pernah memakai email sebagai nama toko.
+ if(!storeName)storeName="FIXZY";
+ if(!accountName)accountName="Pengguna";
+
+ // Sinkronkan cache supaya halaman lain memakai identitas toko yang sama.
+ try{
+  localStorage.setItem("fixzy_user_profile",JSON.stringify({
+   ...cached,
+   uid:user.uid,
+   namaKonter:storeName,
+   namaToko:storeName,
+   namaUsaha:storeName,
+   namaPemilik:accountName
+  }));
+ }catch(e){}
+}
+
 
 function waNumber(v){
  const raw=String(v||"").replace(/[^\d]/g,"");
@@ -202,7 +282,7 @@ function waStatus(status,item){
  const nomor=item.nomorNota||item.idServis||item.id||"-";
  const nama=item.pelanggan?.nama||item.namaPelanggan||"Pelanggan";
  const tipe=item.tipe||item.tipeHp||"HP";
- const pengirim=storeName||"Nama Toko";
+ const pengirim=storeName||"FIXZY";
  const text=`Halo ${nama},
 
 📍 *${pengirim}*
@@ -358,8 +438,8 @@ $("search").oninput=render;$("filter").onchange=render;
 onAuthStateChanged(auth,async u=>{
  if(!u){location.href="login.html";return}
  uid=u.uid;
- $("akun").textContent=u.email||"Login";
  await loadAccountProfile(u);
+ $("akun").textContent=storeName+" • "+(u.email||"Login");
  await load();
 });
 </script></body></html>
