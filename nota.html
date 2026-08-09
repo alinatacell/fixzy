@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>FIXZY - Tes Karyawan Firebase</title>
+<style>
+*{box-sizing:border-box}body{margin:0;background:#f3f4f6;font-family:Arial,sans-serif;color:#111827}.wrap{max-width:700px;margin:auto;padding:16px}.card{background:#fff;border-radius:16px;padding:16px;margin-bottom:12px;box-shadow:0 4px 18px rgba(0,0,0,.08)}h2{margin:0 0 5px}.sub{color:#64748b;font-size:13px}.status{padding:12px;border-radius:10px;background:#f1f5f9;margin-top:12px;white-space:pre-wrap;word-break:break-word}.ok{background:#dcfce7;color:#166534}.bad{background:#fee2e2;color:#991b1b}.wait{background:#fef3c7;color:#92400e}button{border:0;border-radius:10px;padding:12px 15px;background:#f59e0b;font-weight:800;cursor:pointer;margin:4px 4px 4px 0}.danger{background:#111827;color:#fff}.info{font-size:12px;color:#475569}.row{display:flex;justify-content:space-between;gap:10px;border-bottom:1px solid #e5e7eb;padding:10px 0}.row:last-child{border-bottom:0}.name{font-weight:800}.raw{font-family:monospace;font-size:11px;white-space:pre-wrap;word-break:break-all;background:#0f172a;color:#e2e8f0;padding:12px;border-radius:10px;max-height:280px;overflow:auto}select{width:100%;padding:11px;border:1px solid #cbd5e1;border-radius:10px;margin-top:8px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="card">
+    <h2>FIXZY — Tes Karyawan Firebase</h2>
+    <div class="sub">File baru khusus untuk mencari masalah. Tidak mengubah data Firebase dan tidak menyimpan apa pun.</div>
+    <div id="authStatus" class="status wait">Memeriksa sesi Firebase...</div>
+  </div>
+
+  <div class="card">
+    <button onclick="testKaryawan()">🔎 TES BACA KARYAWAN</button>
+    <button class="danger" onclick="location.reload()">↻ REFRESH</button>
+    <div id="testStatus" class="status wait">Belum dites.</div>
+  </div>
+
+  <div class="card">
+    <b>Daftar nama yang terbaca</b>
+    <div id="list" class="status wait">Belum ada hasil.</div>
+  </div>
+
+  <div class="card">
+    <b>Data mentah Firebase</b>
+    <div id="raw" class="raw">Belum ada hasil.</div>
+  </div>
+</div>
+
+<script type="module">
+import {initializeApp} from "https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js";
+import {getAuth,onAuthStateChanged} from "https://www.gstatic.com/firebasejs/11.10.0/firebase-auth.js";
+import {getFirestore,collection,getDocs,query,where} from "https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js";
+
+const firebaseConfig={
+  apiKey:"AIzaSyCwMbJsuORhIq4QCmp4c1r6OsjAUlfxU5Y",
+  authDomain:"fixzy-f056f.firebaseapp.com",
+  projectId:"fixzy-f056f",
+  storageBucket:"fixzy-f056f.firebasestorage.app",
+  messagingSenderId:"838081521031",
+  appId:"1:838081521031:web:50fdee909b56460b055f22"
+};
+
+const app=initializeApp(firebaseConfig);
+const auth=getAuth(app);
+const db=getFirestore(app);
+let currentUser=null;
+
+const $=id=>document.getElementById(id);
+function show(id,text,type="wait"){$(id).className="status "+type;$(id).textContent=text}
+
+window.testKaryawan=async function(){
+  if(!currentUser){
+    show("testStatus","❌ TIDAK ADA SESI LOGIN FIREBASE.\nUID belum tersedia.","bad");
+    return;
+  }
+
+  show("testStatus","⏳ Membaca collection: karyawan ...","wait");
+  $("list").innerHTML="Membaca...";
+  $("raw").textContent="Membaca...";
+
+  const hasil={akun:{uid:currentUser.uid,email:currentUser.email||""},tesUmum:null,tesUid:null};
+
+  // TES 1: baca collection karyawan langsung.
+  try{
+    const snap=await getDocs(collection(db,"karyawan"));
+    hasil.tesUmum={berhasil:true,jumlah:snap.size,docs:[]};
+    snap.forEach(d=>hasil.tesUmum.docs.push({id:d.id,data:d.data()}));
+  }catch(e){
+    hasil.tesUmum={berhasil:false,code:e.code||"",message:e.message||String(e)};
+  }
+
+  // TES 2: baca karyawan milik UID login.
+  try{
+    const snap=await getDocs(query(collection(db,"karyawan"),where("uid","==",currentUser.uid)));
+    hasil.tesUid={berhasil:true,jumlah:snap.size,docs:[]};
+    snap.forEach(d=>hasil.tesUid.docs.push({id:d.id,data:d.data()}));
+  }catch(e){
+    hasil.tesUid={berhasil:false,code:e.code||"",message:e.message||String(e)};
+  }
+
+  const docs=(hasil.tesUid.berhasil&&hasil.tesUid.docs.length?hasil.tesUid.docs:(hasil.tesUmum.berhasil?hasil.tesUmum.docs:[]));
+  const namaKeys=["nama","namaKaryawan","nama_karyawan","name","namaLengkap","nama_lengkap","karyawan"];
+  const names=docs.map(x=>{
+    const d=x.data||{};
+    let nama="";
+    for(const k of namaKeys){if(d[k]!==undefined&&String(d[k]).trim()){nama=String(d[k]);break}}
+    return {id:x.id,nama:nama||"(nama field tidak ditemukan)",data:d};
+  });
+
+  if(!hasil.tesUmum.berhasil && !hasil.tesUid.berhasil){
+    show("testStatus","❌ FIREBASE MENOLAK PEMBACAAN KARYAWAN.\n\nTES UMUM:\n"+hasil.tesUmum.message+"\n\nTES UID:\n"+hasil.tesUid.message,"bad");
+  }else if(hasil.tesUid.berhasil && hasil.tesUid.jumlah>0){
+    show("testStatus","✅ BERHASIL.\nLogin terbaca dan karyawan dengan UID akun ditemukan: "+hasil.tesUid.jumlah+" data.","ok");
+  }else if(hasil.tesUmum.berhasil){
+    show("testStatus","⚠️ Collection karyawan bisa dibaca ("+hasil.tesUmum.jumlah+" data), tetapi query UID menemukan "+(hasil.tesUid.berhasil?hasil.tesUid.jumlah:"ERROR")+" data.\nIni akan menunjukkan apakah field uid pada data karyawan berbeda/tidak ada.","wait");
+  }
+
+  if(names.length){
+    $("list").className="status";
+    $("list").innerHTML=names.map(x=>`<div class="row"><span class="name">${escapeHtml(x.nama)}</span><span>${escapeHtml(x.id)}</span></div>`).join("");
+  }else{
+    show("list","Tidak ada nama karyawan yang berhasil dibaca.","bad");
+  }
+  $("raw").textContent=JSON.stringify(hasil,null,2);
+};
+
+function escapeHtml(v){return String(v??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#039;"}[m]))}
+
+onAuthStateChanged(auth,user=>{
+  currentUser=user||null;
+  if(user){
+    show("authStatus","✅ LOGIN FIREBASE TERDETEKSI\nEmail: "+(user.email||"-")+"\nUID: "+user.uid,"ok");
+    testKaryawan();
+  }else{
+    show("authStatus","❌ BELUM LOGIN FIREBASE\nHalaman ini sengaja tidak mengarahkan ke login agar kita bisa melihat masalahnya dengan jelas.","bad");
+  }
+});
+</script>
+</body>
+</html>
