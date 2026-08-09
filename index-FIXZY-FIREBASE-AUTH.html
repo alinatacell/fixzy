@@ -1,0 +1,617 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<meta name="theme-color" content="#FFC107">
+<title>FIXZY</title>
+
+<style>
+*{box-sizing:border-box}
+
+html,body{
+  margin:0;
+  width:100%;
+  height:100%;
+  font-family:Arial,Helvetica,sans-serif;
+  background:#f3f4f6;
+  color:#111827;
+}
+
+body{overflow:hidden}
+
+/* ================= HEADER ================= */
+.header{
+  height:62px;
+  background:#fff;
+  border-bottom:1px solid #e5e7eb;
+  display:flex;
+  align-items:center;
+  position:fixed;
+  top:0;
+  left:0;
+  right:0;
+  z-index:20;
+  box-shadow:0 2px 12px rgba(0,0,0,.06);
+}
+
+.menu-btn{
+  width:44px;
+  height:44px;
+  margin-left:9px;
+  border:0;
+  border-radius:11px;
+  background:#111827;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  gap:5px;
+  cursor:pointer;
+}
+
+.menu-btn span{
+  width:21px;
+  height:2px;
+  background:#fff;
+  border-radius:4px;
+}
+
+/* Logo HEADER sengaja DIHAPUS */
+
+.header-account{
+  margin-left:auto;
+  margin-right:13px;
+  text-align:right;
+  line-height:1.15;
+}
+
+.account-name{
+  font-size:12px;
+  font-weight:900;
+  max-width:190px;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+
+.account-exp{
+  font-size:9px;
+  color:#6b7280;
+  margin-top:3px;
+}
+
+/* ================= CONTENT ================= */
+.content{
+  position:fixed;
+  top:62px;
+  left:0;
+  right:0;
+  bottom:0;
+  background:#f3f4f6;
+  overflow:hidden;
+}
+
+.content iframe{
+  width:100%;
+  height:100%;
+  border:0;
+  display:block;
+  background:#fff;
+}
+
+/* ================= HALAMAN SELAMAT DATANG ================= */
+.welcome{
+  width:100%;
+  height:100%;
+  overflow:auto;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:28px 18px;
+  background:#f3f4f6;
+}
+
+.welcome-card{
+  width:min(760px,100%);
+  text-align:center;
+  padding:25px 20px 32px;
+}
+
+.welcome-logo{
+  display:block;
+  width:min(430px,78vw);
+  max-height:330px;
+  object-fit:contain;
+  margin:0 auto 18px;
+}
+
+.welcome-title{
+  margin:0;
+  font-size:clamp(25px,5vw,42px);
+  font-weight:1000;
+  letter-spacing:.5px;
+  color:#111827;
+}
+
+.welcome-tagline{
+  margin:7px 0 14px;
+  font-size:clamp(17px,3vw,24px);
+  font-weight:900;
+  color:#f59e0b;
+}
+
+.welcome-desc{
+  margin:0 auto;
+  max-width:650px;
+  font-size:clamp(13px,2.2vw,16px);
+  line-height:1.65;
+  color:#6b7280;
+}
+
+.welcome-hint{
+  display:inline-block;
+  margin-top:22px;
+  padding:10px 16px;
+  border-radius:12px;
+  background:#fff;
+  border:1px solid #e5e7eb;
+  font-size:12px;
+  font-weight:800;
+  color:#374151;
+}
+
+/* ================= OVERLAY ================= */
+.overlay{
+  position:fixed;
+  inset:0;
+  z-index:40;
+  background:rgba(0,0,0,.28);
+  opacity:0;
+  visibility:hidden;
+  transition:.2s;
+}
+
+.overlay.show{
+  opacity:1;
+  visibility:visible;
+}
+
+/* ================= MENU ================= */
+.menu{
+  position:fixed;
+  z-index:50;
+  top:0;
+  left:0;
+  height:100dvh;
+  width:min(310px,86vw);
+  background:#fff;
+  transform:translateX(-105%);
+  transition:.25s ease;
+  box-shadow:8px 0 30px rgba(0,0,0,.15);
+  overflow:auto;
+}
+
+.menu.show{
+  transform:translateX(0);
+}
+
+.menu-head{
+  min-height:62px;
+  padding:10px 13px;
+  background:#111827;
+  color:#fff;
+  display:flex;
+  align-items:center;
+  gap:10px;
+}
+
+.menu-head img{
+  width:78px;
+  max-height:40px;
+  object-fit:contain;
+  background:#fff;
+  border-radius:7px;
+}
+
+.menu-title{
+  font-weight:900;
+  font-size:15px;
+}
+
+.menu-sub{
+  font-size:9px;
+  color:#d1d5db;
+  margin-top:3px;
+}
+
+.close{
+  margin-left:auto;
+  border:0;
+  background:rgba(255,255,255,.12);
+  color:#fff;
+  width:34px;
+  height:34px;
+  border-radius:9px;
+  font-size:20px;
+  cursor:pointer;
+}
+
+.menu-list{
+  padding:9px;
+}
+
+.menu-link{
+  width:100%;
+  display:flex;
+  align-items:center;
+  gap:10px;
+  border:0;
+  background:transparent;
+  text-decoration:none;
+  color:#111827;
+  padding:12px 11px;
+  border-radius:10px;
+  font-size:13px;
+  font-weight:800;
+  text-align:left;
+  cursor:pointer;
+}
+
+.menu-link:hover,
+.menu-link.active{
+  background:#f3f4f6;
+}
+
+.menu-link .ico{
+  width:25px;
+  text-align:center;
+  font-size:16px;
+}
+
+.menu-divider{
+  height:1px;
+  background:#e5e7eb;
+  margin:7px 5px;
+}
+
+/* ================= MOBILE ================= */
+@media(max-width:480px){
+  .header-account{
+    margin-right:9px;
+  }
+
+  .account-name{
+    font-size:11px;
+    max-width:150px;
+  }
+
+  .welcome{
+    padding:20px 12px;
+  }
+
+  .welcome-card{
+    padding:18px 10px 28px;
+  }
+
+  .welcome-logo{
+    width:min(330px,82vw);
+    max-height:250px;
+    margin-bottom:12px;
+  }
+
+  .welcome-tagline{
+    margin-top:5px;
+  }
+}
+</style>
+</head>
+
+<body>
+
+<!-- ================= HEADER ================= -->
+<header class="header">
+  <button class="menu-btn" onclick="bukaMenu()" aria-label="Menu">
+    <span></span>
+    <span></span>
+    <span></span>
+  </button>
+
+  <!-- Logo header DIHAPUS sesuai permintaan -->
+
+  <div class="header-account">
+    <div class="account-name" id="accountName">Akun</div>
+    <div class="account-exp">
+      Exp: <span id="accountExp">-</span>
+    </div>
+  </div>
+</header>
+
+<!-- ================= CONTENT ================= -->
+<div class="content" id="contentArea"></div>
+
+<!-- ================= OVERLAY ================= -->
+<div class="overlay" id="overlay" onclick="tutupMenu()"></div>
+
+<!-- ================= MENU ================= -->
+<aside class="menu" id="menu">
+  <div class="menu-head">
+    <img src="logo.png?v=2" alt="FIXZY">
+    <div>
+      <div class="menu-title">Menu FIXZY</div>
+      <div class="menu-sub">Pilih halaman</div>
+    </div>
+    <button class="close" onclick="tutupMenu()">×</button>
+  </div>
+
+  <nav class="menu-list">
+
+    <button class="menu-link"
+      data-page="dashboard-admin.html"
+      onclick="bukaHalaman(this)">
+      <span class="ico">📊</span>
+      Dashboard Admin
+    </button>
+
+    <button class="menu-link"
+      data-page="data-servis.html"
+      onclick="bukaHalaman(this)">
+      <span class="ico">🔧</span>
+      Data Servis
+    </button>
+
+    <button class="menu-link"
+      data-page="data-penjualan.html"
+      onclick="bukaHalaman(this)">
+      <span class="ico">🛒</span>
+      Data Penjualan
+    </button>
+
+    <button class="menu-link"
+      data-page="stock.html"
+      onclick="bukaHalaman(this)">
+      <span class="ico">📦</span>
+      Stock
+    </button>
+
+    <button class="menu-link"
+      data-page="nota.html"
+      onclick="bukaHalaman(this)">
+      <span class="ico">🧾</span>
+      Nota
+    </button>
+
+  </nav>
+</aside>
+
+<script>
+/* =========================================================
+   FIXZY INDEX
+   - Belum login  : tampilkan login.html
+   - Sudah login  : tampilkan halaman sambutan
+   - Login sukses  : simpan profil dan tampilkan sambutan
+   ========================================================= */
+
+function sudahLogin(){
+  return sessionStorage.getItem("fixzy_logged_in") === "1";
+}
+
+function bukaMenu(){
+  document.getElementById("menu").classList.add("show");
+  document.getElementById("overlay").classList.add("show");
+}
+
+function tutupMenu(){
+  document.getElementById("menu").classList.remove("show");
+  document.getElementById("overlay").classList.remove("show");
+}
+
+/* ================= HALAMAN LOGIN ================= */
+function tampilkanLogin(){
+  const area = document.getElementById("contentArea");
+
+  area.innerHTML = "";
+
+  const frame = document.createElement("iframe");
+  frame.title = "Login FIXZY";
+  frame.src = "login.html?v=2";
+  frame.style.cssText =
+    "width:100%;height:100%;border:0;display:block;background:#fff;";
+
+  area.appendChild(frame);
+  pasangFrameAuth(frame);
+
+  document.querySelectorAll(".menu-link")
+    .forEach(x => x.classList.remove("active"));
+}
+
+/* ================= HALAMAN SAMBUTAN ================= */
+function tampilkanBeranda(){
+  const area = document.getElementById("contentArea");
+
+  area.innerHTML = `
+    <section class="welcome">
+      <div class="welcome-card">
+
+        <img
+          src="logo.png?v=2"
+          class="welcome-logo"
+          alt="FIXZY Pembukuan Servis HP"
+        >
+
+        <h1 class="welcome-title">FIXZY</h1>
+
+        <div class="welcome-tagline">
+          PEMBUKUAN SERVIS HP
+        </div>
+
+        <p class="welcome-desc">
+          Sistem pembukuan khusus usaha servis HP untuk membantu
+          mengelola data servis, pelanggan, penjualan, stok, nota,
+          dan aktivitas usaha secara lebih rapi dalam satu aplikasi.
+        </p>
+
+        <div class="welcome-hint">
+          Gunakan tombol menu ☰ untuk mulai menggunakan FIXZY
+        </div>
+
+      </div>
+    </section>
+  `;
+
+  document.querySelectorAll(".menu-link")
+    .forEach(x => x.classList.remove("active"));
+}
+
+/* ================= BUKA HALAMAN MENU ================= */
+function bukaHalaman(btn){
+  if(!sudahLogin()){
+    tampilkanLogin();
+    tutupMenu();
+    return;
+  }
+
+  const page = btn.dataset.page;
+  const area = document.getElementById("contentArea");
+
+  area.innerHTML = "";
+
+  const frame = document.createElement("iframe");
+  frame.title = "Halaman FIXZY";
+  frame.src = page;
+  frame.style.cssText =
+    "width:100%;height:100%;border:0;display:block;background:#fff;";
+
+  area.appendChild(frame);
+  pasangFrameAuth(frame);
+
+  document.querySelectorAll(".menu-link")
+    .forEach(x => x.classList.remove("active"));
+
+  btn.classList.add("active");
+
+  tutupMenu();
+}
+
+/* ================= PESAN DARI LOGIN ================= */
+window.addEventListener("message", function(e){
+  const d = e.data || {};
+
+  if(d.type === "FIXZY_LOGIN_SUCCESS"){
+
+    sessionStorage.setItem("fixzy_logged_in", "1");
+
+    localStorage.setItem(
+      "fixzy_user_profile",
+      JSON.stringify({
+        uid: d.uid || "",
+        email: d.email || "",
+        nama: d.nama || "Akun",
+        exp: d.exp || "-",
+        role: d.role || "user"
+      })
+    );
+
+    bacaProfil();
+
+    /* Setelah login berhasil langsung masuk halaman utama */
+    tampilkanBeranda();
+  }
+
+  if(d.type === "FIXZY_REGISTER_SUCCESS"){
+    /* Setelah registrasi, tampilkan kembali halaman login */
+    tampilkanLogin();
+  }
+
+  if(d.type === "FIXZY_REQUEST_AUTH"){
+    // Kirim identitas sesi FIXZY ke iframe yang meminta.
+    try{
+      kirimProfilKeFrame(e.source?.frameElement || null);
+    }catch(err){
+      let p={};
+      try{p=JSON.parse(localStorage.getItem("fixzy_user_profile")||"{}")}catch(x){}
+      try{
+        e.source?.postMessage({
+          type:"FIXZY_PARENT_AUTH",
+          uid:p.uid||localStorage.getItem("fixzy_uid")||"",
+          email:p.email||"",
+          nama:p.nama||"Akun",
+          exp:p.exp||"-",
+          role:p.role||"user",
+          loggedIn:sessionStorage.getItem("fixzy_logged_in")==="1"
+        },"*");
+      }catch(x){}
+    }
+  }
+});
+
+/* ================= BACA PROFIL AKUN ================= */
+function bacaProfil(){
+  let p = {};
+
+  try{
+    p = JSON.parse(
+      localStorage.getItem("fixzy_user_profile") || "{}"
+    );
+  }catch(e){
+    p = {};
+  }
+
+  const nama =
+    p.nama ||
+    p.namaToko ||
+    p.namaUsaha ||
+    p.toko ||
+    p.email ||
+    "Akun";
+
+  const exp =
+    p.exp ||
+    p.expired ||
+    p.expiry ||
+    p.masaAktif ||
+    p.tanggalExp ||
+    p.tanggalExpired ||
+    "-";
+
+  document.getElementById("accountName").textContent = nama;
+  document.getElementById("accountExp").textContent = exp;
+}
+
+
+/* ================= KIRIM PROFIL KE HALAMAN ANAK ================= */
+function kirimProfilKeFrame(frame){
+  if(!frame || !frame.contentWindow) return;
+  let p={};
+  try{p=JSON.parse(localStorage.getItem("fixzy_user_profile")||"{}")}catch(e){}
+  frame.contentWindow.postMessage({
+    type:"FIXZY_PARENT_AUTH",
+    uid:p.uid||localStorage.getItem("fixzy_uid")||"",
+    email:p.email||"",
+    nama:p.nama||"Akun",
+    exp:p.exp||"-",
+    role:p.role||"user",
+    loggedIn:sessionStorage.getItem("fixzy_logged_in")==="1"
+  },"*");
+}
+
+function pasangFrameAuth(frame){
+  if(!frame) return;
+  frame.addEventListener("load",()=>kirimProfilKeFrame(frame));
+  setTimeout(()=>kirimProfilKeFrame(frame),500);
+}
+
+/* ================= START ================= */
+bacaProfil();
+
+if(sudahLogin()){
+  tampilkanBeranda();
+}else{
+  /* Saat index pertama dibuka dan belum login,
+     langsung tampilkan login.html */
+  tampilkanLogin();
+}
+</script>
+
+</body>
+</html>
