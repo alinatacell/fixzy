@@ -375,13 +375,6 @@ body{overflow:hidden}
     </button>
 
     <button class="menu-link"
-      data-page="data-karyawan.html"
-      onclick="bukaHalaman(this)">
-      <span class="ico">👥</span>
-      Data Karyawan
-    </button>
-
-    <button class="menu-link"
       data-page="nota.html"
       onclick="bukaHalaman(this)">
       <span class="ico">🧾</span>
@@ -438,7 +431,7 @@ function tampilkanLogin(){
   frame.title = "Login FIXZY";
   frame.src = "login.html?v=3";
   frame.style.cssText =
-    "width:100%;height:100%;border:0;display:block;background:#fff;";
+    "width:100%;height:calc(100vh - 120px);min-height:620px;border:0;display:block;background:#fff;";
 
   area.appendChild(frame);
   pasangFrameAuth(frame);
@@ -553,6 +546,34 @@ window.addEventListener("message",function(e){
       firebaseProxyClients.delete(d.requestId);
       try{client.postMessage(d,"*")}catch(err){}
     }
+  }
+});
+
+/* ================= HASIL LOGIN FIREBASE ================= */
+window.addEventListener("message", function(e){
+  const d=e.data||{};
+
+  if(d.type==="FIXZY_LOGIN_SUCCESS"){
+    // Sesi Dashboard harus mengikuti login Firebase yang baru berhasil.
+    sessionStorage.setItem("fixzy_logged_in","1");
+
+    const profile={
+      uid:d.uid||"",
+      email:d.email||"",
+      nama:d.nama||"Akun",
+      exp:d.exp||"-",
+      role:d.role||"user"
+    };
+
+    localStorage.setItem("fixzy_uid",profile.uid);
+    localStorage.setItem("fixzy_user_profile",JSON.stringify(profile));
+
+    bacaProfil();
+    tampilkanBeranda();
+
+    // Siapkan Firebase bridge setelah login benar-benar berhasil.
+    setTimeout(()=>siapkanFirebaseBridge(),100);
+    return;
   }
 });
 
