@@ -78,11 +78,7 @@ textarea{min-height:72px;resize:vertical}
         <div class="field full">
             <label>Teknisi / Absensi</label>
             <select id="teknisi">
-              <option value="">-- Pilih Teknisi --</option>
-              <option>A Yudi</option>
-              <option>Soleh</option>
-              <option>Farhan</option>
-              <option>Zaka</option>
+              <option value="">⏳ Memuat teknisi...</option>
             </select>
             <small class="attendance-note">Teknisi yang dipilih dicatat ke transaksi sebagai absensi/petugas.</small>
           </div>
@@ -243,7 +239,7 @@ const firebaseConfig={
  appId:"1:838081521031:web:50fdee909b56460b055f22"
 };
 const app=initializeApp(firebaseConfig),auth=getAuth(app),db=getFirestore(app);
-let uid=null,jenis="servis",produk=[],itemsServis=[],itemsJual=[],modeServis="produk",modeJual="produk",saving=false;
+let uid=null,jenis="servis",produk=[],karyawan=[],itemsServis=[],itemsJual=[],modeServis="produk",modeJual="produk",saving=false;
 
 const $=id=>document.getElementById(id);
 const rupiah=n=>new Intl.NumberFormat("id-ID",{style:"currency",currency:"IDR",maximumFractionDigits:0}).format(Number(n)||0);
@@ -272,6 +268,42 @@ async function muatProduk(){
   $("status").textContent="Gagal membaca Firebase: "+e.message;
  }
 }
+
+async function muatKaryawan(){
+ $("teknisi").innerHTML='<option value="">⏳ Memuat teknisi aktif...</option>';
+ try{
+   const snap=await getDocs(query(collection(db,"karyawan"),where("uid","==",uid)));
+   karyawan=snap.docs.map(d=>({id:d.id,...d.data()}))
+     .filter(x=>String(x.status||"Aktif").toLowerCase()==="aktif")
+     .sort((a,b)=>String(a.nama||"").localeCompare(String(b.nama||"")));
+   $("teknisi").innerHTML='<option value="">-- Pilih Teknisi / Absensi --</option>'+
+     karyawan.map(x=>`<option value="${esc(x.id)}">${esc(x.nama||"Tanpa Nama")}${x.jabatan?` • ${esc(x.jabatan)}`:""}</option>`).join("");
+   if(!karyawan.length){
+     $("teknisi").innerHTML='<option value="">Belum ada teknisi aktif</option>';
+   }
+ }catch(e){
+   console.error(e);
+   $("teknisi").innerHTML='<option value="">Gagal memuat teknisi</option>';
+ }
+}
+window.muatKaryawan=muatKaryawan;
+
+function ambilTeknisi(){
+ const id=$("teknisi").value;
+ const k=karyawan.find(x=>String(x.id)===String(id));
+ return k?{
+   id:k.id,
+   nama:k.nama||"",
+   jabatan:k.jabatan||"",
+   hp:k.hp||""
+ }:{
+   id:"",
+   nama:"",
+   jabatan:"",
+   hp:""
+ };
+}
+
 function isiSelect(){
  const opts='<option value="">-- Pilih Produk --</option>'+produk.map(p=>{
   const harga=num(p.hargaJual??p.harga??0),stok=num(p.sisa??p.stok??p.stock);
@@ -379,11 +411,11 @@ function renderAll(){renderServis();renderJual();hitung()}
 window.hitung=hitung;
 
 function kumpulkan(){
- const base={uid,jenis,nomorNota:$("nomorNota").value,tanggal:$("tanggal").value||now(),pelanggan:{nama:$("pelanggan").value.trim(),wa:$("wa").value.trim(),alamat:$("alamat").value.trim()}};
+ const base={uid,jenis,nomorNota:$("nomorNota").value,tanggal:$("tanggal").value||now(),teknisi:ambilTeknisi(),pelanggan:{nama:$("pelanggan").value.trim(),wa:$("wa").value.trim(),alamat:$("alamat").value.trim()}};
  if(jenis==="servis"){
   const total=num($("biayaServis").value),dp=num($("dp").value);
   return {...base,hp:{merk:$("merk").value.trim(),tipe:$("tipe").value.trim(),imei:$("imei").value.trim()},keluhan:$("keluhan").value.trim(),
-   kelengkapan:checks.filter((_,i)=>$("ck"+i).checked),sandi:$("sandi").value,teknisi:$("teknisi").value.trim(),sparepart:[],
+   kelengkapan:checks.filter((_,i)=>$("ck"+i).checked),sandi:$("sandi").value,sparepart:[],
    biayaServis:num($("biayaServis").value),totalSparepart:0,totalJasa:num($("biayaServis").value),total:num($("biayaServis").value),dp,sisa:Math.max(0,num($("biayaServis").value)-dp),status:$("statusServis").value,catatan:$("catatanServis").value.trim()};
  }
  const subtotal=itemsJual.reduce((a,x)=>a+num(x.hargaJual)*num(x.qty),0),diskon=num($("diskon").value),total=Math.max(0,subtotal-diskon),dibayar=num($("dibayar").value);
@@ -437,7 +469,8 @@ window.simpan=simpan;
 
 function resetForm(){
  itemsServis=[];itemsJual=[];$("nomorNota").value=nomor(jenis);$("tanggal").value=now();
- ["pelanggan","wa","alamat","merk","tipe","imei","keluhan","sandi","teknisi","catatanServis","catatanJual"].forEach(id=>$(id).value="");
+ ["pelanggan","wa","alamat","merk","tipe","imei","keluhan","sandi","catatanServis","catatanJual"].forEach(id=>$(id).value="");
+ $("teknisi").value="";
  ["dp","diskon","dibayar"].forEach(id=>$(id).value=0);
  $("pola").value="";resetPola();
  $("statusServis").value="Menunggu";$("statusJual").value="Selesai";$("metode").value="Tunai";
@@ -466,7 +499,8 @@ function printNota(d){
  @media print{body{background:#fff}.paper{margin:0;width:80mm}.actions{display:none}}
  </style></head><body><div class="actions"><button class="p" onclick="print()">🖨 Cetak</button><button class="c" onclick="close()">Tutup</button></div>
  <div class="paper"><h2>${toko}</h2><b>${d.jenis==="servis"?"NOTA SERVIS":"NOTA PENJUALAN"}</b><p>${esc(d.nomorNota)}<br>${esc(d.tanggal)}</p>
- <p>Pelanggan: <b>${esc(d.pelanggan.nama||"Umum")}</b><br>${esc(d.pelanggan.wa||"")}</p>${extra}
+ <p>Teknisi/Absensi: <b>${esc(d.teknisi?.nama||"-")}</b>${d.teknisi?.jabatan?` • ${esc(d.teknisi.jabatan)}`:""}<br>
+Pelanggan: <b>${esc(d.pelanggan.nama||"Umum")}</b><br>${esc(d.pelanggan.wa||"")}</p>${extra}
  <div class="qrbox"><div id="qrcode"></div><small>Scan untuk cek transaksi</small></div>
  <table><thead><tr><th>#</th><th>Item</th><th>Qty</th><th>Harga</th><th>Total</th></tr></thead><tbody>${rows}</tbody></table>
  <div style="margin-top:12px">${summary}</div><p>Status: <b>${esc(d.status)}</b></p><p>${esc(d.catatan||"")}</p></div></body></html>`);
@@ -503,8 +537,8 @@ window.pilihDot=pilihDot;window.resetPola=resetPola;
 
 onAuthStateChanged(auth,async user=>{
  if(!user){$("status").textContent="Belum login Firebase.";setTimeout(()=>location.href="login.html",500);return}
- uid=user.uid;$("status").textContent="Login Firebase • memuat produk...";
- await muatProduk();
+ uid=user.uid;$("status").textContent="Login Firebase • memuat produk & teknisi...";
+ await Promise.all([muatProduk(),muatKaryawan()]);
  $("nomorNota").value=nomor(jenis);$("tanggal").value=now();renderAll();
 });
 </script>
