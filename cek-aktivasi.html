@@ -75,11 +75,16 @@ select{width:100%;padding:14px;border:1px solid #cbd5e1;border-radius:13px;backg
     <div class="price" id="harga">Rp 0</div>
     <img src="qris.jpg" alt="QRIS pembayaran">
     <p class="note">Setelah transfer, simpan bukti pembayaran. Kemudian tekan tombol WhatsApp di bawah dan kirim bukti transfer untuk konfirmasi.</p>
-    <button class="btn dark" onclick="kirimWA()">📲 Konfirmasi Bukti Transfer ke WhatsApp</button>
+    <button class="btn dark" onclick="kirimWA()">📲 Konfirmasi & Kirim ke WhatsApp</button>
   </section>
 
   <section class="card">
     <div id="status" class="status">Menghubungkan ke akun Firebase...</div>
+  </section>
+
+  <section class="card">
+    <h3 style="margin-top:0">📋 Status Pengajuan Perpanjangan</h3>
+    <div id="riwayatPengajuan" class="status">Belum ada pengajuan.</div>
   </section>
 </main>
 
@@ -99,6 +104,8 @@ function tutupHalaman(){
 function rupiah(n){return "Rp "+Number(n||0).toLocaleString("id-ID")}
 function clean(v){return String(v??"").trim()}
 let pilihan={bulan:0,harga:0}, profil={};
+let currentUser=null;
+let db=null;
 
 function pilihPaket(){
   const v=document.getElementById("paket").value;
@@ -171,7 +178,7 @@ async function loadFirebase(){
   try{
     const {initializeApp}=await import("https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js");
     const {getAuth,onAuthStateChanged}=await import("https://www.gstatic.com/firebasejs/11.10.0/firebase-auth.js");
-    const {getFirestore,doc,getDoc}=await import("https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js");
+    const {getFirestore,doc,getDoc,collection,addDoc,getDocs,query,where,serverTimestamp}=await import("https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js");
 
     const firebaseConfig={
       apiKey:"AIzaSyCwMbJsuORhIq4QCmp4c1r6OsjAUlfxU5Y",
@@ -184,9 +191,10 @@ async function loadFirebase(){
 
     const app=initializeApp(firebaseConfig);
     const auth=getAuth(app);
-    const db=getFirestore(app);
+    db=getFirestore(app);
 
     onAuthStateChanged(auth,async user=>{
+      currentUser=user;
       if(!user){
         document.getElementById("status").className="status warn";
         document.getElementById("status").textContent="Akun Firebase belum login. Silakan login terlebih dahulu.";
@@ -207,6 +215,7 @@ async function loadFirebase(){
         document.getElementById("status").innerHTML=exp
           ? `✅ Data akun berhasil dibaca. Tanggal aktivasi/berakhir: <b>${formatTanggalTampil(exp)}</b>`
           : "⚠️ Tanggal aktivasi belum ditemukan pada data akun.";
+        await muatPengajuan();
       }catch(e){
         document.getElementById("status").className="status warn";
         document.getElementById("status").textContent="Gagal mengambil data akun: "+(e.message||e);
@@ -217,20 +226,149 @@ async function loadFirebase(){
     document.getElementById("status").textContent="Firebase gagal dimuat: "+(e.message||e);
   }
 }
-function kirimWA(){
-  if(!pilihan.harga)return;
+async function muatPengajuan(){
+  const el=document.getElementById("riwayatPengajuan");
+  if(!currentUser || !db){
+    el.className="status warn";
+    el.textContent="Belum login Firebase.";
+    return;
+  }
+
+  try{
+    const q=query(
+      collection(db,"aktivasi_pengajuan"),
+      where("uid","==",currentUser.uid)
+    );
+    const snap=await getDocs(q);
+
+    if(snap.empty){
+      el.className="status";
+      el.textContent="Belum ada pengajuan perpanjangan.";
+      return;
+    }
+
+    const rows=snap.docs.map(d=>({id:d.id,...d.data()}));
+    rows.sort((a,b)=>{
+      const ad=a.createdAt?.seconds||0;
+      const bd=b.createdAt?.seconds||0;
+      return bd-ad;
+    });
+
+    const r=rows[0];
+    const st=String(r.status||"menunggu").toLowerCase();
+
+    let label="MENUNGGU";
+    let cls="warn";
+    if(["disetujui","approved","approve","setuju"].includes(st)){
+      label="DISETUJUI";
+      cls="ok";
+    }else if(["ditolak","rejected","reject","tolak"].includes(st)){
+      label="DITOLAK";
+      cls="warn";
+    }
+
+    const paket=r.paket||`${r.bulan||0} bulan`;
+    const nominal=rupiah(r.nominal||0);
+
+    el.className=`status ${cls}`;
+    el.innerHTML=
+      `Status terakhir: <b>${label}</b><br>`+
+      `Paket: <b>${clean(paket)}</b> · Nominal: <b>${nominal}</b>`+
+      (r.alasanPenolakan
+        ? `<br>Alasan: <b>${clean(r.alasanPenolakan)}</b>`
+        : "");
+  }catch(e){
+    console.error(e);
+    el.className="status warn";
+    el.textContent="Gagal membaca status pengajuan: "+(e.message||e);
+  }
+}
+
+async function kirimWA(){
+  if(!pilihan.harga){
+    alert("Pilih paket terlebih dahulu.");
+    return;
+  }
+
+  if(!currentUser || !db){
+    alert("Akun Firebase belum login.");
+    return;
+  }
+
   const nama=document.getElementById("namaKonter").textContent;
   const exp=cariExp(profil)||"-";
-  const pesan=
-`Halo, saya ingin konfirmasi perpanjangan aktivasi FIXZY.
+  const paket=`${pilihan.bulan} Bulan`;
+
+  try{
+    const q=query(
+      collection(db,"aktivasi_pengajuan"),
+      where("uid","==",currentUser.uid)
+    );
+    const snap=await getDocs(q);
+
+    const adaPending=snap.docs.some(d=>{
+      const x=d.data()||{};
+      const st=String(x.status||"menunggu").toLowerCase();
+      const bln=Number(x.bulan||0);
+      return ["menunggu","pending"].includes(st) && bln===Number(pilihan.bulan);
+    });
+
+    if(adaPending){
+      await muatPengajuan();
+
+      const pesan=`Halo, saya ingin konfirmasi pembayaran perpanjangan aktivasi FIXZY.
 
 Nama konter: ${nama}
-Paket: ${pilihan.bulan} bulan
+Paket: ${paket}
 Nominal: ${rupiah(pilihan.harga)}
-Masa aktif saat ini: ${exp}
+Masa aktif saat ini: ${formatTanggalTampil(exp)}
 
-Saya sudah melakukan transfer dan akan mengirim bukti pembayaran di chat ini.`;
-  window.open("https://wa.me/6282319264646?text="+encodeURIComponent(pesan),"_blank");
+Pengajuan perpanjangan saya sudah tercatat di sistem. Saya mengirim bukti transfer di chat ini.`;
+
+      window.open(
+        "https://wa.me/6282319264646?text="+encodeURIComponent(pesan),
+        "_blank"
+      );
+      return;
+    }
+
+    await addDoc(collection(db,"aktivasi_pengajuan"),{
+      uid:currentUser.uid,
+      email:currentUser.email||profil.email||"",
+      namaKonter:nama,
+      paket:paket,
+      bulan:Number(pilihan.bulan),
+      durasiHari:Number(pilihan.bulan)*30,
+      nominal:Number(pilihan.harga),
+      tanggalExpiredLama:exp,
+      status:"menunggu",
+      buktiPembayaran:"",
+      createdAt:serverTimestamp()
+    });
+
+    await muatPengajuan();
+
+    const pesan=
+`Halo, saya ingin konfirmasi pembayaran perpanjangan aktivasi FIXZY.
+
+Nama konter: ${nama}
+Paket: ${paket}
+Nominal: ${rupiah(pilihan.harga)}
+Masa aktif saat ini: ${formatTanggalTampil(exp)}
+
+Saya sudah melakukan transfer dan akan mengirim bukti pembayaran di chat ini.
+
+Mohon diperiksa dan diproses melalui Kendali FIXZY.`;
+
+    window.open(
+      "https://wa.me/6282319264646?text="+encodeURIComponent(pesan),
+      "_blank"
+    );
+
+  }catch(e){
+    console.error(e);
+    alert("Pengajuan gagal disimpan: "+(e.message||e));
+  }
 }
 loadFirebase();
 </script>
