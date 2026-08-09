@@ -458,7 +458,7 @@ window.edit=id=>{
  $("modal").classList.add("show");
 };
 window.closeEdit=()=>$("modal").classList.remove("show");
-window.tutupHalaman=()=>{ window.close(); };
+
 
 window.saveEdit=async()=>{
  const id=$("editId").value,x=rows.find(a=>a.id===id);if(!id||!x)return;
@@ -639,4 +639,15 @@ onAuthStateChanged(auth,async u=>{
  $("akun").textContent=storeName+" • "+(u.email||"Login");
  await load();
 });
-</script></body></html>
+</script><script>
+function tutupHalaman(){
+  try{if(window.frameElement){window.frameElement.remove();return}}catch(e){}
+  try{if(window.parent!==window){
+    window.parent.postMessage({type:"FIXZY_CLOSE_PAGE"},"*");
+    return;
+  }}catch(e){}
+  try{window.close()}catch(e){}
+}
+window.tutupHalaman=tutupHalaman;
+</script>
+</body></html>
