@@ -30,6 +30,28 @@ textarea{min-height:75px;resize:vertical}
 @media(max-width:650px){.grid{grid-template-columns:1fr}.full{grid-column:auto}.actions button{flex:1}.pattern{width:165px;gap:12px}}
 @media print{header,.actions,.no-print{display:none!important}body{background:#fff}.card{border:0}}
 </style>
+<style>
+.printArea{display:none}
+@media print{
+  body>*:not(.printArea){display:none!important}
+  .printArea{display:block!important}
+  .printNota{width:80mm;margin:0 auto;font-family:Arial,sans-serif;font-size:12px;color:#000}
+  body.print-thermal .printNota{width:50mm;min-height:80mm;font-size:9px}
+  body.print-thermal .printNota h2{font-size:13px}
+  body.print-thermal .printQr canvas,body.print-thermal .printQr img{width:55px!important;height:55px!important}
+  body.print-standard .printNota{width:190mm;font-size:12px}
+  body.print-standard .printNota h2{font-size:20px}
+  body.print-standard .printQr canvas,body.print-standard .printQr img{width:90px!important;height:90px!important}
+  .printNota h2{text-align:center;margin:0 0 4px;font-size:18px}
+  .printNota .center{text-align:center}
+  .printNota hr{border:0;border-top:1px dashed #000;margin:8px 0}
+  .printNota table{width:100%;border-collapse:collapse}
+  .printNota td{padding:2px 0;vertical-align:top}
+  .printNota .total{font-weight:900;font-size:14px}
+  .printQr{text-align:center;margin-top:8px}
+}
+</style>
+<script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
 </head>
 <body>
 <header><h1>🧾 Nota FIXZY</h1><div class="grow"></div><button class="light" onclick="location.reload()">↻ Refresh</button></header>
@@ -107,9 +129,11 @@ textarea{min-height:75px;resize:vertical}
 <div class="card actions">
  <button class="danger" onclick="batal()">Batal</button>
  <button class="light" onclick="simpan(false)">Simpan</button>
- <button class="primary" onclick="simpan(true)">Simpan & Cetak</button>
+ <button class="primary" onclick="simpanCetak('thermal')">Cetak 5×8</button>
+ <button class="primary" onclick="simpanCetak('standar')">Cetak Umum</button>
 </div>
 </main>
+<div id="printArea" class="printArea"></div>
 <div id="toast" class="toast"></div>
 
 <script type="module">
@@ -222,6 +246,31 @@ function collectNota(){
  return d;
 }
 
+async function simpanCetak(mode){
+ if(!uid){toast("Belum login Firebase.");return}
+ if(!$("teknisi").value){toast("Pilih teknisi terlebih dahulu.");return}
+ let d;
+ try{d=collectNota()}catch(e){toast(e.message);return}
+ const col=jenis,notaId=d.nomorNota;
+ $("saveStatus").textContent="Menyimpan ke Firebase...";
+ try{
+  await setDoc(doc(db,col,notaId),{...d,createdAt:serverTimestamp(),updatedAt:serverTimestamp()},{merge:true});
+  buatNotaCetak(d);
+  document.body.classList.remove("print-thermal","print-standard");
+  document.body.classList.add(mode==="thermal"?"print-thermal":"print-standard");
+  $("saveStatus").textContent=`Tersimpan di Firebase • ${col}/${notaId}`;
+  toast(mode==="thermal"?"Tersimpan • cetak 5×8":"Tersimpan • cetak umum");
+  setTimeout(()=>window.print(),250);
+  setTimeout(()=>{
+   document.body.classList.remove("print-thermal","print-standard");
+   resetForm();
+  },800);
+ }catch(e){
+  console.error(e);
+  $("saveStatus").textContent="Gagal menyimpan ke Firebase.";
+  alert("Gagal menyimpan ke Firebase:\n"+(e?.message||e));
+ }
+}
 async function simpan(cetak){
  if(!uid){toast("Belum login Firebase.");return}
  if(!$("teknisi").value){toast("Pilih teknisi terlebih dahulu.");return}
@@ -249,8 +298,9 @@ async function simpan(cetak){
 
   // Setelah transaksi berhasil tersimpan, form selalu kembali kosong.
   if(cetak){
-    window.print();
-    setTimeout(()=>resetForm(),500);
+    buatNotaCetak(d);
+    setTimeout(()=>window.print(),250);
+    setTimeout(()=>resetForm(),700);
   }else{
     setTimeout(()=>resetForm(),250);
   }
@@ -261,6 +311,51 @@ async function simpan(cetak){
  }
 }
 
+
+function buatNotaCetak(d){
+ const area=$("printArea");
+ const pelanggan=d.pelanggan?.nama||"-";
+ const teknisi=d.namaTeknisi||d.teknisi||"-";
+ let isi="";
+ if(d.jenis==="servis"){
+   isi=`
+    <tr><td>HP</td><td>: ${esc(d.tipe||"-")}</td></tr>
+    <tr><td>IMEI</td><td>: ${esc(d.imei||"-")}</td></tr>
+    <tr><td>Keluhan</td><td>: ${esc(d.keluhan||"-")}</td></tr>
+    <tr><td>Teknisi</td><td>: ${esc(teknisi)}</td></tr>
+    <tr><td>Biaya</td><td>: Rp ${Number(d.total||0).toLocaleString("id-ID")}</td></tr>
+    <tr><td>DP</td><td>: Rp ${Number(d.dp||0).toLocaleString("id-ID")}</td></tr>
+    <tr><td>Sisa</td><td>: Rp ${Number(d.sisa||0).toLocaleString("id-ID")}</td></tr>`;
+ }else{
+   const it=(d.items||[]).map(x=>`
+    <tr><td colspan="2">${esc(x.nama)}<br>${x.qty} × Rp ${Number(x.harga||0).toLocaleString("id-ID")}</td></tr>`).join("");
+   isi=it+`
+    <tr><td>Teknisi</td><td>: ${esc(teknisi)}</td></tr>
+    <tr><td>Total</td><td>: Rp ${Number(d.total||0).toLocaleString("id-ID")}</td></tr>
+    <tr><td>Dibayar</td><td>: Rp ${Number(d.dibayar||0).toLocaleString("id-ID")}</td></tr>
+    <tr><td>Sisa</td><td>: Rp ${Number(d.sisa||0).toLocaleString("id-ID")}</td></tr>`;
+ }
+ area.innerHTML=`
+  <div class="printNota">
+   <h2>FIXZY</h2>
+   <div class="center">PEMBUKUAN SERVIS HP</div>
+   <hr>
+   <table>
+    <tr><td>Nota</td><td>: ${esc(d.nomorNota)}</td></tr>
+    <tr><td>Tanggal</td><td>: ${esc(d.tanggal)}</td></tr>
+    <tr><td>Pelanggan</td><td>: ${esc(pelanggan)}</td></tr>
+   </table>
+   <hr>
+   <table>${isi}</table>
+   <hr>
+   <div class="center">Terima kasih</div>
+   <div id="printQr" class="printQr"></div>
+   <div class="center">${esc(d.nomorNota)}</div>
+  </div>`;
+ const qrText=`${location.origin}${location.pathname}?cek=${encodeURIComponent(d.nomorNota)}&jenis=${encodeURIComponent(d.jenis)}`;
+ const qr=document.getElementById("printQr");
+ if(window.QRCode) new QRCode(qr,{text:qrText,width:100,height:100});
+}
 function resetForm(){
   // Nomor baru dan tanggal baru.
   $("nomor").value=nomor();
