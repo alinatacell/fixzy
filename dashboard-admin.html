@@ -30,6 +30,18 @@ table{width:100%;border-collapse:collapse;min-width:800px}th,td{padding:9px 8px;
 .product-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}.prod{background:#fff;border-radius:12px;padding:11px;box-shadow:0 5px 18px rgba(0,0,0,.05)}.prod h3{font-size:13px;margin:0 0 5px}.prod div{font-size:10px;color:#64748b;margin-top:3px}
 .year-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}.month-card{background:#fff;border-radius:12px;padding:11px;box-shadow:0 5px 18px rgba(0,0,0,.05)}.month-card h3{margin:0 0 8px;font-size:12px}.money{display:flex;justify-content:space-between;font-size:10px;padding:3px 0}.money b{font-size:11px}
 .empty{text-align:center;color:#64748b;padding:35px}
+.wage-head{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:10px}
+.wage-form{display:grid;grid-template-columns:1.4fr 1fr auto;gap:8px;background:#fff;padding:11px;border-radius:13px;margin-bottom:10px;box-shadow:0 5px 20px rgba(0,0,0,.05)}
+.wage-note{font-size:10px;color:#64748b;line-height:1.45;margin-top:6px}
+.wage-actions{display:flex;gap:5px;flex-wrap:wrap}
+.btn-danger{background:#fee2e2;color:#991b1b}
+.btn-edit{background:#fef3c7;color:#92400e}
+.wage-table table{min-width:650px}
+@media(max-width:520px){
+  .wage-form{grid-template-columns:1fr}
+  .wage-form .btn{width:100%}
+}
+
 @media(max-width:800px){
  .cards{grid-template-columns:1fr 1fr}.product-grid{grid-template-columns:1fr 1fr}.year-grid{grid-template-columns:1fr 1fr}
  .filters{grid-template-columns:1fr 1fr}.filters input{grid-column:1/-1}.filters .btn{grid-column:1/-1}
@@ -99,6 +111,56 @@ table{width:100%;border-collapse:collapse;min-width:800px}th,td{padding:9px 8px;
 <div class="table-card chart"><div class="bars" id="bars"></div><div class="legend">Grafik laba kotor sesuai periode yang dipilih.</div></div>
 <div id="financeTable" style="margin-top:10px"></div>
 </section>
+
+<section id="upah" class="panel">
+  <div class="wage-head">
+    <div>
+      <b style="font-size:16px">Upah Karyawan / Teknisi</b>
+      <div class="wage-note">
+        Upah dihitung berdasarkan hari unik teknisi mengerjakan servis pada bulan yang dipilih.
+        Beberapa nota pada tanggal yang sama tetap dihitung 1 hari.
+      </div>
+    </div>
+  </div>
+
+  <div class="filters">
+    <input id="wSearch" placeholder="Cari nama karyawan/teknisi..." oninput="renderUpah()">
+    <input id="wMonth" type="month" onchange="renderUpah()">
+    <button class="btn btn-light" onclick="resetUpah()">Bulan Ini</button>
+    <button class="btn btn-dark" onclick="renderUpah()">↻ Refresh</button>
+  </div>
+
+  <div class="wage-form">
+    <input id="wName" placeholder="Nama karyawan / teknisi">
+    <input id="wRate" type="number" min="0" step="1000" placeholder="Upah per hari">
+    <button class="btn btn-dark" id="wSaveBtn" onclick="saveWage()">＋ Simpan Upah</button>
+  </div>
+
+  <div class="cards">
+    <div class="card"><small>Karyawan/Teknisi</small><b id="wCount">0</b></div>
+    <div class="card"><small>Total Hari Hadir</small><b id="wAttendance">0</b></div>
+    <div class="card"><small>Total Upah Bulan Ini</small><b id="wTotal">Rp0</b></div>
+    <div class="card"><small>Periode</small><b id="wPeriod">-</b></div>
+  </div>
+
+  <div class="table-card wage-table">
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Nama</th>
+            <th class="num">Upah / Hari</th>
+            <th class="num">Hari Hadir</th>
+            <th class="num">Total Upah</th>
+            <th>Aksi</th>
+          </tr>
+        </thead>
+        <tbody id="wBody"></tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
 </main>
 
 <script type="module">
@@ -126,7 +188,41 @@ const active=r=>r?.omzetEligible!==false && r?.status!=="Batal";
 const dateOf=r=>String(r?.tanggal||r?.disimpanPada||"").slice(0,10);
 const modalServis=r=>(r?.sparepart||[]).reduce((a,x)=>a+num(x.hargaModal)*Math.max(1,num(x.qty)||1),0);
 const modalJual=r=>(r?.items||[]).reduce((a,x)=>a+num(x.hargaModal)*Math.max(1,num(x.qty)||1),0);
-function profile(){try{return JSON.parse(localStorage.getItem("fixzy_user_profile")||"{}")}catch(e){return {}}}
+function profile(){
+  try{
+    const keys=["fixzy_user_profile","fixzy_register_profile","fixzy_profile"];
+    for(const key of keys){
+      const raw=localStorage.getItem(key);
+      if(!raw)continue;
+      const p=JSON.parse(raw);
+      if(p&&typeof p==="object"&&Object.keys(p).length)return p;
+    }
+  }catch(e){}
+  return {};
+}
+
+function storeNameFromProfile(p,user){
+  return p.namaToko||
+         p.namaUsaha||
+         p.toko||
+         p.namaTokoUsaha||
+         p.nama_usaha||
+         p.nama_toko||
+         p.storeName||
+         p.store||
+         "NAMA TOKO";
+}
+
+function accountNameFromProfile(p,user){
+  return p.nama||
+         p.namaLengkap||
+         p.namaUser||
+         p.username||
+         p.email||
+         user?.displayName||
+         user?.email||
+         "Admin";
+}
 function badge(s){let c=s==="Batal"?"bad":(s==="Selesai"||s==="Diambil"?"ok":"wait");return `<span class="badge ${c}">${esc(s||"-")}</span>`}
 function loadLocal(){try{servis=JSON.parse(localStorage.getItem(KEY_S)||"[]")}catch(e){servis=[]}try{penjualan=JSON.parse(localStorage.getItem(KEY_P)||"[]")}catch(e){penjualan=[]}}
 async function loadStock(){
@@ -203,50 +299,140 @@ function setupYears(){
 function resetServis(){$("sSearch").value="";$("sStatus").value="";$("sDate").value="";renderServis()}
 function resetPenjualan(){$("pSearch").value="";$("pStatus").value="";$("pDate").value="";renderPenjualan()}
 
-function getWages(){try{return JSON.parse(localStorage.getItem(WAGE_KEY)||"{}")}catch(e){return {}}}
-function saveWage(){
- const name=$("wName").value.trim(),rate=num($("wRate").value);
- if(!name){alert("Isi nama karyawan/teknisi.");return}
- if(rate<0){alert("Nominal upah tidak valid.");return}
- const w=getWages();w[name]=rate;localStorage.setItem(WAGE_KEY,JSON.stringify(w));
- $("wName").value="";$("wRate").value="";renderUpah();
+function wageStorageKey(){
+  const p=profile();
+  const accountId=uid||p.uid||p.email||p.namaToko||p.namaUsaha||p.toko||"local";
+  return WAGE_KEY+"_"+String(accountId).replace(/[^a-zA-Z0-9._-]/g,"_");
 }
+
+function getWages(){
+  try{
+    const key=wageStorageKey();
+    const current=JSON.parse(localStorage.getItem(key)||"{}");
+    if(Object.keys(current).length) return current;
+
+    /* Migrasi data upah lama yang sebelumnya tersimpan global. */
+    const legacy=JSON.parse(localStorage.getItem(WAGE_KEY)||"{}");
+    if(Object.keys(legacy).length){
+      localStorage.setItem(key,JSON.stringify(legacy));
+      return legacy;
+    }
+    return {};
+  }catch(e){return {}}
+}
+
+function saveWage(){
+  const name=$("wName").value.trim();
+  const rate=num($("wRate").value);
+
+  if(!name){
+    alert("Isi nama karyawan/teknisi.");
+    return;
+  }
+  if(rate<0){
+    alert("Nominal upah tidak valid.");
+    return;
+  }
+
+  const w=getWages();
+  w[name]=rate;
+  localStorage.setItem(wageStorageKey(),JSON.stringify(w));
+
+  $("wName").value="";
+  $("wRate").value="";
+  $("wSaveBtn").textContent="＋ Simpan Upah";
+  $("wSaveBtn").dataset.editing="";
+  renderUpah();
+}
+
+function editWage(name){
+  const w=getWages();
+  $("wName").value=name;
+  $("wRate").value=num(w[name]);
+  $("wName").focus();
+  $("wSaveBtn").textContent="✓ Update Upah";
+  $("wSaveBtn").dataset.editing=name;
+}
+
+function deleteWage(name){
+  if(!confirm("Hapus data upah untuk "+name+"?"))return;
+  const w=getWages();
+  delete w[name];
+  localStorage.setItem(wageStorageKey(),JSON.stringify(w));
+  renderUpah();
+}
+
+function resetUpah(){
+  $("wSearch").value="";
+  $("wMonth").value=new Date().toISOString().slice(0,7);
+  $("wName").value="";
+  $("wRate").value="";
+  $("wSaveBtn").textContent="＋ Simpan Upah";
+  $("wSaveBtn").dataset.editing="";
+  renderUpah();
+}
+
 function renderUpah(){
- const w=getWages(), period=new Date().toISOString().slice(0,7), hadir={};
- /*
-   ATURAN ABSEN:
-   Satu teknisi yang mengerjakan beberapa nota pada tanggal yang sama
-   tetap dihitung 1 hari hadir saja.
-   Jadi:
-   - 1 nota pada 1 hari = 1 hadir
-   - 10 nota pada 1 hari = tetap 1 hadir
-   - nota di 3 tanggal berbeda = 3 hadir
-   Rumus: total upah = nominal upah × jumlah hari hadir unik.
- */
- servis.filter(r=>active(r)&&dateOf(r).startsWith(period)).forEach(r=>{
-   const name=String(r.teknisi||"").trim(),d=dateOf(r);
-   if(!name||!d)return;
-   if(!hadir[name])hadir[name]=new Set();
-   hadir[name].add(d);
- });
- const names=[...new Set([...Object.keys(w),...Object.keys(hadir)])].sort((a,b)=>a.localeCompare(b));
- let total=0,attendance=0;
- $("wPeriod").textContent=period;
- $("wCount").textContent=names.length;
- $("wBody").innerHTML=names.map(name=>{
-   const rate=num(w[name]);
-   const att=hadir[name]?hadir[name].size:0;
-   const pay=rate*att;
-   total+=pay;attendance+=att;
-   return `<tr><td><b>${esc(name)}</b></td><td class="num">${money(rate)}</td><td class="num">${att} hari</td><td class="num">${money(pay)}</td></tr>`;
- }).join("")||'<tr><td colspan="4" class="empty">Belum ada teknisi/karyawan.</td></tr>';
- $("wAttendance").textContent=attendance;
- $("wTotal").textContent=money(total);
+  const w=getWages();
+  const period=$("wMonth").value||new Date().toISOString().slice(0,7);
+  const search=($("wSearch").value||"").toLowerCase().trim();
+  const hadir={};
+
+  /*
+    ATURAN ABSEN:
+    - Hanya servis aktif; Batal tidak dihitung.
+    - Satu teknisi mengerjakan banyak nota pada tanggal yang sama = 1 hari hadir.
+    - Nota pada tanggal berbeda = hari hadir berbeda.
+    - Total upah = upah per hari × hari hadir unik.
+  */
+  servis
+    .filter(r=>active(r)&&dateOf(r).startsWith(period))
+    .forEach(r=>{
+      const name=String(r.teknisi||"").trim();
+      const d=dateOf(r);
+      if(!name||!d)return;
+      if(!hadir[name])hadir[name]=new Set();
+      hadir[name].add(d);
+    });
+
+  let names=[...new Set([...Object.keys(w),...Object.keys(hadir)])]
+    .filter(name=>!search||name.toLowerCase().includes(search))
+    .sort((a,b)=>a.localeCompare(b));
+
+  let total=0,attendance=0;
+
+  $("wPeriod").textContent=period;
+  $("wCount").textContent=names.length;
+
+  $("wBody").innerHTML=names.map(name=>{
+    const rate=num(w[name]);
+    const att=hadir[name]?hadir[name].size:0;
+    const pay=rate*att;
+    total+=pay;
+    attendance+=att;
+
+    return `<tr>
+      <td><b>${esc(name)}</b></td>
+      <td class="num">${money(rate)}</td>
+      <td class="num">${att} hari</td>
+      <td class="num">${money(pay)}</td>
+      <td>
+        <div class="wage-actions">
+          <button class="btn btn-edit" onclick='editWage(${JSON.stringify(name)})'>Edit</button>
+          <button class="btn btn-danger" onclick='deleteWage(${JSON.stringify(name)})'>Hapus</button>
+        </div>
+      </td>
+    </tr>`;
+  }).join("")||'<tr><td colspan="5" class="empty">Belum ada teknisi/karyawan.</td></tr>';
+
+  $("wAttendance").textContent=attendance;
+  $("wTotal").textContent=money(total);
 }
 
 function renderAll(){renderRingkasan();renderServis();renderPenjualan();renderProduk();setupYears();renderKeuangan();renderUpah()}
 document.querySelectorAll(".tab").forEach(btn=>btn.onclick=()=>{document.querySelectorAll(".tab").forEach(x=>x.classList.remove("active"));document.querySelectorAll(".panel").forEach(x=>x.classList.remove("active"));btn.classList.add("active");$(btn.dataset.tab).classList.add("active");if(btn.dataset.tab==="keuangan")renderKeuangan();if(btn.dataset.tab==="upah")renderUpah()});
 $("periodeRingkasan").onchange=renderRingkasan;
+$("wMonth").value=new Date().toISOString().slice(0,7);
 onAuthStateChanged(auth,async user=>{
  // Dashboard tidak pernah melempar ke halaman login.
  // Jika Firebase belum memiliki sesi, dashboard tetap tampil bersih;
@@ -254,8 +440,8 @@ onAuthStateChanged(auth,async user=>{
  if(!user){
    uid=null;
    const p=profile();
-   $("brand").textContent=p.namaToko||p.namaUsaha||p.toko||"NAMA TOKO";
-   $("userInfo").textContent=p.nama||"Admin";
+   $("brand").textContent=storeNameFromProfile(p);
+   $("userInfo").textContent=accountNameFromProfile(p);
    loadLocal();
    setupYears();
    renderAll();
@@ -263,8 +449,8 @@ onAuthStateChanged(auth,async user=>{
  }
  uid=user.uid;
  const p=profile();
- $("brand").textContent=p.namaToko||p.namaUsaha||p.toko||"NAMA TOKO";
- $("userInfo").textContent=p.nama||user.email||"Admin";
+ $("brand").textContent=storeNameFromProfile(p,user);
+ $("userInfo").textContent=accountNameFromProfile(p,user);
  loadLocal();
  setupYears();
  renderAll();
