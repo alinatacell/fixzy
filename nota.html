@@ -147,13 +147,7 @@ input:focus,select:focus,textarea:focus{border-color:#f59e0b;box-shadow:0 0 0 3p
 </div>
 <div class="toast" id="toast"></div>
 
-<script type="module">
-import{initializeApp}from"https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js";
-import{getAuth,onAuthStateChanged,setPersistence,browserLocalPersistence}from"https://www.gstatic.com/firebasejs/11.10.0/firebase-auth.js";
-import{getFirestore,collection,query,where,getDocs,getDoc,doc,setDoc,serverTimestamp}from"https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js";
-
-const firebaseConfig={apiKey:"AIzaSyCwMbJsuORHIq4QCmp4c1r6OsjAUlfxU5Y",authDomain:"fixzy-f056f.firebaseapp.com",projectId:"fixzy-f056f",storageBucket:"fixzy-f056f.firebasestorage.app",messagingSenderId:"838081521031",appId:"1:838081521031:web:50fdee909b56460b055f22"};
-const app=initializeApp(firebaseConfig),auth=getAuth(app),db=getFirestore(app);
+<script>
 const $=id=>document.getElementById(id);
 const esc=v=>String(v??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[m]));
 const num=v=>Number(v)||0;
@@ -202,22 +196,70 @@ function hitung(){
  const sub=itemsJual.reduce((a,x)=>a+num(x.hargaJual)*num(x.qty),0),disk=num($("diskon").value),total=Math.max(0,sub-disk),bayar=num($("dibayar").value);
  $("jualSubtotal").textContent=rupiah(sub);$("jualDiskon").textContent=rupiah(disk);$("jualTotal").textContent=rupiah(total);$("jualDibayar").textContent=rupiah(bayar);$("jualSisa").textContent=rupiah(Math.max(0,total-bayar));
 }
+
+const pendingProxy=new Map();
+let proxySeq=0;
+function firebaseProxy(op,extra={}){
+  return new Promise((resolve,reject)=>{
+    const requestId="fx-"+Date.now()+"-"+(++proxySeq);
+    pendingProxy.set(requestId,{resolve,reject});
+    try{
+      window.parent.postMessage({type:"FIXZY_FIREBASE_PROXY",requestId,op,...extra},"*");
+    }catch(e){
+      pendingProxy.delete(requestId);reject(e);
+    }
+    setTimeout(()=>{
+      const p=pendingProxy.get(requestId);
+      if(p){pendingProxy.delete(requestId);reject(new Error("Firebase bridge timeout."));}
+    },15000);
+  });
+}
+window.addEventListener("message",e=>{
+  const d=e.data||{};
+  if(d.type==="FIXZY_PARENT_AUTH"){
+    uid=d.uid||"";
+    $("namaAkun").textContent=d.nama||d.email||"Akun";
+    $("akunNota").style.display="block";
+    $("firebaseStatus").textContent=d.loggedIn?"Akun FIXZY terdeteksi • Firebase siap melalui halaman utama.":"Menunggu login Firebase...";
+    if(d.loggedIn) iniciarDatos();
+    return;
+  }
+  if(d.type==="FIXZY_FIREBASE_PROXY_RESULT"){
+    const p=pendingProxy.get(d.requestId);
+    if(!p)return;
+    pendingProxy.delete(d.requestId);
+    d.ok?p.resolve(d.result):p.reject(new Error(d.error||"Firebase error"));
+  }
+});
+
+async function iniciarDatos(){
+  try{
+    await Promise.all([muatKaryawan(),muatProduk()]);
+    $("firebaseStatus").textContent="Firebase aktif • Akun, karyawan, dan stok berhasil dimuat.";
+  }catch(e){
+    console.error(e);
+    $("firebaseStatus").textContent="Akun terdeteksi, tetapi Firebase gagal mengambil data.";
+    $("firebaseError").style.display="block";
+    $("firebaseError").textContent=e.message;
+  }
+}
 async function muatKaryawan(){
- const snap=await getDocs(query(collection(db,"karyawan"),where("uid","==",uid)));
- karyawan=snap.docs.map(d=>({id:d.id,...d.data()})).filter(x=>(x.status||"Aktif")==="Aktif").sort((a,b)=>String(a.nama||"").localeCompare(String(b.nama||""),"id"));
- $("teknisi").innerHTML='<option value="">-- Pilih Teknisi --</option>'+karyawan.map(x=>`<option value="${esc(x.id)}">${esc(x.nama||"Tanpa Nama")} • ${esc(x.jabatan||"Teknisi")}</option>`).join("");
- if(!karyawan.length)$("teknisi").innerHTML='<option value="">Belum ada karyawan aktif</option>';
+  karyawan=await firebaseProxy("getKaryawan");
+  $("teknisi").innerHTML='<option value="">-- Pilih Teknisi --</option>'+
+    karyawan.map(x=>`<option value="${esc(x.id)}">${esc(x.nama||"Tanpa Nama")} • ${esc(x.jabatan||"Teknisi")}</option>`).join("");
+  if(!karyawan.length)$("teknisi").innerHTML='<option value="">Belum ada karyawan aktif</option>';
 }
 async function muatProduk(){
- const snap=await getDocs(query(collection(db,"stok"),where("uid","==",uid)));
- produk=snap.docs.map(d=>({id:d.id,...d.data()}));
- $("produkSelect").innerHTML='<option value="">-- Pilih Produk --</option>'+produk.map(x=>{
-  const nama=x.nama||x.name||x.produk||x.productName||"Produk";
-  const harga=num(x.hargaJual??x.harga??x.price??x.jual);
-  const stok=num(x.stok??x.stock??x.qty??x.jumlah);
-  return `<option value="${esc(x.id)}">${esc(nama)} • ${rupiah(harga)} • Stok ${stok}</option>`;
- }).join("");
+  produk=await firebaseProxy("getStok");
+  $("produkSelect").innerHTML='<option value="">-- Pilih Produk --</option>'+
+    produk.map(x=>{
+      const nama=x.nama||x.name||x.produk||x.productName||"Produk";
+      const harga=num(x.hargaJual??x.harga??x.price??x.jual);
+      const stok=num(x.stok??x.stock??x.qty??x.jumlah);
+      return `<option value="${esc(x.id)}">${esc(nama)} • ${rupiah(harga)} • Stok ${stok}</option>`;
+    }).join("");
 }
+
 function produkData(id){
  const x=produk.find(p=>p.id===id);if(!x)return null;
  return {id:x.id,nama:x.nama||x.name||x.produk||x.productName||"Produk",hargaJual:num(x.hargaJual??x.harga??x.price??x.jual),stok:num(x.stok??x.stock??x.qty??x.jumlah),sumber:"stok"};
@@ -244,7 +286,7 @@ async function simpan(cetak=false){
  const d=kumpulkan(),err=validasi(d);if(err)return alert(err);
  const col=d.jenis==="servis"?"servis":"penjualan";
  try{
-  await setDoc(doc(db,col,d.nomorNota),d,{merge:false});
+  await firebaseProxy("save",{collection:col,id:d.nomorNota,data:d});
   toast("Nota tersimpan di Firebase.");
   if(cetak)setTimeout(()=>cetakNota(d),300);
   resetNota();
@@ -308,91 +350,25 @@ async function tampilkanAkun(user){
   box.style.display="block";
 }
 
-let authSelesai=false;
-let parentAuthReceived=false;
-let parentProfile=null;
 
-function tampilkanProfilParent(d){
-  parentAuthReceived=true;
-  parentProfile=d||{};
-  if(d && d.loggedIn){
-    $("firebaseStatus").textContent="Akun FIXZY terdeteksi: "+(d.nama||d.email||"Akun")+". Memeriksa sesi Firebase...";
-    $("namaAkun").textContent=d.nama||d.email||"Akun";
-    $("akunNota").style.display="block";
-  }
-}
-
-window.addEventListener("message",e=>{
-  const d=e.data||{};
-  if(d.type==="FIXZY_PARENT_AUTH"){
-    tampilkanProfilParent(d);
-  }
-});
-
-// Minta parent/index mengirim profil lagi jika nota dibuka di dalam iframe.
-try{
-  if(window.parent&&window.parent!==window){
-    window.parent.postMessage({type:"FIXZY_REQUEST_AUTH"},"*");
-  }
-}catch(e){}
-
-async function mulaiFirebaseAuth(){
+function requestParentAuth(){
   try{
-    await setPersistence(auth,browserLocalPersistence);
-  }catch(e){
-    console.warn("Persistence Firebase tidak dapat disetel:",e);
-  }
-
-  onAuthStateChanged(auth,async user=>{
-    authSelesai=true;
-    if(!user){
-      uid=null;
-      if(parentAuthReceived && parentProfile && parentProfile.loggedIn){
-        $("firebaseStatus").textContent="Akun "+(parentProfile.nama||parentProfile.email||"FIXZY")+" terdeteksi. Sesi Firebase sedang dipulihkan...";
-        $("namaAkun").textContent=parentProfile.nama||parentProfile.email||"Akun";
-        $("akunNota").style.display="block";
-      }else{
-        $("firebaseStatus").textContent="Menunggu sesi login Firebase...";
-        $("akunNota").style.display="none";
-      }
-      return;
+    if(window.parent&&window.parent!==window){
+      window.parent.postMessage({type:"FIXZY_REQUEST_AUTH"},"*");
+    }else{
+      $("firebaseStatus").textContent="Nota harus dibuka dari Dashboard FIXZY.";
     }
-
-    uid=user.uid;
-    $("firebaseStatus").textContent="Login Firebase terdeteksi. Memuat akun...";
-    if(parentProfile?.nama){
-      $("namaAkun").textContent=parentProfile.nama;
-      $("akunNota").style.display="block";
-    }
-    try{
-      await tampilkanAkun(user);
-      await Promise.all([muatKaryawan(),muatProduk()]);
-      $("firebaseStatus").textContent="Firebase aktif • Akun, karyawan, dan stok berhasil dimuat.";
-      resetNota();
-    }catch(e){
-      console.error(e);
-      $("firebaseStatus").textContent="Login Firebase berhasil.";
-      $("firebaseError").style.display="block";
-      $("firebaseError").textContent="Data Firebase gagal dimuat: "+e.message;
-    }
-  },error=>{
-    console.error("Firebase Auth error:",error);
-    authSelesai=true;
-    $("firebaseStatus").textContent="Firebase Auth mengalami error.";
-    $("firebaseError").style.display="block";
-    $("firebaseError").textContent=error?.message||String(error);
-  });
-
-  setTimeout(()=>{
-    if(!authSelesai){
-      $("firebaseStatus").textContent="Sesi Firebase belum terbaca.";
-      $("firebaseError").style.display="block";
-      $("firebaseError").textContent="Login halaman utama terdeteksi: "+(parentAuthReceived && parentProfile?.loggedIn?"YA":"TIDAK")+" • Firebase Auth Nota belum menemukan user.";
-    }
-  },8000);
+  }catch(e){}
 }
-
-mulaiFirebaseAuth();
+$("firebaseStatus").textContent="Meminta akun Firebase dari Dashboard...";
+requestParentAuth();
+setTimeout(requestParentAuth,800);
+setTimeout(()=>{
+  if(!$("namaAkun").textContent||$("namaAkun").textContent==="-"){
+    $("firebaseError").style.display="block";
+    $("firebaseError").textContent="Akun belum diterima dari Dashboard. Buka Nota melalui menu FIXZY setelah login.";
+  }
+},5000);
 </script>
 </body>
 </html>
