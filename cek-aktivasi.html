@@ -150,24 +150,36 @@ function cariNama(p){
   return p.namaKonter||p.namaToko||p.namaUsaha||p.toko||p.nama||p.email||"Akun";
 }
 function cariExp(p){
-  // Utamakan tanggal aktivasi/expired yang sebenarnya.
-  // Nilai seperti "trial" tidak ditampilkan sebagai masa aktif.
   const kandidat = [
-    p.tanggalExpired,
-    p.tanggalExp,
-    p.expiry,
-    p.expired,
-    p.exp,
-    p.masaAktif
+    p.tanggalExpired, p.tanggalExp, p.expiry, p.expired, p.exp,
+    p.expDate, p.expirationDate,
+    p.activationExpiry, p.activationExpires, p.activationEnd,
+    p.tanggalAktivasiSampai, p.aktifSampai, p.aktifHingga,
+    p.masaAktifSampai, p.tanggalBerakhir, p.tanggalBerakhirAktivasi,
+    p.endDate, p.end_date, p.expiresAt, p.expiredAt,
+    p.activationExpiresAt, p.activationEndAt, p.masaAktif
   ];
+
   for(const v of kandidat){
-    if(v === null || v === undefined || String(v).trim() === '') continue;
-    const t = String(v).trim().toLowerCase();
-    if(t === 'trial' || t === 'gratis' || t === 'free') continue;
+    if(v===null || v===undefined) continue;
+    if(typeof v==="string" && !v.trim()) continue;
+    const t=String(v).trim().toLowerCase();
+    if(["trial","gratis","free","-"].includes(t)) continue;
     if(formatTanggal(v)) return v;
+  }
+
+  for(const [k,v] of Object.entries(p||{})){
+    const key=String(k).toLowerCase();
+    if(/expir|expired|expiry|activation.*(end|expir)|(^|_)(exp|enddate|berakhir|aktif.*sampai)($|_)/.test(key)){
+      if(v===null || v===undefined || String(v).trim()==="") continue;
+      const t=String(v).trim().toLowerCase();
+      if(["trial","gratis","free","-"].includes(t)) continue;
+      if(formatTanggal(v)) return v;
+    }
   }
   return null;
 }
+
 function formatTanggalTampil(v){
   const d=formatTanggal(v);
   if(!d) return String(v||'-');
@@ -206,6 +218,23 @@ async function loadFirebase(){
         else{
           try{profil=JSON.parse(localStorage.getItem("fixzy_user_profile")||"{}")}catch(e){profil={}}
         }
+
+        try{
+          const local=JSON.parse(localStorage.getItem("fixzy_user_profile")||"{}");
+          profil={...(local||{}),...(profil||{})};
+        }catch(e){}
+
+        const localKeys=[
+          "fixzy_exp","fixzy_expiry","fixzy_expired",
+          "tanggalExpired","tanggalExp","expiry","expired","exp",
+          "activationExpiry","activationExpires","activationEnd",
+          "expiresAt","expiredAt","activationExpiresAt"
+        ];
+        for(const k of localKeys){
+          const v=localStorage.getItem(k);
+          if(v && !profil[k]) profil[k]=v;
+        }
+
         document.getElementById("namaKonter").textContent=cariNama(profil);
         const exp=cariExp(profil);
         const hasil=sisaAktivasi(exp);
@@ -213,8 +242,8 @@ async function loadFirebase(){
         document.getElementById("sisa").className=hasil.days!==null&&hasil.days<=0?"red":"green";
         document.getElementById("status").className="status ok";
         document.getElementById("status").innerHTML=exp
-          ? `✅ Data akun berhasil dibaca. Tanggal aktivasi/berakhir: <b>${formatTanggalTampil(exp)}</b>`
-          : "⚠️ Tanggal aktivasi belum ditemukan pada data akun.";
+          ? `✅ Data akun berhasil dibaca. Aktif sampai: <b>${formatTanggalTampil(exp)}</b> · Sisa: <b>${hasil.days===null?"-":(hasil.days>0?hasil.days+" hari":hasil.days===0?"hari ini":"sudah berakhir")}</b>`
+          : "⚠️ Tanggal aktivasi belum ditemukan pada data akun. Periksa field tanggal Exp pada dokumen users.";
         await muatPengajuan();
       }catch(e){
         document.getElementById("status").className="status warn";
