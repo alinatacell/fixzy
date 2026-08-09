@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<meta name="theme-color" content="#FFC107">
+<title>FIXZY | Ringkasan Pendapatan</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;font-family:Arial,Helvetica,sans-serif;background:#f3f4f6;color:#111827}
+header{background:#111827;color:#fff;padding:18px 20px}
+header h1{margin:0;font-size:24px} header p{margin:5px 0 0;color:#cbd5e1}
+.wrap{max-width:1100px;margin:auto;padding:18px}
+.card{background:#fff;border-radius:20px;padding:18px;margin-bottom:16px;box-shadow:0 4px 18px rgba(0,0,0,.07)}
+.filters{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+label{font-weight:800;color:#475569;display:block;margin-bottom:6px}
+input,select{width:100%;padding:12px;border:1px solid #cbd5e1;border-radius:12px;font-size:16px}
+.grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+.stat{padding:18px;border-radius:18px;background:#f8fafc;border:1px solid #e5e7eb}
+.stat small{display:block;color:#64748b;font-weight:800}
+.stat b{display:block;font-size:23px;margin-top:8px}
+.green{color:#15803d}.red{color:#dc2626}.blue{color:#2563eb}.orange{color:#c2410c}
+.tablewrap{overflow:auto;border-radius:14px;border:1px solid #e5e7eb}
+table{width:100%;border-collapse:collapse;min-width:720px}
+th{background:#111827;color:#fff;padding:12px;text-align:left}
+td{padding:11px;border-bottom:1px solid #e5e7eb}
+.right{text-align:right;font-weight:800}
+.empty{text-align:center;padding:28px;color:#64748b}
+.note{color:#64748b;line-height:1.5}
+@media(max-width:700px){
+ .filters{grid-template-columns:1fr}.grid{grid-template-columns:1fr 1fr}
+ .wrap{padding:12px}.card{padding:15px}.stat b{font-size:19px}
+}
+</style>
+</head>
+<body>
+<header>
+  <h1>📊 Ringkasan Pendapatan</h1>
+  <p>Pendapatan, pengeluaran, dan sisa kas FIXZY</p>
+</header>
+
+<main class="wrap">
+<section class="card">
+  <div class="filters">
+    <div>
+      <label>Periode</label>
+      <select id="mode" onchange="render()">
+        <option value="hari">Hari</option>
+        <option value="bulan" selected>Bulan</option>
+        <option value="tahun">Tahun</option>
+      </select>
+    </div>
+    <div>
+      <label>Tanggal / Bulan / Tahun</label>
+      <input id="periode" type="date" onchange="render()">
+    </div>
+  </div>
+  <p class="note" id="periodeInfo"></p>
+</section>
+
+<section class="grid">
+  <div class="stat"><small>💰 Pendapatan</small><b class="green" id="pendapatan">Rp 0</b></div>
+  <div class="stat"><small>💸 Pengeluaran</small><b class="red" id="pengeluaran">Rp 0</b></div>
+  <div class="stat"><small>💵 Sisa Kas</small><b class="blue" id="sisa">Rp 0</b></div>
+  <div class="stat"><small>🧾 Transaksi</small><b id="transaksi">0</b></div>
+</section>
+
+<section class="card">
+  <h2>Rincian Harian</h2>
+  <div class="tablewrap">
+    <table>
+      <thead><tr><th>Tanggal</th><th>Penjualan</th><th>Servis</th><th>Pengeluaran</th><th>Sisa</th></tr></thead>
+      <tbody id="tbody"></tbody>
+    </table>
+  </div>
+</section>
+</main>
+
+<script type="module">
+import {initializeApp} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import {getFirestore,collection,getDocs} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey:"GANTI_DENGAN_CONFIG_FIREBASE_LAMA",
+  authDomain:"GANTI_DENGAN_CONFIG_FIREBASE_LAMA",
+  projectId:"GANTI_DENGAN_CONFIG_FIREBASE_LAMA",
+  storageBucket:"GANTI_DENGAN_CONFIG_FIREBASE_LAMA",
+  messagingSenderId:"GANTI_DENGAN_CONFIG_FIREBASE_LAMA",
+  appId:"GANTI_DENGAN_CONFIG_FIREBASE_LAMA"
+};
+
+const app=initializeApp(firebaseConfig);
+const db=getFirestore(app);
+let penjualan=[],servis=[],pengeluaran=[];
+
+const $=id=>document.getElementById(id);
+const money=n=>"Rp "+Number(n||0).toLocaleString("id-ID");
+
+function today(){
+ const d=new Date();
+ return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;
+}
+function num(v){
+ if(typeof v==="number")return v;
+ return Number(String(v??"0").replace(/[^0-9.-]/g,""))||0;
+}
+function tanggal(r){
+ return String(r?.tanggal||r?.date||r?.createdDate||r?.tgl||"").slice(0,10);
+}
+function aktif(r){
+ const s=String(r?.status||"").trim().toLowerCase();
+ return s!=="batal" && s!=="dibatalkan" && s!=="cancel";
+}
+function total(r){
+ return num(r?.total??r?.grandTotal??r?.totalBayar??r?.jumlah);
+}
+function isServis(r){
+ const s=String(r?.jenis||r?.type||"").toLowerCase();
+ return !s || s.includes("servis") || s.includes("service");
+}
+function periodeMatch(d,mode,p){
+ if(!d)return false;
+ if(mode==="hari")return d===p;
+ if(mode==="bulan")return d.startsWith(p.slice(0,7));
+ return d.startsWith(p.slice(0,4));
+}
+function setInput(){
+ const p=$("periode");
+ p.type="date";
+ p.value=today();
+}
+$("periode").addEventListener("change",render);
+
+async function load(){
+ try{
+   const [a,b,c]=await Promise.all([
+     getDocs(collection(db,"penjualan")),
+     getDocs(collection(db,"servis")),
+     getDocs(collection(db,"pengeluaran"))
+   ]);
+   penjualan=a.docs.map(d=>({id:d.id,...d.data()}));
+   servis=b.docs.map(d=>({id:d.id,...d.data()}));
+   pengeluaran=c.docs.map(d=>({id:d.id,...d.data()}));
+   render();
+ }catch(e){
+   console.error(e);
+   alert("Gagal membaca data Firebase: "+(e.message||e));
+ }
+}
+
+window.render=function(){
+ const mode=$("mode").value;
+ const p=$("periode").value||today();
+
+ const sales=penjualan.filter(r=>periodeMatch(tanggal(r),mode,p)&&aktif(r));
+ const services=servis.filter(r=>periodeMatch(tanggal(r),mode,p)&&aktif(r));
+ const expenses=pengeluaran.filter(r=>periodeMatch(tanggal(r),mode,p));
+
+ const jual=sales.reduce((s,r)=>s+total(r),0);
+ const servisTotal=services.reduce((s,r)=>s+total(r),0);
+ const out=expenses.reduce((s,r)=>s+num(r.nominal),0);
+ const income=jual+servisTotal;
+ const tx=sales.length+services.length;
+
+ $("pendapatan").textContent=money(income);
+ $("pengeluaran").textContent=money(out);
+ $("sisa").textContent=money(income-out);
+ $("transaksi").textContent=tx;
+
+ $("periodeInfo").textContent =
+   mode==="hari" ? "Ringkasan untuk tanggal "+p :
+   mode==="bulan" ? "Ringkasan bulan "+p.slice(0,7) :
+   "Ringkasan tahun "+p.slice(0,4);
+
+ const year=p.slice(0,4), month=p.slice(5,7);
+ let days=[];
+ if(mode==="hari") days=[p];
+ else if(mode==="bulan"){
+   const last=new Date(Number(year),Number(month),0).getDate();
+   for(let i=1;i<=last;i++) days.push(`${year}-${month}-${String(i).padStart(2,"0")}`);
+ }else{
+   for(let m=1;m<=12;m++){
+     const mm=String(m).padStart(2,"0");
+     const last=new Date(Number(year),m,0).getDate();
+     for(let i=1;i<=last;i++) days.push(`${year}-${mm}-${String(i).padStart(2,"0")}`);
+   }
+ }
+
+ const rows=days.map(d=>{
+   const j=sales.filter(r=>tanggal(r)===d).reduce((s,r)=>s+total(r),0);
+   const sv=services.filter(r=>tanggal(r)===d).reduce((s,r)=>s+total(r),0);
+   const ex=expenses.filter(r=>tanggal(r)===d).reduce((s,r)=>s+num(r.nominal),0);
+   return {d,j,sv,ex,sisa:j+sv-ex};
+ }).filter(x=>x.j||x.sv||x.ex);
+
+ $("tbody").innerHTML=rows.length?rows.map(x=>`
+ <tr>
+  <td>${x.d}</td>
+  <td class="right">${money(x.j)}</td>
+  <td class="right">${money(x.sv)}</td>
+  <td class="right">${money(x.ex)}</td>
+  <td class="right">${money(x.sisa)}</td>
+ </tr>`).join(""):'<tr><td colspan="5" class="empty">Belum ada data pada periode ini.</td></tr>';
+};
+
+setInput();
+load();
+</script>
+</body>
+</html>
