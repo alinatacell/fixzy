@@ -88,7 +88,7 @@ textarea{min-height:75px;resize:vertical}
 
 <header class="topbar">
   <div class="brand" id="brandName">Nama Toko</div>
-  <button class="back" type="button" onclick="kembali()">← Kembali</button>
+  <div style="display:flex;gap:8px;align-items:center"><button class="back" type="button" onclick="refreshHalaman()" title="Refresh">↻ Refresh</button><button class="back" type="button" onclick="kembali()">← Kembali</button></div>
 </header>
 
 <main class="wrap">
@@ -288,7 +288,7 @@ textarea{min-height:75px;resize:vertical}
 
 import {initializeApp} from "https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js";
 import {getAuth,onAuthStateChanged} from "https://www.gstatic.com/firebasejs/11.10.0/firebase-auth.js";
-import {getFirestore,collection,getDocs,query,where,doc,setDoc,serverTimestamp} from "https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js";
+import {getFirestore,collection,getDocs,query,where,doc,setDoc,serverTimestamp,Timestamp} from "https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js";
 
 const firebaseConfig={
   apiKey:"AIzaSyCwMbJsuORhIq4QCmp4c1r6OsjAUlfxU5Y",
@@ -749,35 +749,95 @@ async function simpan(cetak){
     return;
   }
 
-  if(jenis==="servis" && d.status==="Batal"){
-    d.omzetEligible=false;
-  }else if(jenis==="penjualan" && d.status==="Batal"){
-    d.omzetEligible=false;
-  }else{
-    d.omzetEligible=true;
-  }
-
+  const isBatal=d.status==="Batal";
+  d.omzetEligible=!isBatal;
   d.disimpanPada=new Date().toISOString();
   d.userId=firebaseUid;
   d.uid=firebaseUid;
 
-  // Simpan seluruh isi nota ke Firestore.
-  // ID dokumen dibuat deterministik dari nomor nota agar menyimpan ulang/edit
-  // tidak membuat duplikasi nota.
-  const collectionName=jenis==="servis"?"nota_servis":"nota_penjualan";
-  const notaRef=doc(collection(db,collectionName),d.nomorNota);
-
-  // Payload Firestore tidak boleh berisi undefined.
-  const payload=JSON.parse(JSON.stringify(d));
-  payload.uid=firebaseUid;
-  payload.userId=firebaseUid;
-  payload.disimpanPada=d.disimpanPada;
-  payload.updatedAt=serverTimestamp();
+  // Status nota disamakan dengan format halaman Data Servis/Data Penjualan.
+  const statusServisMap={
+    "Menunggu":"masuk",
+    "Dikerjakan":"proses",
+    "Selesai":"selesai",
+    "Diambil":"diambil",
+    "Batal":"batal"
+  };
+  const statusJualMap={
+    "Selesai":"selesai",
+    "DP":"piutang",
+    "Tempo":"piutang",
+    "Batal":"batal"
+  };
 
   try{
-    await setDoc(notaRef,payload,{merge:true});
+    let collectionName="";
+    let payload={...d};
 
-    // Cache lokal hanya sebagai draft/cadangan tampilan, bukan sumber data utama.
+    if(jenis==="servis"){
+      collectionName="servis";
+      payload={
+        ...d,
+        idServis:d.nomorNota,
+        namaPelanggan:d.pelanggan?.nama||"",
+        noHp:d.pelanggan?.wa||"",
+        tipeHp:[d.hp?.merk,d.hp?.tipe].filter(Boolean).join(" "),
+        imei:d.hp?.imei||"",
+        kerusakan:d.keluhan||"",
+        kelengkapan:(d.kelengkapan||[]).join(", "),
+        biaya:Number(d.total)||0,
+        dp:Number(d.dp)||0,
+        sisa:Number(d.sisa)||0,
+        status:statusServisMap[d.status]||"masuk",
+        catatan:d.catatan||"",
+        teknisi:d.teknisi||"",
+        tanggalMasuk:Timestamp.fromDate(new Date(d.tanggal||Date.now())),
+        tanggal:d.tanggal||nowLocal(),
+        createdAt:serverTimestamp(),
+        updatedAt:serverTimestamp(),
+        sparepart:Array.isArray(d.sparepart)?d.sparepart:[],
+        totalSparepart:Number(d.totalSparepart)||0,
+        total:Number(d.total)||0,
+        pola:d.pola||"",
+        sandi:d.sandi||""
+      };
+    }else{
+      collectionName="penjualan";
+      const items=Array.isArray(d.items)?d.items:[];
+      const first=items[0]||{};
+      const produkText=items.map(x=>`${x.nama||"Produk"} ×${Number(x.qty)||1}`).join(", ");
+      const qtyTotal=items.reduce((a,x)=>a+(Number(x.qty)||1),0);
+      const hargaPertama=Number(first.hargaJual)||0;
+
+      payload={
+        ...d,
+        idPenjualan:d.nomorNota,
+        namaPelanggan:d.pelanggan?.nama||"",
+        noHp:d.pelanggan?.wa||"",
+        produk:produkText,
+        qty:qtyTotal,
+        harga:hargaPertama,
+        hargaJual:hargaPertama,
+        diskon:Number(d.diskon)||0,
+        pembayaran:d.metode||"Tunai",
+        metode:d.metode||"Tunai",
+        dibayar:Number(d.dibayar)||0,
+        sisa:Number(d.sisa)||0,
+        status:statusJualMap[d.status]||"selesai",
+        catatan:d.catatan||"",
+        tanggal:Timestamp.fromDate(new Date(d.tanggal||Date.now())),
+        createdAt:serverTimestamp(),
+        updatedAt:serverTimestamp(),
+        items,
+        subtotal:Number(d.subtotal)||0,
+        total:Number(d.total)||0
+      };
+    }
+
+    // Satu nomor nota = satu dokumen. Simpan ulang/edit tidak menggandakan data.
+    await setDoc(doc(db,collectionName,d.nomorNota),payload,{merge:true});
+
+    // Cache lokal hanya draft/cadangan; bukan sumber data transaksi.
     const key=jenis==="servis"?STORAGE.savedServis:STORAGE.savedPenjualan;
     const list=JSON.parse(localStorage.getItem(key)||"[]");
     const idx=list.findIndex(x=>x.nomorNota===d.nomorNota);
@@ -806,8 +866,16 @@ function batal(){
     location.reload();
   }
 }
+function refreshHalaman(){
+  window.location.reload();
+}
 function kembali(){
-  if(document.referrer)history.back();else location.href="index.html";
+  const tujuan="dashboard-admin.html";
+  if(document.referrer && new URL(document.referrer,location.href).origin===location.origin){
+    history.back();
+  }else{
+    location.href=tujuan;
+  }
 }
 function toast(t){
   const x=document.getElementById("toast");x.textContent=t;x.classList.add("show");
@@ -834,7 +902,7 @@ window.ubahJenis=ubahJenis;window.ubahModeSparepart=ubahModeSparepart;window.tam
 window.tambahManual=tambahManual;window.hapusSparepart=hapusSparepart;window.ubahQtyServis=ubahQtyServis;window.ubahQtyJual=ubahQtyJual;window.ubahHargaJual=ubahHargaJual;
 window.hapusJual=hapusJual;window.tambahBarisPenjualan=tambahBarisPenjualan;window.ubahProdukJual=ubahProdukJual;
 window.hitung=hitung;window.bukaPopup=bukaPopup;window.tutupPopup=tutupPopup;window.simpan=simpan;
-window.simpanDanCetak=simpanDanCetak;window.batal=batal;window.kembali=kembali;
+window.simpanDanCetak=simpanDanCetak;window.batal=batal;window.kembali=kembali;window.refreshHalaman=refreshHalaman;
 onAuthStateChanged(auth,async user=>{
   if(!user){
     toast("Silakan login terlebih dahulu.");
