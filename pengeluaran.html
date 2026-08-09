@@ -115,8 +115,9 @@ th{background:#0d6efd;color:#fff;padding:14px;text-align:left} td{padding:13px;b
 </main>
 
 <script type="module">
-import {initializeApp} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import {getFirestore,collection,getDocs,addDoc,serverTimestamp} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import {initializeApp} from "https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js";
+import {getAuth,onAuthStateChanged} from "https://www.gstatic.com/firebasejs/11.10.0/firebase-auth.js";
+import {getFirestore,collection,query,where,getDocs,addDoc,serverTimestamp} from "https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js";
 
 const firebaseConfig={
   apiKey:"AIzaSyCwMbJsuORhIq4QCmp4c1r6OsjAUlfxU5Y",
@@ -127,8 +128,10 @@ const firebaseConfig={
   appId:"1:838081521031:web:50fdee909b56460b055f22"
 };
 const app=initializeApp(firebaseConfig);
+const auth=getAuth(app);
 const db=getFirestore(app);
 
+let uid=null;
 let rows=[];
 let employees=[];
 
@@ -145,13 +148,13 @@ function monthNow(){
 function clean(v){return String(v??"").trim().toLowerCase().replace(/\s+/g," ")}
 
 window.tutupHalaman=function(){
-  try{
-    if(window.frameElement){window.frameElement.remove();return;}
-  }catch(e){}
-  try{
-    if(window.parent!==window){window.parent.postMessage({type:"FIXZY_CLOSE_PAGE"},"*");return;}
-  }catch(e){}
   try{window.close()}catch(e){}
+  setTimeout(()=>{
+    try{
+      if(history.length>1){history.back();return;}
+    }catch(e){}
+    location.href="index.html";
+  },120);
 };
 
 window.toggleKaryawan=function(){
@@ -167,7 +170,12 @@ window.bersihkan=function(){
 };
 
 async function loadEmployees(){
-  const snap=await getDocs(collection(db,"karyawan"));
+  if(!uid) return;
+
+  const snap=await getDocs(
+    query(collection(db,"karyawan"),where("uid","==",uid))
+  );
+
   employees=snap.docs.map(d=>({id:d.id,...d.data()}));
 
   const select=$("karyawan");
@@ -176,22 +184,12 @@ async function loadEmployees(){
   let count=0;
 
   employees.forEach(e=>{
-    // Data Karyawan can use different naming conventions.
-    const name=String(
-      e.nama ??
-      e.namaKaryawan ??
-      e.namaTeknisi ??
-      e.name ??
-      e.nama_lengkap ??
-      e.fullName ??
-      ""
-    ).trim();
-
+    // Data Karyawan FIXZY memakai field nama dan status.
+    const name=String(e.nama||e.namaKaryawan||e.namaTeknisi||e.name||e.namaLengkap||e.nama_lengkap||"").trim();
     if(!name) return;
 
-    // Only active employees are offered for new kasbon.
-    const status=String(e.status ?? "Aktif").trim().toLowerCase();
-    if(status && !["aktif","active"].includes(status)) return;
+    const status=String(e.status||"Aktif").trim().toLowerCase();
+    if(status!=="aktif" && status!=="active") return;
 
     const op=document.createElement("option");
     op.value=e.id;
@@ -204,14 +202,19 @@ async function loadEmployees(){
   const statusEl=$("karyawanStatus");
   if(count===0){
     select.innerHTML='<option value="">Tidak ada karyawan aktif</option>';
-    if(statusEl) statusEl.textContent="Belum ada karyawan aktif di collection karyawan.";
+    if(statusEl) statusEl.textContent="Tidak ada karyawan aktif untuk akun ini.";
   }else{
     if(statusEl) statusEl.textContent=count+" karyawan aktif ditemukan.";
   }
 }
 
 async function loadRows(){
-  const snap=await getDocs(collection(db,"pengeluaran"));
+  if(!uid) return;
+
+  const snap=await getDocs(
+    query(collection(db,"pengeluaran"),where("uid","==",uid))
+  );
+
   rows=snap.docs.map(d=>({id:d.id,...d.data()}));
 }
 
@@ -232,7 +235,11 @@ window.simpan=async function(){
     if(!karyawanId){alert("Pilih karyawan untuk kasbon.");return;}
   }
 
-  await addDoc(collection(db,"pengeluaran"),{
+  if(!uid){alert("Login Firebase belum siap. Silakan login kembali.");return;}
+
+  try{
+    await addDoc(collection(db,"pengeluaran"),{
+    uid,
     tanggal,
     jenis,
     nominal,
@@ -240,11 +247,15 @@ window.simpan=async function(){
     karyawanId,
     namaKaryawan,
     createdAt:serverTimestamp()
-  });
+    });
 
-  alert("Pengeluaran berhasil disimpan.");
-  bersihkan();
-  await muatData();
+    alert("Pengeluaran berhasil disimpan.");
+    bersihkan();
+    await muatData();
+  }catch(e){
+    console.error("FIXZY SIMPAN PENGELUARAN:",e);
+    alert("Gagal menyimpan pengeluaran.\n\n"+(e.code||"")+"\n"+(e.message||e));
+  }
 };
 
 window.muatData=async function(){
@@ -254,7 +265,7 @@ window.muatData=async function(){
     render();
   }catch(e){
     console.error("FIXZY PENGELUARAN:",e);
-    alert("Gagal mengambil data Firebase. Cek koneksi dan Firestore Rules.\n\n"+(e.message||e));
+    alert("Gagal mengambil data Firebase.\n\nKode: "+(e.code||"-")+"\n"+(e.message||e));
   }
 };
 
@@ -292,7 +303,22 @@ window.render=function(){
 $("tanggal").value=today();
 $("filterBulan").value=monthNow();
 toggleKaryawan();
-muatData();
+
+onAuthStateChanged(auth,async user=>{
+  if(!user){
+    $("karyawanStatus").textContent="Belum login Firebase.";
+    alert("Sesi login Firebase tidak ditemukan. Silakan login kembali.");
+    return;
+  }
+
+  uid=user.uid;
+
+  try{
+    await muatData();
+  }catch(e){
+    console.error("FIXZY PENGELUARAN:",e);
+  }
+});
 </script>
 </body>
 </html>
