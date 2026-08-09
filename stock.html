@@ -79,20 +79,30 @@ tr:hover td{background:#fffdf5}
 </head>
 <body>
 <script>
-/* FIX TUTUP: halaman stok dipakai di iframe/popup, jadi jangan navigasi history. */
-(function(){
-  window.tutupHalaman=function(){
-    try{
-      if(window.parent && window.parent !== window){
-        window.parent.postMessage({type:"FIXZY_CLOSE_STOK"}, "*");
-        return;
-      }
-    }catch(e){}
-    try{
-      window.close();
-    }catch(e){}
-  };
-})();
+/* FIX TUTUP: hapus iframe yang sedang menampilkan halaman ini. */
+function tutupHalaman(){
+  try{
+    if(window.frameElement){
+      window.frameElement.remove();
+      return;
+    }
+  }catch(e){}
+
+  try{
+    if(window.parent && window.parent !== window){
+      window.parent.postMessage({type:"FIXZY_CLOSE_STOK"}, "*");
+      return;
+    }
+  }catch(e){}
+
+  try{
+    window.close();
+  }catch(e){}
+
+  // Fallback untuk halaman yang tidak boleh ditutup browser.
+  history.replaceState(null,"",location.href);
+  document.body.innerHTML="";
+}
 </script>
 
 <header class="header">
