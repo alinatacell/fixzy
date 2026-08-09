@@ -86,6 +86,7 @@ textarea{min-height:75px;resize:vertical}
  <div class="title">Produk Penjualan</div>
  <div class="grid">
   <div class="full"><label>PRODUK DARI FIREBASE</label><select id="produk"><option value="">Memuat stok...</option></select></div>
+  <div class="full"><label>ATAU PRODUK MANUAL</label><input id="produkManual" placeholder="Isi nama produk jika tidak dari stok"></div>
   <div><label>QTY</label><input id="qty" inputmode="numeric" value="1"></div>
   <div><label>HARGA</label><input id="harga" inputmode="numeric" value=""></div>
  </div>
@@ -101,6 +102,7 @@ textarea{min-height:75px;resize:vertical}
  </div>
 </div>
 
+<div id="saveStatus" class="status no-print">Belum disimpan.</div>
 <div class="card actions">
  <button class="danger" onclick="batal()">Batal</button>
  <button class="light" onclick="simpan(false)">Simpan</button>
@@ -112,7 +114,7 @@ textarea{min-height:75px;resize:vertical}
 <script type="module">
 import {initializeApp} from "https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js";
 import {getAuth,onAuthStateChanged} from "https://www.gstatic.com/firebasejs/11.10.0/firebase-auth.js";
-import {getFirestore,collection,query,where,getDocs,addDoc,serverTimestamp} from "https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js";
+import {getFirestore,collection,query,where,getDocs,doc,setDoc,serverTimestamp} from "https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js";
 
 const config={
  apiKey:"AIzaSyCwMbJsuORhIq4QCmp4c1r6OsjAUlfxU5Y",
@@ -145,36 +147,145 @@ async function loadProducts(){
  products=snap.docs.map(d=>({id:d.id,...d.data()}));
  $("produk").innerHTML='<option value="">-- Pilih Produk --</option>'+products.map(x=>`<option value="${esc(x.id)}">${esc(x.nama||"-")} • Stok ${Number(x.sisa??x.stok??0)}</option>`).join("");
 }
-$("produk").addEventListener("change",()=>{const p=products.find(x=>x.id===$("produk").value);if(p)$("harga").value=Number(p.hargaJual||0)})
+$("produk").addEventListener("change",()=>{
+ const p=products.find(x=>x.id===$("produk").value);
+ if(p){
+   $("harga").value=Number(p.hargaJual||0);
+   $("produkManual").value="";
+ }
+});
+
 function num(id){return Number(String($(id).value||"").replace(/[^\d]/g,""))||0}
+
+function collectNota(){
+ const teknisiOpt=$("teknisi").selectedOptions[0];
+ const d={
+  uid,
+  nomorNota:$("nomor").value,
+  tanggal:$("tanggal").value,
+  jenis,
+  teknisi:$("teknisi").value,
+  namaTeknisi:teknisiOpt?.textContent||"",
+  teknisiId:$("teknisi").value,
+  pelanggan:{
+   nama:$("nama").value.trim(),
+   wa:$("wa").value.trim()
+  },
+  metode:$("metode").value,
+  dibayar:num("dibayar"),
+  catatan:$("catatan").value.trim(),
+  updatedAt:serverTimestamp()
+ };
+
+ if(jenis==="servis"){
+  d.tipe=$("tipe").value.trim();
+  d.imei=$("imei").value.trim();
+  d.keluhan=$("keluhan").value.trim();
+  d.kelengkapan=[...document.querySelectorAll(".kel:checked")].map(x=>x.value);
+  d.pola=pattern.join("-");
+  d.biaya=num("biaya");
+  d.dp=num("dp");
+  d.total=d.biaya;
+  d.sisa=Math.max(0,d.total-d.dp);
+ }else{
+  const p=products.find(x=>x.id===$("produk").value);
+  const manual=$("produkManual").value.trim();
+  const qty=num("qty")||1;
+  const harga=num("harga");
+
+  if(!p && !manual) throw new Error("Pilih produk dari Firebase atau isi Produk Manual.");
+  if(harga<=0) throw new Error("Harga produk harus diisi.");
+
+  d.items=[{
+   produkId:p?.id||null,
+   nama:p?.nama||manual,
+   qty,
+   harga,
+   sumber:p?"firebase":"manual"
+  }];
+  d.produk=p?.nama||manual;
+  d.qty=qty;
+  d.harga=harga;
+  d.total=qty*harga;
+  d.sisa=Math.max(0,d.total-d.dibayar);
+ }
+ return d;
+}
+
 async function simpan(cetak){
  if(!uid){toast("Belum login Firebase.");return}
  if(!$("teknisi").value){toast("Pilih teknisi terlebih dahulu.");return}
- const d={
-  uid,tanggal:$("tanggal").value,nomorNota:$("nomor").value,jenis,
-  teknisi:$("teknisi").selectedOptions[0]?.textContent||"",
-  teknisiId:$("teknisi").value,
-  pelanggan:{nama:$("nama").value.trim(),wa:$("wa").value.trim()},
-  metode:$("metode").value,dibayar:num("dibayar"),catatan:$("catatan").value.trim(),
-  createdAt:serverTimestamp(),updatedAt:serverTimestamp()
- };
- let col=jenis;
- if(jenis==="servis"){
-  d.tipe=$("tipe").value.trim();d.imei=$("imei").value.trim();d.keluhan=$("keluhan").value.trim();
-  d.kelengkapan=[...document.querySelectorAll(".kel:checked")].map(x=>x.value);
-  d.pola=pattern.join("-");d.biaya=num("biaya");d.dp=num("dp");
-  d.total=d.biaya;d.sisa=Math.max(0,d.total-d.dp);
- }else{
-  const p=products.find(x=>x.id===$("produk").value);
-  d.items=p?[{produkId:p.id,nama:p.nama||"",qty:num("qty")||1,harga:num("harga")}]:[];
-  d.total=d.items.reduce((a,x)=>a+x.qty*x.harga,0);d.sisa=Math.max(0,d.total-d.dibayar);
- }
+
+ let d;
+ try{d=collectNota()}catch(e){toast(e.message);return}
+
+ const col=jenis;
+ const notaId=d.nomorNota;
+ $("saveStatus").textContent="Menyimpan ke Firebase...";
  try{
-  toast("Menyimpan ke Firebase...");
-  await addDoc(collection(db,col),d);
-  toast("Berhasil tersimpan di Firebase.");
-  if(cetak)window.print();
- }catch(e){console.error(e);alert("Gagal menyimpan ke Firebase:\n"+e.message)}
+  /*
+   * Nomor nota dipakai sebagai ID dokumen.
+   * Dengan setDoc, penyimpanan tidak membuat nota baru berulang
+   * dan halaman tidak perlu di-reset setelah berhasil.
+   */
+  await setDoc(doc(db,col,notaId),{
+   ...d,
+   createdAt:serverTimestamp(),
+   updatedAt:serverTimestamp()
+  },{merge:true});
+
+  $("saveStatus").textContent=`Tersimpan di Firebase • ${col}/${notaId}`;
+  toast(cetak?"Tersimpan. Menyiapkan cetak...":"Berhasil tersimpan di Firebase.");
+
+  // Setelah transaksi berhasil tersimpan, form selalu kembali kosong.
+  if(cetak){
+    window.print();
+    setTimeout(()=>resetForm(),500);
+  }else{
+    setTimeout(()=>resetForm(),250);
+  }
+ }catch(e){
+  console.error("Gagal menyimpan:",e);
+  $("saveStatus").textContent="Gagal menyimpan ke Firebase.";
+  alert("Gagal menyimpan ke Firebase:\n"+(e?.message||e));
+ }
+}
+
+function resetForm(){
+  // Nomor baru dan tanggal baru.
+  $("nomor").value=nomor();
+  today();
+
+  // Data akun/teknisi tetap dari Firebase, hanya pilihan teknisi dikosongkan.
+  $("teknisi").value="";
+
+  $("nama").value="";
+  $("wa").value="";
+  $("tipe").value="";
+  $("imei").value="";
+  $("keluhan").value="";
+  $("biaya").value="";
+  $("dp").value="";
+  $("dibayar").value="";
+  $("catatan").value="";
+
+  document.querySelectorAll(".kel").forEach(x=>x.checked=false);
+
+  pattern=[];
+  renderPattern();
+
+  $("produk").value="";
+  $("produkManual").value="";
+  $("qty").value="1";
+  $("harga").value="";
+
+  $("status").value="masuk";
+  $("metode").value="Tunai";
+
+  // Kembali ke mode Servis sebagai form awal.
+  setJenis("servis");
+
+  $("saveStatus").textContent="Form baru siap diisi.";
 }
 window.simpan=simpan;
 window.batal=()=>{if(confirm("Batalkan nota?"))location.reload()};
