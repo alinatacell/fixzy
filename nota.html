@@ -50,6 +50,9 @@ textarea{min-height:72px;resize:vertical}
 .clear-pattern{border:0;border-radius:7px;padding:6px 8px;background:#e2e8f0;color:#334155;font-weight:800;font-size:9px}
 .attendance-note{font-size:9px;color:#64748b;margin-top:2px}
 @media(max-width:680px){.pattern-box{max-width:100%}}
+.checks{display:grid;grid-template-columns:repeat(4,1fr);gap:7px}.check{padding:8px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;font-size:10px;font-weight:800}.check input{width:auto}
+.pattern-box{border:1px solid #cbd5e1;border-radius:12px;background:#f8fafc;padding:9px;max-width:220px}.pattern-grid{display:grid;grid-template-columns:repeat(3,44px);gap:9px;justify-content:center}.dot{width:44px;height:44px;border-radius:50%;border:2px solid #cbd5e1;background:#fff;color:#64748b;font-weight:900;touch-action:manipulation}.dot.active{background:#111827;border-color:#ffc107;color:#ffc107}.pattern-tools{display:flex;justify-content:space-between;align-items:center;gap:7px;margin-top:8px;font-size:9px;color:#64748b}.clear-pattern{border:0;border-radius:7px;padding:6px 8px;background:#e2e8f0;font-weight:800}
+@media(max-width:680px){.checks{grid-template-columns:1fr 1fr}}
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 </head>
@@ -57,7 +60,10 @@ textarea{min-height:72px;resize:vertical}
 <header class="top">
   <div class="topin">
     <div class="brand">FIXZY <span>NOTA</span></div>
-    <button class="topbtn" type="button" onclick="tutupHalaman()">✕ Tutup</button>
+    <div style="display:flex;gap:7px">
+      <button class="topbtn" type="button" onclick="window.refreshHalaman()">↻ Refresh</button>
+      <button class="topbtn" type="button" onclick="window.tutupHalaman()">✕ Tutup</button>
+    </div>
   </div>
 </header>
 
@@ -77,7 +83,7 @@ textarea{min-height:72px;resize:vertical}
         <div class="field"><label>Tanggal</label><input id="tanggal" type="date"></div>
         <div class="field full">
             <label>Teknisi / Absensi</label>
-            <select id="teknisi"><option value="">⏳ Memuat teknisi...</option></select>
+            <select id="teknisi"><option value="">⏳ Memuat teknisi aktif...</option></select>
             <small class="attendance-note">Teknisi yang dipilih dicatat ke transaksi sebagai absensi/petugas.</small>
           </div>
           <div class="field"><label>Nama Pelanggan</label><input id="pelanggan" placeholder="Nama pelanggan"></div>
@@ -87,68 +93,49 @@ textarea{min-height:72px;resize:vertical}
     </div>
   </section>
 
-  <section id="servisForm">
-    <section class="card">
-      <div class="head">Data HP</div><div class="body">
+  <section class="card">
+      <div class="head">Data HP</div>
+      <div class="body">
         <div class="grid">
           <div class="field full"><label>Merk / Tipe / Model HP</label><input id="merkTipe" placeholder="Contoh: Samsung Galaxy A15"></div>
           <div class="field"><label>IMEI</label><input id="imei" inputmode="numeric"></div>
-          <div class="field full"><label>Keluhan</label><textarea id="keluhan"></textarea></div>
+          <div class="field full"><label>Keluhan</label><textarea id="keluhan" placeholder="Keluhan pelanggan"></textarea></div>
           <div class="field full"><label>Kelengkapan</label><div id="checks" class="checks"></div></div>
-          <div class="field"><label>Sandi</label><input id="sandi" autocomplete="off" placeholder="PIN / sandi HP"></div>
+          <div class="field"><label>Sandi / PIN</label><input id="sandi" autocomplete="off" placeholder="PIN / sandi HP"></div>
           <div class="field">
             <label>Pola Sandi HP</label>
-            <div id="patternBox" class="pattern-box" aria-label="Pola sandi 9 titik">
+            <div class="pattern-box">
               <div class="pattern-grid">
-                <button type="button" class="dot" data-dot="1" onclick="pilihDot(1)">1</button>
-                <button type="button" class="dot" data-dot="2" onclick="pilihDot(2)">2</button>
-                <button type="button" class="dot" data-dot="3" onclick="pilihDot(3)">3</button>
-                <button type="button" class="dot" data-dot="4" onclick="pilihDot(4)">4</button>
-                <button type="button" class="dot" data-dot="5" onclick="pilihDot(5)">5</button>
-                <button type="button" class="dot" data-dot="6" onclick="pilihDot(6)">6</button>
-                <button type="button" class="dot" data-dot="7" onclick="pilihDot(7)">7</button>
-                <button type="button" class="dot" data-dot="8" onclick="pilihDot(8)">8</button>
-                <button type="button" class="dot" data-dot="9" onclick="pilihDot(9)">9</button>
+                <button type="button" class="dot" data-dot="1" onclick="window.pilihDot(1)">1</button>
+                <button type="button" class="dot" data-dot="2" onclick="window.pilihDot(2)">2</button>
+                <button type="button" class="dot" data-dot="3" onclick="window.pilihDot(3)">3</button>
+                <button type="button" class="dot" data-dot="4" onclick="window.pilihDot(4)">4</button>
+                <button type="button" class="dot" data-dot="5" onclick="window.pilihDot(5)">5</button>
+                <button type="button" class="dot" data-dot="6" onclick="window.pilihDot(6)">6</button>
+                <button type="button" class="dot" data-dot="7" onclick="window.pilihDot(7)">7</button>
+                <button type="button" class="dot" data-dot="8" onclick="window.pilihDot(8)">8</button>
+                <button type="button" class="dot" data-dot="9" onclick="window.pilihDot(9)">9</button>
               </div>
-              <div class="pattern-tools">
-                <span id="polaText">Belum ada pola</span>
-                <button type="button" class="clear-pattern" onclick="resetPola()">Hapus</button>
-              </div>
+              <div class="pattern-tools"><span id="polaText">Belum ada pola</span><button type="button" class="clear-pattern" onclick="window.resetPola()">Hapus</button></div>
             </div>
             <input type="hidden" id="pola" value="">
           </div>
-          
         </div>
       </div>
     </section>
 
+    <section id="servisForm">
     <section class="card">
-      <div class="head">Penerimaan Servis</div>
+      <div class="head">Biaya & Status Servis</div>
       <div class="body">
         <div class="grid">
-          <div class="field"><label>Biaya Servis / Estimasi</label><input id="biayaServis" type="number" min="0" value="" oninput="hitung()"></div>
-          <div class="field"><label>DP</label><input id="dp" type="number" min="0" value="" oninput="hitung()"></div>
+          <div class="field"><label>Biaya Servis / Estimasi</label><input id="biayaServis" type="number" min="0" value="" inputmode="numeric"></div>
+          <div class="field"><label>DP</label><input id="dp" type="number" min="0" value="" inputmode="numeric"></div>
           <div class="field"><label>Status</label><select id="statusServis"><option>Menunggu</option><option>Dikerjakan</option><option>Selesai</option><option>Diambil</option><option>Batal</option></select></div>
-          <div class="field full"><label>Catatan</label><textarea id="catatanServis"></textarea></div>
+          <div class="field full"><label>Catatan</label><textarea id="catatanServis" placeholder="Catatan tambahan"></textarea></div>
         </div>
         <div class="total">
           <div class="sum"><span>Biaya Servis</span><strong id="totalJasa">Rp0</strong></div>
-          <div class="sum grand"><span>TOTAL</span><strong id="servisTotal">Rp0</strong></div>
-          <div class="sum"><span>DP</span><strong id="servisDP">Rp0</strong></div>
-          <div class="sum sisa"><span>SISA</span><strong id="servisSisa">Rp0</strong></div>
-        </div>
-      </div>
-    </section>
-
-    <section class="card">
-      <div class="head">Pembayaran & Status</div><div class="body">
-        <div class="grid">
-          <div class="field"><label>DP</label><input id="dp" type="number" min="0" value="" oninput="hitung()"></div>
-          <div class="field"><label>Status</label><select id="statusServis"><option>Menunggu</option><option>Dikerjakan</option><option>Selesai</option><option>Diambil</option><option>Batal</option></select></div>
-          <div class="field full"><label>Catatan</label><textarea id="catatanServis"></textarea></div>
-        </div>
-        <div class="total">
-          <div class="sum"><span>Sparepart</span><strong id="servisSubtotal">Rp0</strong></div>
           <div class="sum grand"><span>TOTAL</span><strong id="servisTotal">Rp0</strong></div>
           <div class="sum"><span>DP</span><strong id="servisDP">Rp0</strong></div>
           <div class="sum sisa"><span>SISA</span><strong id="servisSisa">Rp0</strong></div>
@@ -222,7 +209,6 @@ textarea{min-height:72px;resize:vertical}
 
 <div id="toast" class="toast"></div>
 
-<script>window.refreshHalaman=refreshHalaman;window.tutupHalaman=tutupHalaman;</script>
 <script type="module">
 const polaState={items:[]};
 function renderPola(){
@@ -265,10 +251,23 @@ const $=id=>document.getElementById(id);
 const rupiah=n=>new Intl.NumberFormat("id-ID",{style:"currency",currency:"IDR",maximumFractionDigits:0}).format(Number(n)||0);
 const esc=v=>String(v??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[m]));
 const num=v=>Number(v)||0;
-const now=()=>{const d=new Date(),p=n=>String(n).padStart(2,"0");return `${d.getFullYear()}-${p(d.getMonth()+1)}-${p(d.getDate())}T${p(d.getHours())}:${p(d.getMinutes())}`};
+const now=()=>{const d=new Date(),p=n=>String(n).padStart(2,"0");return `${d.getFullYear()}-${p(d.getMonth()+1)}-${p(d.getDate())}`};
 const nomor=k=>{const d=new Date(),p=n=>String(n).padStart(2,"0");return `${k==="servis"?"SRV":"JLN"}-${d.getFullYear()}${p(d.getMonth()+1)}${p(d.getDate())}-${p(d.getHours())}${p(d.getMinutes())}${p(d.getSeconds())}`};
 
 function toast(t){$("toast").textContent=t;$("toast").classList.add("show");setTimeout(()=>$("toast").classList.remove("show"),2500)}
+function refreshHalaman(){
+  const u=new URL(window.location.href);
+  u.searchParams.set("_refresh",Date.now());
+  window.location.replace(u.toString());
+}
+window.refreshHalaman=refreshHalaman;
+function tutupHalaman(){
+  try{if(window.frameElement && window.frameElement.parentNode){window.frameElement.parentNode.removeChild(window.frameElement);return;}}catch(e){}
+  try{if(window.parent && window.parent!==window){window.parent.postMessage({type:"FIXZY_CLOSE_NOTA"},"*");return;}}catch(e){}
+  try{window.close();}catch(e){}
+}
+window.tutupHalaman=tutupHalaman;
+
 function refreshHalaman(){
   const b=document.getElementById("refreshPageBtn");
   if(b){b.disabled=true;b.textContent="↻ Memuat...";}
@@ -443,7 +442,7 @@ function tambahManualJual(){
  renderAll();
 }
 function hitung(){
- const ss=itemsServis.reduce((a,x)=>a+num(x.hargaJual)*num(x.qty),0),dp=num($("dp").value);
+ const ss=num($("biayaServis").value),dp=num($("dp").value);
  $("totalJasa").textContent=rupiah(ss);$("servisTotal").textContent=rupiah(ss);$("servisDP").textContent=rupiah(dp);$("servisSisa").textContent=rupiah(Math.max(0,ss-dp));
  const sub=itemsJual.reduce((a,x)=>a+num(x.hargaJual)*num(x.qty),0),dis=num($("diskon").value),bay=num($("dibayar").value),tot=Math.max(0,sub-dis);
  $("jualSubtotal").textContent=rupiah(sub);$("jualDiskon").textContent=rupiah(dis);$("jualTotal").textContent=rupiah(tot);$("jualDibayar").textContent=rupiah(bay);$("jualSisa").textContent=rupiah(Math.max(0,tot-bay));
@@ -454,10 +453,8 @@ window.hitung=hitung;
 function kumpulkan(){
  const base={uid,jenis,nomorNota:$("nomorNota").value,tanggal:$("tanggal").value||now(),teknisi:ambilTeknisi(),pelanggan:{nama:$("pelanggan").value.trim(),wa:$("wa").value.trim(),alamat:$("alamat").value.trim()}};
  if(jenis==="servis"){
-  const total=num($("biayaServis").value),dp=num($("dp").value);
-  return {...base,hp:{merk:$("merk").value.trim(),tipe:$("tipe").value.trim(),imei:$("imei").value.trim()},keluhan:$("keluhan").value.trim(),
-   kelengkapan:checks.filter((_,i)=>$("ck"+i).checked),sandi:$("sandi").value,sparepart:[],
-   biayaServis:num($("biayaServis").value),totalSparepart:0,totalJasa:num($("biayaServis").value),total:num($("biayaServis").value),dp,sisa:Math.max(0,num($("biayaServis").value)-dp),status:$("statusServis").value,catatan:$("catatanServis").value.trim()};
+  const biaya=num($("biayaServis").value),dp=num($("dp").value);
+  return {...base,hp:{merkTipe:$("merkTipe").value.trim(),imei:$("imei").value.trim()},keluhan:$("keluhan").value.trim(),kelengkapan:checks.filter((_,i)=>$("ck"+i).checked),sandi:$("sandi").value,pola:$("pola").value,sparepart:[],biayaServis:biaya,totalSparepart:0,totalJasa:biaya,total:biaya,dp,sisa:Math.max(0,biaya-dp),status:$("statusServis").value,catatan:$("catatanServis").value.trim()};
  }
  const subtotal=itemsJual.reduce((a,x)=>a+num(x.hargaJual)*num(x.qty),0),diskon=num($("diskon").value),total=Math.max(0,subtotal-diskon),dibayar=num($("dibayar").value);
  return {...base,items:itemsJual,subtotal,diskon,total,dibayar,sisa:Math.max(0,total-dibayar),metode:$("metode").value,status:$("statusJual").value,catatan:$("catatanJual").value.trim()};
@@ -468,8 +465,8 @@ window.bukaPopup=bukaPopup;window.tutupPopup=tutupPopup;
 
 function validate(d){
  if(!d.pelanggan.nama){} // pelanggan boleh Umum
- const list=d.jenis==="servis"?d.sparepart:d.items;
- if(!list.length)return "Belum ada produk/sparepart pada nota.";
+ const list=d.jenis==="servis"?[]:d.items;
+ if(d.jenis==="penjualan" && !list.length)return "Belum ada produk pada nota.";
  for(const x of list)if(num(x.qty)<=0)return "Qty harus lebih dari 0.";
  if(d.jenis==="penjualan" && d.status!=="Batal" && d.total<=0)return "Total penjualan harus lebih dari 0.";
  return "";
@@ -510,9 +507,9 @@ window.simpan=simpan;
 
 function resetForm(){
  itemsServis=[];itemsJual=[];$("nomorNota").value=nomor(jenis);$("tanggal").value=now();
- ["pelanggan","wa","alamat","merk","tipe","imei","keluhan","sandi","catatanServis","catatanJual"].forEach(id=>$(id).value="");
+ ["pelanggan","wa","alamat","merkTipe","imei","keluhan","sandi","catatanServis","catatanJual"].forEach(id=>$(id).value="");
  $("teknisi").value="";
- ["dp","diskon","dibayar"].forEach(id=>$(id).value=0);
+ ["biayaServis","dp","diskon","dibayar"].forEach(id=>$(id).value="");
  $("pola").value="";resetPola();
  $("statusServis").value="Menunggu";$("statusJual").value="Selesai";$("metode").value="Tunai";
  document.querySelectorAll(".check input").forEach(x=>x.checked=false);renderAll();
@@ -521,9 +518,12 @@ function batal(){if(confirm("Batalkan nota yang sedang dibuat? Data belum disimp
 window.batal=batal;
 
 function printNota(d){
- const toko="FIXZY",rows=(d.jenis==="servis"?d.sparepart:d.items).map((x,i)=>`<tr><td>${i+1}</td><td>${esc(x.nama)}</td><td>${x.qty}</td><td>${rupiah(x.hargaJual)}</td><td>${rupiah(x.qty*x.hargaJual)}</td></tr>`).join("");
+ const toko="FIXZY";
+ const rows=d.jenis==="servis"
+ ?`<tr><td>1</td><td>Jasa / Estimasi Servis</td><td>1</td><td>${rupiah(d.biayaServis)}</td><td>${rupiah(d.biayaServis)}</td></tr>`
+ :(d.items||[]).map((x,i)=>`<tr><td>${i+1}</td><td>${esc(x.nama)}</td><td>${x.qty}</td><td>${rupiah(x.hargaJual)}</td><td>${rupiah(x.qty*x.hargaJual)}</td></tr>`).join("");
  const summary=d.jenis==="servis"
- ?`<p>Sparepart: <b>${rupiah(d.totalSparepart)}</b></p><h3>TOTAL: ${rupiah(d.total)}</h3><p>DP: ${rupiah(d.dp)}</p><h3>SISA: ${rupiah(d.sisa)}</h3>`
+ ?`<p>Biaya Servis: <b>${rupiah(d.biayaServis)}</b></p><h3>TOTAL: ${rupiah(d.total)}</h3><p>DP: ${rupiah(d.dp)}</p><h3>SISA: ${rupiah(d.sisa)}</h3>`
  :`<p>Subtotal: ${rupiah(d.subtotal)}</p><p>Diskon: ${rupiah(d.diskon)}</p><h3>TOTAL: ${rupiah(d.total)}</h3><p>Dibayar: ${rupiah(d.dibayar)}</p><h3>SISA: ${rupiah(d.sisa)}</h3>`;
  const extra=d.jenis==="servis"?`<p>HP: ${esc(d.hp.merkTipe||[d.hp.merk,d.hp.tipe].filter(Boolean).join(" "))} • IMEI: ${esc(d.hp.imei||"-")}</p><p>Teknisi: ${esc(d.teknisi||"-")}</p><p>Keluhan: ${esc(d.keluhan||"-")}</p>`:"";
  const w=window.open("","_blank","width=430,height=700");
