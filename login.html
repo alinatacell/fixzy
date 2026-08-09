@@ -83,7 +83,7 @@ body{background:#0d0d0d;background-image:radial-gradient(circle at top, rgba(255
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js";
 import { getAuth, signInWithEmailAndPassword, signOut, sendPasswordResetEmail, setPersistence, browserLocalPersistence } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-auth.js";
-import { getFirestore, doc, getDoc, updateDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js";
+import { getFirestore, doc, getDoc, updateDoc, serverTimestamp, collection, query, where, getDocs, setDoc } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyCwMbJsuORhIq4QCmp4c1r6OsjAUlfxU5Y",
@@ -96,6 +96,45 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
+
+
+/* ================= FIREBASE BRIDGE UNTUK HALAMAN IFRAME ================= */
+async function firebaseBridge(req){
+  if(!auth.currentUser) throw new Error("Sesi Firebase belum aktif.");
+  const uid=auth.currentUser.uid;
+
+  if(req.op==="getKaryawan"){
+    const snap=await getDocs(query(collection(db,"karyawan"),where("uid","==",uid)));
+    return snap.docs.map(d=>({id:d.id,...d.data()})).filter(x=>(x.status||"Aktif")==="Aktif");
+  }
+
+  if(req.op==="getStok"){
+    const snap=await getDocs(query(collection(db,"stok"),where("uid","==",uid)));
+    return snap.docs.map(d=>({id:d.id,...d.data()}));
+  }
+
+  if(req.op==="save"){
+    const col=req.collection;
+    if(col!=="servis" && col!=="penjualan") throw new Error("Koleksi transaksi tidak valid.");
+    const data={...(req.data||{}),uid};
+    await setDoc(doc(db,col,req.id),data,{merge:false});
+    return {ok:true,id:req.id,uid};
+  }
+
+  throw new Error("Operasi Firebase tidak dikenal: "+req.op);
+}
+
+window.addEventListener("message",async e=>{
+  const d=e.data||{};
+  if(d.type!=="FIXZY_FIREBASE_PROXY" || !d.requestId) return;
+  try{
+    const result=await firebaseBridge(d);
+    e.source?.postMessage({type:"FIXZY_FIREBASE_PROXY_RESULT",requestId:d.requestId,ok:true,result},"*");
+  }catch(err){
+    console.error("Firebase bridge:",err);
+    e.source?.postMessage({type:"FIXZY_FIREBASE_PROXY_RESULT",requestId:d.requestId,ok:false,error:err?.message||String(err)},"*");
+  }
+});
 
 const form = document.getElementById("loginForm");
 const btn = document.getElementById("btnLogin");
