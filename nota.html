@@ -89,6 +89,7 @@ textarea{min-height:75px;resize:vertical}
   <div class="full"><label>ATAU PRODUK MANUAL</label><input id="produkManual" placeholder="Isi nama produk jika tidak dari stok"></div>
   <div><label>QTY</label><input id="qty" inputmode="numeric" value="1"></div>
   <div><label>HARGA</label><input id="harga" inputmode="numeric" value=""></div>
+  <div><label>TOTAL PENJUALAN</label><input id="totalJual" readonly value="Rp 0"></div>
  </div>
 </div>
 </div>
@@ -134,7 +135,8 @@ function renderPattern(){
  $("pattern").innerHTML=Array.from({length:9},(_,i)=>`<div class="dot ${pattern.includes(i+1)?"active":""}" onclick="dot(${i+1})">${i+1}</div>`).join("");
  $("patternText").textContent=pattern.length?pattern.join("-"):"Belum ada";
 }
-window.dot=n=>{if(!pattern.includes(n))pattern.push(n);renderPattern()}
+window.dot=n=>{if(!pattern.includes(n))pattern.push(n);renderPattern()};
+window.setJenis=setJenis;
 
 async function loadEmployees(){
  const snap=await getDocs(query(collection(db,"karyawan"),where("uid","==",uid)));
@@ -153,8 +155,16 @@ $("produk").addEventListener("change",()=>{
    $("harga").value=Number(p.hargaJual||0);
    $("produkManual").value="";
  }
+ updateTotalJual();
 });
+$("qty").addEventListener("input",updateTotalJual);
+$("harga").addEventListener("input",updateTotalJual);
 
+
+function updateTotalJual(){
+ const total=(num("qty")||0)*(num("harga")||0);
+ $("totalJual").value="Rp "+total.toLocaleString("id-ID");
+}
 function num(id){return Number(String($(id).value||"").replace(/[^\d]/g,""))||0}
 
 function collectNota(){
@@ -278,6 +288,7 @@ function resetForm(){
   $("produkManual").value="";
   $("qty").value="1";
   $("harga").value="";
+  $("totalJual").value="Rp 0";
 
   $("status").value="masuk";
   $("metode").value="Tunai";
