@@ -12,17 +12,52 @@ input,select{padding:10px 11px;border:1px solid #d1d5db;border-radius:9px;backgr
 .card{background:#fff;border:1px solid #e5e7eb;border-radius:13px;padding:13px}
 .top{display:flex;justify-content:space-between;gap:8px}.name{font-weight:900;font-size:14px}.small{font-size:11px;color:#6b7280;margin-top:3px}
 .badge{padding:5px 8px;border-radius:999px;font-size:10px;font-weight:900;background:#fef3c7;color:#92400e;height:max-content}
-.info{font-size:12px;line-height:1.6;margin-top:10px}.actions{display:flex;gap:7px;margin-top:11px}.actions button{flex:1;background:#111827;color:#fff}
+.info{font-size:12px;line-height:1.6;margin-top:10px}.actions{display:flex;gap:7px;margin-top:11px}.actions button{flex:1;background:#111827;color:#fff;min-width:75px}
 .empty{background:#fff;border-radius:12px;padding:30px;text-align:center;color:#6b7280}
 .err{color:#b91c1c;white-space:pre-wrap}
+
+.modal{position:fixed;inset:0;background:rgba(0,0,0,.65);display:none;align-items:flex-start;justify-content:center;padding:12px;z-index:100}
+.modal.show{display:flex}.modalbox{width:min(600px,100%);max-height:94vh;overflow:auto;background:#fff;border-radius:16px;padding:16px}
+.modalhead{display:flex;align-items:center;gap:8px;margin-bottom:12px}.modalhead h2{margin:0;font-size:17px}.x{margin-left:auto;background:#eef0f3}
+.formgrid{display:grid;grid-template-columns:1fr 1fr;gap:9px}.field.full{grid-column:1/-1}
+.field label{display:block;font-size:10px;font-weight:900;color:#4b5563;margin-bottom:5px}
+.field input,.field select,.field textarea{width:100%;padding:10px;border:1px solid #d1d5db;border-radius:9px;background:#fff}
+.field textarea{min-height:70px}.modalactions{display:flex;gap:8px;justify-content:flex-end;margin-top:13px}
+.modalactions button{background:#111827;color:#fff}.modalactions .save{background:#ffc107;color:#111}
+.statusbuttons{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}.statusbuttons button{background:#111827;color:#fff}
+@media(max-width:600px){.formgrid{grid-template-columns:1fr}.field.full{grid-column:auto}}
 </style></head><body>
 <header><h1>🔧 Data Servis</h1><div class="grow"></div><button class="refresh" onclick="load()">↻ Refresh</button></header>
 <main>
 <div class="bar"><input id="search" class="search" placeholder="Cari pelanggan, HP, nota, teknisi..."><select id="filter"><option value="semua">Semua Status</option><option>masuk</option><option>proses</option><option>selesai</option><option>diambil</option><option>batal</option></select></div>
 <div class="stats">Firebase `/servis` • Total: <b id="total">0</b> • <span id="akun">memeriksa akun...</span></div>
 <div id="list" class="list"><div class="empty">Memuat Firebase...</div></div>
-</main><div id="editModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.65);z-index:9999;padding:15px;overflow:auto"><div style="max-width:520px;margin:30px auto;background:#fff;border-radius:15px;padding:16px"><h2 style="margin:0 0 12px">Edit Data Servis</h2><input id="eId" type="hidden"><div style="display:grid;gap:9px"><input id="eNama" placeholder="Nama pelanggan"><input id="eHp" placeholder="No WhatsApp"><input id="eTipe" placeholder="Merk / tipe HP"><input id="eTeknisi" placeholder="Teknisi"><input id="eKeluhan" placeholder="Kerusakan / keluhan"><input id="eBiaya" type="number" placeholder="Biaya"><input id="eDp" type="number" placeholder="DP"><select id="eStatus"><option value="masuk">Masuk</option><option value="proses">Proses</option><option value="selesai">Selesai</option><option value="diambil">Diambil</option><option value="batal">Batal</option></select><textarea id="eCatatan" placeholder="Catatan" style="min-height:80px;padding:10px;border:1px solid #d1d5db;border-radius:9px"></textarea><div style="display:flex;gap:8px"><button onclick="closeEdit()" style="flex:1;background:#e5e7eb">Batal</button><button onclick="saveEdit()" style="flex:1;background:#ffc107">Simpan</button></div></div></div></div>
+</main>
 
+<div id="modal" class="modal">
+ <div class="modalbox">
+  <div class="modalhead"><h2>Edit Data Servis</h2><button class="x" onclick="closeEdit()">✕</button></div>
+  <input type="hidden" id="editId">
+  <div class="formgrid">
+   <div class="field"><label>NAMA PELANGGAN</label><input id="eNama"></div>
+   <div class="field"><label>NO. WHATSAPP</label><input id="eWa" inputmode="tel"></div>
+   <div class="field full"><label>MERK / TIPE / MODEL</label><input id="eTipe"></div>
+   <div class="field"><label>IMEI</label><input id="eImei"></div>
+   <div class="field"><label>TEKNISI</label><input id="eTeknisi"></div>
+   <div class="field full"><label>KELUHAN / KERUSAKAN</label><textarea id="eKeluhan"></textarea></div>
+   <div class="field"><label>BIAYA</label><input id="eBiaya" inputmode="numeric"></div>
+   <div class="field"><label>DP</label><input id="eDp" inputmode="numeric"></div>
+   <div class="field"><label>STATUS</label><select id="eStatus">
+    <option value="masuk">Masuk</option><option value="proses">Proses</option><option value="selesai">Selesai</option><option value="diambil">Diambil</option><option value="batal">Batal</option>
+   </select></div>
+   <div class="field full"><label>CATATAN</label><textarea id="eCatatan"></textarea></div>
+  </div>
+  <div class="modalactions">
+   <button onclick="closeEdit()">Batal</button>
+   <button class="save" onclick="saveEdit()">Simpan Perubahan</button>
+  </div>
+ </div>
+</div>
 <script type="module">
 import {initializeApp} from "https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js";
 import {getAuth,onAuthStateChanged} from "https://www.gstatic.com/firebasejs/11.10.0/firebase-auth.js";
@@ -39,6 +74,60 @@ const app=initializeApp(firebaseConfig),auth=getAuth(app),db=getFirestore(app);l
 const $=id=>document.getElementById(id);
 const esc=v=>String(v??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]));
 const money=v=>"Rp "+Number(v||0).toLocaleString("id-ID");
+
+function waNumber(v){
+ const raw=String(v||"").replace(/[^\d]/g,"");
+ if(!raw)return "";
+ if(raw.startsWith("0"))return "62"+raw.slice(1);
+ if(raw.startsWith("62"))return raw;
+ return raw;
+}
+function waStatus(status,item){
+ const n=waNumber(item.pelanggan?.wa||item.noHp);
+ if(!n)return;
+ const label={masuk:"Masuk",proses:"Sedang Diproses",selesai:"Selesai",diambil:"Sudah Bisa Diambil",batal:"Dibatalkan"}[status]||status;
+ const nomor=item.nomorNota||item.idServis||item.id||"";
+ const nama=item.pelanggan?.nama||item.namaPelanggan||"Pelanggan";
+ const tipe=item.tipe||item.tipeHp||"-";
+ const text=`Halo ${nama}, kami dari FIXZY.\\n\\nStatus servis HP ${tipe} (Nota ${nomor}) sekarang: *${label}*.\\n\\nTerima kasih.`;
+ window.open("https://wa.me/"+n+"?text="+encodeURIComponent(text),"_blank");
+}
+window.edit=id=>{
+ const x=rows.find(a=>a.id===id); if(!x)return;
+ $("editId").value=id;
+ $("eNama").value=x.pelanggan?.nama||x.namaPelanggan||"";
+ $("eWa").value=x.pelanggan?.wa||x.noHp||"";
+ $("eTipe").value=x.tipe||x.tipeHp||"";
+ $("eImei").value=x.imei||"";
+ $("eTeknisi").value=x.namaTeknisi||x.teknisi||"";
+ $("eKeluhan").value=x.keluhan||x.kerusakan||"";
+ $("eBiaya").value=x.biaya??x.total??0;
+ $("eDp").value=x.dp||0;
+ $("eStatus").value=x.status||"masuk";
+ $("eCatatan").value=x.catatan||"";
+ $("modal").classList.add("show");
+};
+window.closeEdit=()=>$("modal").classList.remove("show");
+window.saveEdit=async()=>{
+ const id=$("editId").value,x=rows.find(a=>a.id===id);if(!id||!x)return;
+ const oldStatus=x.status||"masuk",newStatus=$("eStatus").value;
+ const payload={
+  namaPelanggan:$("eNama").value.trim(),noHp:$("eWa").value.trim(),
+  tipeHp:$("eTipe").value.trim(),imei:$("eImei").value.trim(),
+  teknisi:$("eTeknisi").value.trim(),kerusakan:$("eKeluhan").value.trim(),
+  biaya:Number(String($("eBiaya").value).replace(/[^\d]/g,""))||0,
+  dp:Number(String($("eDp").value).replace(/[^\d]/g,""))||0,
+  status:newStatus,catatan:$("eCatatan").value.trim(),
+  updatedAt:serverTimestamp()
+ };
+ payload.total=payload.biaya;payload.sisa=Math.max(0,payload.total-payload.dp);
+ try{
+  await updateDoc(doc(db,"servis",id),payload);
+  $("modal").classList.remove("show");
+  await load();
+  if(newStatus!==oldStatus)waStatus(newStatus,{...x,...payload});
+ }catch(e){alert("Gagal menyimpan perubahan:\\n"+e.message)}
+};
 function render(){
  const q=$("search").value.toLowerCase(), f=$("filter").value;
  const a=rows.filter(x=> (f==="semua" || String(x.status||"masuk")===f) && (!q || JSON.stringify(x).toLowerCase().includes(q)));
@@ -49,7 +138,7 @@ function render(){
   <span class="badge">${esc(x.status||"masuk")}</span></div>
   <div class="info">📱 ${esc(x.tipe||x.tipeHp||"-")}<br>📞 ${esc(x.pelanggan?.wa||x.noHp||"-")}<br>🔧 Teknisi: ${esc(x.namaTeknisi||x.teknisi||"-")}<br>📝 ${esc(x.keluhan||x.kerusakan||"-")}<br>💰 Biaya: <b>${money(x.total??x.biaya)}</b> • DP: ${money(x.dp)}</div>
   <div class="actions">
-   <button onclick="editData('${x.id}')">Edit</button>
+   <button onclick="edit('${x.id}')">Edit</button>
    <button onclick="status('${x.id}','proses')">Proses</button>
    <button onclick="status('${x.id}','selesai')">Selesai</button>
    <button onclick="hapus('${x.id}')">Hapus</button>
@@ -62,33 +151,12 @@ async function load(){
 }
 window.load=load;
 window.status=async(id,s)=>{
- const x=rows.find(r=>r.id===id); if(!x)return;
- if(!confirm(`Ubah status menjadi ${s.toUpperCase()}?`))return;
+ const x=rows.find(a=>a.id===id);if(!x)return;
+ if(!confirm(`Ubah status menjadi "${s}"?`))return;
  try{
-  const update={status:s,updatedAt:serverTimestamp()};
-  if(s==='selesai'||s==='diambil')update.tanggalSelesai=serverTimestamp();
-  if(s==='batal')update.tanggalBatal=serverTimestamp();
-  await updateDoc(doc(db,'servis',id),update);
+  await updateDoc(doc(db,"servis",id),{status:s,updatedAt:serverTimestamp()});
   await load();
-  const raw=String(x.pelanggan?.wa||x.noHp||'').replace(/\D/g,'');
-  const wa=raw?(raw.startsWith('0')?'62'+raw.slice(1):raw):'';
-  if(wa){
-   const nama=x.pelanggan?.nama||x.namaPelanggan||'Pelanggan';
-   const nota=x.nomorNota||x.idServis||'';
-   const msg=`Halo ${nama}, informasi servis HP Anda.\nNota: ${nota}\nStatus servis sekarang: ${s.toUpperCase()}.\nTerima kasih. - FIXZY`;
-   window.open(`https://wa.me/${wa}?text=${encodeURIComponent(msg)}`,'_blank');
-  }else alert('Status berhasil diubah. Nomor WhatsApp pelanggan belum tersedia.');
- }catch(e){alert(e.message)}
-};
-window.editData=id=>{
- const x=rows.find(r=>r.id===id);if(!x)return;
- $('eId').value=id;$('eNama').value=x.pelanggan?.nama||x.namaPelanggan||'';$('eHp').value=x.pelanggan?.wa||x.noHp||'';$('eTipe').value=x.tipe||x.tipeHp||'';$('eTeknisi').value=x.namaTeknisi||x.teknisi||'';$('eKeluhan').value=x.keluhan||x.kerusakan||'';$('eBiaya').value=x.total??x.biaya??0;$('eDp').value=x.dp??0;$('eStatus').value=x.status||'masuk';$('eCatatan').value=x.catatan||'';$('editModal').style.display='block';
-};
-window.closeEdit=()=>{$('editModal').style.display='none'};
-window.saveEdit=async()=>{
- const id=$('eId').value;try{
-  await updateDoc(doc(db,'servis',id),{namaPelanggan:$('eNama').value.trim(),noHp:$('eHp').value.trim(),tipeHp:$('eTipe').value.trim(),teknisi:$('eTeknisi').value.trim(),kerusakan:$('eKeluhan').value.trim(),biaya:Number($('eBiaya').value)||0,dp:Number($('eDp').value)||0,status:$('eStatus').value,catatan:$('eCatatan').value.trim(),updatedAt:serverTimestamp()});
-  closeEdit();await load();alert('Data servis berhasil diperbarui');
+  waStatus(s,{...x,status:s});
  }catch(e){alert(e.message)}
 };
 window.hapus=async id=>{if(!confirm("Hapus data servis ini?"))return;try{await deleteDoc(doc(db,"servis",id));await load()}catch(e){alert(e.message)}};
