@@ -305,8 +305,6 @@ table{width:100%;border-collapse:collapse;min-width:800px}th,td{padding:9px 8px;
 
 
 <script>
-function tutupHalaman(){ window.close(); }
-
 async function refreshHalaman(){
   if(!uid){window.location.reload();return}
   try{
@@ -718,6 +716,17 @@ onAuthStateChanged(auth,async user=>{
   setupYears();
   renderAll();
 });
+</script>
+<script>
+function tutupHalaman(){
+  try{if(window.frameElement){window.frameElement.remove();return}}catch(e){}
+  try{if(window.parent!==window){
+    window.parent.postMessage({type:"FIXZY_CLOSE_PAGE"},"*");
+    return;
+  }}catch(e){}
+  try{window.close()}catch(e){}
+}
+window.tutupHalaman=tutupHalaman;
 </script>
 </body>
 </html>
