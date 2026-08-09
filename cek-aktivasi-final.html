@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<meta name="theme-color" content="#111827">
+<title>FIXZY | Cek Aktivasi</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;font-family:Arial,Helvetica,sans-serif;background:#f1f3f7;color:#111827}
+header{background:#111827;color:#fff;padding:14px 18px;position:sticky;top:0;z-index:5}
+.head{max-width:760px;margin:auto;display:flex;align-items:center;gap:12px}
+.back{width:48px;height:48px;border:0;border-radius:14px;background:#1e293b;color:#fff;font-size:30px;cursor:pointer}
+.brand{flex:1}.brand h1{margin:0;font-size:21px}.brand p{margin:4px 0 0;color:#cbd5e1;font-size:13px}
+.wrap{max-width:760px;margin:auto;padding:16px}
+.card{background:#fff;border:1px solid #e2e8f0;border-radius:22px;padding:18px;margin-bottom:16px;box-shadow:0 5px 20px rgba(0,0,0,.06)}
+.hero{background:#111827;color:#fff;border-radius:22px;padding:22px}
+.hero h2{margin:0 0 7px;font-size:28px}.hero p{margin:0;color:#cbd5e1;line-height:1.5}
+.info{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:15px}
+.box{background:#f8fafc;border:1px solid #e5e7eb;border-radius:16px;padding:16px}
+.box small{display:block;color:#64748b;font-weight:800;margin-bottom:7px}.box b{font-size:20px;color:#111827 !important}
+.green{color:#059669}.red{color:#dc2626}.blue{color:#2563eb}
+label{display:block;font-weight:800;color:#475569;margin-bottom:8px}
+select{width:100%;padding:14px;border:1px solid #cbd5e1;border-radius:13px;background:#fff;font-size:17px}
+.btn{width:100%;border:0;border-radius:14px;padding:14px;font-weight:900;font-size:16px;cursor:pointer}
+.primary{background:#fbbf24;color:#111827}.dark{background:#111827;color:#fff}.light{background:#e2e8f0;color:#111827}
+.qris{display:none;text-align:center}.qris.show{display:block}
+.qris img{width:min(420px,100%);height:auto;border-radius:16px;border:1px solid #e5e7eb;background:#fff}
+.price{font-size:28px;font-weight:900;margin:8px 0 15px}
+.wa{display:none}.wa.show{display:block}
+.note{font-size:13px;line-height:1.55;color:#64748b}
+.status{padding:13px;border-radius:13px;background:#f8fafc;color:#475569;font-size:14px}
+.status.ok{background:#ecfdf5;color:#166534}.status.warn{background:#fffbeb;color:#92400e}
+@media(max-width:600px){.wrap{padding:12px}.info{grid-template-columns:1fr}.hero h2{font-size:24px}}
+</style>
+</head>
+<body>
+<header>
+  <div class="head">
+    <button class="back" onclick="tutupHalaman()" aria-label="Kembali">‹</button>
+    <div class="brand">
+      <h1>FIXZY</h1>
+      <p>🔐 Cek Aktivasi</p>
+    </div>
+  </div>
+</header>
+
+<main class="wrap">
+  <section class="hero">
+    <h2>🔐 Aktivasi Akun</h2>
+    <p>Periksa nama konter dan sisa masa aktif akun FIXZY.</p>
+    <div class="info">
+      <div class="box"><small>Nama Konter</small><b id="namaKonter">Memuat...</b></div>
+      <div class="box"><small>Aktif Sampai</small><b id="sisa" class="green">Memuat...</b></div>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2 style="margin-top:0">Perpanjang Aktivasi</h2>
+    <label for="paket">Pilih paket</label>
+    <select id="paket" onchange="pilihPaket()">
+      <option value="">-- Pilih paket --</option>
+      <option value="3|50000">3 Bulan — Rp 50.000</option>
+      <option value="6|75000">6 Bulan — Rp 75.000</option>
+      <option value="12|120000">12 Bulan — Rp 120.000</option>
+    </select>
+    <div id="pilihan" style="display:none;margin-top:15px">
+      <div class="status ok" id="ringkasan"></div>
+      <button class="btn primary" style="margin-top:12px" onclick="tampilkanQRIS()">Tampilkan QRIS</button>
+    </div>
+  </section>
+
+  <section class="card qris" id="qrisBox">
+    <h2 style="margin-top:0">Pembayaran QRIS</h2>
+    <div class="price" id="harga">Rp 0</div>
+    <img src="qris.jpg" alt="QRIS pembayaran">
+    <p class="note">Setelah transfer, simpan bukti pembayaran. Kemudian tekan tombol WhatsApp di bawah dan kirim bukti transfer untuk konfirmasi.</p>
+    <button class="btn dark" onclick="kirimWA()">📲 Konfirmasi & Kirim ke WhatsApp</button>
+  </section>
+
+  <section class="card">
+    <div id="status" class="status">Menghubungkan ke akun Firebase...</div>
+  </section>
+
+  <section class="card">
+    <h3 style="margin-top:0">📋 Status Pengajuan Perpanjangan</h3>
+    <div id="riwayatPengajuan" class="status">Belum ada pengajuan.</div>
+  </section>
+</main>
+
+<script>
+function tutupHalaman(){
+  try{
+    if(window.frameElement){window.frameElement.remove();return}
+  }catch(e){}
+  try{
+    if(window.parent!==window){
+      window.parent.postMessage({type:"FIXZY_CLOSE_PAGE"},"*");
+      return;
+    }
+  }catch(e){}
+  try{window.history.back()}catch(e){}
+}
+function rupiah(n){return "Rp "+Number(n||0).toLocaleString("id-ID")}
+function clean(v){return String(v??"").trim()}
+let pilihan={bulan:0,harga:0}, profil={};
+let currentUser=null;
+let db=null;
+
+function pilihPaket(){
+  const v=document.getElementById("paket").value;
+  const el=document.getElementById("pilihan");
+  const ring=document.getElementById("ringkasan");
+  document.getElementById("qrisBox").classList.remove("show");
+  if(!v){el.style.display="none";return}
+  const [bulan,harga]=v.split("|").map(Number);
+  pilihan={bulan,harga};
+  ring.innerHTML=`Paket <b>${bulan} bulan</b> dipilih • Total <b>${rupiah(harga)}</b>`;
+  el.style.display="block";
+}
+function tampilkanQRIS(){
+  if(!pilihan.harga)return;
+  document.getElementById("harga").textContent=rupiah(pilihan.harga);
+  document.getElementById("qrisBox").classList.add("show");
+  document.getElementById("qrisBox").scrollIntoView({behavior:"smooth",block:"start"});
+}
+function formatTanggal(v){
+  if(!v)return null;
+  let d;
+  if(typeof v==="object" && v.seconds)d=new Date(v.seconds*1000);
+  else if(typeof v==="number")d=new Date(v<100000000000? v*1000:v);
+  else{
+    const s=String(v).trim();
+    d=new Date(s);
+    if(isNaN(d.getTime())){
+      const n=Number(s);
+      if(n)d=new Date(n<100000000000?n*1000:n);
+    }
+  }
+  return isNaN(d?.getTime?.())?null:d;
+}
+function sisaAktivasi(v){
+  const d=formatTanggal(v);
+  if(!d)return {text:clean(v)||"-",days:null};
+  const now=new Date();
+  const days=Math.ceil((d-now)/86400000);
+  return {text:days>0?`${days} hari`:(days===0?"Berakhir hari ini":"Sudah berakhir"),days};
+}
+function cariNama(p){
+  return p.namaKonter||p.namaToko||p.namaUsaha||p.toko||p.nama||p.email||"Akun";
+}
+function cariExp(p){
+  // Utamakan tanggal aktivasi/expired yang sebenarnya.
+  // Nilai seperti "trial" tidak ditampilkan sebagai masa aktif.
+  const kandidat = [
+    p.tanggalExpired,
+    p.tanggalExp,
+    p.expiry,
+    p.expired,
+    p.exp,
+    p.masaAktif
+  ];
+  for(const v of kandidat){
+    if(v === null || v === undefined || String(v).trim() === '') continue;
+    const t = String(v).trim().toLowerCase();
+    if(t === 'trial' || t === 'gratis' || t === 'free') continue;
+    if(formatTanggal(v)) return v;
+  }
+  return null;
+}
+function formatTanggalTampil(v){
+  const d=formatTanggal(v);
+  if(!d) return String(v||'-');
+  return d.toLocaleDateString('id-ID',{day:'2-digit',month:'long',year:'numeric'});
+}
+
+async function loadFirebase(){
+  try{
+    const {initializeApp}=await import("https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js");
+    const {getAuth,onAuthStateChanged}=await import("https://www.gstatic.com/firebasejs/11.10.0/firebase-auth.js");
+    const {getFirestore,doc,getDoc,collection,addDoc,getDocs,query,where,serverTimestamp}=await import("https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js");
+
+    const firebaseConfig={
+      apiKey:"AIzaSyCwMbJsuORhIq4QCmp4c1r6OsjAUlfxU5Y",
+      authDomain:"fixzy-f056f.firebaseapp.com",
+      projectId:"fixzy-f056f",
+      storageBucket:"fixzy-f056f.firebasestorage.app",
+      messagingSenderId:"838081521031",
+      appId:"1:838081521031:web:50fdee909b56460b055f22"
+    };
+
+    const app=initializeApp(firebaseConfig);
+    const auth=getAuth(app);
+    db=getFirestore(app);
+
+    onAuthStateChanged(auth,async user=>{
+      currentUser=user;
+      if(!user){
+        document.getElementById("status").className="status warn";
+        document.getElementById("status").textContent="Akun Firebase belum login. Silakan login terlebih dahulu.";
+        return;
+      }
+      try{
+        const snap=await getDoc(doc(db,"users",user.uid));
+        if(snap.exists()) profil=snap.data()||{};
+        else{
+          try{profil=JSON.parse(localStorage.getItem("fixzy_user_profile")||"{}")}catch(e){profil={}}
+        }
+        document.getElementById("namaKonter").textContent=cariNama(profil);
+        const exp=cariExp(profil);
+        const hasil=sisaAktivasi(exp);
+        document.getElementById("sisa").textContent=formatTanggalTampil(exp);
+        document.getElementById("sisa").className=hasil.days!==null&&hasil.days<=0?"red":"green";
+        document.getElementById("status").className="status ok";
+        document.getElementById("status").innerHTML=exp
+          ? `✅ Data akun berhasil dibaca. Tanggal aktivasi/berakhir: <b>${formatTanggalTampil(exp)}</b>`
+          : "⚠️ Tanggal aktivasi belum ditemukan pada data akun.";
+        await muatPengajuan();
+      }catch(e){
+        document.getElementById("status").className="status warn";
+        document.getElementById("status").textContent="Gagal mengambil data akun: "+(e.message||e);
+      }
+    });
+  }catch(e){
+    document.getElementById("status").className="status warn";
+    document.getElementById("status").textContent="Firebase gagal dimuat: "+(e.message||e);
+  }
+}
+async function muatPengajuan(){
+  const el=document.getElementById("riwayatPengajuan");
+  if(!currentUser || !db){
+    el.className="status warn";
+    el.textContent="Belum login Firebase.";
+    return;
+  }
+
+  try{
+    const q=query(
+      collection(db,"aktivasi_pengajuan"),
+      where("uid","==",currentUser.uid)
+    );
+    const snap=await getDocs(q);
+
+    if(snap.empty){
+      el.className="status";
+      el.textContent="Belum ada pengajuan perpanjangan.";
+      return;
+    }
+
+    const rows=snap.docs.map(d=>({id:d.id,...d.data()}));
+    rows.sort((a,b)=>{
+      const ad=a.createdAt?.seconds||0;
+      const bd=b.createdAt?.seconds||0;
+      return bd-ad;
+    });
+
+    const r=rows[0];
+    const st=String(r.status||"menunggu").toLowerCase();
+
+    let label="MENUNGGU";
+    let cls="warn";
+    if(["disetujui","approved","approve","setuju"].includes(st)){
+      label="DISETUJUI";
+      cls="ok";
+    }else if(["ditolak","rejected","reject","tolak"].includes(st)){
+      label="DITOLAK";
+      cls="warn";
+    }
+
+    const paket=r.paket||`${r.bulan||0} bulan`;
+    const nominal=rupiah(r.nominal||0);
+
+    el.className=`status ${cls}`;
+    el.innerHTML=
+      `Status terakhir: <b>${label}</b><br>`+
+      `Paket: <b>${clean(paket)}</b> · Nominal: <b>${nominal}</b>`+
+      (r.alasanPenolakan
+        ? `<br>Alasan: <b>${clean(r.alasanPenolakan)}</b>`
+        : "");
+  }catch(e){
+    console.error(e);
+    el.className="status warn";
+    el.textContent="Gagal membaca status pengajuan: "+(e.message||e);
+  }
+}
+
+async function kirimWA(){
+  if(!pilihan.harga){
+    alert("Pilih paket terlebih dahulu.");
+    return;
+  }
+
+  if(!currentUser || !db){
+    alert("Akun Firebase belum login.");
+    return;
+  }
+
+  const nama=document.getElementById("namaKonter").textContent;
+  const exp=cariExp(profil)||"-";
+  const paket=`${pilihan.bulan} Bulan`;
+
+  try{
+    const q=query(
+      collection(db,"aktivasi_pengajuan"),
+      where("uid","==",currentUser.uid)
+    );
+    const snap=await getDocs(q);
+
+    const adaPending=snap.docs.some(d=>{
+      const x=d.data()||{};
+      const st=String(x.status||"menunggu").toLowerCase();
+      const bln=Number(x.bulan||0);
+      return ["menunggu","pending"].includes(st) && bln===Number(pilihan.bulan);
+    });
+
+    if(adaPending){
+      await muatPengajuan();
+
+      const pesan=`Halo, saya ingin konfirmasi pembayaran perpanjangan aktivasi FIXZY.
+
+Nama konter: ${nama}
+Paket: ${paket}
+Nominal: ${rupiah(pilihan.harga)}
+Masa aktif saat ini: ${formatTanggalTampil(exp)}
+
+Pengajuan perpanjangan saya sudah tercatat di sistem. Saya mengirim bukti transfer di chat ini.`;
+
+      window.open(
+        "https://wa.me/6282319264646?text="+encodeURIComponent(pesan),
+        "_blank"
+      );
+      return;
+    }
+
+    await addDoc(collection(db,"aktivasi_pengajuan"),{
+      uid:currentUser.uid,
+      email:currentUser.email||profil.email||"",
+      namaKonter:nama,
+      paket:paket,
+      bulan:Number(pilihan.bulan),
+      durasiHari:Number(pilihan.bulan)*30,
+      nominal:Number(pilihan.harga),
+      tanggalExpiredLama:exp,
+      status:"menunggu",
+      buktiPembayaran:"",
+      createdAt:serverTimestamp()
+    });
+
+    await muatPengajuan();
+
+    const pesan=
+`Halo, saya ingin konfirmasi pembayaran perpanjangan aktivasi FIXZY.
+
+Nama konter: ${nama}
+Paket: ${paket}
+Nominal: ${rupiah(pilihan.harga)}
+Masa aktif saat ini: ${formatTanggalTampil(exp)}
+
+Saya sudah melakukan transfer dan akan mengirim bukti pembayaran di chat ini.
+
+Mohon diperiksa dan diproses melalui Kendali FIXZY.`;
+
+    window.open(
+      "https://wa.me/6282319264646?text="+encodeURIComponent(pesan),
+      "_blank"
+    );
+
+  }catch(e){
+    console.error(e);
+    alert("Pengajuan gagal disimpan: "+(e.message||e));
+  }
+}
+loadFirebase();
+</script>
+</body>
+</html>
