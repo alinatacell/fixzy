@@ -276,7 +276,16 @@ table{width:100%;border-collapse:collapse;min-width:800px}th,td{padding:9px 8px;
 
 <script>
 function kembaliKeIndex(){
-  window.location.href = "index.html";
+  /*
+   * Dashboard dibuka di dalam iframe index.html.
+   * Jangan membuka index.html di dalam iframe lagi,
+   * karena akan membuat index bertumpuk/bersarang.
+   */
+  if(window.parent && window.parent !== window){
+    window.parent.location.href = "index.html";
+  }else{
+    window.location.href = "index.html";
+  }
 }
 
 function refreshHalaman(){
