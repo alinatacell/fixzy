@@ -309,6 +309,32 @@ async function tampilkanAkun(user){
 }
 
 let authSelesai=false;
+let parentAuthReceived=false;
+let parentProfile=null;
+
+function tampilkanProfilParent(d){
+  parentAuthReceived=true;
+  parentProfile=d||{};
+  if(d && d.loggedIn){
+    $("firebaseStatus").textContent="Akun FIXZY terdeteksi: "+(d.nama||d.email||"Akun")+". Memeriksa sesi Firebase...";
+    $("namaAkun").textContent=d.nama||d.email||"Akun";
+    $("akunNota").style.display="block";
+  }
+}
+
+window.addEventListener("message",e=>{
+  const d=e.data||{};
+  if(d.type==="FIXZY_PARENT_AUTH"){
+    tampilkanProfilParent(d);
+  }
+});
+
+// Minta parent/index mengirim profil lagi jika nota dibuka di dalam iframe.
+try{
+  if(window.parent&&window.parent!==window){
+    window.parent.postMessage({type:"FIXZY_REQUEST_AUTH"},"*");
+  }
+}catch(e){}
 
 async function mulaiFirebaseAuth(){
   try{
@@ -321,13 +347,23 @@ async function mulaiFirebaseAuth(){
     authSelesai=true;
     if(!user){
       uid=null;
-      $("firebaseStatus").textContent="Belum login Firebase. Silakan buka halaman Login FIXZY terlebih dahulu.";
-      $("akunNota").style.display="none";
+      if(parentAuthReceived && parentProfile && parentProfile.loggedIn){
+        $("firebaseStatus").textContent="Akun "+(parentProfile.nama||parentProfile.email||"FIXZY")+" terdeteksi. Sesi Firebase sedang dipulihkan...";
+        $("namaAkun").textContent=parentProfile.nama||parentProfile.email||"Akun";
+        $("akunNota").style.display="block";
+      }else{
+        $("firebaseStatus").textContent="Menunggu sesi login Firebase...";
+        $("akunNota").style.display="none";
+      }
       return;
     }
 
     uid=user.uid;
     $("firebaseStatus").textContent="Login Firebase terdeteksi. Memuat akun...";
+    if(parentProfile?.nama){
+      $("namaAkun").textContent=parentProfile.nama;
+      $("akunNota").style.display="block";
+    }
     try{
       await tampilkanAkun(user);
       await Promise.all([muatKaryawan(),muatProduk()]);
@@ -349,9 +385,9 @@ async function mulaiFirebaseAuth(){
 
   setTimeout(()=>{
     if(!authSelesai){
-      $("firebaseStatus").textContent="Firebase Auth belum merespons.";
+      $("firebaseStatus").textContent="Sesi Firebase belum terbaca.";
       $("firebaseError").style.display="block";
-      $("firebaseError").textContent="Pastikan halaman Login dan Nota menggunakan project Firebase FIXZY yang sama.";
+      $("firebaseError").textContent="Login halaman utama terdeteksi: "+(parentAuthReceived && parentProfile?.loggedIn?"YA":"TIDAK")+" • Firebase Auth Nota belum menemukan user.";
     }
   },8000);
 }
