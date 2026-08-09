@@ -10,7 +10,15 @@
 button,input,select{font:inherit}button{cursor:pointer}
 .top{position:sticky;top:0;z-index:20;background:#fff;border-bottom:1px solid #e5e7eb;padding:12px 14px;display:flex;align-items:center;justify-content:space-between}
 .brand{font-weight:900;font-size:20px}.brand span{color:#f59e0b}
-.back{border:0;background:#111827;color:#fff;border-radius:10px;padding:9px 13px;font-weight:800}
+.top-actions{display:flex;align-items:center;justify-content:flex-end;gap:8px;margin-left:auto}
+.refresh,.back{border:0;background:#111827;color:#fff;border-radius:10px;padding:9px 13px;font-weight:800;white-space:nowrap}
+.refresh:active,.back:active{transform:scale(.97)}
+@media(max-width:700px){
+ .top{padding:10px 12px}
+ .brand{font-size:18px;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+ .top-actions{gap:5px}
+ .refresh,.back{padding:8px 9px;font-size:12px}
+}
 .wrap{max-width:1100px;margin:14px auto;padding:0 10px 30px}
 .head{background:#fff;border-radius:15px;padding:16px;box-shadow:0 6px 24px rgba(0,0,0,.06);margin-bottom:12px}
 h1{margin:0;font-size:22px}.sub{color:#64748b;font-size:13px;margin-top:5px}
@@ -34,7 +42,13 @@ input,select{border:1px solid #cbd5e1;border-radius:10px;padding:10px;background
 </style>
 </head>
 <body>
-<header class="top"><div class="brand" id="brand">Nama Toko</div><button class="back" onclick="kembali()">← Kembali</button></header>
+<header class="top">
+  <div class="brand" id="brand">Nama Toko</div>
+  <div class="top-actions">
+    <button class="refresh" onclick="refreshHalaman()" aria-label="Refresh halaman">↻ Refresh</button>
+    <button class="back" onclick="kembali()" aria-label="Kembali ke index">← Kembali</button>
+  </div>
+</header>
 <main class="wrap">
 <section class="head">
 <h1>🔧 Data Servis</h1><div class="sub">Semua transaksi servis yang disimpan dari nota servis.</div>
@@ -96,7 +110,20 @@ function render(){
  }).join("")||'<div class="empty">Belum ada data servis.</div>';
 }
 function resetFilter(){q.value="";status.value="";tanggal.value="";render()}
-function kembali(){if(document.referrer)history.back();else location.href="index.html"}
+function refreshHalaman(){
+  window.location.reload();
+}
+
+function kembali(){
+  /* Data Servis dibuka di iframe index.html.
+     Kembali harus keluar dari iframe, bukan membuka index
+     di dalam iframe lagi. */
+  if(window.parent && window.parent !== window){
+    window.parent.location.href="index.html";
+  }else{
+    location.href="index.html";
+  }
+}
 load();
 </script>
 </body>
