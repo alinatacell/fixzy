@@ -20,12 +20,13 @@ input:focus,select:focus{border-color:#ffc107;box-shadow:0 0 0 3px rgba(255,193,
 .top{display:flex;justify-content:space-between;gap:10px}.name{font-weight:900;font-size:15px}.small{font-size:11px;color:#64748b;margin-top:4px}
 .badge{padding:6px 10px;border-radius:999px;font-size:10px;font-weight:900;background:#fff4c2;color:#8a5a00;height:max-content;border:1px solid #ffe58a}
 .info{font-size:12px;line-height:1.75;margin-top:11px;color:#334155}.info b{color:#111827}
-.actions{display:grid;grid-template-columns:1.1fr 1.1fr 1fr 1fr;gap:7px;margin-top:13px}
-.actions button{min-width:0;color:#fff;padding:10px 7px;font-size:11px;background:#172033}
-.actions button:nth-child(1){background:#e9edf3;color:#172033}
-.actions button:nth-child(2){background:#2563eb}
-.actions button:nth-child(3){background:#16a34a}
-.actions button:nth-child(4){background:#ef4444}
+.actions{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:14px}
+.actions button{min-width:0!important;border-radius:12px!important;padding:12px 7px!important;font-size:12px!important;font-weight:900!important;color:#fff!important;border:0!important;box-shadow:0 3px 0 rgba(0,0,0,.12)!important;transition:.15s!important}
+.actions button:active{transform:translateY(2px)!important;box-shadow:none!important}
+.actions .btn-edit{background:#64748b!important}
+.actions .btn-process{background:#2563eb!important}
+.actions .btn-done{background:#16a34a!important}
+.actions .btn-delete{background:#dc2626!important}
 .empty{background:#fff;border-radius:14px;padding:32px;text-align:center;color:#64748b;border:1px solid #e4e8ef}
 .err{color:#b91c1c;white-space:pre-wrap}
 
@@ -49,7 +50,7 @@ input:focus,select:focus{border-color:#ffc107;box-shadow:0 0 0 3px rgba(255,193,
 <header><h1>🔧 Data Servis</h1><div class="grow"></div><button class="refresh" onclick="load()">↻ Refresh</button></header>
 <main>
 <div class="bar"><input id="search" class="search" placeholder="Cari pelanggan, HP, nota, teknisi..."><select id="filter"><option value="semua">Semua Status</option><option>masuk</option><option>proses</option><option>selesai</option><option>diambil</option><option>batal</option></select></div>
-<div class="stats">Firebase `/servis` • Total: <b id="total">0</b> • <span id="akun">memeriksa akun...</span></div>
+<div class="stats">☁️ Firebase `/servis` • Total: <b id="total">0</b> • <span id="akun">memeriksa akun...</span></div>
 <div id="list" class="list"><div class="empty">Memuat Firebase...</div></div>
 </main>
 
@@ -116,12 +117,14 @@ function waStatus(status,item){
  const nomor=item.nomorNota||item.idServis||item.id||"-";
  const nama=item.pelanggan?.nama||item.namaPelanggan||"Pelanggan";
  const tipe=item.tipe||item.tipeHp||"HP";
- const pengirim=accountName||"Toko";
+ const pengirim=(accountName||"Pengguna").trim();
 
  const text=
 `Halo ${nama},
 
-Kami dari ${pengirim} ingin menginformasikan status servis HP Anda.
+📍 *${pengirim}*
+
+Kami menginformasikan status servis HP Anda:
 
 📱 HP: ${tipe}
 🧾 No. Nota: ${nomor}
