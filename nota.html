@@ -211,7 +211,7 @@ function firebaseProxy(op,extra={}){
     setTimeout(()=>{
       const p=pendingProxy.get(requestId);
       if(p){pendingProxy.delete(requestId);reject(new Error("Firebase bridge timeout."));}
-    },15000);
+    },30000);
   });
 }
 window.addEventListener("message",e=>{
@@ -221,7 +221,7 @@ window.addEventListener("message",e=>{
     $("namaAkun").textContent=d.nama||d.email||"Akun";
     $("akunNota").style.display="block";
     $("firebaseStatus").textContent=d.loggedIn?"Akun FIXZY terdeteksi • Firebase siap melalui halaman utama.":"Menunggu login Firebase...";
-    if(d.loggedIn) iniciarDatos();
+    if(d.loggedIn && !window.__fixzyDataLoading){window.__fixzyDataLoading=true;iniciarDatos();}
     return;
   }
   if(d.type==="FIXZY_FIREBASE_PROXY_RESULT"){
@@ -362,7 +362,7 @@ function requestParentAuth(){
 }
 $("firebaseStatus").textContent="Meminta akun Firebase dari Dashboard...";
 requestParentAuth();
-setTimeout(requestParentAuth,800);
+setTimeout(requestParentAuth,500);\nsetTimeout(requestParentAuth,1500);
 setTimeout(()=>{
   if(!$("namaAkun").textContent||$("namaAkun").textContent==="-"){
     $("firebaseError").style.display="block";
