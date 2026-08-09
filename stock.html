@@ -116,10 +116,11 @@ th{background:#f8fafc;font-weight:900;position:sticky;top:0}
         <div class="help">Tempel URL CSV yang bisa diakses publik, misalnya link CSV dari Google Sheets yang sudah dipublish. Server harus mengizinkan akses publik/CORS.</div>
         <div class="field">
           <label>URL CSV Publik</label>
-          <input id="csvUrl" placeholder="https://.../file.csv">
+          <input id="csvUrl" value="https://docs.google.com/spreadsheets/d/e/2PACX-1vTAP_R50frV13whqx54ctjplc-8xhcN53rHEVk5mkhLeZE283xWnr6TdTBFr-KFymEiaYE_NWgGthpo/pub?gid=2070671735&single=true&output=csv" placeholder="URL CSV publik">
         </div>
         <div class="actions">
-          <button class="btn yellow" onclick="ambilUrl()">🌐 Ambil & Preview</button>
+          <button class="btn yellow" onclick="ambilUrl()">🌐 Ambil Produk dari Google Sheet</button>
+          <button class="btn light" onclick="ubahKeCSV()">🔄 Gunakan Link CSV</button>
         </div>
         <div id="urlPreview" class="status">Belum mengambil URL.</div>
       </div>
@@ -320,12 +321,14 @@ $("confirmDelete").onclick=async()=>{
 
 function parseCSV(text){
   text=text.replace(/^\uFEFF/,"").trim();
+  const firstLine=(text.split(/\r?\n/,1)[0]||"");
+  const delimiter=(firstLine.split(";").length > firstLine.split(",").length) ? ";" : ",";
   const lines=[];let row=[],cell="",quoted=false;
   for(let i=0;i<text.length;i++){
     const c=text[i],n=text[i+1];
     if(c==='"'&&quoted&&n==='"'){cell+='"';i++;continue}
     if(c==='"'){quoted=!quoted;continue}
-    if(c===','&&!quoted){row.push(cell);cell="";continue}
+    if(c===delimiter&&!quoted){row.push(cell);cell="";continue}
     if((c==='\n'||c==='\r')&&!quoted){
       if(c==='\r'&&n==='\n')i++;
       row.push(cell);cell="";
@@ -379,9 +382,34 @@ async function prosesFile(){
 }
 window.prosesFile=prosesFile;
 
+function ubahKeCSV(){
+  const el=$("csvUrl");
+  const u=el.value.trim();
+  if(!u)return;
+  try{
+    const x=new URL(u);
+    if(x.hostname==="docs.google.com" && x.pathname.includes("/spreadsheets/d/e/")){
+      x.pathname=x.pathname.replace(/\/pubhtml$/, "/pub");
+      x.searchParams.set("output","csv");
+      el.value=x.toString();
+      $("urlPreview").textContent="Link sudah diubah ke format CSV Google Sheets.";
+    }
+  }catch(e){}
+}
+window.ubahKeCSV=ubahKeCSV;
+
 async function ambilUrl(){
-  const url=$("csvUrl").value.trim();if(!url)return alert("Masukkan URL CSV publik.");
-  $("urlPreview").textContent="Mengambil file publik...";
+  let url=$("csvUrl").value.trim();if(!url)return alert("Masukkan URL CSV publik.");
+  try{
+    const x=new URL(url);
+    if(x.hostname==="docs.google.com" && x.pathname.includes("/spreadsheets/d/e/")){
+      x.pathname=x.pathname.replace(/\/pubhtml$/, "/pub");
+      x.searchParams.set("output","csv");
+      url=x.toString();
+      $("csvUrl").value=url;
+    }
+  }catch(e){}
+  $("urlPreview").textContent="Mengambil produk dari Google Sheet...";
   try{
     const res=await fetch(url,{cache:"no-store"});if(!res.ok)throw new Error("HTTP "+res.status);
     const text=await res.text();const data=parseCSV(text);
