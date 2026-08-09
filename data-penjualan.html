@@ -262,7 +262,7 @@ async function load(){
 }
 window.load=load;
 
-window.tutupHalaman=()=>{ window.close(); };
+
 
 $("search").oninput=render;
 $("filter").onchange=render;
@@ -273,4 +273,15 @@ onAuthStateChanged(auth,async u=>{
   $("akun").textContent=u.email||"Akun login";
   await load();
 });
-</script></body></html>
+</script><script>
+function tutupHalaman(){
+  try{if(window.frameElement){window.frameElement.remove();return}}catch(e){}
+  try{if(window.parent!==window){
+    window.parent.postMessage({type:"FIXZY_CLOSE_PAGE"},"*");
+    return;
+  }}catch(e){}
+  try{window.close()}catch(e){}
+}
+window.tutupHalaman=tutupHalaman;
+</script>
+</body></html>
