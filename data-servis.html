@@ -54,6 +54,52 @@ input:focus,select:focus{border-color:#ffc107;box-shadow:0 0 0 3px rgba(255,193,
 .status-selesai{background:#dcfce7!important;color:#166534!important}
 .status-diambil{background:#e0e7ff!important;color:#3730a3!important}
 .status-batal{background:#fee2e2!important;color:#b91c1c!important}
+
+/* V9: status dropdown berada di area tombol */
+.actions{
+ display:grid!important;
+ grid-template-columns:1fr 1.35fr 1fr!important;
+ gap:8px!important;
+ margin-top:14px!important;
+ align-items:stretch!important;
+}
+.actions button{
+ min-width:0!important;
+ border-radius:12px!important;
+ padding:12px 7px!important;
+ font-size:12px!important;
+ font-weight:900!important;
+ opacity:1!important;
+}
+.actions .btn-edit{
+ background:#e5e7eb!important;
+ color:#111827!important;
+}
+.actions .btn-delete{
+ background:#dc2626!important;
+ color:#ffffff!important;
+}
+.actions .statusSelect{
+ width:100%!important;
+ min-width:0!important;
+ border-radius:12px!important;
+ padding:12px 8px!important;
+ text-align:center!important;
+ font-weight:900!important;
+ font-size:12px!important;
+ color:#111827!important;
+ background:#f3f4f6!important;
+}
+.actions .statusSelect.status-masuk{background:#fef3c7!important;color:#92400e!important}
+.actions .statusSelect.status-nunggu-sparepart{background:#ffedd5!important;color:#9a3412!important}
+.actions .statusSelect.status-proses{background:#dbeafe!important;color:#1d4ed8!important}
+.actions .statusSelect.status-selesai{background:#dcfce7!important;color:#166534!important}
+.actions .statusSelect.status-diambil{background:#e0e7ff!important;color:#3730a3!important}
+.actions .statusSelect.status-batal{background:#fee2e2!important;color:#b91c1c!important}
+@media(max-width:700px){
+ .actions{grid-template-columns:1fr 1.2fr 1fr!important}
+ .actions button,.actions .statusSelect{font-size:11px!important;padding:11px 4px!important}
+}
 </style></head><body>
 <header><h1>🔧 Data Servis</h1><div class="grow"></div><button class="refresh" onclick="load()">↻ Refresh</button></header>
 <main>
@@ -212,13 +258,14 @@ function render(){
  $("list").innerHTML=a.length?a.map(x=>`<article class="card">
   <div class="top"><div><div class="name">${esc(x.pelanggan?.nama||x.namaPelanggan||"Pelanggan")}</div>
   <div class="small">${esc(x.nomorNota||x.idServis||"-")} • ${esc(x.tanggal||"")}</div></div>
-  <select class="statusSelect ${statusClass(x.status||"masuk")}" onchange="ubahStatus('${x.id}',this.value)">
-    ${statusOptions(x.status||"masuk")}
-  </select></div>
+  </div>
   <div class="info">📱 ${esc(x.tipe||x.tipeHp||"-")}<br>📞 ${esc(x.pelanggan?.wa||x.noHp||"-")}<br>🔧 Teknisi: ${esc(x.namaTeknisi||x.teknisi||"-")}<br>📝 ${esc(x.keluhan||x.kerusakan||"-")}<br>💰 Biaya: <b>${money(x.total??x.biaya)}</b> • DP: ${money(x.dp)}</div>
   <div class="actions">
-   <button title="Edit data" onclick="edit('${x.id}')">✏️ Edit</button>
-   <button title="Hapus data" onclick="hapus('${x.id}')">🗑️ Hapus</button>
+   <button class="btn-edit" title="Edit data" onclick="edit('${x.id}')">✏️ Edit</button>
+   <select class="statusSelect ${statusClass(x.status||"masuk")}" onchange="ubahStatus('${x.id}',this.value)" aria-label="Status servis">
+    ${statusOptions(x.status||"masuk")}
+   </select>
+   <button class="btn-delete" title="Hapus data" onclick="hapus('${x.id}')">🗑️ Hapus</button>
   </div></article>`).join(""):`<div class="empty">Tidak ada data servis.</div>`;
 }
 async function load(){
