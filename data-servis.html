@@ -47,58 +47,75 @@ input:focus,select:focus{border-color:#ffc107;box-shadow:0 0 0 3px rgba(255,193,
  .modal{padding:8px}.modalbox{padding:14px;border-radius:16px}
 }
 
-.statusSelect{border:0!important;border-radius:999px!important;padding:9px 12px!important;font-weight:900!important;font-size:12px!important;cursor:pointer!important;min-width:155px;outline:none}
-.status-masuk{background:#fef3c7!important;color:#92400e!important}
-.status-nunggu-sparepart{background:#ffedd5!important;color:#9a3412!important}
-.status-proses{background:#dbeafe!important;color:#1d4ed8!important}
-.status-selesai{background:#dcfce7!important;color:#166534!important}
-.status-diambil{background:#e0e7ff!important;color:#3730a3!important}
-.status-batal{background:#fee2e2!important;color:#b91c1c!important}
-
-/* V9: status dropdown berada di area tombol */
-.actions{
- display:grid!important;
- grid-template-columns:1fr 1.35fr 1fr!important;
- gap:8px!important;
- margin-top:14px!important;
- align-items:stretch!important;
+.statusWrap{position:relative;min-width:170px}
+.statusCurrent{
+  width:100%;display:flex;align-items:center;justify-content:space-between;gap:8px;
+  border:1px solid rgba(15,23,42,.08)!important;border-radius:13px!important;
+  padding:10px 12px!important;font-weight:900!important;font-size:12px!important;
+  cursor:pointer!important;outline:none!important;color:#111827!important;
+  box-shadow:0 2px 5px rgba(15,23,42,.08)!important;
 }
-.actions button{
- min-width:0!important;
- border-radius:12px!important;
- padding:12px 7px!important;
- font-size:12px!important;
- font-weight:900!important;
- opacity:1!important;
+.statusCurrent .statusLeft{display:flex;align-items:center;gap:7px}
+.statusCurrent .chev{font-size:12px;transition:.18s}
+.statusWrap.open .chev{transform:rotate(180deg)}
+.statusWrap.open{z-index:50}
+.statusMenu{
+  position:absolute;right:0;left:0;top:calc(100% + 7px);
+  display:none;padding:6px;background:#fff;border:1px solid #e5e7eb;
+  border-radius:14px;box-shadow:0 14px 35px rgba(15,23,42,.18);z-index:100
 }
-.actions .btn-edit{
- background:#e5e7eb!important;
- color:#111827!important;
+.statusWrap.open .statusMenu{display:block}
+.statusOption{
+  width:100%;display:flex;align-items:center;gap:8px;text-align:left;
+  border:0!important;background:#fff!important;color:#1f2937!important;
+  border-radius:10px!important;padding:10px 9px!important;font-size:12px!important;
+  font-weight:800!important;cursor:pointer!important
 }
-.actions .btn-delete{
- background:#dc2626!important;
- color:#ffffff!important;
+.statusOption:hover{background:#f3f4f6!important}
+.statusOption.active{background:#f1f5f9!important}
+.statusDot{width:9px;height:9px;border-radius:50%;flex:0 0 9px}
+.dot-masuk{background:#f59e0b}.dot-nunggu-sparepart{background:#f97316}
+.dot-proses{background:#2563eb}.dot-selesai{background:#16a34a}
+.dot-diambil{background:#6366f1}.dot-batal{background:#dc2626}
+.status-masuk{background:#fff7d6!important;color:#8a4b00!important}
+.status-nunggu-sparepart{background:#fff0e1!important;color:#9a4300!important}
+.status-proses{background:#e6f0ff!important;color:#174ea6!important}
+.status-selesai{background:#dcfce9!important;color:#126b3a!important}
+.status-diambil{background:#ecebff!important;color:#4338ca!important}
+.status-batal{background:#ffe4e4!important;color:#a40000!important}
+/* ===== CONFIRM WA POPUP ===== */
+.waModal{
+  position:fixed;inset:0;display:none;align-items:center;justify-content:center;
+  padding:18px;background:rgba(15,23,42,.68);z-index:9999;
+  backdrop-filter:blur(4px);
 }
-.actions .statusSelect{
- width:100%!important;
- min-width:0!important;
- border-radius:12px!important;
- padding:12px 8px!important;
- text-align:center!important;
- font-weight:900!important;
- font-size:12px!important;
- color:#111827!important;
- background:#f3f4f6!important;
+.waModal.show{display:flex}
+.waBox{
+  width:min(430px,100%);background:#fff;border-radius:20px;
+  box-shadow:0 18px 60px rgba(0,0,0,.28);overflow:hidden;
 }
-.actions .statusSelect.status-masuk{background:#fef3c7!important;color:#92400e!important}
-.actions .statusSelect.status-nunggu-sparepart{background:#ffedd5!important;color:#9a3412!important}
-.actions .statusSelect.status-proses{background:#dbeafe!important;color:#1d4ed8!important}
-.actions .statusSelect.status-selesai{background:#dcfce7!important;color:#166534!important}
-.actions .statusSelect.status-diambil{background:#e0e7ff!important;color:#3730a3!important}
-.actions .statusSelect.status-batal{background:#fee2e2!important;color:#b91c1c!important}
-@media(max-width:700px){
- .actions{grid-template-columns:1fr 1.2fr 1fr!important}
- .actions button,.actions .statusSelect{font-size:11px!important;padding:11px 4px!important}
+.waHead{
+  padding:16px 18px;background:#111827;color:#fff;
+  display:flex;align-items:center;gap:10px;
+}
+.waHead .waIcon{font-size:25px}
+.waHead h3{margin:0;font-size:16px}
+.waBody{padding:18px}
+.waBody p{margin:0 0 10px;color:#374151;font-size:13px;line-height:1.55}
+.waPreview{
+  background:#f3f4f6;border-radius:12px;padding:12px;
+  white-space:pre-wrap;font-size:12px;line-height:1.5;color:#1f2937;
+  max-height:190px;overflow:auto;
+}
+.waActions{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-top:15px}
+.waActions button{
+  border:0;border-radius:12px;padding:12px 9px;
+  font-weight:900;font-size:12px;cursor:pointer;
+}
+.waNo{background:#e5e7eb;color:#374151}
+.waYes{background:#16a34a;color:#fff}
+@media(max-width:600px){
+  .waBox{border-radius:18px}
 }
 </style></head><body>
 <header><h1>🔧 Data Servis</h1><div class="grow"></div><button class="refresh" onclick="load()">↻ Refresh</button></header>
@@ -132,6 +149,23 @@ input:focus,select:focus{border-color:#ffc107;box-shadow:0 0 0 3px rgba(255,193,
   </div>
  </div>
 </div>
+
+<div id="waModal" class="waModal" aria-hidden="true">
+ <div class="waBox">
+  <div class="waHead">
+   <span class="waIcon">💬</span>
+   <h3>Kirim Konfirmasi WhatsApp?</h3>
+  </div>
+  <div class="waBody">
+   <p id="waQuestion">Status sudah berhasil diperbarui. Kirim pemberitahuan kepada pelanggan?</p>
+   <div id="waPreview" class="waPreview"></div>
+   <div class="waActions">
+    <button class="waNo" onclick="batalKirimWA()">Tidak</button>
+    <button class="waYes" onclick="lanjutKirimWA()">Kirim WhatsApp</button>
+   </div>
+  </div>
+ </div>
+</div>
 <script type="module">
 import {initializeApp} from "https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js";
 import {getAuth,onAuthStateChanged} from "https://www.gstatic.com/firebasejs/11.10.0/firebase-auth.js";
@@ -156,9 +190,14 @@ function waNumber(v){
  if(raw.startsWith("62"))return raw;
  return raw;
 }
+let waPending=null;
+
 function waStatus(status,item){
  const n=waNumber(item.pelanggan?.wa||item.noHp);
- if(!n){alert("Nomor WhatsApp pelanggan belum ada.");return;}
+ if(!n){
+  alert("Nomor WhatsApp pelanggan belum ada.");
+  return;
+ }
 
  const label={
   masuk:"HP sudah diterima",
@@ -189,14 +228,36 @@ Jika ada yang ingin ditanyakan, silakan hubungi kami.
 
 Terima kasih 🙏`;
 
+ waPending={number:n,text};
+ $("waPreview").textContent=text;
+ $("waQuestion").textContent=`Status ${label.toLowerCase()}. Kirim konfirmasi WhatsApp kepada ${nama}?`;
+ $("waModal").classList.add("show");
+ $("waModal").setAttribute("aria-hidden","false");
+}
+
+window.batalKirimWA=()=>{
+ waPending=null;
+ $("waModal").classList.remove("show");
+ $("waModal").setAttribute("aria-hidden","true");
+};
+
+window.lanjutKirimWA=()=>{
+ if(!waPending){batalKirimWA();return}
+ const {number,text}=waPending;
  const encoded=encodeURIComponent(text);
  const isDesktop=!/Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent);
  const url=isDesktop
-   ? "https://web.whatsapp.com/send?phone="+n+"&text="+encoded
-   : "https://wa.me/"+n+"?text="+encoded;
+   ?"https://web.whatsapp.com/send?phone="+number+"&text="+encoded
+   :"https://wa.me/"+number+"?text="+encoded;
+ $("waModal").classList.remove("show");
+ $("waModal").setAttribute("aria-hidden","true");
  window.open(url,"_blank");
-}
+ waPending=null;
+};
 
+document.addEventListener("keydown",e=>{
+ if(e.key==="Escape" && $("waModal")?.classList.contains("show")) batalKirimWA();
+});
 async function loadAccountProfile(user){
  accountName=(user?.displayName||"").trim();
  try{
@@ -251,6 +312,41 @@ window.saveEdit=async()=>{
 const STATUS=[["masuk","Masuk"],["nunggu-sparepart","Nunggu Sparepart"],["proses","Proses"],["selesai","Selesai"],["diambil","Diambil"],["batal","Batal"]];
 function statusClass(v){return "status-"+String(v||"masuk").toLowerCase().replace(/[^a-z0-9]+/g,"-")}
 function statusOptions(current){return STATUS.map(([v,l])=>`<option value="${v}" ${v===current?"selected":""}>${l}</option>`).join("")}
+
+function statusInfo(v){
+ const k=String(v||"masuk");
+ const found=STATUS.find(a=>a[0]===k);
+ return {key:k,label:found?found[1]:k};
+}
+function statusDropdown(x){
+ const cur=statusInfo(x.status||"masuk");
+ const opts=STATUS.map(([v,l])=>`
+  <button type="button" class="statusOption ${v===cur.key?"active":""}"
+    onclick="ubahStatusMenu('${x.id}','${v}')">
+    <span class="statusDot dot-${v}"></span>${l}
+  </button>`).join("");
+ return `<div class="statusWrap" id="sw-${x.id}">
+   <button type="button" class="statusCurrent status-${cur.key}"
+     onclick="toggleStatusMenu('${x.id}')">
+     <span class="statusLeft"><span class="statusDot dot-${cur.key}"></span>${cur.label}</span>
+     <span class="chev">⌄</span>
+   </button>
+   <div class="statusMenu">${opts}</div>
+ </div>`;
+}
+window.toggleStatusMenu=id=>{
+ const el=$("sw-"+id); if(!el)return;
+ document.querySelectorAll(".statusWrap.open").forEach(x=>{if(x!==el)x.classList.remove("open")});
+ el.classList.toggle("open");
+};
+window.ubahStatusMenu=async(id,s)=>{
+ const el=$("sw-"+id);if(el)el.classList.remove("open");
+ await window.ubahStatus(id,s);
+};
+document.addEventListener("click",e=>{
+ if(!e.target.closest(".statusWrap"))
+   document.querySelectorAll(".statusWrap.open").forEach(x=>x.classList.remove("open"));
+});
 function render(){
  const q=$("search").value.toLowerCase(), f=$("filter").value;
  const a=rows.filter(x=> (f==="semua" || String(x.status||"masuk")===f) && (!q || JSON.stringify(x).toLowerCase().includes(q)));
@@ -258,14 +354,11 @@ function render(){
  $("list").innerHTML=a.length?a.map(x=>`<article class="card">
   <div class="top"><div><div class="name">${esc(x.pelanggan?.nama||x.namaPelanggan||"Pelanggan")}</div>
   <div class="small">${esc(x.nomorNota||x.idServis||"-")} • ${esc(x.tanggal||"")}</div></div>
-  </div>
+  ${statusDropdown(x)} </div>
   <div class="info">📱 ${esc(x.tipe||x.tipeHp||"-")}<br>📞 ${esc(x.pelanggan?.wa||x.noHp||"-")}<br>🔧 Teknisi: ${esc(x.namaTeknisi||x.teknisi||"-")}<br>📝 ${esc(x.keluhan||x.kerusakan||"-")}<br>💰 Biaya: <b>${money(x.total??x.biaya)}</b> • DP: ${money(x.dp)}</div>
   <div class="actions">
-   <button class="btn-edit" title="Edit data" onclick="edit('${x.id}')">✏️ Edit</button>
-   <select class="statusSelect ${statusClass(x.status||"masuk")}" onchange="ubahStatus('${x.id}',this.value)" aria-label="Status servis">
-    ${statusOptions(x.status||"masuk")}
-   </select>
-   <button class="btn-delete" title="Hapus data" onclick="hapus('${x.id}')">🗑️ Hapus</button>
+   <button title="Edit data" onclick="edit('${x.id}')">✏️ Edit</button>
+   <button title="Hapus data" onclick="hapus('${x.id}')">🗑️ Hapus</button>
   </div></article>`).join(""):`<div class="empty">Tidak ada data servis.</div>`;
 }
 async function load(){
