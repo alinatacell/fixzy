@@ -1,0 +1,455 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<meta name="theme-color" content="#FFC107">
+<title>FIXZY - Dashboard Admin FIX</title>
+<style>
+*{box-sizing:border-box}html,body{margin:0;font-family:Inter,Arial,sans-serif;background:#f3f4f6;color:#111827}
+button,input,select{font:inherit}button{cursor:pointer}
+.top{position:sticky;top:0;z-index:50;background:#0f172a;color:#fff;padding:12px 16px;display:flex;align-items:center;justify-content:space-between}
+.brand{font-weight:900;font-size:20px}.brand b{color:#fbbf24}.user{font-size:11px;color:#cbd5e1}
+.wrap{max-width:1250px;margin:auto;padding:12px 12px 40px}
+.hero{background:linear-gradient(135deg,#0f172a,#334155);color:#fff;border-radius:20px;padding:22px;margin-bottom:12px}
+.hero h1{margin:0;font-size:24px}.hero p{margin:8px 0 0;color:#cbd5e1;font-size:13px;line-height:1.5}
+.tabs{display:flex;gap:6px;overflow:auto;background:#fff;border-radius:14px;padding:6px;margin-bottom:12px;box-shadow:0 5px 20px rgba(0,0,0,.05);scrollbar-width:none}
+.tab{border:0;background:#f1f5f9;color:#475569;border-radius:10px;padding:11px 14px;white-space:nowrap;font-weight:800;font-size:12px}
+.tab.active{background:#0f172a;color:#fff}
+.panel{display:none}.panel.active{display:block}
+.filters{display:grid;grid-template-columns:2fr 1fr 1fr auto;gap:8px;background:#fff;padding:12px;border-radius:14px;margin-bottom:12px;box-shadow:0 5px 20px rgba(0,0,0,.05)}
+input,select{border:1px solid #cbd5e1;border-radius:10px;padding:10px;background:#fff;min-width:0}
+.btn{border:0;border-radius:10px;padding:10px 14px;font-weight:800}.btn-dark{background:#0f172a;color:#fff}.btn-light{background:#e5e7eb}
+.cards{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:12px}
+.card{background:#fff;border-radius:16px;padding:16px;box-shadow:0 5px 20px rgba(0,0,0,.05)}
+.card small{display:block;color:#64748b;font-size:11px;font-weight:700;letter-spacing:.3px;text-transform:uppercase}.card b{display:block;font-size:20px;margin-top:6px}
+.card.highlight{background:#0f172a;color:#fff}.card.highlight small{color:#94a3b8}.card.highlight b{color:#fff}
+.card.profit{background:linear-gradient(135deg,#16a34a,#15803d);color:#fff}.card.profit small{color:#bbf7d0}
+.card.loss{background:linear-gradient(135deg,#dc2626,#991b1b);color:#fff}.card.loss small{color:#fecaca}
+.table-card{background:#fff;border-radius:16px;box-shadow:0 5px 20px rgba(0,0,0,.05);overflow:hidden}.table-wrap{overflow:auto}
+table{width:100%;border-collapse:collapse;min-width:850px}th,td{padding:11px 10px;border-bottom:1px solid #f1f5f9;text-align:left;font-size:12px}th{background:#f8fafc;font-size:11px;text-transform:uppercase;letter-spacing:.5px;color:#475569}.num{text-align:right;font-weight:700}
+.badge{display:inline-block;padding:5px 9px;border-radius:999px;font-size:10px;font-weight:800}.ok{background:#dcfce7;color:#166534}.wait{background:#fef3c7;color:#92400e}.bad{background:#fee2e2;color:#991b1b}.kasbon{background:#fee2e2;color:#dc2626;border:1px solid #fecaca}
+.chart{height:260px;padding:14px}.bars{height:200px;display:flex;align-items:end;gap:6px;border-bottom:1px solid #e2e8f0;padding:0 6px}.bar{flex:1;min-width:6px;background:#f59e0b;border-radius:6px 6px 0 0;position:relative;transition:.3s}.bar.profit-bar{background:#16a34a}.bar.loss-bar{background:#ef4444}.bar span{position:absolute;bottom:-22px;left:50%;transform:translateX(-50%);font-size:9px;color:#64748b;white-space:nowrap}.legend{font-size:11px;color:#64748b;margin-top:26px;line-height:1.5}
+.year-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}.month-card{background:#fff;border-radius:14px;padding:14px;box-shadow:0 5px 18px rgba(0,0,0,.05)}.month-card h3{margin:0 0 10px;font-size:13px}.money{display:flex;justify-content:space-between;font-size:11px;padding:4px 0;border-bottom:1px dashed #f1f5f9}.money:last-child{border:0}.money b{font-size:12px}
+.empty{text-align:center;color:#64748b;padding:40px}
+.wage-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:12px;flex-wrap:wrap}
+.wage-form{display:grid;grid-template-columns:1.4fr 1fr auto;gap:8px;background:#fff;padding:12px;border-radius:14px;margin-bottom:12px;box-shadow:0 5px 20px rgba(0,0,0,.05)}
+.wage-note{font-size:11px;color:#64748b;line-height:1.5;margin:8px 0;background:#fff7ed;padding:10px 12px;border-radius:10px;border:1px solid #ffedd5}
+.wage-actions{display:flex;gap:6px;flex-wrap:wrap}.btn-danger{background:#fee2e2;color:#991b1b}.btn-edit{background:#fef3c7;color:#92400e}
+.alert{padding:12px 14px;border-radius:12px;font-size:12px;margin-bottom:12px}.alert-info{background:#eff6ff;color:#1e40af;border:1px solid #bfdbfe}
+@media(max-width:800px){.cards{grid-template-columns:1fr 1fr}.year-grid{grid-template-columns:1fr 1fr}.filters{grid-template-columns:1fr 1fr}.filters input{grid-column:1/-1}.filters .btn{grid-column:1/-1}}
+@media(max-width:520px){.cards,.year-grid{grid-template-columns:1fr}.tab{padding:10px 11px}.user{display:none}.wage-form{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<header class="top">
+  <div class="brand" id="brand">FIXZY <b>ADMIN</b></div>
+  <div style="display:flex;align-items:center;gap:8px">
+    <span class="user" id="userInfo">Memuat...</span>
+    <button id="btnRefreshPage" onclick="location.reload()" style="border:0;background:#1e293b;color:#fff;padding:9px 13px;border-radius:10px;font-weight:700;font-size:13px">↻ Refresh</button>
+    <button onclick="tutupHalaman()" style="border:0;background:#334155;color:#fff;padding:9px 13px;border-radius:10px;font-weight:800">✕</button>
+  </div>
+</header>
+
+<main class="wrap">
+  <section class="hero">
+    <h1>Ringkasan Toko - FIXZY</h1>
+    <p><b>FIX v2:</b> Sekarang sudah hitung <b>Pengeluaran Toko</b> + <b>Kasbon Karyawan otomatis potong Upah</b>. Laba bersih = Pemasukan - Pengeluaran Lain - Total Upah Bruto (agar kasbon tidak double).</p>
+  </section>
+
+  <div class="tabs">
+    <button class="tab active" data-tab="ringkasan">📊 Ringkasan</button>
+    <button class="tab" data-tab="keuangan">💰 Keuangan Bulanan</button>
+    <button class="tab" data-tab="upah">👷 Upah Karyawan</button>
+    <button class="tab" data-tab="servis">🔧 Servis</button>
+    <button class="tab" data-tab="penjualan">🛒 Penjualan</button>
+    <button class="tab" data-tab="karyawan">👥 Karyawan</button>
+  </div>
+
+  <!-- RINGKASAN -->
+  <div id="ringkasan" class="panel active">
+    <div class="filters">
+      <input id="periodeRingkasan" type="month">
+      <select id="filterTeknisiRingkasan"><option value="">Semua Teknisi</option></select>
+      <button class="btn btn-dark" onclick="renderRingkasan()">Tampilkan</button>
+    </div>
+    <div class="cards">
+      <div class="card"><small>Total Pemasukan</small><b id="rPemasukan">Rp 0</b><div id="rPemasukanDetail" style="font-size:10px;color:#64748b;margin-top:4px"></div></div>
+      <div class="card"><small>Pengeluaran Lain</small><b id="rPengeluaran" style="color:#dc2626">Rp 0</b><div id="rPengeluaranDetail" style="font-size:10px;color:#64748b;margin-top:4px"></div></div>
+      <div class="card"><small>Total Upah Bruto</small><b id="rUpah">Rp 0</b><div id="rUpahDetail" style="font-size:10px;color:#64748b;margin-top:4px"></div></div>
+      <div class="card" id="cardLaba"><small>Laba Bersih</small><b id="rLaba">Rp 0</b><div id="rLabaDetail" style="font-size:10px;margin-top:4px"></div></div>
+    </div>
+    <div class="cards">
+      <div class="card"><small>Kasbon Bulan Ini</small><b id="rKasbon" style="color:#dc2626">Rp 0</b></div>
+      <div class="card"><small>Total Servis</small><b id="rJmlServis">0</b></div>
+      <div class="card"><small>Total Penjualan</small><b id="rJmlJual">0</b></div>
+      <div class="card"><small>Sisa Upah Dibayar</small><b id="rSisaUpah">Rp 0</b></div>
+    </div>
+    <div class="table-card">
+      <div class="table-wrap"><table><thead><tr><th>Metrik</th><th class="num">Nilai</th><th>Keterangan</th></tr></thead><tbody id="ringkasanBody"></tbody></table></div>
+    </div>
+  </div>
+
+  <!-- KEUANGAN -->
+  <div id="keuangan" class="panel">
+    <div class="alert alert-info">Keuangan sekarang sudah termasuk <b>pengeluaran toko</b>. Bar hijau = untung, merah = rugi. Kasbon tidak dihitung sebagai biaya tambahan, hanya pengurang kas di upah.</div>
+    <div class="filters">
+      <select id="yearSelect"></select>
+      <button class="btn btn-dark" onclick="renderKeuangan()">Tampilkan</button>
+    </div>
+    <div class="table-card">
+      <div class="chart"><div class="bars" id="keuanganBars"></div><div class="legend" id="keuanganLegend"></div></div>
+    </div>
+    <div class="year-grid" id="yearGrid" style="margin-top:12px"></div>
+  </div>
+
+  <!-- UPAH -->
+  <div id="upah" class="panel">
+    <div class="wage-head">
+      <h2 style="margin:0;font-size:18px">👷 Upah Karyawan (Otomatis Potong Kasbon)</h2>
+      <input type="month" id="wMonth">
+    </div>
+    <div class="wage-note">
+      <b>Aturan Baru FIX:</b><br>
+      1. Hadir = 1 teknisi mengerjakan banyak nota di tanggal sama = 1 hari.<br>
+      2. Upah Bruto = Upah/hari × Hari Hadir.<br>
+      3. Kasbon Bulan Ini diambil dari collection <code>pengeluaran</code> jenis "Kasbon Karyawan".<br>
+      4. <b>Sisa Upah = Upah Bruto - Kasbon</b>. Jika kasbon > bruto, sisa 0 (tidak minus).<br>
+      5. Laba toko tetap hitung upah bruto, bukan sisa, agar tidak double.
+    </div>
+    <div class="filters">
+      <input id="wSearch" placeholder="Cari nama karyawan..." oninput="renderUpah()">
+      <input id="wName" placeholder="Nama karyawan/teknisi">
+      <input id="wRate" type="number" placeholder="Upah per hari">
+      <button class="btn btn-dark" id="wSaveBtn" onclick="saveWage()">+ Simpan Upah</button>
+    </div>
+    <div class="cards">
+      <div class="card"><small>Periode</small><b id="wPeriod">-</b></div>
+      <div class="card"><small>Total Karyawan</small><b id="wCount">0</b></div>
+      <div class="card"><small>Total Hari Hadir</small><b id="wAttendance">0</b></div>
+      <div class="card highlight"><small>Total Sisa Upah Dibayar</small><b id="wTotal">Rp 0</b></div>
+    </div>
+    <div class="table-card wage-table"><div class="table-wrap"><table><thead><tr><th>Nama</th><th class="num">Upah/Hari</th><th class="num">Hadir</th><th class="num">Kasbon</th><th class="num">Bruto</th><th class="num">Sisa Dibayar</th><th>Aksi</th></tr></thead><tbody id="wBody"></tbody></table></div></div>
+  </div>
+
+  <!-- SERVIS -->
+  <div id="servis" class="panel"><div class="table-card"><div class="table-wrap"><table><thead><tr><th>Tanggal</th><th>Teknisi</th><th>Pelanggan</th><th>Status</th><th class="num">Total</th></tr></thead><tbody id="servisBody"></tbody></table></div></div></div>
+  <!-- PENJUALAN -->
+  <div id="penjualan" class="panel"><div class="table-card"><div class="table-wrap"><table><thead><tr><th>Tanggal</th><th>Item</th><th class="num">Total</th></tr></thead><tbody id="penjualanBody"></tbody></table></div></div></div>
+  <!-- KARYAWAN -->
+  <div id="karyawan" class="panel">
+    <div class="cards"><div class="card"><small>Total Karyawan</small><b id="kCount">0</b></div><div class="card"><small>Teknisi</small><b id="kTeknisi">0</b></div><div class="card"><small>Aktif</small><b id="kAktif">0</b></div></div>
+    <div class="table-card"><div class="table-wrap"><table><thead><tr><th>Nama</th><th>Jabatan</th><th>WA</th><th>Status</th></tr></thead><tbody id="kBody"></tbody></table></div></div>
+  </div>
+</main>
+
+<script type="module">
+import {initializeApp} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import {getFirestore,collection,getDocs,doc,getDoc} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import {getAuth,onAuthStateChanged} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+
+const firebaseConfig={
+  apiKey:"AIzaSyCwMbJsuORhIq4QCmp4c1r6OsjAUlfxU5Y",
+  authDomain:"fixzy-f056f.firebaseapp.com",
+  projectId:"fixzy-f056f",
+  storageBucket:"fixzy-f056f.firebasestorage.app",
+  messagingSenderId:"838081521031",
+  appId:"1:838081521031:web:50fdee909b56460b055f22"
+};
+const app=initializeApp(firebaseConfig);
+const db=getFirestore(app);
+const auth=getAuth(app);
+
+let servis=[], penjualan=[], karyawan=[], pengeluaran=[], stock=[];
+let uid=null;
+const WAGE_KEY="fixzy_upah_v2";
+
+const $=id=>document.getElementById(id);
+const num=v=>{const n=Number(String(v||0).replace(/[^0-9.-]/g,"")); return isNaN(n)?0:n;};
+const money=n=>"Rp "+Number(n||0).toLocaleString("id-ID");
+const esc=s=>String(s||"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const dateOf=r=>String(r.tanggal||r.tgl||r.date||r.createdAtStr||"").slice(0,10);
+const active=r=>{const s=String(r.status||"").toLowerCase(); return !["batal","cancel","dibatalkan"].includes(s);};
+
+function profile(){ try{return JSON.parse(localStorage.getItem("fixzy_profile")||"{}")}catch{return{}} }
+function storeNameFromProfile(p){return p.namaKonter||p.namaToko||p.namaUsaha||"FIXZY";}
+function accountNameFromProfile(p){return p.namaPemilik||p.nama||"Admin";}
+async function loadRegisteredProfile(user){ try{const snap=await getDoc(doc(db,"users",user.uid)); if(snap.exists()) return snap.data();}catch(e){} return profile(); }
+
+function wageStorageKey(){ const accountId=uid||"anon"; return WAGE_KEY+"_"+String(accountId).replace(/[^a-zA-Z0-9._-]/g,"_"); }
+function getWages(){ try{ const key=wageStorageKey(); const cur=JSON.parse(localStorage.getItem(key)||"{}"); if(Object.keys(cur).length) return cur; const legacy=JSON.parse(localStorage.getItem(WAGE_KEY)||"{}"); if(Object.keys(legacy).length){localStorage.setItem(key,JSON.stringify(legacy)); return legacy;} return {};}catch{return{}} }
+
+async function loadFirebaseData(){
+  const [sSnap,pSnap,kSnap,pgSnap] = await Promise.all([
+    getDocs(collection(db,"servis")),
+    getDocs(collection(db,"penjualan")),
+    getDocs(collection(db,"karyawan")),
+    getDocs(collection(db,"pengeluaran"))
+  ]);
+  servis=sSnap.docs.map(d=>({id:d.id,...d.data()}));
+  penjualan=pSnap.docs.map(d=>({id:d.id,...d.data()}));
+  karyawan=kSnap.docs.map(d=>({id:d.id,...d.data()}));
+  pengeluaran=pgSnap.docs.map(d=>({id:d.id,...d.data()}));
+  try{ const stSnap=await getDocs(collection(db,"stock")); stock=stSnap.docs.map(d=>({id:d.id,...d.data()})); }catch{}
+}
+
+function getKasbonMap(period){
+  const map={};
+  pengeluaran.filter(r=>String(r.tanggal||"").startsWith(period) && String(r.jenis).toLowerCase().includes("kasbon"))
+    .forEach(r=>{
+      const name=String(r.namaKaryawan||"").trim();
+      if(!name) return;
+      map[name]=(map[name]||0)+num(r.nominal);
+    });
+  return map;
+}
+
+function hitungHadir(period){
+  const hadir={};
+  servis.filter(r=>active(r)&&dateOf(r).startsWith(period)).forEach(r=>{
+    const name=String(r.teknisi||"").trim();
+    const d=dateOf(r);
+    if(!name||!d) return;
+    if(!hadir[name]) hadir[name]=new Set();
+    hadir[name].add(d);
+  });
+  return hadir;
+}
+
+function renderRingkasan(){
+  const period=$("periodeRingkasan").value || new Date().toISOString().slice(0,7);
+  const teknisiFilter=$("filterTeknisiRingkasan").value;
+
+  let servisF=servis.filter(r=>active(r)&&dateOf(r).startsWith(period));
+  if(teknisiFilter) servisF=servisF.filter(r=>String(r.teknisi||"").toLowerCase()===teknisiFilter.toLowerCase());
+  const jualF=penjualan.filter(r=>String(r.tanggal||r.date||"").startsWith(period));
+  const keluarF=pengeluaran.filter(r=>String(r.tanggal||"").startsWith(period));
+
+  const omsetServis=servisF.reduce((s,r)=>s+num(r.total||r.biaya||r.harga||0),0);
+  const omsetJual=jualF.reduce((s,r)=>s+num(r.total||r.grandTotal||0),0);
+  const totalPemasukan=omsetServis+omsetJual;
+
+  const pengeluaranLain=keluarF.filter(r=>!String(r.jenis||"").toLowerCase().includes("kasbon")).reduce((s,r)=>s+num(r.nominal),0);
+  const totalKasbon=keluarF.filter(r=>String(r.jenis||"").toLowerCase().includes("kasbon")).reduce((s,r)=>s+num(r.nominal),0);
+
+  const hadir=hitungHadir(period);
+  const wages=getWages();
+  let totalUpahBruto=0;
+  Object.keys(wages).forEach(name=>{
+    const rate=num(wages[name]);
+    const att=hadir[name]?hadir[name].size:0;
+    totalUpahBruto+=rate*att;
+  });
+  // jika teknisi belum set upah tapi ada hadir, hitung 0
+  // karyawan hadir tapi belum ada upah tetap kehitung hadir saja
+
+  const labaBersih = totalPemasukan - pengeluaranLain - totalUpahBruto;
+  // Sisa kas = laba - kasbon sudah keluar? kasbon sudah mengurangi kas, tapi laba di atas sudah benar tanpa kasbon
+  // Untuk info arus kas:
+  const arusKasBersih = totalPemasukan - pengeluaranLain - totalKasbon - Object.values(getKasbonMap(period)).reduce((a,b)=>a+b,0) + totalKasbon; // simplified to laba - kasbon? keep simple
+  // final
+  const totalSisaUpah = (()=>{ let t=0; const km=getKasbonMap(period); Object.keys(wages).forEach(n=>{ const bruto=num(wages[n])*(hadir[n]?.size||0); t+=Math.max(0,bruto-(km[n]||0)); }); return t; })();
+
+  $("rPemasukan").textContent=money(totalPemasukan);
+  $("rPemasukanDetail").textContent=`Servis ${money(omsetServis)} + Jual ${money(omsetJual)}`;
+  $("rPengeluaran").textContent=money(pengeluaranLain);
+  $("rPengeluaranDetail").textContent=`${keluarF.filter(r=>!String(r.jenis).toLowerCase().includes("kasbon")).length} transaksi (tanpa kasbon)`;
+  $("rUpah").textContent=money(totalUpahBruto);
+  $("rUpahDetail").textContent=`Bruto, belum potong kasbon`;
+  $("rKasbon").textContent=money(totalKasbon);
+  $("rJmlServis").textContent=servisF.length;
+  $("rJmlJual").textContent=jualF.length;
+  $("rSisaUpah").textContent=money(totalSisaUpah);
+
+  const cardLaba=$("cardLaba");
+  $("rLaba").textContent=money(labaBersih);
+  if(labaBersih>=0){ cardLaba.className="card profit"; $("rLabaDetail").textContent="Untung"; } else { cardLaba.className="card loss"; $("rLabaDetail").textContent="Rugi"; }
+
+  $("ringkasanBody").innerHTML=`
+    <tr><td>Total Pemasukan</td><td class="num">${money(totalPemasukan)}</td><td>Omset servis + penjualan</td></tr>
+    <tr><td>Pengeluaran Lain</td><td class="num" style="color:#dc2626">${money(pengeluaranLain)}</td><td>Makan, Belanja, Listrik, dll (tanpa kasbon)</td></tr>
+    <tr><td>Upah Bruto Karyawan</td><td class="num">${money(totalUpahBruto)}</td><td>Rate x hadir (kasbon belum dipotong di laba)</td></tr>
+    <tr><td><b>Laba Bersih</b></td><td class="num"><b>${money(labaBersih)}</b></td><td><b>Pemasukan - Pengeluaran Lain - Upah Bruto</b></td></tr>
+    <tr><td>Kasbon Bulan Ini</td><td class="num" style="color:#dc2626">${money(totalKasbon)}</td><td>Uang muka karyawan, mengurangi kas tapi bukan biaya tambahan</td></tr>
+    <tr><td>Sisa Upah Harus Dibayar</td><td class="num"><b>${money(totalSisaUpah)}</b></td><td>Bruto - Kasbon per karyawan</td></tr>
+  `;
+}
+
+function renderKeuangan(){
+  const year=Number($("yearSelect").value||new Date().getFullYear());
+  const months=[...Array(12)].map((_,i)=>`${year}-${String(i+1).padStart(2,"0")}`);
+  const data=months.map(m=>{
+    const s=servis.filter(r=>active(r)&&dateOf(r).startsWith(m)).reduce((a,r)=>a+num(r.total||r.biaya||0),0);
+    const j=penjualan.filter(r=>String(r.tanggal||"").startsWith(m)).reduce((a,r)=>a+num(r.total||0),0);
+    const pLain=pengeluaran.filter(r=>String(r.tanggal||"").startsWith(m)&&!String(r.jenis).toLowerCase().includes("kasbon")).reduce((a,r)=>a+num(r.nominal),0);
+    const hadir=hitungHadir(m);
+    const wages=getWages();
+    let upahBruto=0;
+    Object.keys(wages).forEach(n=>{ upahBruto+=num(wages[n])*(hadir[n]?.size||0); });
+    const pemasukan=s+j;
+    const laba=pemasukan-pLain-upahBruto;
+    return {month:m, pemasukan, pengeluaran:pLain, upah:upahBruto, laba, servis:s, jual:j};
+  });
+
+  const maxVal=Math.max(...data.map(d=>Math.max(d.pemasukan,d.laba,1)),1);
+  $("keuanganBars").innerHTML=data.map(d=>{
+    const hP=Math.max(4,(d.pemasukan/maxVal)*180);
+    const hL=Math.max(4,Math.abs(d.laba)/maxVal*180);
+    const isProfit=d.laba>=0;
+    return `<div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px">
+      <div style="display:flex;gap:2px;align-items:end;height:200px">
+        <div class="bar" style="height:${hP}px" title="Pemasukan ${money(d.pemasukan)}"></div>
+        <div class="bar ${isProfit?'profit-bar':'loss-bar'}" style="height:${hL}px" title="Laba ${money(d.laba)}"></div>
+      </div>
+      <span>${d.month.slice(5)}</span>
+    </div>`;
+  }).join("");
+  $("keuanganLegend").textContent=`Tahun ${year} | Kuning = Pemasukan, Hijau/Merah = Laba Bersih (Pemasukan - Pengeluaran Lain - Upah Bruto)`;
+  $("yearGrid").innerHTML=data.map(d=>`
+    <div class="month-card">
+      <h3>${d.month}</h3>
+      <div class="money"><span>Pemasukan</span><b>${money(d.pemasukan)}</b></div>
+      <div class="money"><span>Servis</span><b>${money(d.servis)}</b></div>
+      <div class="money"><span>Penjualan</span><b>${money(d.jual)}</b></div>
+      <div class="money"><span>Pengeluaran Lain</span><b style="color:#dc2626">${money(d.pengeluaran)}</b></div>
+      <div class="money"><span>Upah Bruto</span><b>${money(d.upah)}</b></div>
+      <div class="money"><span>Laba Bersih</span><b style="color:${d.laba>=0?'#16a34a':'#dc2626'}">${money(d.laba)}</b></div>
+    </div>
+  `).join("");
+}
+
+function renderUpah(){
+  const w=getWages();
+  const period=$("wMonth").value||new Date().toISOString().slice(0,7);
+  const search=($("wSearch").value||"").toLowerCase().trim();
+  const hadir=hitungHadir(period);
+  const kasbonMap=getKasbonMap(period);
+
+  let names=[...new Set([...Object.keys(w),...Object.keys(hadir),...Object.keys(kasbonMap)])]
+    .filter(name=>!search||name.toLowerCase().includes(search))
+    .sort((a,b)=>a.localeCompare(b));
+
+  let totalSisa=0,attendance=0;
+
+  $("wPeriod").textContent=period;
+  $("wCount").textContent=names.length;
+
+  $("wBody").innerHTML=names.map(name=>{
+    const rate=num(w[name]);
+    const att=hadir[name]?hadir[name].size:0;
+    const kasbon=kasbonMap[name]||0;
+    const bruto=rate*att;
+    const sisa=Math.max(0,bruto-kasbon);
+    totalSisa+=sisa;
+    attendance+=att;
+    return `<tr>
+      <td><b>${esc(name)}</b></td>
+      <td class="num">${money(rate)}</td>
+      <td class="num">${att} hari</td>
+      <td class="num"><span class="badge kasbon">-${money(kasbon)}</span></td>
+      <td class="num">${money(bruto)}</td>
+      <td class="num"><b>${money(sisa)}</b></td>
+      <td><div class="wage-actions">
+        <button class="btn btn-edit" onclick='editWage(${JSON.stringify(name)})'>Edit</button>
+        <button class="btn btn-danger" onclick='deleteWage(${JSON.stringify(name)})'>Hapus</button>
+      </div></td>
+    </tr>`;
+  }).join("")||'<tr><td colspan="7" class="empty">Belum ada data upah / hadir di periode ini.</td></tr>';
+
+  $("wAttendance").textContent=attendance;
+  $("wTotal").textContent=money(totalSisa);
+}
+
+window.saveWage=function(){
+  const name=$("wName").value.trim();
+  const rate=num($("wRate").value);
+  if(!name){alert("Isi nama karyawan/teknisi.");return;}
+  if(rate<0){alert("Nominal upah tidak valid.");return;}
+  const w=getWages();
+  w[name]=rate;
+  localStorage.setItem(wageStorageKey(),JSON.stringify(w));
+  $("wName").value="";$("wRate").value="";
+  $("wSaveBtn").textContent="+ Simpan Upah";
+  renderUpah(); renderRingkasan();
+};
+window.editWage=function(name){
+  const w=getWages();
+  $("wName").value=name;
+  $("wRate").value=num(w[name]);
+  $("wName").focus();
+  $("wSaveBtn").textContent="✓ Update Upah";
+};
+window.deleteWage=function(name){
+  if(!confirm("Hapus data upah untuk "+name+"?"))return;
+  const w=getWages(); delete w[name];
+  localStorage.setItem(wageStorageKey(),JSON.stringify(w));
+  renderUpah(); renderRingkasan();
+};
+
+function renderServis(){
+  const list=[...servis].sort((a,b)=>dateOf(b).localeCompare(dateOf(a))).slice(0,100);
+  $("servisBody").innerHTML=list.map(r=>`<tr><td>${esc(dateOf(r))}</td><td>${esc(r.teknisi||"-")}</td><td>${esc(r.nama||r.pelanggan||"-")}</td><td><span class="badge ${active(r)?'ok':'bad'}">${esc(r.status||"Selesai")}</span></td><td class="num">${money(r.total||r.biaya||0)}</td></tr>`).join("")||'<tr><td colspan="5" class="empty">Belum ada servis</td></tr>';
+}
+function renderPenjualan(){
+  const list=[...penjualan].sort((a,b)=>String(b.tanggal||"").localeCompare(String(a.tanggal||""))).slice(0,100);
+  $("penjualanBody").innerHTML=list.map(r=>`<tr><td>${esc(r.tanggal||"-")}</td><td>${esc(r.namaBarang||r.item||r.produk||"-")}</td><td class="num">${money(r.total||0)}</td></tr>`).join("")||'<tr><td colspan="3" class="empty">Belum ada penjualan</td></tr>';
+}
+function renderKaryawan(){
+ $("kCount").textContent=karyawan.length;
+ $("kTeknisi").textContent=karyawan.filter(x=>/teknisi/i.test(String(x.jabatan||x.posisi||x.role||""))).length;
+ $("kAktif").textContent=karyawan.filter(x=>String(x.status||"aktif").toLowerCase()!=="nonaktif").length;
+ $("kBody").innerHTML=karyawan.map(x=>`<tr>
+ <td><b>${esc(x.nama||x.namaKaryawan||"-")}</b></td>
+ <td>${esc(x.jabatan||x.posisi||"-")}</td>
+ <td>${esc(x.wa||x.whatsapp||"-")}</td>
+ <td>${esc(x.status||"Aktif")}</td>
+ </tr>`).join("")||'<tr><td colspan="4" class="empty">Belum ada data karyawan.</td></tr>';
+}
+
+function setupYears(){
+  const cur=new Date().getFullYear();
+  const sel=$("yearSelect");
+  if(sel) sel.innerHTML=[cur-1,cur,cur+1,cur+2].map(y=>`<option value="${y}" ${y===cur?'selected':''}>${y}</option>`).join("");
+  const techSet=[...new Set(servis.map(s=>String(s.teknisi||"").trim()).filter(Boolean))].sort();
+  const selT=$("filterTeknisiRingkasan");
+  if(selT){ selT.innerHTML='<option value="">Semua Teknisi</option>'+techSet.map(t=>`<option value="${esc(t)}">${esc(t)}</option>`).join(""); }
+}
+
+function renderAll(){ renderRingkasan(); renderServis(); renderPenjualan(); renderKaryawan(); renderKeuangan(); renderUpah(); }
+
+document.querySelectorAll(".tab").forEach(btn=>btn.onclick=()=>{
+  document.querySelectorAll(".tab").forEach(x=>x.classList.remove("active"));
+  document.querySelectorAll(".panel").forEach(x=>x.classList.remove("active"));
+  btn.classList.add("active");
+  $(btn.dataset.tab).classList.add("active");
+  if(btn.dataset.tab==="keuangan") renderKeuangan();
+  if(btn.dataset.tab==="upah") renderUpah();
+  if(btn.dataset.tab==="ringkasan") renderRingkasan();
+});
+$("periodeRingkasan").value=new Date().toISOString().slice(0,7);
+$("wMonth").value=new Date().toISOString().slice(0,7);
+$("periodeRingkasan").onchange=renderRingkasan;
+
+onAuthStateChanged(auth,async user=>{
+  if(!user){
+    uid=null;
+    $("brand").textContent=storeNameFromProfile(profile());
+    $("userInfo").textContent=accountNameFromProfile(profile());
+    setupYears(); renderAll(); return;
+  }
+  uid=user.uid;
+  const p=await loadRegisteredProfile(user);
+  $("brand").textContent=p.namaKonter||p.namaToko||"FIXZY";
+  $("userInfo").textContent=p.namaPemilik||p.nama||user.email||"Admin";
+  await loadFirebaseData();
+  setupYears(); renderAll();
+});
+
+window.tutupHalaman=function(){
+  try{if(window.frameElement){window.frameElement.remove();return}}catch(e){}
+  try{if(window.parent!==window){window.parent.postMessage({type:"FIXZY_CLOSE_PAGE"},"*");return;}}catch(e){}
+  try{window.close()}catch(e){}
+};
+</script>
+</body>
+</html>
