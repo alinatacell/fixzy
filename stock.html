@@ -103,7 +103,7 @@ tr:hover td{background:#fffdf5}
     </div>
     <div>
       <button class="head-btn" onclick="tutupHalaman()">✕ Tutup</button>
-      <button class="head-btn refresh" onclick="loadProducts()">↻ Refresh</button>
+      <button class="head-btn refresh" id="refreshBtn" onclick="refreshHalaman()">↻ Refresh</button>
     </div>
   </div>
 </header>
@@ -184,6 +184,19 @@ tr:hover td{background:#fffdf5}
 <div class="loading" id="loading"><div class="loader"><div class="spin"></div><b id="loadingText">Memproses...</b></div></div>
 <div class="toast" id="toast"></div>
 
+<script>
+function refreshHalaman(){
+  const b=document.getElementById("refreshBtn");
+  if(b){
+    b.disabled=true;
+    b.textContent="↻ Memuat...";
+  }
+  // Hard reload: ensures HTML + module + Firebase query are initialized again.
+  const u=new URL(window.location.href);
+  u.searchParams.set("_refresh",Date.now());
+  window.location.replace(u.toString());
+}
+</script>
 <script type="module">
 import {initializeApp} from "https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js";
 import {getAuth,onAuthStateChanged} from "https://www.gstatic.com/firebasejs/11.10.0/firebase-auth.js";
