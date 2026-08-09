@@ -44,7 +44,7 @@ textarea{min-height:72px;resize:vertical}
 
 .pattern-box{border:1px solid #cbd5e1;border-radius:12px;background:#f8fafc;padding:9px;width:100%;max-width:220px}
 .pattern-grid{display:grid;grid-template-columns:repeat(3,44px);gap:9px;justify-content:center}
-.dot{width:44px;height:44px;border-radius:50%;border:2px solid #cbd5e1;background:#fff;color:#64748b;font-size:11px;font-weight:900;padding:0}
+.dot{width:44px;height:44px;border-radius:50%;touch-action:manipulation;-webkit-tap-highlight-color:transparent;border:2px solid #cbd5e1;background:#fff;color:#64748b;font-size:11px;font-weight:900;padding:0}
 .dot.active{background:#111827;border-color:#ffc107;color:#ffc107;box-shadow:0 0 0 4px #ffc10722}
 .pattern-tools{display:flex;align-items:center;justify-content:space-between;gap:7px;margin-top:8px;font-size:9px;color:#64748b}
 .clear-pattern{border:0;border-radius:7px;padding:6px 8px;background:#e2e8f0;color:#334155;font-weight:800;font-size:9px}
@@ -74,7 +74,7 @@ textarea{min-height:72px;resize:vertical}
     <div class="body">
       <div class="grid">
         <div class="field"><label>Nomor Nota</label><input id="nomorNota" readonly></div>
-        <div class="field"><label>Tanggal</label><input id="tanggal" type="datetime-local"></div>
+        <div class="field"><label>Tanggal</label><input id="tanggal" type="date"></div>
         <div class="field full">
             <label>Teknisi / Absensi</label>
             <select id="teknisi">
@@ -93,8 +93,7 @@ textarea{min-height:72px;resize:vertical}
     <section class="card">
       <div class="head">Data HP</div><div class="body">
         <div class="grid">
-          <div class="field"><label>Merk</label><input id="merk" placeholder="Samsung / Vivo / Oppo"></div>
-          <div class="field"><label>Tipe / Model</label><input id="tipe" placeholder="A15"></div>
+          <div class="field full"><label>Merk / Tipe / Model HP</label><input id="merkTipe" placeholder="Contoh: Samsung Galaxy A15"></div>
           <div class="field"><label>IMEI</label><input id="imei" inputmode="numeric"></div>
           <div class="field full"><label>Keluhan</label><textarea id="keluhan"></textarea></div>
           <div class="field full"><label>Kelengkapan</label><div id="checks" class="checks"></div></div>
@@ -129,8 +128,8 @@ textarea{min-height:72px;resize:vertical}
       <div class="head">Penerimaan Servis</div>
       <div class="body">
         <div class="grid">
-          <div class="field"><label>Biaya Servis / Estimasi</label><input id="biayaServis" type="number" min="0" value="0" oninput="hitung()"></div>
-          <div class="field"><label>DP</label><input id="dp" type="number" min="0" value="0" oninput="hitung()"></div>
+          <div class="field"><label>Biaya Servis / Estimasi</label><input id="biayaServis" type="number" min="0" value="" oninput="hitung()"></div>
+          <div class="field"><label>DP</label><input id="dp" type="number" min="0" value="" oninput="hitung()"></div>
           <div class="field"><label>Status</label><select id="statusServis"><option>Menunggu</option><option>Dikerjakan</option><option>Selesai</option><option>Diambil</option><option>Batal</option></select></div>
           <div class="field full"><label>Catatan</label><textarea id="catatanServis"></textarea></div>
         </div>
@@ -146,7 +145,7 @@ textarea{min-height:72px;resize:vertical}
     <section class="card">
       <div class="head">Pembayaran & Status</div><div class="body">
         <div class="grid">
-          <div class="field"><label>DP</label><input id="dp" type="number" min="0" value="0" oninput="hitung()"></div>
+          <div class="field"><label>DP</label><input id="dp" type="number" min="0" value="" oninput="hitung()"></div>
           <div class="field"><label>Status</label><select id="statusServis"><option>Menunggu</option><option>Dikerjakan</option><option>Selesai</option><option>Diambil</option><option>Batal</option></select></div>
           <div class="field full"><label>Catatan</label><textarea id="catatanServis"></textarea></div>
         </div>
@@ -173,9 +172,9 @@ textarea{min-height:72px;resize:vertical}
         <div id="jualManual" class="hidden">
           <div class="grid">
             <div class="field"><label>Nama Produk</label><input id="jualManualNama"></div>
-            <div class="field"><label>Qty</label><input id="jualManualQty" type="number" min="1" value="1"></div>
-            <div class="field"><label>Modal</label><input id="jualManualModal" type="number" min="0" value="0"></div>
-            <div class="field"><label>Harga Jual</label><input id="jualManualHarga" type="number" min="0" value="0"></div>
+            <div class="field"><label>Qty</label><input id="jualManualQty" type="number" min="1" value=""></div>
+            <div class="field"><label>Modal</label><input id="jualManualModal" type="number" min="0" value=""></div>
+            <div class="field"><label>Harga Jual</label><input id="jualManualHarga" type="number" min="0" value=""></div>
           </div>
           <button class="add" onclick="tambahManualJual()">＋ Tambah Manual</button>
         </div>
@@ -185,8 +184,8 @@ textarea{min-height:72px;resize:vertical}
     <section class="card">
       <div class="head">Pembayaran</div><div class="body">
         <div class="grid">
-          <div class="field"><label>Diskon</label><input id="diskon" type="number" min="0" value="0" oninput="hitung()"></div>
-          <div class="field"><label>Dibayar / DP</label><input id="dibayar" type="number" min="0" value="0" oninput="hitung()"></div>
+          <div class="field"><label>Diskon</label><input id="diskon" type="number" min="0" value="" oninput="hitung()"></div>
+          <div class="field"><label>Dibayar / DP</label><input id="dibayar" type="number" min="0" value="" oninput="hitung()"></div>
           <div class="field"><label>Metode</label><select id="metode"><option>Tunai</option><option>Transfer</option><option>QRIS</option><option>Tempo</option></select></div>
           <div class="field"><label>Status</label><select id="statusJual"><option>Selesai</option><option>DP</option><option>Tempo</option><option>Batal</option></select></div>
           <div class="field full"><label>Catatan</label><textarea id="catatanJual"></textarea></div>
@@ -249,10 +248,36 @@ const now=()=>{const d=new Date(),p=n=>String(n).padStart(2,"0");return `${d.get
 const nomor=k=>{const d=new Date(),p=n=>String(n).padStart(2,"0");return `${k==="servis"?"SRV":"JLN"}-${d.getFullYear()}${p(d.getMonth()+1)}${p(d.getDate())}-${p(d.getHours())}${p(d.getMinutes())}${p(d.getSeconds())}`};
 
 function toast(t){$("toast").textContent=t;$("toast").classList.add("show");setTimeout(()=>$("toast").classList.remove("show"),2500)}
+function refreshHalaman(){
+  const b=document.getElementById("refreshPageBtn");
+  if(b){b.disabled=true;b.textContent="↻ Memuat...";}
+  // Force a fresh document load without relying on app/Firebase functions.
+  const u=new URL(window.location.href);
+  u.searchParams.set("_refresh",Date.now());
+  window.location.replace(u.toString());
+}
+window.refreshHalaman=refreshHalaman;
+
 function tutupHalaman(){
- try{if(window.frameElement){window.frameElement.remove();return}}catch(e){}
- try{if(window.parent!==window){window.parent.postMessage({type:"FIXZY_CLOSE_NOTA"},"*");return}}catch(e){}
- try{window.close()}catch(e){}
+  // If this page is embedded as an iframe, ask the parent to remove the iframe.
+  try{
+    if(window.frameElement){
+      const frame=window.frameElement;
+      if(frame.parentNode){
+        frame.parentNode.removeChild(frame);
+        return;
+      }
+    }
+  }catch(e){}
+  // Fallback: notify parent page.
+  try{
+    if(window.parent && window.parent!==window){
+      window.parent.postMessage({type:"FIXZY_CLOSE_NOTA"},"*");
+      return;
+    }
+  }catch(e){}
+  // If opened as a popup/window, close it.
+  try{ window.open("","_self"); window.close(); }catch(e){}
 }
 window.tutupHalaman=tutupHalaman;
 
@@ -484,7 +509,7 @@ function printNota(d){
  const summary=d.jenis==="servis"
  ?`<p>Sparepart: <b>${rupiah(d.totalSparepart)}</b></p><h3>TOTAL: ${rupiah(d.total)}</h3><p>DP: ${rupiah(d.dp)}</p><h3>SISA: ${rupiah(d.sisa)}</h3>`
  :`<p>Subtotal: ${rupiah(d.subtotal)}</p><p>Diskon: ${rupiah(d.diskon)}</p><h3>TOTAL: ${rupiah(d.total)}</h3><p>Dibayar: ${rupiah(d.dibayar)}</p><h3>SISA: ${rupiah(d.sisa)}</h3>`;
- const extra=d.jenis==="servis"?`<p>HP: ${esc(d.hp.merk)} ${esc(d.hp.tipe)} • IMEI: ${esc(d.hp.imei||"-")}</p><p>Keluhan: ${esc(d.keluhan||"-")}</p>`:"";
+ const extra=d.jenis==="servis"?`<p>HP: ${esc(d.hp.merkTipe||[d.hp.merk,d.hp.tipe].filter(Boolean).join(" "))} • IMEI: ${esc(d.hp.imei||"-")}</p><p>Teknisi: ${esc(d.teknisi||"-")}</p><p>Keluhan: ${esc(d.keluhan||"-")}</p>`:"";
  const w=window.open("","_blank","width=430,height=700");
  if(!w){alert("Popup cetak diblokir browser. Izinkan popup untuk Fixzy.");return}
  const koleksi=d.jenis==="servis"?"servis":"penjualan";
@@ -534,6 +559,13 @@ function resetPola(){
   document.getElementById("polaText").textContent="Belum ada pola";
 }
 window.pilihDot=pilihDot;window.resetPola=resetPola;
+document.addEventListener("pointerup",e=>{
+  const dot=e.target.closest(".dot");
+  if(!dot) return;
+  e.preventDefault();
+  pilihDot(Number(dot.dataset.dot));
+});
+
 
 onAuthStateChanged(auth,async user=>{
  if(!user){$("status").textContent="Belum login Firebase.";setTimeout(()=>location.href="login.html",500);return}
