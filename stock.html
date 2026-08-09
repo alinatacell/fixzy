@@ -78,6 +78,22 @@ tr:hover td{background:#fffdf5}
 </style>
 </head>
 <body>
+<script>
+/* FIX TUTUP: halaman stok dipakai di iframe/popup, jadi jangan navigasi history. */
+(function(){
+  window.tutupHalaman=function(){
+    try{
+      if(window.parent && window.parent !== window){
+        window.parent.postMessage({type:"FIXZY_CLOSE_STOK"}, "*");
+        return;
+      }
+    }catch(e){}
+    try{
+      window.close();
+    }catch(e){}
+  };
+})();
+</script>
 
 <header class="header">
   <div class="header-in">
@@ -86,7 +102,7 @@ tr:hover td{background:#fffdf5}
       <div><h1>Fixzy</h1><p>Produk & Stok • Firebase</p></div>
     </div>
     <div>
-      <button class="head-btn" onclick="location.href='utama.html'">← Kembali</button>
+      <button class="head-btn" onclick="tutupHalaman()">✕ Tutup</button>
       <button class="head-btn refresh" onclick="loadProducts()">↻ Refresh</button>
     </div>
   </div>
