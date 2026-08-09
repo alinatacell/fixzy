@@ -177,18 +177,34 @@ function refreshHalaman(){
 }
 
 function kembali(){
-  /* Data Servis dibuka di iframe index.html.
-     Kembali harus keluar dari iframe, bukan membuka index
-     di dalam iframe lagi. */
-  if(window.parent && window.parent !== window){
-    window.parent.location.href="index.html";
-  }else{
-    location.href="index.html";
-  }
+  /*
+   * Data Servis berada di dalam iframe index.html.
+   * Gunakan window.top agar yang dinavigasikan adalah
+   * halaman utama, bukan iframe Data Servis.
+   */
+  try{
+    if(window.top){
+      window.top.location.href="index.html";
+      return;
+    }
+  }catch(e){}
+
+  window.location.href="index.html";
 }
 onAuthStateChanged(auth,async user=>{
   await load();
 });
+
+window.addEventListener("message",function(e){
+  if(e.data && e.data.type==="FIXZY_BACK_TO_INDEX"){
+    try{
+      window.top.location.href="index.html";
+    }catch(err){
+      window.location.href="index.html";
+    }
+  }
+});
+
 </script>
 </body>
 </html>
