@@ -89,7 +89,7 @@ input:focus,select:focus{border-color:#ffc107;box-shadow:0 0 0 3px rgba(255,193,
   padding:18px;background:rgba(15,23,42,.68);z-index:9999;
   backdrop-filter:blur(4px);
 }
-.waModal.show{display:flex}
+.waModal.show{display:flex!important}
 .waBox{
   width:min(430px,100%);background:#fff;border-radius:20px;
   box-shadow:0 18px 60px rgba(0,0,0,.28);overflow:hidden;
@@ -113,7 +113,8 @@ input:focus,select:focus{border-color:#ffc107;box-shadow:0 0 0 3px rgba(255,193,
   font-weight:900;font-size:12px;cursor:pointer;
 }
 .waNo{background:#e5e7eb;color:#374151}
-.waYes{background:#16a34a;color:#fff}
+.waYes{background:#16a34a;color:#fff;box-shadow:0 4px 0 #0f7a31}
+.waNo{box-shadow:0 4px 0 #cbd5e1}
 @media(max-width:600px){
   .waBox{border-radius:18px}
 }
@@ -160,8 +161,8 @@ input:focus,select:focus{border-color:#ffc107;box-shadow:0 0 0 3px rgba(255,193,
    <p id="waQuestion">Status sudah berhasil diperbarui. Kirim pemberitahuan kepada pelanggan?</p>
    <div id="waPreview" class="waPreview"></div>
    <div class="waActions">
-    <button class="waNo" onclick="batalKirimWA()">Tidak</button>
-    <button class="waYes" onclick="lanjutKirimWA()">Kirim WhatsApp</button>
+    <button id="waNo" class="waNo" type="button" onclick="batalKirimWA()">Tidak</button>
+    <button id="waYes" class="waYes" type="button" onclick="lanjutKirimWA()">📲 Kirim WhatsApp</button>
    </div>
   </div>
  </div>
@@ -178,7 +179,7 @@ const firebaseConfig={
  messagingSenderId:"838081521031",
  appId:"1:838081521031:web:50fdee909b56460b055f22"
 };
-const app=initializeApp(firebaseConfig),auth=getAuth(app),db=getFirestore(app);let uid="",rows=[],accountName="";
+const app=initializeApp(firebaseConfig),auth=getAuth(app),db=getFirestore(app);let uid="",rows=[],accountName="",storeName="";
 const $=id=>document.getElementById(id);
 const esc=v=>String(v??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]));
 const money=v=>"Rp "+Number(v||0).toLocaleString("id-ID");
@@ -191,30 +192,18 @@ function waNumber(v){
  return raw;
 }
 let waPending=null;
-
 function waStatus(status,item){
  const n=waNumber(item.pelanggan?.wa||item.noHp);
- if(!n){
-  alert("Nomor WhatsApp pelanggan belum ada.");
-  return;
- }
-
  const label={
-  masuk:"HP sudah diterima",
-  "nunggu-sparepart":"Sedang menunggu sparepart",
-  proses:"HP sedang diproses",
-  selesai:"HP sudah selesai dan siap diambil",
-  diambil:"HP sudah diambil",
-  batal:"Servis dibatalkan"
+  masuk:"HP sudah diterima","nunggu-sparepart":"Sedang menunggu sparepart",
+  proses:"HP sedang diproses",selesai:"HP sudah selesai dan siap diambil",
+  diambil:"HP sudah diambil",batal:"Servis dibatalkan"
  }[status]||("Status servis: "+status);
-
  const nomor=item.nomorNota||item.idServis||item.id||"-";
  const nama=item.pelanggan?.nama||item.namaPelanggan||"Pelanggan";
  const tipe=item.tipe||item.tipeHp||"HP";
- const pengirim=(accountName||"Pengguna").trim();
-
- const text=
-`Halo ${nama},
+ const pengirim=storeName||"Nama Toko";
+ const text=`Halo ${nama},
 
 📍 *${pengirim}*
 
@@ -228,51 +217,32 @@ Jika ada yang ingin ditanyakan, silakan hubungi kami.
 
 Terima kasih 🙏`;
 
- waPending={number:n,text};
+ waPending=n?{number:n,text}:null;
  $("waPreview").textContent=text;
- $("waQuestion").textContent=`Status ${label.toLowerCase()}. Kirim konfirmasi WhatsApp kepada ${nama}?`;
- $("waModal").classList.add("show");
- $("waModal").setAttribute("aria-hidden","false");
+ $("waQuestion").textContent=n
+  ? `Status servis berhasil diubah menjadi "${label}". Kirim konfirmasi WhatsApp kepada ${nama}?`
+  : `Status servis berhasil diubah menjadi "${label}", tetapi nomor WhatsApp ${nama} belum tersedia.`;
+
+ const yes=$("waYes"),no=$("waNo");
+ if(yes){yes.style.display=n?"block":"none";yes.textContent="📲 Kirim WhatsApp"}
+ if(no)no.textContent=n?"Tidak":"Tutup";
+
+ const modal=$("waModal");
+ modal.classList.add("show");
+ modal.style.display="flex";
+ modal.setAttribute("aria-hidden","false");
 }
-
 window.batalKirimWA=()=>{
- waPending=null;
- $("waModal").classList.remove("show");
- $("waModal").setAttribute("aria-hidden","true");
+ waPending=null;const m=$("waModal");m.classList.remove("show");m.style.display="none";m.setAttribute("aria-hidden","true");
 };
-
 window.lanjutKirimWA=()=>{
  if(!waPending){batalKirimWA();return}
- const {number,text}=waPending;
- const encoded=encodeURIComponent(text);
+ const {number,text}=waPending,encoded=encodeURIComponent(text);
  const isDesktop=!/Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent);
- const url=isDesktop
-   ?"https://web.whatsapp.com/send?phone="+number+"&text="+encoded
-   :"https://wa.me/"+number+"?text="+encoded;
- $("waModal").classList.remove("show");
- $("waModal").setAttribute("aria-hidden","true");
- window.open(url,"_blank");
- waPending=null;
+ const url=isDesktop?"https://web.whatsapp.com/send?phone="+number+"&text="+encoded:"https://wa.me/"+number+"?text="+encoded;
+ batalKirimWA();window.open(url,"_blank");waPending=null;
 };
-
-document.addEventListener("keydown",e=>{
- if(e.key==="Escape" && $("waModal")?.classList.contains("show")) batalKirimWA();
-});
-async function loadAccountProfile(user){
- accountName=(user?.displayName||"").trim();
- try{
-  const snap=await getDoc(doc(db,"users",user.uid));
-  if(snap.exists()){
-   const d=snap.data()||{};
-   accountName=String(
-    d.namaUsaha||d.namaToko||d.nama||d.namaAkun||d.displayName||accountName||user.email||"Toko"
-   ).trim();
-  }
- }catch(e){
-  console.warn("Profil pengguna tidak dapat dibaca:",e);
- }
- if(!accountName)accountName=user.email||"Toko";
-}
+document.addEventListener("keydown",e=>{if(e.key==="Escape"&&$("waModal")?.classList.contains("show"))batalKirimWA()});
 window.edit=id=>{
  const x=rows.find(a=>a.id===id); if(!x)return;
  $("editId").value=id;
