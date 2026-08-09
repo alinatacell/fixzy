@@ -41,7 +41,17 @@ textarea{min-height:72px;resize:vertical}
 .hidden{display:none!important}
 #status{font-size:11px;color:var(--muted);margin-bottom:9px}
 @media(max-width:680px){.grid{grid-template-columns:1fr}.full{grid-column:auto}.itemgrid{grid-template-columns:1fr 72px 1fr 1fr 38px}.itemgrid .name{grid-column:1/-1}.checks{grid-template-columns:1fr 1fr}.bottom .btn{flex:1;padding:11px 7px}.body{padding:12px}.wrap{padding:9px 7px 95px}}
+
+.pattern-box{border:1px solid #cbd5e1;border-radius:12px;background:#f8fafc;padding:9px;width:100%;max-width:220px}
+.pattern-grid{display:grid;grid-template-columns:repeat(3,44px);gap:9px;justify-content:center}
+.dot{width:44px;height:44px;border-radius:50%;border:2px solid #cbd5e1;background:#fff;color:#64748b;font-size:11px;font-weight:900;padding:0}
+.dot.active{background:#111827;border-color:#ffc107;color:#ffc107;box-shadow:0 0 0 4px #ffc10722}
+.pattern-tools{display:flex;align-items:center;justify-content:space-between;gap:7px;margin-top:8px;font-size:9px;color:#64748b}
+.clear-pattern{border:0;border-radius:7px;padding:6px 8px;background:#e2e8f0;color:#334155;font-weight:800;font-size:9px}
+.attendance-note{font-size:9px;color:#64748b;margin-top:2px}
+@media(max-width:680px){.pattern-box{max-width:100%}}
 </style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 </head>
 <body>
 <header class="top">
@@ -65,7 +75,18 @@ textarea{min-height:72px;resize:vertical}
       <div class="grid">
         <div class="field"><label>Nomor Nota</label><input id="nomorNota" readonly></div>
         <div class="field"><label>Tanggal</label><input id="tanggal" type="datetime-local"></div>
-        <div class="field"><label>Nama Pelanggan</label><input id="pelanggan" placeholder="Nama pelanggan"></div>
+        <div class="field full">
+            <label>Teknisi / Absensi</label>
+            <select id="teknisi">
+              <option value="">-- Pilih Teknisi --</option>
+              <option>A Yudi</option>
+              <option>Soleh</option>
+              <option>Farhan</option>
+              <option>Zaka</option>
+            </select>
+            <small class="attendance-note">Teknisi yang dipilih dicatat ke transaksi sebagai absensi/petugas.</small>
+          </div>
+          <div class="field"><label>Nama Pelanggan</label><input id="pelanggan" placeholder="Nama pelanggan"></div>
         <div class="field"><label>No. WhatsApp</label><input id="wa" inputmode="tel" placeholder="08xxxxxxxxxx"></div>
         <div class="field full"><label>Alamat</label><textarea id="alamat" placeholder="Alamat pelanggan"></textarea></div>
       </div>
@@ -81,35 +102,48 @@ textarea{min-height:72px;resize:vertical}
           <div class="field"><label>IMEI</label><input id="imei" inputmode="numeric"></div>
           <div class="field full"><label>Keluhan</label><textarea id="keluhan"></textarea></div>
           <div class="field full"><label>Kelengkapan</label><div id="checks" class="checks"></div></div>
-          <div class="field"><label>Sandi</label><input id="sandi" autocomplete="off"></div>
-          <div class="field"><label>Teknisi</label><input id="teknisi"></div>
+          <div class="field"><label>Sandi</label><input id="sandi" autocomplete="off" placeholder="PIN / sandi HP"></div>
+          <div class="field">
+            <label>Pola Sandi HP</label>
+            <div id="patternBox" class="pattern-box" aria-label="Pola sandi 9 titik">
+              <div class="pattern-grid">
+                <button type="button" class="dot" data-dot="1" onclick="pilihDot(1)">1</button>
+                <button type="button" class="dot" data-dot="2" onclick="pilihDot(2)">2</button>
+                <button type="button" class="dot" data-dot="3" onclick="pilihDot(3)">3</button>
+                <button type="button" class="dot" data-dot="4" onclick="pilihDot(4)">4</button>
+                <button type="button" class="dot" data-dot="5" onclick="pilihDot(5)">5</button>
+                <button type="button" class="dot" data-dot="6" onclick="pilihDot(6)">6</button>
+                <button type="button" class="dot" data-dot="7" onclick="pilihDot(7)">7</button>
+                <button type="button" class="dot" data-dot="8" onclick="pilihDot(8)">8</button>
+                <button type="button" class="dot" data-dot="9" onclick="pilihDot(9)">9</button>
+              </div>
+              <div class="pattern-tools">
+                <span id="polaText">Belum ada pola</span>
+                <button type="button" class="clear-pattern" onclick="resetPola()">Hapus</button>
+              </div>
+            </div>
+            <input type="hidden" id="pola" value="">
+          </div>
+          
         </div>
       </div>
     </section>
 
     <section class="card">
-      <div class="head">Sparepart Servis</div><div class="body">
-        <div class="mode-row">
-          <button id="modeProduk" class="mode active" onclick="ubahMode('produk')">📦 Pilih dari Firebase</button>
-          <button id="modeManual" class="mode" onclick="ubahMode('manual')">✍️ Manual</button>
+      <div class="head">Penerimaan Servis</div>
+      <div class="body">
+        <div class="grid">
+          <div class="field"><label>Biaya Servis / Estimasi</label><input id="biayaServis" type="number" min="0" value="0" oninput="hitung()"></div>
+          <div class="field"><label>DP</label><input id="dp" type="number" min="0" value="0" oninput="hitung()"></div>
+          <div class="field"><label>Status</label><select id="statusServis"><option>Menunggu</option><option>Dikerjakan</option><option>Selesai</option><option>Diambil</option><option>Batal</option></select></div>
+          <div class="field full"><label>Catatan</label><textarea id="catatanServis"></textarea></div>
         </div>
-        <div id="produkMode">
-          <div class="grid">
-            <div class="field full"><label>Produk dari Firebase / Stok</label><select id="produkSelect"><option>Memuat...</option></select></div>
-            <div class="field"><label>Qty</label><input id="produkQty" type="number" min="1" value="1"></div>
-          </div>
-          <button class="add" onclick="tambahProdukServis()">＋ Tambah Produk</button>
+        <div class="total">
+          <div class="sum"><span>Biaya Servis</span><strong id="totalJasa">Rp0</strong></div>
+          <div class="sum grand"><span>TOTAL</span><strong id="servisTotal">Rp0</strong></div>
+          <div class="sum"><span>DP</span><strong id="servisDP">Rp0</strong></div>
+          <div class="sum sisa"><span>SISA</span><strong id="servisSisa">Rp0</strong></div>
         </div>
-        <div id="manualMode" class="hidden">
-          <div class="grid">
-            <div class="field"><label>Nama</label><input id="manualNama"></div>
-            <div class="field"><label>Qty</label><input id="manualQty" type="number" min="1" value="1"></div>
-            <div class="field"><label>Modal</label><input id="manualModal" type="number" min="0" value="0"></div>
-            <div class="field"><label>Harga Jual</label><input id="manualJual" type="number" min="0" value="0"></div>
-          </div>
-          <button class="add" onclick="tambahManualServis()">＋ Tambah Manual</button>
-        </div>
-        <div id="servisItems" class="list" style="margin-top:10px"></div>
       </div>
     </section>
 
@@ -134,7 +168,8 @@ textarea{min-height:72px;resize:vertical}
     <section class="card">
       <div class="head">Produk Penjualan</div><div class="body">
         <div id="jualItems" class="list"></div>
-        <button class="add" onclick="tambahBarisJual()">＋ Tambah Produk</button>
+        <button class="add" onclick="tambahBarisJual()">＋ Tambah Produk dari Firebase</button>
+        <button class="add" onclick="tambahManualJual()">✍️ Tambah Produk Manual</button>
         <div class="mode-row" style="margin-top:12px">
           <button id="jualModeProduk" class="mode active" onclick="ubahModeJual('produk')">📦 Dari Firebase</button>
           <button id="jualModeManual" class="mode" onclick="ubahModeJual('manual')">✍️ Manual</button>
@@ -171,6 +206,8 @@ textarea{min-height:72px;resize:vertical}
     </section>
   </section>
 </main>
+
+<div id="qrPreview" style="display:none;position:fixed;right:12px;bottom:72px;z-index:25;background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:8px;text-align:center;box-shadow:0 8px 25px #0002"><div id="qrMain"></div><small style="font-size:9px;color:#64748b">QR transaksi</small></div>
 
 <div class="bottom">
   <button class="btn cancel" onclick="batal()">Batal</button>
@@ -313,18 +350,28 @@ function renderServis(){
 }
 function renderJual(){
  $("jualItems").innerHTML=itemsJual.map((x,i)=>{
-  const opts='<option value="">-- pilih --</option>'+produk.map(p=>`<option value="${esc(p.id)}" ${String(p.id)===String(x.productId)?"selected":""}>${esc(p.nama||p.namaProduk||"Produk")} • stok ${num(p.sisa??p.stok??p.stock)}</option>`).join("");
+  let field;
+  if(x.sumber==="manual"){
+   field=`<div class="name field"><label>Produk Manual</label><input value="${esc(x.nama)}" placeholder="Nama produk" onchange="itemsJual[${i}].nama=this.value"></div>`;
+  }else{
+   const opts='<option value="">-- pilih --</option>'+produk.map(p=>`<option value="${esc(p.id)}" ${String(p.id)===String(x.productId)?"selected":""}>${esc(p.nama||p.namaProduk||"Produk")} • stok ${num(p.sisa??p.stok??p.stock)}</option>`).join("");
+   field=`<div class="name field"><label>Produk Firebase</label><select onchange="ubahProdukJual(${i},this.value)">${opts}</select></div>`;
+  }
   return `<div class="item"><div class="itemgrid">
-   <div class="name field"><label>Produk</label><select onchange="ubahProdukJual(${i},this.value)">${opts}</select></div>
+   ${field}
    <div class="field"><label>Qty</label><input type="number" min="1" value="${x.qty}" onchange="qtyJual(${i},this.value)"></div>
-   <div class="field"><label>Modal</label><input type="number" value="${x.hargaModal}" readonly></div>
+   <div class="field"><label>Modal</label><input type="number" value="${x.hargaModal}" onchange="itemsJual[${i}].hargaModal=num(this.value)" ${x.sumber==="manual"?"":"readonly"}></div>
    <div class="field"><label>Jual</label><input type="number" value="${x.hargaJual}" onchange="hargaJual(${i},this.value)"></div>
    <button class="remove" onclick="hapusJual(${i})">×</button></div></div>`;
  }).join("");
 }
+function tambahManualJual(){
+ itemsJual.push({productId:null,nama:"",qty:1,hargaModal:0,hargaJual:0,sumber:"manual"});
+ renderAll();
+}
 function hitung(){
  const ss=itemsServis.reduce((a,x)=>a+num(x.hargaJual)*num(x.qty),0),dp=num($("dp").value);
- $("servisSubtotal").textContent=rupiah(ss);$("servisTotal").textContent=rupiah(ss);$("servisDP").textContent=rupiah(dp);$("servisSisa").textContent=rupiah(Math.max(0,ss-dp));
+ $("totalJasa").textContent=rupiah(ss);$("servisTotal").textContent=rupiah(ss);$("servisDP").textContent=rupiah(dp);$("servisSisa").textContent=rupiah(Math.max(0,ss-dp));
  const sub=itemsJual.reduce((a,x)=>a+num(x.hargaJual)*num(x.qty),0),dis=num($("diskon").value),bay=num($("dibayar").value),tot=Math.max(0,sub-dis);
  $("jualSubtotal").textContent=rupiah(sub);$("jualDiskon").textContent=rupiah(dis);$("jualTotal").textContent=rupiah(tot);$("jualDibayar").textContent=rupiah(bay);$("jualSisa").textContent=rupiah(Math.max(0,tot-bay));
 }
@@ -334,10 +381,10 @@ window.hitung=hitung;
 function kumpulkan(){
  const base={uid,jenis,nomorNota:$("nomorNota").value,tanggal:$("tanggal").value||now(),pelanggan:{nama:$("pelanggan").value.trim(),wa:$("wa").value.trim(),alamat:$("alamat").value.trim()}};
  if(jenis==="servis"){
-  const total=itemsServis.reduce((a,x)=>a+num(x.hargaJual)*num(x.qty),0),dp=num($("dp").value);
+  const total=num($("biayaServis").value),dp=num($("dp").value);
   return {...base,hp:{merk:$("merk").value.trim(),tipe:$("tipe").value.trim(),imei:$("imei").value.trim()},keluhan:$("keluhan").value.trim(),
-   kelengkapan:checks.filter((_,i)=>$("ck"+i).checked),sandi:$("sandi").value,teknisi:$("teknisi").value.trim(),sparepart:itemsServis,
-   totalSparepart:total,totalJasa:0,total,dp,sisa:Math.max(0,total-dp),status:$("statusServis").value,catatan:$("catatanServis").value.trim()};
+   kelengkapan:checks.filter((_,i)=>$("ck"+i).checked),sandi:$("sandi").value,teknisi:$("teknisi").value.trim(),sparepart:[],
+   biayaServis:num($("biayaServis").value),totalSparepart:0,totalJasa:num($("biayaServis").value),total:num($("biayaServis").value),dp,sisa:Math.max(0,num($("biayaServis").value)-dp),status:$("statusServis").value,catatan:$("catatanServis").value.trim()};
  }
  const subtotal=itemsJual.reduce((a,x)=>a+num(x.hargaJual)*num(x.qty),0),diskon=num($("diskon").value),total=Math.max(0,subtotal-diskon),dibayar=num($("dibayar").value);
  return {...base,items:itemsJual,subtotal,diskon,total,dibayar,sisa:Math.max(0,total-dibayar),metode:$("metode").value,status:$("statusJual").value,catatan:$("catatanJual").value.trim()};
@@ -365,21 +412,21 @@ async function simpan(cetak){
   const transaksiRef=doc(db,d.jenis==="servis"?"servis":"penjualan",d.nomorNota);
   batch.set(transaksiRef,d,{merge:true});
 
-  // Kurangi stok Firebase hanya untuk item yang benar-benar berasal dari koleksi stok.
-  if(d.status!=="Batal"){
+  // Hanya penjualan yang mengurangi stok. Nota servis penerimaan belum memakai sparepart.
+  if(d.jenis==="penjualan" && d.status!=="Batal"){
    const qtyByProduct=new Map();
-   const list=d.jenis==="servis"?d.sparepart:d.items;
-   list.filter(x=>x.sumber==="produk"&&x.productId).forEach(x=>qtyByProduct.set(x.productId,(qtyByProduct.get(x.productId)||0)+num(x.qty)));
+   (d.items||[]).filter(x=>x.sumber==="produk"&&x.productId)
+    .forEach(x=>qtyByProduct.set(x.productId,(qtyByProduct.get(x.productId)||0)+num(x.qty)));
    for(const [id,qty] of qtyByProduct){
     const p=produk.find(x=>String(x.id)===String(id));
     if(!p)throw new Error("Produk Firebase tidak ditemukan: "+id);
     const stok=num(p.sisa??p.stok??p.stock);
     if(stok<qty)throw new Error(`Stok ${p.nama||"produk"} tidak cukup. Sisa ${stok}, dibutuhkan ${qty}.`);
-    // Field sisa adalah field stok utama aplikasi stok. Field stok/stock lama tidak dihapus.
     batch.update(doc(db,"stok",id),{sisa:stok-qty,updatedAt:new Date()});
    }
   }
   await batch.commit();
+  if(d.jenis==="penjualan" && d.status!=="Batal") await muatProduk();
   if(cetak)printNota(d);else toast("Transaksi berhasil disimpan ke Firebase.");
   if(!cetak){resetForm()}
   else resetForm();
@@ -392,6 +439,7 @@ function resetForm(){
  itemsServis=[];itemsJual=[];$("nomorNota").value=nomor(jenis);$("tanggal").value=now();
  ["pelanggan","wa","alamat","merk","tipe","imei","keluhan","sandi","teknisi","catatanServis","catatanJual"].forEach(id=>$(id).value="");
  ["dp","diskon","dibayar"].forEach(id=>$(id).value=0);
+ $("pola").value="";resetPola();
  $("statusServis").value="Menunggu";$("statusJual").value="Selesai";$("metode").value="Tunai";
  document.querySelectorAll(".check input").forEach(x=>x.checked=false);renderAll();
 }
@@ -406,19 +454,52 @@ function printNota(d){
  const extra=d.jenis==="servis"?`<p>HP: ${esc(d.hp.merk)} ${esc(d.hp.tipe)} • IMEI: ${esc(d.hp.imei||"-")}</p><p>Keluhan: ${esc(d.keluhan||"-")}</p>`:"";
  const w=window.open("","_blank","width=430,height=700");
  if(!w){alert("Popup cetak diblokir browser. Izinkan popup untuk Fixzy.");return}
+ const koleksi=d.jenis==="servis"?"servis":"penjualan";
+ const qrUrl=new URL("cek.html",window.location.href);
+ qrUrl.searchParams.set("koleksi",koleksi);
+ qrUrl.searchParams.set("nota",d.nomorNota);
  w.document.write(`<!doctype html><html><head><meta charset="utf-8"><title>${esc(d.nomorNota)}</title><style>
  body{font-family:Arial;margin:0;background:#eee}.paper{width:80mm;margin:10px auto;background:#fff;padding:5mm;color:#111}
  table{width:100%;border-collapse:collapse;font-size:11px}th,td{padding:5px 2px;border-bottom:1px dashed #999;text-align:left}
+ .qrbox{text-align:center;margin:10px 0}.qrbox #qrcode{display:inline-block}.qrbox small{display:block;font-size:9px;margin-top:3px;color:#555}
  .actions{position:fixed;top:10px;right:10px;display:flex;gap:5px}button{padding:9px 12px;border:0;border-radius:8px;font-weight:800}.p{background:#ffc107}.c{background:#111;color:#fff}
  @media print{body{background:#fff}.paper{margin:0;width:80mm}.actions{display:none}}
  </style></head><body><div class="actions"><button class="p" onclick="print()">🖨 Cetak</button><button class="c" onclick="close()">Tutup</button></div>
  <div class="paper"><h2>${toko}</h2><b>${d.jenis==="servis"?"NOTA SERVIS":"NOTA PENJUALAN"}</b><p>${esc(d.nomorNota)}<br>${esc(d.tanggal)}</p>
  <p>Pelanggan: <b>${esc(d.pelanggan.nama||"Umum")}</b><br>${esc(d.pelanggan.wa||"")}</p>${extra}
+ <div class="qrbox"><div id="qrcode"></div><small>Scan untuk cek transaksi</small></div>
  <table><thead><tr><th>#</th><th>Item</th><th>Qty</th><th>Harga</th><th>Total</th></tr></thead><tbody>${rows}</tbody></table>
  <div style="margin-top:12px">${summary}</div><p>Status: <b>${esc(d.status)}</b></p><p>${esc(d.catatan||"")}</p></div></body></html>`);
  w.document.close();w.focus();
- setTimeout(()=>w.print(),250);
+ setTimeout(()=>{
+   try{
+     new w.QRCode(w.document.getElementById("qrcode"),{
+       text:qrUrl.toString(),
+       width:110,height:110,
+       correctLevel:w.QRCode.CorrectLevel.M
+     });
+   }catch(e){console.error("QR gagal dibuat",e)}
+   setTimeout(()=>w.print(),350);
+ },250);
 }
+
+
+let polaUrutan=[];
+function pilihDot(n){
+  n=Number(n);
+  if(polaUrutan.includes(n)) return;
+  polaUrutan.push(n);
+  document.querySelectorAll(".dot").forEach(b=>b.classList.toggle("active",polaUrutan.includes(Number(b.dataset.dot))));
+  document.getElementById("pola").value=polaUrutan.join("-");
+  document.getElementById("polaText").textContent=polaUrutan.length?("Pola: "+polaUrutan.join(" → ")):"Belum ada pola";
+}
+function resetPola(){
+  polaUrutan=[];
+  document.getElementById("pola").value="";
+  document.querySelectorAll(".dot").forEach(b=>b.classList.remove("active"));
+  document.getElementById("polaText").textContent="Belum ada pola";
+}
+window.pilihDot=pilihDot;window.resetPola=resetPola;
 
 onAuthStateChanged(auth,async user=>{
  if(!user){$("status").textContent="Belum login Firebase.";setTimeout(()=>location.href="login.html",500);return}
