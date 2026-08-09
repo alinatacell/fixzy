@@ -47,7 +47,8 @@ input:focus,select:focus,textarea:focus{border-color:#f59e0b;box-shadow:0 0 0 3p
 
 <main class="wrap">
 <section class="card"><div class="body">
- <div id="firebaseStatus" class="status">Memeriksa akun Firebase...</div>
+ <div id="firebaseStatus" class="status">Menghubungkan ke Firebase Auth...</div>
+ <div id="firebaseError" class="status error" style="display:none;margin-top:6px"></div>
  <div id="akunNota" style="display:none;margin-top:7px;padding:9px 11px;border-radius:10px;background:#fff8db;border:1px solid #fde68a;font-size:11px">
   👤 Akun: <b id="namaAkun">-</b>
  </div>
@@ -148,8 +149,8 @@ input:focus,select:focus,textarea:focus{border-color:#f59e0b;box-shadow:0 0 0 3p
 
 <script type="module">
 import{initializeApp}from"https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js";
-import{getAuth,onAuthStateChanged}from"https://www.gstatic.com/firebasejs/11.10.0/firebase-auth.js";
-import{getFirestore,collection,query,where,getDocs,doc,setDoc,serverTimestamp}from"https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js";
+import{getAuth,onAuthStateChanged,setPersistence,browserLocalPersistence}from"https://www.gstatic.com/firebasejs/11.10.0/firebase-auth.js";
+import{getFirestore,collection,query,where,getDocs,getDoc,doc,setDoc,serverTimestamp}from"https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js";
 
 const firebaseConfig={apiKey:"AIzaSyCwMbJsuORHIq4QCmp4c1r6OsjAUlfxU5Y",authDomain:"fixzy-f056f.firebaseapp.com",projectId:"fixzy-f056f",storageBucket:"fixzy-f056f.firebasestorage.app",messagingSenderId:"838081521031",appId:"1:838081521031:web:50fdee909b56460b055f22"};
 const app=initializeApp(firebaseConfig),auth=getAuth(app),db=getFirestore(app);
@@ -239,7 +240,7 @@ function kumpulkan(){
  return {...base,items:itemsJual,subtotal,diskon,total,dibayar,sisa:Math.max(0,total-dibayar),metode:$("metode").value,status:$("statusJual").value,catatan:$("catatanJual").value.trim(),createdAt:serverTimestamp(),updatedAt:serverTimestamp()};
 }
 async function simpan(cetak=false){
- if(!uid)return alert("Belum login Firebase.");
+ if(!uid)return alert("Akun Firebase belum terdeteksi. Tunggu sampai nama akun tampil di Nota.");
  const d=kumpulkan(),err=validasi(d);if(err)return alert(err);
  const col=d.jenis==="servis"?"servis":"penjualan";
  try{
@@ -287,45 +288,75 @@ $("simpanBtn").onclick=()=>simpan(false);$("simpanCetakBtn").onclick=()=>simpan(
 
 
 async function tampilkanAkun(user){
-  const box=$("akunNota"),nama=$("namaAkun");
+  const box=$("akunNota");
   if(!user){
     box.style.display="none";
     return;
   }
   let nama=user.displayName||"";
-  // Ambil nama akun dari users/{uid} bila tersedia.
   try{
-    const snap=await getDocs(query(collection(db,"users"),where("__name__","==",user.uid)));
-    if(!snap.empty){
-      const d=snap.docs[0].data()||{};
+    const snap=await getDoc(doc(db,"users",user.uid));
+    if(snap.exists()){
+      const d=snap.data()||{};
       nama=d.nama||d.namaToko||d.name||d.namaAkun||nama;
     }
   }catch(e){
-    console.warn("Nama akun users tidak terbaca:",e);
+    console.warn("Data nama akun users tidak terbaca:",e);
   }
   nama=nama||user.email||("UID "+user.uid.slice(0,8));
   $("namaAkun").textContent=nama;
   box.style.display="block";
 }
-onAuthStateChanged(auth,async user=>{
- if(!user){
-   uid=null;
-   $("firebaseStatus").textContent="Belum login Firebase. Silakan login terlebih dahulu.";
-   $("akunNota").style.display="none";
-   return;
- }
- uid=user.uid;
- $("firebaseStatus").textContent="Login Firebase terdeteksi. Memuat data akun...";
- await tampilkanAkun(user);
- try{
-   await Promise.all([muatKaryawan(),muatProduk()]);
-   $("firebaseStatus").textContent="Firebase aktif • Data karyawan dan stok berhasil dimuat.";
-   resetNota();
- }catch(e){
-   console.error(e);
-   $("firebaseStatus").innerHTML='<span class="error">Login berhasil, tetapi data Firebase gagal dimuat: '+esc(e.message)+'</span>';
- }
-});
+
+let authSelesai=false;
+
+async function mulaiFirebaseAuth(){
+  try{
+    await setPersistence(auth,browserLocalPersistence);
+  }catch(e){
+    console.warn("Persistence Firebase tidak dapat disetel:",e);
+  }
+
+  onAuthStateChanged(auth,async user=>{
+    authSelesai=true;
+    if(!user){
+      uid=null;
+      $("firebaseStatus").textContent="Belum login Firebase. Silakan buka halaman Login FIXZY terlebih dahulu.";
+      $("akunNota").style.display="none";
+      return;
+    }
+
+    uid=user.uid;
+    $("firebaseStatus").textContent="Login Firebase terdeteksi. Memuat akun...";
+    try{
+      await tampilkanAkun(user);
+      await Promise.all([muatKaryawan(),muatProduk()]);
+      $("firebaseStatus").textContent="Firebase aktif • Akun, karyawan, dan stok berhasil dimuat.";
+      resetNota();
+    }catch(e){
+      console.error(e);
+      $("firebaseStatus").textContent="Login Firebase berhasil.";
+      $("firebaseError").style.display="block";
+      $("firebaseError").textContent="Data Firebase gagal dimuat: "+e.message;
+    }
+  },error=>{
+    console.error("Firebase Auth error:",error);
+    authSelesai=true;
+    $("firebaseStatus").textContent="Firebase Auth mengalami error.";
+    $("firebaseError").style.display="block";
+    $("firebaseError").textContent=error?.message||String(error);
+  });
+
+  setTimeout(()=>{
+    if(!authSelesai){
+      $("firebaseStatus").textContent="Firebase Auth belum merespons.";
+      $("firebaseError").style.display="block";
+      $("firebaseError").textContent="Pastikan halaman Login dan Nota menggunakan project Firebase FIXZY yang sama.";
+    }
+  },8000);
+}
+
+mulaiFirebaseAuth();
 </script>
 </body>
 </html>
