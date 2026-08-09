@@ -416,6 +416,7 @@ function siapkanFirebaseBridge(){
   f.title="FIXZY Firebase Bridge";
   f.src="login.html?bridge=1";
   f.style.cssText="position:fixed;left:-10000px;top:-10000px;width:1px;height:1px;border:0;opacity:0;pointer-events:none;";
+  f.addEventListener("load",()=>{firebaseBridgeReady=true;while(firebaseProxyQueue.length) firebaseProxyQueue.shift().forward();});
   document.body.appendChild(f);
   firebaseBridgeFrame=f;
   return f;
@@ -509,82 +510,41 @@ function bukaHalaman(btn){
 
 /* ================= PESAN DARI LOGIN ================= */
 
+let firebaseBridgeReady=false;
 const firebaseProxyClients=new Map();
+const firebaseProxyQueue=[];
+
+function kirimKeBridge(d,source){
+  const bridge=siapkanFirebaseBridge();
+  const forward=()=>{
+    try{
+      firebaseProxyClients.set(d.requestId,source);
+      bridge.contentWindow.postMessage(d,"*");
+    }catch(err){
+      firebaseProxyClients.delete(d.requestId);
+      source?.postMessage({type:"FIXZY_FIREBASE_PROXY_RESULT",requestId:d.requestId,ok:false,error:err.message},"*");
+    }
+  };
+  if(firebaseBridgeReady) forward();
+  else firebaseProxyQueue.push({forward});
+}
 
 window.addEventListener("message",function(e){
   const d=e.data||{};
-  if(d.type==="FIXZY_FIREBASE_PROXY"){
-    const bridge=siapkanFirebaseBridge();
-    if(e.source) firebaseProxyClients.set(d.requestId,e.source);
-    const forward=()=>{
-      try{bridge.contentWindow.postMessage(d,"*");}
-      catch(err){
-        firebaseProxyClients.delete(d.requestId);
-        e.source?.postMessage({type:"FIXZY_FIREBASE_PROXY_RESULT",requestId:d.requestId,ok:false,error:err.message},"*");
-      }
-    };
-    if(bridge.contentDocument?.readyState==="complete") forward();
-    else bridge.addEventListener("load",forward,{once:true});
+  if(d.type==="FIXZY_FIREBASE_BRIDGE_READY"){
+    firebaseBridgeReady=true;
+    while(firebaseProxyQueue.length) firebaseProxyQueue.shift().forward();
     return;
   }
-
+  if(d.type==="FIXZY_FIREBASE_PROXY"){
+    kirimKeBridge(d,e.source);
+    return;
+  }
   if(d.type==="FIXZY_FIREBASE_PROXY_RESULT"){
     const client=firebaseProxyClients.get(d.requestId);
     if(client){
       firebaseProxyClients.delete(d.requestId);
       try{client.postMessage(d,"*")}catch(err){}
-    }
-  }
-});
-window.addEventListener("message", function(e){
-  const d = e.data || {};
-
-  if(d.type === "FIXZY_LOGIN_SUCCESS"){
-    sessionStorage.setItem("fixzy_logged_in","1");
-
-    localStorage.setItem(
-      "fixzy_user_profile",
-      JSON.stringify({
-        uid: d.uid || "",
-        email: d.email || "",
-        nama: d.nama || "Akun",
-        exp: d.exp || "-",
-        role: d.role || "user"
-      })
-    );
-
-    bacaProfil();
-    tampilkanBeranda();
-    // Pertahankan satu iframe login tersembunyi sebagai pemegang Firebase Auth.
-    setTimeout(()=>siapkanFirebaseBridge(),200);
-    return;
-  }
-
-  if(d.type === "FIXZY_REGISTER_SUCCESS"){
-    tampilkanLogin();
-    return;
-  }
-
-  if(d.type === "FIXZY_REQUEST_AUTH"){
-    let p={};
-    try{
-      p=JSON.parse(localStorage.getItem("fixzy_user_profile")||"{}");
-    }catch(err){}
-
-    try{
-      if(e.source){
-        e.source.postMessage({
-          type:"FIXZY_PARENT_AUTH",
-          uid:p.uid||localStorage.getItem("fixzy_uid")||"",
-          email:p.email||"",
-          nama:p.nama||"Akun",
-          exp:p.exp||"-",
-          role:p.role||"user",
-          loggedIn:sessionStorage.getItem("fixzy_logged_in")==="1"
-        },"*");
-      }
-    }catch(err){
-      console.warn("Gagal mengirim auth ke iframe:",err);
     }
   }
 });
