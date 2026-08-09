@@ -346,19 +346,78 @@ function parseCSV(text){
 }
 
 function normalize(o){
-  const pick=(...keys)=>{for(const k of keys){if(o[k]!==undefined&&o[k]!=="")return o[k]}return ""};
+  // Google Sheet bisa memakai banyak variasi nama kolom.
+  // Kita normalisasi nama header terlebih dahulu agar "STOK", "Stock",
+  // "Stok Tersedia", "STOCK READY", "Qty", "Jumlah Stok", dll terbaca.
+  const cleanKey=k=>String(k??"")
+    .toLowerCase()
+    .replace(/[\s_\-./()]+/g,"")
+    .replace(/[^a-z0-9]/g,"");
+
+  const entries=Object.entries(o);
+  const findValue=(exact=[],contains=[],exclude=[])=>{
+    for(const wanted of exact){
+      const w=cleanKey(wanted);
+      const hit=entries.find(([k,v])=>cleanKey(k)===w && String(v).trim()!=="");
+      if(hit)return hit[1];
+    }
+    for(const [k,v] of entries){
+      const ck=cleanKey(k);
+      if(!String(v).trim())continue;
+      if(exclude.some(x=>ck.includes(cleanKey(x))))continue;
+      if(contains.some(x=>ck.includes(cleanKey(x))))return v;
+    }
+    return "";
+  };
+
   return {
-    kode:pick("kode","Kode","kodeProduk","Kode Produk"),
-    nama:pick("nama","Nama","namaProduk","Nama Produk","produk"),
-    kategori:pick("kategori","Kategori","category"),
-    merk:pick("merk","Merk","brand"),
-    model:pick("model","Model","tipe","Tipe"),
-    hargaModal:num(pick("hargaModal","Harga Modal","modal","harga_beli","Harga Beli")),
-    hargaJual:num(pick("hargaJual","Harga Jual","harga","price")),
-    stok:num(pick("stok","Stok","stock","qty","Qty")),
-    stokMin:num(pick("stokMin","Stok Minimum","minimum","min")),
-    gambar:pick("gambar","Gambar","image","Image","urlGambar"),
-    catatan:pick("catatan","Catatan","keterangan","Keterangan")
+    kode:findValue(
+      ["kode","kodeproduk","kodeproduk","sku","barcode"],
+      ["kode","sku","barcode"]
+    ),
+    nama:findValue(
+      ["nama","namaproduk","produk","namabarang","barang"],
+      ["nama","produk","barang","item"]
+    ),
+    kategori:findValue(
+      ["kategori","category","jeniskategori"],
+      ["kategori","category","jenis"]
+    ),
+    merk:findValue(
+      ["merk","brand"],
+      ["merk","brand"]
+    ),
+    model:findValue(
+      ["model","tipe","type"],
+      ["model","tipe","type"]
+    ),
+    hargaModal:num(findValue(
+      ["hargamodal","hargabeli","modal","hpp","modalproduk"],
+      ["hargamodal","hargabeli","hpp","modal"]
+    )),
+    hargaJual:num(findValue(
+      ["hargajual","harga","price","harganormal"],
+      ["hargajual","price","harga"]
+    )),
+    // PENTING: cari kolom stok secara fleksibel.
+    // "Stok Minimum" dikecualikan agar tidak terbaca sebagai stok aktual.
+    stok:num(findValue(
+      ["stok","stock","qty","quantity","jumlahstok","stoktersedia","stocktersedia","stokready","stockready"],
+      ["stok","stock","qty","quantity","jumlahstok","tersedia","ready","persediaan"],
+      ["minimum","minim","stokminimum","stockminimum","qtyminimum"]
+    )),
+    stokMin:num(findValue(
+      ["stokminimum","stockminimum","minimum","min"],
+      ["stokminimum","stockminimum","minimum","min"]
+    )),
+    gambar:findValue(
+      ["gambar","image","urlgambar","urlimage","foto","photo"],
+      ["gambar","image","foto","photo","url"]
+    ),
+    catatan:findValue(
+      ["catatan","keterangan","deskripsi","description"],
+      ["catatan","keterangan","deskripsi","description"]
+    )
   };
 }
 
@@ -366,6 +425,10 @@ function tampilPreview(data){
   importRows=data;
   $("importCard").style.display="block";
   $("previewCount").textContent=`${data.length} baris`;
+  const nonZeroStock=data.filter(x=>num(x.stok)>0).length;
+  if(data.length && nonZeroStock===0){
+    $("urlPreview").textContent = "Data produk terbaca, tetapi kolom stok belum terdeteksi. Cek nama kolom stok di Google Sheet.";
+  }
   if(!data.length){$("previewHead").innerHTML="";$("previewBody").innerHTML='<tr><td class="empty">Tidak ada data valid.</td></tr>';return}
   const cols=["kode","nama","kategori","merk","model","hargaModal","hargaJual","stok","stokMin","gambar"];
   $("previewHead").innerHTML="<tr>"+cols.map(c=>`<th>${c}</th>`).join("")+"</tr>";
@@ -413,7 +476,8 @@ async function ambilUrl(){
   try{
     const res=await fetch(url,{cache:"no-store"});if(!res.ok)throw new Error("HTTP "+res.status);
     const text=await res.text();const data=parseCSV(text);
-    $("urlPreview").textContent=`URL berhasil dibaca: ${data.length} produk.`;
+    const sample=data.slice(0,3).map(x=>`${x.nama||"-"} = stok ${x.stok}`).join(" | ");
+    $("urlPreview").textContent=`URL berhasil dibaca: ${data.length} produk. Contoh stok: ${sample||"tidak ditemukan"}`;
     tampilPreview(data);
   }catch(e){
     $("urlPreview").textContent="Gagal mengambil URL. Pastikan file benar-benar publik dan server mengizinkan CORS.";
