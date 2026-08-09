@@ -1,6 +1,6 @@
 <!doctype html><html lang="id"><head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>FIXZY | Data Servis</title>
+<title>FIXZY | Data Servis v16</title>
 <style>
 *{box-sizing:border-box}
 body{margin:0;background:#f3f5f8;color:#172033;font-family:Inter,Arial,sans-serif}
@@ -40,6 +40,7 @@ input:focus,select:focus{border-color:#ffc107;box-shadow:0 0 0 3px rgba(255,193,
 .modalactions button{background:#172033;color:#fff}.modalactions .save{background:#ffc107;color:#111}
 .statusbuttons{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}.statusbuttons button{background:#172033;color:#fff}
 @media(max-width:650px){
+ .statusWrap{min-width:155px;max-width:none}
  header{padding:13px 12px}h1{font-size:17px}.refresh{padding:10px 13px}
  main{padding:12px}.search{min-width:150px}.list{grid-template-columns:1fr}
  .actions{grid-template-columns:1fr 1fr}.actions button{font-size:12px;padding:11px 6px}
@@ -47,7 +48,7 @@ input:focus,select:focus{border-color:#ffc107;box-shadow:0 0 0 3px rgba(255,193,
  .modal{padding:8px}.modalbox{padding:14px;border-radius:16px}
 }
 
-.statusWrap{position:relative;min-width:170px}
+.statusWrap{position:relative;min-width:170px;max-width:280px}
 .statusCurrent{
   width:100%;display:flex;align-items:center;justify-content:space-between;gap:8px;
   border:1px solid rgba(15,23,42,.08)!important;border-radius:13px!important;
@@ -112,9 +113,10 @@ input:focus,select:focus{border-color:#ffc107;box-shadow:0 0 0 3px rgba(255,193,
   border:0;border-radius:12px;padding:12px 9px;
   font-weight:900;font-size:12px;cursor:pointer;
 }
-.waNo{background:#e5e7eb;color:#374151}
-.waYes{background:#16a34a;color:#fff;box-shadow:0 4px 0 #0f7a31}
-.waNo{box-shadow:0 4px 0 #cbd5e1}
+.waNo{background:#172033;color:#fff;box-shadow:0 4px 0 #0b1220}
+.waYes{background:#ffc107;color:#111827;box-shadow:0 4px 0 #c58f00}
+.waNo:hover{filter:brightness(1.12)}
+.waYes:hover{filter:brightness(1.06)}
 @media(max-width:600px){
   .waBox{border-radius:18px}
 }
@@ -165,17 +167,21 @@ input:focus,select:focus{border-color:#ffc107;box-shadow:0 0 0 3px rgba(255,193,
   text-shadow:none!important;
 }
 .actions button:first-child{
-  background:#2196F3!important;
+  background:linear-gradient(135deg,#42A5F5,#1976D2)!important;
   color:#fff!important;
   box-shadow:0 4px 10px rgba(33,150,243,.30)!important;
 }
 .actions button:last-child{
-  background:#F44336!important;
+  background:linear-gradient(135deg,#FF5252,#D32F2F)!important;
   color:#fff!important;
   box-shadow:0 4px 10px rgba(244,67,54,.30)!important;
 }
 .actions button:first-child:hover{background:#1976D2!important}
 .actions button:last-child:hover{background:#D32F2F!important}
+
+/* Tombol aksi FIXZY — hitam elegan */
+.actions button,.actions button:first-child,.actions button:last-child{background:#111827!important;color:#ffffff!important;border:1px solid #0b1220!important;box-shadow:0 4px 10px rgba(0,0,0,.18)!important;font-weight:900!important;opacity:1!important}
+.actions button:hover{background:#1f2937!important;color:#ffffff!important}
 </style></head><body>
 <header><h1>🔧 Data Servis</h1><div class="grow"></div><button class="refresh" onclick="load()">↻ Refresh</button></header>
 <main>
@@ -256,59 +262,29 @@ function readSavedProfile(){
 
 async function loadAccountProfile(user){
  const cached=readSavedProfile();
-
- // Firebase users/{uid} tetap sumber utama.
  let firebase={};
  try{
   const snap=await getDoc(doc(db,"users",user.uid));
-  if(snap.exists())firebase=snap.data()||{};
+  if(snap.exists()) firebase=snap.data()||{};
  }catch(e){
-  console.warn("Profil Firebase tidak terbaca, memakai profil tersimpan:",e);
+  console.warn("Profil Firebase tidak terbaca:",e);
  }
 
- // Nama toko mengikuti field yang memang dipakai dashboard/register.
- storeName=String(
-   firebase.namaKonter||
-   firebase.namaToko||
-   firebase.namaUsaha||
-   firebase.toko||
-   firebase.namaTokoUsaha||
-   firebase.nama_usaha||
-   firebase.nama_toko||
-   firebase.storeName||
-   firebase.store||
-   cached.namaKonter||
-   cached.namaToko||
-   cached.namaUsaha||
-   cached.toko||
-   cached.namaTokoUsaha||
-   cached.nama_usaha||
-   cached.nama_toko||
-   cached.storeName||
-   cached.store||
-   ""
- ).trim();
-
+ // SUMBER NAMA TOKO RESMI: data Register -> users/{uid}.namaKonter
+ // Jangan gunakan email sebagai nama toko.
+ storeName=String(firebase.namaKonter||cached.namaKonter||"").trim();
  accountName=String(
-   firebase.namaPemilik||
-   firebase.nama||
-   firebase.namaLengkap||
-   firebase.namaUser||
-   firebase.username||
-   cached.namaPemilik||
-   cached.nama||
-   cached.namaLengkap||
-   cached.namaUser||
-   cached.username||
-   user?.displayName||
-   ""
+  firebase.namaPemilik||
+  cached.namaPemilik||
+  user?.displayName||
+  "Pengguna"
  ).trim();
 
- // Jangan pernah memakai email sebagai nama toko.
- if(!storeName)storeName="FIXZY";
- if(!accountName)accountName="Pengguna";
+ // Jika namaKonter benar-benar kosong di Firebase, gunakan identitas FIXZY,
+ // bukan email dan bukan teks "Nama Toko".
+ if(!storeName) storeName="FIXZY";
+ if(!accountName) accountName="Pengguna";
 
- // Sinkronkan cache supaya halaman lain memakai identitas toko yang sama.
  try{
   localStorage.setItem("fixzy_user_profile",JSON.stringify({
    ...cached,
@@ -316,10 +292,12 @@ async function loadAccountProfile(user){
    namaKonter:storeName,
    namaToko:storeName,
    namaUsaha:storeName,
+   toko:storeName,
    namaPemilik:accountName
   }));
  }catch(e){}
 }
+
 
 
 function waNumber(v){
@@ -331,6 +309,7 @@ function waNumber(v){
 }
 let waPending=null;
 function waStatus(status,item){
+ // Pesan WA selalu memakai nama toko terdaftar, bukan email akun.
  const n=waNumber(item.pelanggan?.wa||item.noHp);
  const label={
   masuk:"HP sudah diterima","nunggu-sparepart":"Sedang menunggu sparepart",
