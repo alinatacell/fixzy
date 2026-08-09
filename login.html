@@ -82,7 +82,7 @@ body{background:#0d0d0d;background-image:radial-gradient(circle at top, rgba(255
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js";
-import { getAuth, signInWithEmailAndPassword, signOut, sendPasswordResetEmail, setPersistence, browserLocalPersistence } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-auth.js";
+import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, signOut, sendPasswordResetEmail, setPersistence, browserLocalPersistence } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-auth.js";
 import { getFirestore, doc, getDoc, updateDoc, serverTimestamp, collection, query, where, getDocs, setDoc } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js";
 
 const firebaseConfig = {
@@ -99,9 +99,26 @@ const db = getFirestore(app);
 
 
 /* ================= FIREBASE BRIDGE UNTUK HALAMAN IFRAME ================= */
+let bridgeUserReady=null;
+let bridgeUserResolve=null;
+bridgeUserReady=new Promise(resolve=>{bridgeUserResolve=resolve;});
+onAuthStateChanged(auth,user=>{
+  if(user && bridgeUserResolve){ bridgeUserResolve(user); bridgeUserResolve=null; }
+});
+
+async function getBridgeUser(){
+  if(auth.currentUser) return auth.currentUser;
+  const user=await Promise.race([
+    bridgeUserReady,
+    new Promise(resolve=>setTimeout(()=>resolve(auth.currentUser||null),12000))
+  ]);
+  return user||auth.currentUser||null;
+}
+
 async function firebaseBridge(req){
-  if(!auth.currentUser) throw new Error("Sesi Firebase belum aktif.");
-  const uid=auth.currentUser.uid;
+  const user=await getBridgeUser();
+  if(!user) throw new Error("Sesi Firebase belum aktif setelah menunggu 12 detik.");
+  const uid=user.uid;
 
   if(req.op==="getKaryawan"){
     const snap=await getDocs(query(collection(db,"karyawan"),where("uid","==",uid)));
@@ -123,6 +140,8 @@ async function firebaseBridge(req){
 
   throw new Error("Operasi Firebase tidak dikenal: "+req.op);
 }
+
+window.parent?.postMessage({type:"FIXZY_FIREBASE_BRIDGE_READY"},"*");
 
 window.addEventListener("message",async e=>{
   const d=e.data||{};
