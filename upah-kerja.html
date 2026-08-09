@@ -226,7 +226,7 @@ input:focus{border-color:#94a3b8;box-shadow:0 0 0 3px rgba(37,99,235,.08)}
   </section>
 
   <div class="notice">
-    <b>Aturan:</b> hanya karyawan yang terdaftar di Data Karyawan yang ditampilkan. 1 teknisi + 1 tanggal = 1 hari kerja.
+    <b>Aturan:</b> Nama teknisi pada nota harus sama dengan nama di Data Karyawan. 1 nama + 1 tanggal = 1 hari hadir.
     Pengambilan yang memuat kata <b>ambil uang</b>, <b>pengambilan uang</b>,
     atau <b>kasbon</b> akan dikurangi dari total upah bulan tersebut.
   </div>
@@ -409,9 +409,16 @@ function getTechnicianName(r){
 function cleanTechnicianDisplayName(v){
   let s=String(v??"").trim();
   if(!s)return "";
-  // Nota baru menyimpan text option seperti "Jilun • Teknisi".
-  s=s.replace(/\\s*[•|]\\s*(teknisi|karyawan|admin|kasir|kurir).*$/i,"");
-  return s.trim();
+
+  // Data teknisi dari nota bisa berupa:
+  // "Nama • Teknisi", "Nama | Teknisi", "Nama - Teknisi"
+  // atau hanya "Nama".
+  s=s
+    .replace(/\s*[•|]\s*(teknisi|karyawan|admin|kasir|kurir).*$/i,"")
+    .replace(/\s+-\s+(teknisi|karyawan|admin|kasir|kurir).*$/i,"")
+    .trim();
+
+  return s;
 }
 
 function normalizeName(v){
@@ -565,27 +572,56 @@ function buildData(){
   const period=$("month").value||thisMonth();
   const hadir={};
 
-  // Pencatatan hadir hanya untuk teknisi yang berhasil dicocokkan
-  // dengan data karyawan yang TERDAFTAR saat ini.
+  /*
+   * ATURAN UPah:
+   * Per tanggal saja.
+   *
+   * Contoh:
+   * 01 Agustus:
+   *   nota teknisi = "Farhan"
+   *   data karyawan = "Farhan"
+   *   => Farhan HADIR pada 01 Agustus.
+   *
+   * Berapa pun jumlah nota pada tanggal yang sama tetap 1 hari.
+   *
+   * Patokan pencocokan untuk kehadiran adalah:
+   * NAMA TEKNISI PADA NOTA === NAMA KARYAWAN PADA DATA KARYAWAN
+   *
+   * Tidak ada nama Farhan/Jilun yang ditulis di kode.
+   */
+
   servis
     .filter(r=>activeService(r)&&dateOf(r).startsWith(period))
     .forEach(r=>{
-      const emp=findRegisteredEmployee(r);
-      const d=dateOf(r);
-      const name=emp?employeeName(emp):"";
-      if(!emp||!name||!d)return;
+      const tanggal=dateOf(r);
+      if(!tanggal)return;
 
-      if(!hadir[name])hadir[name]=new Set();
-      hadir[name].add(d);
+      const teknisiNota=normalizeName(
+        cleanTechnicianDisplayName(getTechnicianName(r))
+      );
+      if(!teknisiNota)return;
+
+      // Cari nama yang SAMA PERSIS di Data Karyawan.
+      const emp=karyawan.find(e=>{
+        const namaKaryawan=normalizeName(employeeName(e));
+        return namaKaryawan && namaKaryawan===teknisiNota;
+      });
+
+      if(!emp)return;
+
+      const namaKaryawan=employeeName(emp);
+      if(!namaKaryawan)return;
+
+      if(!hadir[namaKaryawan])hadir[namaKaryawan]=new Set();
+      hadir[namaKaryawan].add(tanggal);
     });
 
-  // IMPORTANT:
-  // The displayed employee list comes ONLY from karyawan.
-  // Never add names/UUIDs discovered from servis, wages, or other collections.
+  // DAFTAR YANG DITAMPILKAN SELALU HANYA DARI DATA KARYAWAN.
   const registeredEmployees=karyawan
     .map(r=>{
       const name=employeeName(r);
       if(!name)return null;
+
       const rate=num(
         r.upah??
         r.upahHarian??
@@ -593,6 +629,7 @@ function buildData(){
         r.rate??
         r.upahPerHari
       );
+
       return {record:r,name,rate};
     })
     .filter(Boolean);
@@ -605,7 +642,10 @@ function buildData(){
     .map(e=>{
       const name=e.name;
       const rate=e.rate;
+
+      // Set tanggal unik = jumlah hari hadir.
       const dates=hadir[name]?[...hadir[name]].sort():[];
+
       const gross=rate*dates.length;
 
       const takenRows=withdrawals.filter(r=>{
@@ -616,7 +656,7 @@ function buildData(){
         const target=normalizeName(name);
         if(!n||!target)return false;
 
-        return n===target||n.includes(target)||target.includes(n);
+        return n===target;
       });
 
       const take=takenRows.reduce((a,r)=>a+withdrawalAmount(r),0);
