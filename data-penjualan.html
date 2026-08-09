@@ -25,14 +25,77 @@ table{width:100%;border-collapse:collapse;min-width:950px}th,td{padding:10px 9px
 .item{background:#fff;border-radius:13px;padding:13px;box-shadow:0 5px 18px rgba(0,0,0,.06)}.item-top{display:flex;justify-content:space-between;gap:8px}.item h3{margin:0;font-size:14px}.line{display:flex;justify-content:space-between;gap:10px;padding-top:7px;font-size:12px}.line span:first-child{color:#64748b}
 }
 
-.top-actions{display:flex;align-items:center;justify-content:flex-end;gap:8px;margin-left:auto}
-.refresh,.back{border:0;background:#111827;color:#fff;border-radius:10px;padding:9px 13px;font-weight:800;white-space:nowrap}
-.refresh:active,.back:active{transform:scale(.97)}
-@media(max-width:700px){
-  .top{padding:12px 14px}
-  .brand{font-size:20px;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.brand{font-size:20px;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
   .top-actions{gap:5px}
   .refresh,.back{padding:9px 10px;font-size:12px}
+}
+
+
+/* Header dan tombol disamakan dengan Dashboard Admin */
+.top{
+  width:100%;
+  display:flex !important;
+  align-items:center;
+  justify-content:space-between !important;
+  gap:10px;
+}
+
+.top .brand{
+  order:1 !important;
+  margin-right:auto !important;
+  text-align:left !important;
+  flex:1 1 auto !important;
+  min-width:0;
+  font-weight:900;
+  font-size:20px;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+}
+
+.top .top-actions{
+  order:2 !important;
+  margin-left:auto !important;
+  display:flex !important;
+  align-items:center;
+  justify-content:flex-end;
+  gap:8px;
+  flex:0 0 auto;
+}
+
+#btnRefreshPage,
+#btnKembaliIndex{
+  border:0;
+  background:#0f172a;
+  color:#fff;
+  padding:10px 14px;
+  border-radius:12px;
+  font-size:14px;
+  font-weight:700;
+  cursor:pointer;
+  white-space:nowrap;
+  box-shadow:0 4px 12px rgba(0,0,0,.12);
+}
+
+#btnRefreshPage:active,
+#btnKembaliIndex:active{
+  transform:scale(.97);
+}
+
+@media(max-width:600px){
+  .top{
+    gap:7px;
+  }
+
+  .top .top-actions{
+    gap:5px;
+  }
+
+  #btnRefreshPage,
+  #btnKembaliIndex{
+    padding:8px 9px;
+    font-size:12px;
+  }
 }
 
 </style>
@@ -40,9 +103,15 @@ table{width:100%;border-collapse:collapse;min-width:950px}th,td{padding:10px 9px
 <body>
 <header class="top">
   <div class="brand" id="brand">Nama Toko</div>
+
   <div class="top-actions">
-    <button class="refresh" type="button" onclick="refreshHalaman()">↻ Refresh</button>
-    <button class="back" type="button" onclick="kembali()">← Kembali</button>
+    <button id="btnRefreshPage" type="button" onclick="refreshHalaman()" aria-label="Refresh halaman">
+      ↻ Refresh
+    </button>
+
+    <button id="btnKembaliIndex" type="button" onclick="kembaliKeIndex()" aria-label="Kembali ke Index">
+      ← Kembali
+    </button>
   </div>
 </header>
 <main class="wrap">
@@ -56,6 +125,17 @@ table{width:100%;border-collapse:collapse;min-width:950px}th,td{padding:10px 9px
 <section class="table-card"><div class="table-wrap"><table><thead><tr><th>Nota</th><th>Tanggal</th><th>Pelanggan</th><th>Produk</th><th>Status</th><th>Pembayaran</th><th class="num">Total</th><th class="num">Dibayar</th><th class="num">Sisa</th></tr></thead><tbody id="tbody"></tbody></table></div></section>
 <section id="mobile" class="mobile"></section>
 </main>
+
+<script>
+function kembaliKeIndex(){
+  window.location.href = "index.html";
+}
+
+function refreshHalaman(){
+  window.location.reload();
+}
+</script>
+
 <script type="module">
 import {initializeApp} from "https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js";
 import {getAuth,onAuthStateChanged} from "https://www.gstatic.com/firebasejs/11.10.0/firebase-auth.js";
@@ -138,20 +218,6 @@ function resetFilter(){
 function refreshHalaman(){
   window.location.reload();
 }
-
-function kembaliKeIndex(){
-  /*
-   * Dashboard dibuka di dalam iframe index.html.
-   * Jangan membuka index.html di dalam iframe lagi,
-   * karena akan membuat index bertumpuk/bersarang.
-   */
-  if(window.parent && window.parent !== window){
-    window.parent.location.href = "index.html";
-  }else{
-    window.location.href = "index.html";
-  }
-}
-
 
 onAuthStateChanged(auth,async user=>{
   await load();
