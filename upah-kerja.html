@@ -389,19 +389,29 @@ async function loadWithdrawals(){
 }
 
 function activeService(r){
-  return String(r?.status||"").toLowerCase()!=="batal" && r?.omzetEligible!==false;
+  // Kehadiran/upah berasal dari nota servis yang ditulis teknisi.
+  // omzetEligible tidak boleh menghapus hari hadir.
+  return String(r?.status||"").toLowerCase()!=="batal";
 }
 
 function getTechnicianName(r){
   return String(
-    r?.teknisiNama||
     r?.namaTeknisi||
-    r?.teknisi||
+    r?.teknisiNama||
     r?.teknisiName||
     r?.karyawanNama||
     r?.namaKaryawan||
+    r?.teknisi||
     ""
   ).trim();
+}
+
+function cleanTechnicianDisplayName(v){
+  let s=String(v??"").trim();
+  if(!s)return "";
+  // Nota baru menyimpan text option seperti "Jilun • Teknisi".
+  s=s.replace(/\\s*[•|]\\s*(teknisi|karyawan|admin|kasir|kurir).*$/i,"");
+  return s.trim();
 }
 
 function normalizeName(v){
@@ -422,61 +432,129 @@ function employeeName(r){
   ).trim();
 }
 
-function employeeKeys(r){
+function employeeIdentityKeys(r){
+  // IDENTITAS KARYAWAN — bukan nama tertentu.
+  // ID dokumen karyawan menjadi patokan utama agar saat nama karyawan
+  // berubah, riwayat nota tetap masuk ke orang yang sama.
   return [
     r?.id,
-    r?.uid,
-    r?.userId,
-    r?.userID,
     r?.karyawanId,
     r?.karyawanID,
     r?.teknisiId,
     r?.teknisiID,
     r?.teknisiUid,
     r?.teknisiUID,
-    r?.email,
-    r?.username,
-    employeeName(r)
+    r?.employeeId,
+    r?.employeeID,
+    r?.employeeUid,
+    r?.employeeUID,
+    r?.userId,
+    r?.userID,
+    r?.uid,
+    r?.email
   ]
   .filter(v=>v!==undefined&&v!==null&&String(v).trim()!=="")
   .map(v=>normalizeName(v));
 }
 
-function serviceTechnicianKeys(r){
+function employeeNameKeys(r){
+  const raw=[
+    employeeName(r),
+    r?.nama,
+    r?.namaKaryawan,
+    r?.namaTeknisi,
+    r?.name,
+    r?.username
+  ];
+
+  const keys=[];
+  raw.forEach(v=>{
+    if(v===undefined||v===null)return;
+    const s=String(v).trim();
+    if(!s)return;
+    keys.push(normalizeName(s));
+
+    const clean=cleanTechnicianDisplayName(s);
+    if(clean)keys.push(normalizeName(clean));
+  });
+
+  return [...new Set(keys)];
+}
+
+function serviceTechnicianIdentityKeys(r){
+  // Yang dicari terlebih dahulu adalah ID teknisi/karyawan yang tersimpan
+  // di nota. UID pemilik nota TIDAK dipakai karena itu bukan identitas teknisi.
   return [
-    r?.teknisi,
+    r?.teknisiId,
+    r?.teknisiID,
+    r?.teknisiUid,
+    r?.teknisiUID,
+    r?.karyawanId,
+    r?.karyawanID,
+    r?.employeeId,
+    r?.employeeID,
+    r?.employeeUid,
+    r?.employeeUID,
+    // Pada struktur nota FIXZY, field "teknisi" dapat berisi ID karyawan.
+    r?.teknisi
+  ]
+  .filter(v=>v!==undefined&&v!==null&&String(v).trim()!=="")
+  .map(v=>normalizeName(v));
+}
+
+function serviceTechnicianNameKeys(r){
+  const raw=[
     r?.namaTeknisi,
     r?.teknisiNama,
     r?.teknisiName,
-    r?.teknisiId,
-    r?.teknisiID,
-    r?.teknisiUid,
-    r?.teknisiUID,
-    r?.karyawanId,
-    r?.karyawanID,
     r?.karyawanNama,
     r?.namaKaryawan,
-    r?.userId,
-    r?.uid
-  ]
-  .filter(v=>v!==undefined&&v!==null&&String(v).trim()!=="")
-  .map(v=>normalizeName(v));
+    // Fallback bila field teknisi ternyata menyimpan nama, bukan ID.
+    r?.teknisi
+  ];
+
+  const keys=[];
+  raw.forEach(v=>{
+    if(v===undefined||v===null)return;
+    const s=String(v).trim();
+    if(!s)return;
+    const clean=cleanTechnicianDisplayName(s);
+    keys.push(normalizeName(clean||s));
+  });
+
+  return [...new Set(keys)];
 }
 
 function findRegisteredEmployee(r){
-  const serviceKeys=serviceTechnicianKeys(r);
-  if(!serviceKeys.length)return null;
+  // ============================================================
+  // ATURAN UTAMA:
+  // 1. Ambil SEMUA data dari collection karyawan.
+  // 2. Cocokkan ID teknisi pada nota dengan ID karyawan.
+  // 3. Jika nota tidak menyimpan ID, baru cocokkan nama teknisi
+  //    dengan nama yang SAAT INI ada di data karyawan.
+  // 4. Tidak ada nama Farhan/Jilun yang ditulis permanen di kode.
+  // ============================================================
 
-  for(const emp of karyawan){
-    const keys=employeeKeys(emp);
-    if(keys.some(k=>serviceKeys.includes(k)))return emp;
+  const serviceIds=serviceTechnicianIdentityKeys(r);
+
+  if(serviceIds.length){
+    for(const emp of karyawan){
+      const empIds=employeeIdentityKeys(emp);
+      if(empIds.some(id=>serviceIds.includes(id))){
+        return emp;
+      }
+    }
   }
 
-  // Name comparison with common technician fields.
-  const serviceName=normalizeName(getTechnicianName(r));
-  if(serviceName){
+  // Fallback hanya jika data nota memang tidak mempunyai ID teknisi.
+  const serviceNames=serviceTechnicianNameKeys(r);
+
+  if(serviceNames.length){
     for(const emp of karyawan){
-      if(normalizeName(employeeName(emp))===serviceName)return emp;
+      const empNames=employeeNameKeys(emp);
+      if(empNames.some(name=>serviceNames.includes(name))){
+        return emp;
+      }
     }
   }
 
@@ -487,9 +565,8 @@ function buildData(){
   const period=$("month").value||thisMonth();
   const hadir={};
 
-  // IMPORTANT:
-  // Attendance is collected only when the technician on the service
-  // note can be matched to an employee already registered in karyawan.
+  // Pencatatan hadir hanya untuk teknisi yang berhasil dicocokkan
+  // dengan data karyawan yang TERDAFTAR saat ini.
   servis
     .filter(r=>activeService(r)&&dateOf(r).startsWith(period))
     .forEach(r=>{
@@ -664,32 +741,25 @@ window.loadData=async function(){
 };
 
 window.tutupHalaman=function(){
-  // Samakan perilaku dengan halaman internal dashboard:
-  // kembali ke halaman sebelumnya, bukan menutup tab browser.
+  // FIXZY membuka halaman sebagai iframe dari Dashboard.
+  // Hapus iframe tersebut agar kembali ke Dashboard, sama seperti
+  // halaman Data Penjualan/Data Servis yang sudah berjalan.
   try{
-    if(document.referrer && document.referrer!==location.href){
-      history.back();
+    if(window.frameElement){
+      window.frameElement.remove();
       return;
     }
+  }catch(e){}
 
-    if(history.length>1){
-      history.back();
+  try{
+    if(window.parent!==window){
+      window.parent.postMessage({type:"FIXZY_CLOSE_PAGE"},"*");
       return;
     }
+  }catch(e){}
 
-    // Fallback bila halaman dibuka langsung.
-    const candidates=[
-      "dashboard.html",
-      "index.html",
-      "./dashboard.html",
-      "./index.html"
-    ];
-
-    // Prefer dashboard.html when it exists as the normal internal entry.
-    location.href="dashboard.html";
-  }catch(e){
-    location.href="dashboard.html";
-  }
+  // Jika dibuka langsung sebagai tab, jangan memunculkan alert browser.
+  try{window.close()}catch(e){}
 };
 
 onAuthStateChanged(auth,async user=>{
