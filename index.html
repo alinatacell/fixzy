@@ -414,7 +414,7 @@ function tampilkanLogin(){
 
   const frame = document.createElement("iframe");
   frame.title = "Login FIXZY";
-  frame.src = "login.html?v=2";
+  frame.src = "login.html?v=3";
   frame.style.cssText =
     "width:100%;height:100%;border:0;display:block;background:#fff;";
 
@@ -498,8 +498,7 @@ window.addEventListener("message", function(e){
   const d = e.data || {};
 
   if(d.type === "FIXZY_LOGIN_SUCCESS"){
-
-    sessionStorage.setItem("fixzy_logged_in", "1");
+    sessionStorage.setItem("fixzy_logged_in","1");
 
     localStorage.setItem(
       "fixzy_user_profile",
@@ -513,25 +512,24 @@ window.addEventListener("message", function(e){
     );
 
     bacaProfil();
-
-    /* Setelah login berhasil langsung masuk halaman utama */
     tampilkanBeranda();
+    return;
   }
 
   if(d.type === "FIXZY_REGISTER_SUCCESS"){
-    /* Setelah registrasi, tampilkan kembali halaman login */
     tampilkanLogin();
+    return;
   }
 
   if(d.type === "FIXZY_REQUEST_AUTH"){
-    // Kirim identitas sesi FIXZY ke iframe yang meminta.
+    let p={};
     try{
-      kirimProfilKeFrame(e.source?.frameElement || null);
-    }catch(err){
-      let p={};
-      try{p=JSON.parse(localStorage.getItem("fixzy_user_profile")||"{}")}catch(x){}
-      try{
-        e.source?.postMessage({
+      p=JSON.parse(localStorage.getItem("fixzy_user_profile")||"{}");
+    }catch(err){}
+
+    try{
+      if(e.source){
+        e.source.postMessage({
           type:"FIXZY_PARENT_AUTH",
           uid:p.uid||localStorage.getItem("fixzy_uid")||"",
           email:p.email||"",
@@ -540,7 +538,9 @@ window.addEventListener("message", function(e){
           role:p.role||"user",
           loggedIn:sessionStorage.getItem("fixzy_logged_in")==="1"
         },"*");
-      }catch(x){}
+      }
+    }catch(err){
+      console.warn("Gagal mengirim auth ke iframe:",err);
     }
   }
 });
@@ -607,8 +607,6 @@ bacaProfil();
 if(sudahLogin()){
   tampilkanBeranda();
 }else{
-  /* Saat index pertama dibuka dan belum login,
-     langsung tampilkan login.html */
   tampilkanLogin();
 }
 </script>
