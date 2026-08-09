@@ -202,7 +202,7 @@ input:focus{border-color:#94a3b8;box-shadow:0 0 0 3px rgba(37,99,235,.08)}
         <p>
           Upah dihitung dari teknisi yang menulis nota servis.
           Beberapa nota pada tanggal yang sama tetap dihitung 1 hari hadir.
-          Pengambilan uang/kasbon otomatis mengurangi sisa upah.
+          Pengambilan uang/kasbon otomatis mengurangi total upah, sehingga yang ditampilkan sebagai Total Upah adalah sisa setelah kasbon.
         </p>
       </div>
       <div class="period-badge" id="periodBadge">Bulan Ini</div>
@@ -221,12 +221,12 @@ input:focus{border-color:#94a3b8;box-shadow:0 0 0 3px rgba(37,99,235,.08)}
   <section class="summary">
     <div class="summary-card"><small>Karyawan / Teknisi</small><b id="cEmployees">0</b></div>
     <div class="summary-card"><small>Total Hari Hadir</small><b id="cDays">0</b></div>
-    <div class="summary-card"><small>Total Upah</small><b id="cGross">Rp0</b></div>
+    <div class="summary-card"><small>Total Upah Setelah Kasbon</small><b id="cGross">Rp0</b></div>
     <div class="summary-card"><small>Sisa Upah</small><b id="cNet">Rp0</b></div>
   </section>
 
   <div class="notice">
-    <b>Aturan:</b> Nama teknisi pada nota harus sama dengan nama di Data Karyawan. 1 nama + 1 tanggal = 1 hari hadir.
+    <b>Aturan:</b> Setiap tanggal kalender dicek. Jika nama teknisi pada nota sama dengan nama di Data Karyawan, tanggal tersebut dihitung 1 hari hadir. Banyak nota pada tanggal yang sama tetap 1 hari.
     Pengambilan yang memuat kata <b>ambil uang</b>, <b>pengambilan uang</b>,
     atau <b>kasbon</b> akan dikurangi dari total upah bulan tersebut.
   </div>
@@ -340,15 +340,9 @@ async function loadKaryawan(){
     wages[name]=rate;
   }
 
-  // Tetap kompatibel dengan data upah lama di perangkat.
-  try{
-    Object.keys(localStorage)
-      .filter(k=>k.startsWith("fixzy_wage_rates"))
-      .forEach(k=>{
-        const x=JSON.parse(localStorage.getItem(k)||"{}");
-        if(x&&typeof x==="object")Object.assign(wages,x);
-      });
-  }catch(e){}
+  // Nominal upah selalu berasal dari Data Karyawan.
+  // Tidak memakai nominal lama dari localStorage agar tidak berbeda
+  // dengan data yang sekarang tersimpan di Firebase.
 }
 
 function withdrawalText(r){
@@ -570,53 +564,87 @@ function findRegisteredEmployee(r){
 
 function buildData(){
   const period=$("month").value||thisMonth();
-  const hadir={};
 
   /*
-   * ATURAN UPah:
-   * Per tanggal saja.
+   * ================================================================
+   * LOGIKA FINAL UPAH — BERDASARKAN KALENDER
+   * ================================================================
    *
-   * Contoh:
-   * 01 Agustus:
-   *   nota teknisi = "Farhan"
-   *   data karyawan = "Farhan"
-   *   => Farhan HADIR pada 01 Agustus.
+   * 1. Data Karyawan = MASTER.
+   * 2. Ambil nominal upah dari Data Karyawan.
+   * 3. Buat kalender lengkap untuk bulan yang dipilih:
+   *      tanggal 01 sampai tanggal terakhir bulan tersebut.
+   * 4. Untuk setiap tanggal, cari nota di collection "servis".
+   * 5. Ambil NAMA TEKNISI dari nota.
+   * 6. Jika nama teknisi == nama karyawan yang ada di Data Karyawan,
+   *    maka karyawan tersebut HADIR pada tanggal itu.
+   * 7. Berapa pun jumlah nota pada tanggal yang sama = tetap 1 hari.
+   * 8. Total upah = jumlah tanggal hadir x nominal upah.
    *
-   * Berapa pun jumlah nota pada tanggal yang sama tetap 1 hari.
-   *
-   * Patokan pencocokan untuk kehadiran adalah:
-   * NAMA TEKNISI PADA NOTA === NAMA KARYAWAN PADA DATA KARYAWAN
-   *
-   * Tidak ada nama Farhan/Jilun yang ditulis di kode.
+   * Tidak ada nama karyawan tertentu yang ditulis di kode.
    */
 
+  // ---------------------------------------------------------------
+  // Kalender bulan yang dipilih
+  // ---------------------------------------------------------------
+  const [year,month]=period.split("-").map(Number);
+  const lastDay=new Date(year,month,0).getDate();
+
+  const calendar=[];
+  for(let day=1;day<=lastDay;day++){
+    calendar.push(
+      `${year}-${String(month).padStart(2,"0")}-${String(day).padStart(2,"0")}`
+    );
+  }
+
+  // ---------------------------------------------------------------
+  // Index servis:
+  // tanggal -> kumpulan nama teknisi yang bekerja pada tanggal itu
+  // ---------------------------------------------------------------
+  const hadirByDate={};
+
   servis
-    .filter(r=>activeService(r)&&dateOf(r).startsWith(period))
+    .filter(r=>{
+      const d=dateOf(r);
+      if(!d.startsWith(period))return false;
+
+      // Collection servis dapat menyimpan jenis transaksi.
+      // Untuk upah hanya nota servis yang dihitung.
+      const jenis=String(r?.jenis||"").trim().toLowerCase();
+      if(jenis && jenis!=="servis")return false;
+
+      return activeService(r);
+    })
     .forEach(r=>{
       const tanggal=dateOf(r);
       if(!tanggal)return;
 
-      const teknisiNota=normalizeName(
-        cleanTechnicianDisplayName(getTechnicianName(r))
+      // Nota baru menyimpan nama teknisi pada namaTeknisi,
+      // contoh: "Nama • Teknisi".
+      const namaTeknisi=normalizeName(
+        cleanTechnicianDisplayName(
+          r?.namaTeknisi||
+          r?.teknisiNama||
+          r?.teknisiName||
+          r?.karyawanNama||
+          r?.namaKaryawan||
+          ""
+        )
       );
-      if(!teknisiNota)return;
 
-      // Cari nama yang SAMA PERSIS di Data Karyawan.
-      const emp=karyawan.find(e=>{
-        const namaKaryawan=normalizeName(employeeName(e));
-        return namaKaryawan && namaKaryawan===teknisiNota;
-      });
+      if(!namaTeknisi)return;
 
-      if(!emp)return;
+      if(!hadirByDate[tanggal]){
+        hadirByDate[tanggal]=new Set();
+      }
 
-      const namaKaryawan=employeeName(emp);
-      if(!namaKaryawan)return;
-
-      if(!hadir[namaKaryawan])hadir[namaKaryawan]=new Set();
-      hadir[namaKaryawan].add(tanggal);
+      // Satu nama hanya disimpan satu kali per tanggal.
+      hadirByDate[tanggal].add(namaTeknisi);
     });
 
-  // DAFTAR YANG DITAMPILKAN SELALU HANYA DARI DATA KARYAWAN.
+  // ---------------------------------------------------------------
+  // DATA KARYAWAN = MASTER YANG DITAMPILKAN
+  // ---------------------------------------------------------------
   const registeredEmployees=karyawan
     .map(r=>{
       const name=employeeName(r);
@@ -630,40 +658,66 @@ function buildData(){
         r.upahPerHari
       );
 
-      return {record:r,name,rate};
+      return {
+        record:r,
+        name,
+        rate
+      };
     })
     .filter(Boolean);
 
   const search=normalizeName($("search").value);
 
   return registeredEmployees
-    .filter(e=>!search||normalizeName(e.name).includes(search))
+    .filter(e=>{
+      return !search ||
+        normalizeName(e.name).includes(search);
+    })
     .sort((a,b)=>a.name.localeCompare(b.name,"id"))
     .map(e=>{
-      const name=e.name;
-      const rate=e.rate;
+      const namaKaryawan=normalizeName(e.name);
 
-      // Set tanggal unik = jumlah hari hadir.
-      const dates=hadir[name]?[...hadir[name]].sort():[];
+      // -------------------------------------------------------------
+      // Cek SATU PER SATU tanggal kalender.
+      // Kalau pada tanggal tersebut ada nama teknisi yang sama,
+      // tanggal tersebut menjadi 1 hari hadir.
+      // -------------------------------------------------------------
+      const dates=[];
 
-      const gross=rate*dates.length;
+      calendar.forEach(tanggal=>{
+        const teknisiHari=hadirByDate[tanggal];
 
+        if(teknisiHari && teknisiHari.has(namaKaryawan)){
+          dates.push(tanggal);
+        }
+      });
+
+      const hariHadir=dates.length;
+      const gross=hariHadir*e.rate;
+
+      // -------------------------------------------------------------
+      // Pengambilan/kasbon bulan yang sama.
+      // Tetap berdasarkan nama karyawan saat ini.
+      // -------------------------------------------------------------
       const takenRows=withdrawals.filter(r=>{
         const d=dateOf(r);
         if(!d.startsWith(period))return false;
 
-        const n=normalizeName(withdrawalName(r));
-        const target=normalizeName(name);
-        if(!n||!target)return false;
+        const n=normalizeName(
+          cleanTechnicianDisplayName(withdrawalName(r))
+        );
 
-        return n===target;
+        return n && n===namaKaryawan;
       });
 
-      const take=takenRows.reduce((a,r)=>a+withdrawalAmount(r),0);
+      const take=takenRows.reduce(
+        (total,r)=>total+withdrawalAmount(r),
+        0
+      );
 
       return {
-        name,
-        rate,
+        name:e.name,
+        rate:e.rate,
         dates,
         gross,
         take,
