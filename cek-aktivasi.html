@@ -18,7 +18,7 @@ header{background:#111827;color:#fff;padding:14px 18px;position:sticky;top:0;z-i
 .hero h2{margin:0 0 7px;font-size:28px}.hero p{margin:0;color:#cbd5e1;line-height:1.5}
 .info{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:15px}
 .box{background:#f8fafc;border:1px solid #e5e7eb;border-radius:16px;padding:16px}
-.box small{display:block;color:#64748b;font-weight:800;margin-bottom:7px}.box b{font-size:20px}
+.box small{display:block;color:#64748b;font-weight:800;margin-bottom:7px}.box b{font-size:20px;color:#111827 !important}
 .green{color:#059669}.red{color:#dc2626}.blue{color:#2563eb}
 label{display:block;font-weight:800;color:#475569;margin-bottom:8px}
 select{width:100%;padding:14px;border:1px solid #cbd5e1;border-radius:13px;background:#fff;font-size:17px}
@@ -51,7 +51,7 @@ select{width:100%;padding:14px;border:1px solid #cbd5e1;border-radius:13px;backg
     <p>Periksa nama konter dan sisa masa aktif akun FIXZY.</p>
     <div class="info">
       <div class="box"><small>Nama Konter</small><b id="namaKonter">Memuat...</b></div>
-      <div class="box"><small>Sisa Aktivasi</small><b id="sisa" class="green">Memuat...</b></div>
+      <div class="box"><small>Aktif Sampai</small><b id="sisa" class="green">Memuat...</b></div>
     </div>
   </section>
 
@@ -143,7 +143,28 @@ function cariNama(p){
   return p.namaKonter||p.namaToko||p.namaUsaha||p.toko||p.nama||p.email||"Akun";
 }
 function cariExp(p){
-  return p.exp??p.expired??p.expiry??p.masaAktif??p.tanggalExp??p.tanggalExpired??null;
+  // Utamakan tanggal aktivasi/expired yang sebenarnya.
+  // Nilai seperti "trial" tidak ditampilkan sebagai masa aktif.
+  const kandidat = [
+    p.tanggalExpired,
+    p.tanggalExp,
+    p.expiry,
+    p.expired,
+    p.exp,
+    p.masaAktif
+  ];
+  for(const v of kandidat){
+    if(v === null || v === undefined || String(v).trim() === '') continue;
+    const t = String(v).trim().toLowerCase();
+    if(t === 'trial' || t === 'gratis' || t === 'free') continue;
+    if(formatTanggal(v)) return v;
+  }
+  return null;
+}
+function formatTanggalTampil(v){
+  const d=formatTanggal(v);
+  if(!d) return String(v||'-');
+  return d.toLocaleDateString('id-ID',{day:'2-digit',month:'long',year:'numeric'});
 }
 
 async function loadFirebase(){
@@ -180,11 +201,11 @@ async function loadFirebase(){
         document.getElementById("namaKonter").textContent=cariNama(profil);
         const exp=cariExp(profil);
         const hasil=sisaAktivasi(exp);
-        document.getElementById("sisa").textContent=hasil.text;
+        document.getElementById("sisa").textContent=formatTanggalTampil(exp);
         document.getElementById("sisa").className=hasil.days!==null&&hasil.days<=0?"red":"green";
         document.getElementById("status").className="status ok";
         document.getElementById("status").innerHTML=exp
-          ? `✅ Data akun berhasil dibaca. Masa aktif: <b>${String(exp)}</b>`
+          ? `✅ Data akun berhasil dibaca. Tanggal aktivasi/berakhir: <b>${formatTanggalTampil(exp)}</b>`
           : "⚠️ Tanggal aktivasi belum ditemukan pada data akun.";
       }catch(e){
         document.getElementById("status").className="status warn";
