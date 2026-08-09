@@ -46,6 +46,14 @@ input:focus,select:focus{border-color:#ffc107;box-shadow:0 0 0 3px rgba(255,193,
  .formgrid{grid-template-columns:1fr}.field.full{grid-column:auto}
  .modal{padding:8px}.modalbox{padding:14px;border-radius:16px}
 }
+
+.statusSelect{border:0!important;border-radius:999px!important;padding:9px 12px!important;font-weight:900!important;font-size:12px!important;cursor:pointer!important;min-width:155px;outline:none}
+.status-masuk{background:#fef3c7!important;color:#92400e!important}
+.status-nunggu-sparepart{background:#ffedd5!important;color:#9a3412!important}
+.status-proses{background:#dbeafe!important;color:#1d4ed8!important}
+.status-selesai{background:#dcfce7!important;color:#166534!important}
+.status-diambil{background:#e0e7ff!important;color:#3730a3!important}
+.status-batal{background:#fee2e2!important;color:#b91c1c!important}
 </style></head><body>
 <header><h1>🔧 Data Servis</h1><div class="grow"></div><button class="refresh" onclick="load()">↻ Refresh</button></header>
 <main>
@@ -68,7 +76,7 @@ input:focus,select:focus{border-color:#ffc107;box-shadow:0 0 0 3px rgba(255,193,
    <div class="field"><label>BIAYA</label><input id="eBiaya" inputmode="numeric"></div>
    <div class="field"><label>DP</label><input id="eDp" inputmode="numeric"></div>
    <div class="field"><label>STATUS</label><select id="eStatus">
-    <option value="masuk">Masuk</option><option value="proses">Proses</option><option value="selesai">Selesai</option><option value="diambil">Diambil</option><option value="batal">Batal</option>
+    <option value="masuk">Masuk</option><option value="nunggu-sparepart">Nunggu Sparepart</option><option value="proses">Proses</option><option value="selesai">Selesai</option><option value="diambil">Diambil</option><option value="batal">Batal</option>
    </select></div>
    <div class="field full"><label>CATATAN</label><textarea id="eCatatan"></textarea></div>
   </div>
@@ -108,6 +116,7 @@ function waStatus(status,item){
 
  const label={
   masuk:"HP sudah diterima",
+  "nunggu-sparepart":"Sedang menunggu sparepart",
   proses:"HP sedang diproses",
   selesai:"HP sudah selesai dan siap diambil",
   diambil:"HP sudah diambil",
@@ -193,6 +202,9 @@ window.saveEdit=async()=>{
   if(newStatus!==oldStatus)waStatus(newStatus,{...x,...payload});
  }catch(e){alert("Gagal menyimpan perubahan:\\n"+e.message)}
 };
+const STATUS=[["masuk","Masuk"],["nunggu-sparepart","Nunggu Sparepart"],["proses","Proses"],["selesai","Selesai"],["diambil","Diambil"],["batal","Batal"]];
+function statusClass(v){return "status-"+String(v||"masuk").toLowerCase().replace(/[^a-z0-9]+/g,"-")}
+function statusOptions(current){return STATUS.map(([v,l])=>`<option value="${v}" ${v===current?"selected":""}>${l}</option>`).join("")}
 function render(){
  const q=$("search").value.toLowerCase(), f=$("filter").value;
  const a=rows.filter(x=> (f==="semua" || String(x.status||"masuk")===f) && (!q || JSON.stringify(x).toLowerCase().includes(q)));
@@ -200,12 +212,12 @@ function render(){
  $("list").innerHTML=a.length?a.map(x=>`<article class="card">
   <div class="top"><div><div class="name">${esc(x.pelanggan?.nama||x.namaPelanggan||"Pelanggan")}</div>
   <div class="small">${esc(x.nomorNota||x.idServis||"-")} • ${esc(x.tanggal||"")}</div></div>
-  <span class="badge">${esc(x.status||"masuk")}</span></div>
+  <select class="statusSelect ${statusClass(x.status||"masuk")}" onchange="ubahStatus('${x.id}',this.value)">
+    ${statusOptions(x.status||"masuk")}
+  </select></div>
   <div class="info">📱 ${esc(x.tipe||x.tipeHp||"-")}<br>📞 ${esc(x.pelanggan?.wa||x.noHp||"-")}<br>🔧 Teknisi: ${esc(x.namaTeknisi||x.teknisi||"-")}<br>📝 ${esc(x.keluhan||x.kerusakan||"-")}<br>💰 Biaya: <b>${money(x.total??x.biaya)}</b> • DP: ${money(x.dp)}</div>
   <div class="actions">
    <button title="Edit data" onclick="edit('${x.id}')">✏️ Edit</button>
-   <button title="Ubah ke proses" onclick="status('${x.id}','proses')">🔧 Proses</button>
-   <button title="Ubah ke selesai" onclick="status('${x.id}','selesai')">✅ Selesai</button>
    <button title="Hapus data" onclick="hapus('${x.id}')">🗑️ Hapus</button>
   </div></article>`).join(""):`<div class="empty">Tidak ada data servis.</div>`;
 }
@@ -215,6 +227,13 @@ async function load(){
  catch(e){$("list").innerHTML=`<div class="empty err">Gagal membaca Firebase:\n${e.message}</div>`}
 }
 window.load=load;
+window.ubahStatus=async(id,s)=>{
+ const x=rows.find(a=>a.id===id);if(!x)return;
+ const old=x.status||"masuk";if(old===s)return;
+ if(!confirm(`Ubah status menjadi "${STATUS.find(a=>a[0]===s)?.[1]||s}"?`)){await load();return}
+ try{await updateDoc(doc(db,"servis",id),{status:s,updatedAt:serverTimestamp()});await load();waStatus(s,{...x,status:s})}
+ catch(e){alert("Gagal mengubah status:\n"+e.message);await load()}
+};
 window.status=async(id,s)=>{
  const x=rows.find(a=>a.id===id);if(!x)return;
  if(!confirm(`Ubah status menjadi "${s}"?`))return;
