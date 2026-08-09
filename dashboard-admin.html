@@ -50,7 +50,7 @@ table{width:100%;border-collapse:collapse;min-width:800px}th,td{padding:9px 8px;
 </style>
 </head>
 <body>
-<header class="top"><div class="brand" id="brand">NAMA <b>TOKO</b></div><div class="user" id="userInfo">Admin</div></header>
+<header class="top"><div class="brand" id="brand">NAMA TOKO</div><div class="user" id="userInfo">Admin</div></header>
 <main class="wrap">
 <section class="hero">
 <h1>Dashboard Admin</h1>
@@ -166,15 +166,15 @@ table{width:100%;border-collapse:collapse;min-width:800px}th,td{padding:9px 8px;
 <script type="module">
 import {initializeApp} from "https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js";
 import {getAuth,onAuthStateChanged} from "https://www.gstatic.com/firebasejs/11.10.0/firebase-auth.js";
-import {getFirestore,collection,getDocs,query,where} from "https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js";
+import {getFirestore,collection,getDocs,query,where,doc,getDoc} from "https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js";
 
 const firebaseConfig={
-  apiKey:"AIzaSyC2bGqV1xqjQY4J5y8h3Qf8yJ9lY9bZ3fQ",
+  apiKey:"AIzaSyCwMbJsuORhIq4QCmp4c1r6OsjAUlfxU5Y",
   authDomain:"fixzy-f056f.firebaseapp.com",
   projectId:"fixzy-f056f",
   storageBucket:"fixzy-f056f.firebasestorage.app",
-  messagingSenderId:"103988037878493",
-  appId:"1:103988037878493:web:5b3e0f4a1c9d7f0f3e2b11"
+  messagingSenderId:"838081521031",
+  appId:"1:838081521031:web:50fdee909b56460b055f22"
 };
 const app=initializeApp(firebaseConfig),auth=getAuth(app),db=getFirestore(app);
 let uid=null,stock=[],servis=[],penjualan=[];
@@ -222,6 +222,51 @@ function accountNameFromProfile(p,user){
          user?.displayName||
          user?.email||
          "Admin";
+}
+
+/* =========================================================
+   NAMA KONTER DARI DATA REGISTER FIREBASE
+   Register menyimpan data akun di:
+   users/{uid}
+   dengan field namaKonter.
+   ========================================================= */
+async function loadRegisteredProfile(user){
+  if(!user) return profile();
+
+  try{
+    const snap=await getDoc(doc(db,"users",user.uid));
+
+    if(snap.exists()){
+      const data=snap.data()||{};
+
+      /* Simpan profil lengkap agar halaman lain juga bisa membaca. */
+      const old=profile();
+
+      const merged={
+        ...old,
+        uid:user.uid,
+        nama:data.namaKonter||old.namaToko||old.namaUsaha||old.toko||"",
+        namaKonter:data.namaKonter||"",
+        namaToko:data.namaKonter||old.namaToko||"",
+        namaUsaha:data.namaKonter||old.namaUsaha||"",
+        namaPemilik:data.namaPemilik||old.namaPemilik||"",
+        whatsapp:data.whatsapp||old.whatsapp||"",
+        email:data.email||user.email||old.email||"",
+        alamat:data.alamat||old.alamat||"",
+        exp:data.tanggalBerakhir||old.exp||"",
+        tanggalBerakhir:data.tanggalBerakhir||old.tanggalBerakhir||"",
+        role:data.role||old.role||"user"
+      };
+
+      localStorage.setItem("fixzy_user_profile",JSON.stringify(merged));
+
+      return merged;
+    }
+  }catch(err){
+    console.warn("Profil toko Firebase tidak terbaca:",err);
+  }
+
+  return profile();
 }
 function badge(s){let c=s==="Batal"?"bad":(s==="Selesai"||s==="Diambil"?"ok":"wait");return `<span class="badge ${c}">${esc(s||"-")}</span>`}
 function loadLocal(){try{servis=JSON.parse(localStorage.getItem(KEY_S)||"[]")}catch(e){servis=[]}try{penjualan=JSON.parse(localStorage.getItem(KEY_P)||"[]")}catch(e){penjualan=[]}}
@@ -434,27 +479,49 @@ document.querySelectorAll(".tab").forEach(btn=>btn.onclick=()=>{document.querySe
 $("periodeRingkasan").onchange=renderRingkasan;
 $("wMonth").value=new Date().toISOString().slice(0,7);
 onAuthStateChanged(auth,async user=>{
- // Dashboard tidak pernah melempar ke halaman login.
- // Jika Firebase belum memiliki sesi, dashboard tetap tampil bersih;
- // data Firebase akan dimuat saat sesi akun tersedia.
- if(!user){
-   uid=null;
-   const p=profile();
-   $("brand").textContent=storeNameFromProfile(p);
-   $("userInfo").textContent=accountNameFromProfile(p);
-   loadLocal();
-   setupYears();
-   renderAll();
-   return;
- }
- uid=user.uid;
- const p=profile();
- $("brand").textContent=storeNameFromProfile(p,user);
- $("userInfo").textContent=accountNameFromProfile(p,user);
- loadLocal();
- setupYears();
- renderAll();
- await loadStock();
+  /* Dashboard tetap tampil tanpa melempar pengguna ke login. */
+  if(!user){
+    uid=null;
+    const p=profile();
+
+    $("brand").textContent=storeNameFromProfile(p);
+    $("userInfo").textContent=accountNameFromProfile(p);
+
+    loadLocal();
+    setupYears();
+    renderAll();
+    return;
+  }
+
+  uid=user.uid;
+
+  /* Ambil data REGISTER langsung dari users/{uid}. */
+  const p=await loadRegisteredProfile(user);
+
+  /* Nama KONTER, bukan nama pemilik. */
+  const namaKonter=
+    p.namaKonter||
+    p.namaToko||
+    p.namaUsaha||
+    p.toko||
+    "NAMA TOKO";
+
+  $("brand").textContent=namaKonter;
+
+  /* Nama akun/pemilik tetap di kanan atas. */
+  $("userInfo").textContent=
+    p.namaPemilik||
+    p.nama||
+    p.namaLengkap||
+    user.displayName||
+    user.email||
+    "Admin";
+
+  loadLocal();
+  setupYears();
+  renderAll();
+
+  await loadStock();
 });
 </script>
 </body>
