@@ -407,6 +407,20 @@ function tutupMenu(){
 }
 
 /* ================= HALAMAN LOGIN ================= */
+
+let firebaseBridgeFrame=null;
+
+function siapkanFirebaseBridge(){
+  if(firebaseBridgeFrame && firebaseBridgeFrame.isConnected) return firebaseBridgeFrame;
+  const f=document.createElement("iframe");
+  f.title="FIXZY Firebase Bridge";
+  f.src="login.html?bridge=1";
+  f.style.cssText="position:fixed;left:-10000px;top:-10000px;width:1px;height:1px;border:0;opacity:0;pointer-events:none;";
+  document.body.appendChild(f);
+  firebaseBridgeFrame=f;
+  return f;
+}
+
 function tampilkanLogin(){
   const area = document.getElementById("contentArea");
 
@@ -494,6 +508,34 @@ function bukaHalaman(btn){
 }
 
 /* ================= PESAN DARI LOGIN ================= */
+
+const firebaseProxyClients=new Map();
+
+window.addEventListener("message",function(e){
+  const d=e.data||{};
+  if(d.type==="FIXZY_FIREBASE_PROXY"){
+    const bridge=siapkanFirebaseBridge();
+    if(e.source) firebaseProxyClients.set(d.requestId,e.source);
+    const forward=()=>{
+      try{bridge.contentWindow.postMessage(d,"*");}
+      catch(err){
+        firebaseProxyClients.delete(d.requestId);
+        e.source?.postMessage({type:"FIXZY_FIREBASE_PROXY_RESULT",requestId:d.requestId,ok:false,error:err.message},"*");
+      }
+    };
+    if(bridge.contentDocument?.readyState==="complete") forward();
+    else bridge.addEventListener("load",forward,{once:true});
+    return;
+  }
+
+  if(d.type==="FIXZY_FIREBASE_PROXY_RESULT"){
+    const client=firebaseProxyClients.get(d.requestId);
+    if(client){
+      firebaseProxyClients.delete(d.requestId);
+      try{client.postMessage(d,"*")}catch(err){}
+    }
+  }
+});
 window.addEventListener("message", function(e){
   const d = e.data || {};
 
@@ -513,6 +555,8 @@ window.addEventListener("message", function(e){
 
     bacaProfil();
     tampilkanBeranda();
+    // Pertahankan satu iframe login tersembunyi sebagai pemegang Firebase Auth.
+    setTimeout(()=>siapkanFirebaseBridge(),200);
     return;
   }
 
@@ -606,6 +650,7 @@ bacaProfil();
 
 if(sudahLogin()){
   tampilkanBeranda();
+  setTimeout(()=>siapkanFirebaseBridge(),300);
 }else{
   tampilkanLogin();
 }
