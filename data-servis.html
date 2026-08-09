@@ -70,13 +70,75 @@ input,select{border:1px solid #cbd5e1;border-radius:10px;padding:10px;background
 </tr></thead><tbody id="tbody"></tbody></table></div></section>
 <section id="mobile" class="mobile"></section>
 </main>
-<script>
+<script type="module">
+import {initializeApp} from "https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js";
+import {getAuth,onAuthStateChanged} from "https://www.gstatic.com/firebasejs/11.10.0/firebase-auth.js";
+import {getFirestore,doc,getDoc} from "https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js";
+
+const firebaseConfig={
+  apiKey:"AIzaSyCwMbJsuORhIq4QCmp4c1r6OsjAUlfxU5Y",
+  authDomain:"fixzy-f056f.firebaseapp.com",
+  projectId:"fixzy-f056f",
+  storageBucket:"fixzy-f056f.firebasestorage.app",
+  messagingSenderId:"838081521031",
+  appId:"1:838081521031:web:50fdee909b56460b055f22"
+};
+
+const app=initializeApp(firebaseConfig);
+const auth=getAuth(app);
+const db=getFirestore(app);
+
+
 const KEY="fixzy_transaksi_servis_saved";
 let rows=[];
 function rupiah(n){return new Intl.NumberFormat("id-ID",{style:"currency",currency:"IDR",maximumFractionDigits:0}).format(Number(n)||0)}
 function esc(v){return String(v??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]))}
 function profile(){try{return JSON.parse(localStorage.getItem("fixzy_user_profile")||"{}")}catch(e){return {}}}
-function load(){try{rows=JSON.parse(localStorage.getItem(KEY)||"[]")}catch(e){rows=[]}document.getElementById("brand").textContent=profile().namaToko||profile().namaUsaha||profile().toko||"Nama Toko";render()}
+async function load(){
+  try{
+    rows=JSON.parse(localStorage.getItem(KEY)||"[]");
+  }catch(e){
+    rows=[];
+  }
+
+  const p=profile();
+  document.getElementById("brand").textContent=
+    p.namaKonter||p.namaToko||p.namaUsaha||p.toko||"Nama Toko";
+
+  render();
+
+  /* Nama toko resmi diambil langsung dari Firebase users/{uid}. */
+  try{
+    const user=auth.currentUser;
+
+    if(user){
+      const snap=await getDoc(doc(db,"users",user.uid));
+
+      if(snap.exists()){
+        const data=snap.data()||{};
+        const namaKonter=data.namaKonter||"Nama Toko";
+
+        document.getElementById("brand").textContent=namaKonter;
+
+        const old=profile();
+        localStorage.setItem("fixzy_user_profile",JSON.stringify({
+          ...old,
+          uid:user.uid,
+          namaKonter:namaKonter,
+          namaToko:namaKonter,
+          namaUsaha:namaKonter,
+          toko:namaKonter,
+          namaPemilik:data.namaPemilik||old.namaPemilik||"",
+          email:data.email||user.email||old.email||"",
+          tanggalBerakhir:data.tanggalBerakhir||old.tanggalBerakhir||"",
+          exp:data.tanggalBerakhir||old.exp||""
+        }));
+      }
+    }
+  }catch(err){
+    console.warn("Gagal mengambil nama toko dari Firebase:",err);
+  }
+}
 function active(r){return r.status!=="Batal"}
 function modalRow(r){return (r.sparepart||[]).reduce((a,x)=>a+(Number(x.hargaModal)||0)*(Number(x.qty)||1),0)}
 function match(r){
@@ -124,7 +186,9 @@ function kembali(){
     location.href="index.html";
   }
 }
-load();
+onAuthStateChanged(auth,async user=>{
+  await load();
+});
 </script>
 </body>
 </html>
