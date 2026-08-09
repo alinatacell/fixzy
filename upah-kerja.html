@@ -212,7 +212,7 @@ input:focus{border-color:#94a3b8;box-shadow:0 0 0 3px rgba(37,99,235,.08)}
   <div id="errorBox"></div>
 
   <section class="toolbar">
-    <input id="search" placeholder="Cari nama karyawan / teknisi..." oninput="render()">
+    <input id="search" placeholder="Cari nama karyawan..." oninput="render()">
     <input id="month" type="month" onchange="render()">
     <button class="btn btn-light" onclick="setThisMonth()">Bulan Ini</button>
     <button class="btn btn-dark" onclick="loadData()">↻ Muat Data</button>
@@ -226,7 +226,7 @@ input:focus{border-color:#94a3b8;box-shadow:0 0 0 3px rgba(37,99,235,.08)}
   </section>
 
   <div class="notice">
-    <b>Aturan:</b> 1 teknisi + 1 tanggal = 1 hari kerja.
+    <b>Aturan:</b> hanya karyawan yang terdaftar di Data Karyawan yang ditampilkan. 1 teknisi + 1 tanggal = 1 hari kerja.
     Pengambilan yang memuat kata <b>ambil uang</b>, <b>pengambilan uang</b>,
     atau <b>kasbon</b> akan dikurangi dari total upah bulan tersebut.
   </div>
@@ -393,50 +393,163 @@ function activeService(r){
 }
 
 function getTechnicianName(r){
-  return String(r?.teknisi||r?.namaTeknisi||r?.teknisiNama||"").trim();
+  return String(
+    r?.teknisiNama||
+    r?.namaTeknisi||
+    r?.teknisi||
+    r?.teknisiName||
+    r?.karyawanNama||
+    r?.namaKaryawan||
+    ""
+  ).trim();
+}
+
+function normalizeName(v){
+  return String(v??"")
+    .trim()
+    .toLowerCase()
+    .replace(/\s+/g," ");
+}
+
+function employeeName(r){
+  return String(
+    r?.nama||
+    r?.namaKaryawan||
+    r?.namaTeknisi||
+    r?.name||
+    r?.username||
+    ""
+  ).trim();
+}
+
+function employeeKeys(r){
+  return [
+    r?.id,
+    r?.uid,
+    r?.userId,
+    r?.userID,
+    r?.karyawanId,
+    r?.karyawanID,
+    r?.teknisiId,
+    r?.teknisiID,
+    r?.teknisiUid,
+    r?.teknisiUID,
+    r?.email,
+    r?.username,
+    employeeName(r)
+  ]
+  .filter(v=>v!==undefined&&v!==null&&String(v).trim()!=="")
+  .map(v=>normalizeName(v));
+}
+
+function serviceTechnicianKeys(r){
+  return [
+    r?.teknisi,
+    r?.namaTeknisi,
+    r?.teknisiNama,
+    r?.teknisiName,
+    r?.teknisiId,
+    r?.teknisiID,
+    r?.teknisiUid,
+    r?.teknisiUID,
+    r?.karyawanId,
+    r?.karyawanID,
+    r?.karyawanNama,
+    r?.namaKaryawan,
+    r?.userId,
+    r?.uid
+  ]
+  .filter(v=>v!==undefined&&v!==null&&String(v).trim()!=="")
+  .map(v=>normalizeName(v));
+}
+
+function findRegisteredEmployee(r){
+  const serviceKeys=serviceTechnicianKeys(r);
+  if(!serviceKeys.length)return null;
+
+  for(const emp of karyawan){
+    const keys=employeeKeys(emp);
+    if(keys.some(k=>serviceKeys.includes(k)))return emp;
+  }
+
+  // Name comparison with common technician fields.
+  const serviceName=normalizeName(getTechnicianName(r));
+  if(serviceName){
+    for(const emp of karyawan){
+      if(normalizeName(employeeName(emp))===serviceName)return emp;
+    }
+  }
+
+  return null;
 }
 
 function buildData(){
   const period=$("month").value||thisMonth();
   const hadir={};
 
+  // IMPORTANT:
+  // Attendance is collected only when the technician on the service
+  // note can be matched to an employee already registered in karyawan.
   servis
     .filter(r=>activeService(r)&&dateOf(r).startsWith(period))
     .forEach(r=>{
-      const name=getTechnicianName(r), d=dateOf(r);
-      if(!name||!d)return;
+      const emp=findRegisteredEmployee(r);
+      const d=dateOf(r);
+      const name=emp?employeeName(emp):"";
+      if(!emp||!name||!d)return;
+
       if(!hadir[name])hadir[name]=new Set();
       hadir[name].add(d);
     });
 
-  const names=new Set([
-    ...Object.keys(wages),
-    ...Object.keys(hadir),
-    ...karyawan.map(r=>String(r.nama||r.namaKaryawan||r.namaTeknisi||r.name||"").trim()).filter(Boolean)
-  ]);
+  // IMPORTANT:
+  // The displayed employee list comes ONLY from karyawan.
+  // Never add names/UUIDs discovered from servis, wages, or other collections.
+  const registeredEmployees=karyawan
+    .map(r=>{
+      const name=employeeName(r);
+      if(!name)return null;
+      const rate=num(
+        r.upah??
+        r.upahHarian??
+        r.nominalUpah??
+        r.rate??
+        r.upahPerHari
+      );
+      return {record:r,name,rate};
+    })
+    .filter(Boolean);
 
-  const search=$("search").value.toLowerCase().trim();
+  const search=normalizeName($("search").value);
 
-  return [...names]
-    .filter(n=>!search||n.toLowerCase().includes(search))
-    .sort((a,b)=>a.localeCompare(b,"id"))
-    .map(name=>{
-      const rate=num(wages[name]);
+  return registeredEmployees
+    .filter(e=>!search||normalizeName(e.name).includes(search))
+    .sort((a,b)=>a.name.localeCompare(b.name,"id"))
+    .map(e=>{
+      const name=e.name;
+      const rate=e.rate;
       const dates=hadir[name]?[...hadir[name]].sort():[];
       const gross=rate*dates.length;
 
       const takenRows=withdrawals.filter(r=>{
         const d=dateOf(r);
         if(!d.startsWith(period))return false;
-        const n=withdrawalName(r).toLowerCase();
-        const target=name.toLowerCase();
+
+        const n=normalizeName(withdrawalName(r));
+        const target=normalizeName(name);
+        if(!n||!target)return false;
+
         return n===target||n.includes(target)||target.includes(n);
       });
 
       const take=takenRows.reduce((a,r)=>a+withdrawalAmount(r),0);
 
       return {
-        name,rate,dates,gross,take,
+        name,
+        rate,
+        dates,
+        gross,
+        take,
         net:Math.max(0,gross-take),
         takenRows
       };
@@ -551,12 +664,32 @@ window.loadData=async function(){
 };
 
 window.tutupHalaman=function(){
-  try{window.close()}catch(e){}
-  setTimeout(()=>{
-    if(!document.hidden){
-      alert("Halaman ini tidak bisa ditutup otomatis oleh browser. Silakan tutup tab browser.");
+  // Samakan perilaku dengan halaman internal dashboard:
+  // kembali ke halaman sebelumnya, bukan menutup tab browser.
+  try{
+    if(document.referrer && document.referrer!==location.href){
+      history.back();
+      return;
     }
-  },250);
+
+    if(history.length>1){
+      history.back();
+      return;
+    }
+
+    // Fallback bila halaman dibuka langsung.
+    const candidates=[
+      "dashboard.html",
+      "index.html",
+      "./dashboard.html",
+      "./index.html"
+    ];
+
+    // Prefer dashboard.html when it exists as the normal internal entry.
+    location.href="dashboard.html";
+  }catch(e){
+    location.href="dashboard.html";
+  }
 };
 
 onAuthStateChanged(auth,async user=>{
