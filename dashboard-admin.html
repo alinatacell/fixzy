@@ -47,10 +47,120 @@ table{width:100%;border-collapse:collapse;min-width:800px}th,td{padding:9px 8px;
  .filters{grid-template-columns:1fr 1fr}.filters input{grid-column:1/-1}.filters .btn{grid-column:1/-1}
 }
 @media(max-width:520px){.hero h1{font-size:20px}.cards{grid-template-columns:1fr 1fr}.product-grid,.year-grid{grid-template-columns:1fr}.tab{padding:9px 10px}.user{display:none}}
+
+/* Header Dashboard:
+   nama toko tetap di kiri,
+   aksi Refresh + Kembali tetap di kanan */
+.top{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+}
+
+.brand{
+  flex:1 1 auto;
+  min-width:0;
+  text-align:left;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+}
+
+.top-actions{
+  margin-left:auto;
+  display:flex;
+  align-items:center;
+  justify-content:flex-end;
+  gap:8px;
+  flex:0 0 auto;
+}
+
+#btnRefreshPage,
+#btnKembaliIndex{
+  border:0;
+  background:#0f172a;
+  color:#fff;
+  padding:10px 14px;
+  border-radius:12px;
+  font-size:14px;
+  font-weight:700;
+  cursor:pointer;
+  white-space:nowrap;
+  box-shadow:0 4px 12px rgba(0,0,0,.12);
+}
+
+#btnRefreshPage:active,
+#btnKembaliIndex:active{
+  transform:scale(.97);
+}
+
+@media(max-width:600px){
+  .top{
+    gap:7px;
+  }
+
+  .top-actions{
+    gap:5px;
+  }
+
+  #btnRefreshPage,
+  #btnKembaliIndex{
+    padding:8px 9px;
+    font-size:12px;
+  }
+}
+
+
+/* HEADER FINAL: nama toko kiri, tombol aksi kanan */
+.top{
+  width:100%;
+  display:flex !important;
+  align-items:center;
+  justify-content:space-between !important;
+  gap:10px;
+}
+
+.top .brand{
+  order:1 !important;
+  margin-right:auto !important;
+  text-align:left !important;
+  flex:1 1 auto !important;
+  min-width:0;
+}
+
+.top .top-actions{
+  order:2 !important;
+  margin-left:auto !important;
+  display:flex !important;
+  align-items:center;
+  justify-content:flex-end;
+  gap:8px;
+  flex:0 0 auto;
+}
+
+@media(max-width:600px){
+  .top .top-actions{
+    gap:5px;
+  }
+}
+
 </style>
 </head>
 <body>
-<header class="top"><div class="brand" id="brand">NAMA TOKO</div><div class="user" id="userInfo">Admin</div></header>
+<header class="top">
+  <div class="brand" id="brand">NAMA TOKO</div>
+
+  <div class="top-actions">
+  <button id="btnRefreshPage" type="button" onclick="refreshHalaman()" aria-label="Refresh halaman">
+    ↻ Refresh
+  </button>
+
+  <button id="btnKembaliIndex" type="button" onclick="kembaliKeIndex()" aria-label="Kembali ke Index">
+    ← Kembali
+  </button>
+</div>
+<div class="user" id="userInfo">Admin</div></header>
 <main class="wrap">
 <section class="hero">
 <h1>Dashboard Admin</h1>
@@ -162,6 +272,17 @@ table{width:100%;border-collapse:collapse;min-width:800px}th,td{padding:9px 8px;
 </section>
 
 </main>
+
+
+<script>
+function kembaliKeIndex(){
+  window.location.href = "index.html";
+}
+
+function refreshHalaman(){
+  window.location.reload();
+}
+</script>
 
 <script type="module">
 import {initializeApp} from "https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js";
