@@ -142,7 +142,19 @@ input,select{border:1px solid #cbd5e1;border-radius:10px;padding:10px;background
 
 <script>
 function kembaliKeIndex(){
-  window.location.href = "index.html";
+  /*
+   * Halaman ini dibuka dari index.html melalui iframe.
+   * Gunakan window.top agar yang kembali adalah halaman
+   * index utama, bukan index baru di dalam iframe.
+   */
+  try{
+    if(window.top && window.top !== window){
+      window.top.location.replace("index.html");
+      return;
+    }
+  }catch(e){}
+
+  window.location.replace("index.html");
 }
 
 function refreshHalaman(){
