@@ -182,10 +182,78 @@ input:focus,select:focus{border-color:#ffc107;box-shadow:0 0 0 3px rgba(255,193,
 /* Tombol aksi FIXZY — hitam elegan */
 .actions button,.actions button:first-child,.actions button:last-child{background:#111827!important;color:#ffffff!important;border:1px solid #0b1220!important;box-shadow:0 4px 10px rgba(0,0,0,.18)!important;font-weight:900!important;opacity:1!important}
 .actions button:hover{background:#1f2937!important;color:#ffffff!important}
+
+/* ===== DATA SERVIS MODE BARIS / TABLE ===== */
+.list{display:block!important}
+.tableWrap{
+  background:#fff;border:1px solid #e4e8ef;border-radius:16px;
+  box-shadow:0 3px 12px rgba(15,23,42,.05);overflow:auto;
+}
+.serviceTable{width:100%;border-collapse:collapse;min-width:920px}
+.serviceTable th{
+  background:#f8fafc;color:#475569;font-size:11px;font-weight:900;
+  text-align:left;padding:12px 10px;border-bottom:1px solid #e5e7eb;
+  white-space:nowrap;
+}
+.serviceTable td{
+  padding:12px 10px;border-bottom:1px solid #eef1f5;
+  font-size:12px;color:#334155;vertical-align:middle;
+}
+.serviceTable tbody tr:hover{background:#fafafa}
+.serviceTable tbody tr:last-child td{border-bottom:0}
+.serviceTable .customer{font-weight:900;color:#111827}
+.serviceTable .nota{font-weight:800;color:#334155;white-space:nowrap}
+.serviceTable .phone{white-space:nowrap}
+.serviceTable .money{font-weight:900;color:#111827;white-space:nowrap}
+.serviceTable .actionCell{width:170px;text-align:right}
+.rowAction{position:relative;display:inline-block}
+.actionMain{
+  min-width:145px!important;background:#111827!important;color:#fff!important;
+  border:0!important;border-radius:10px!important;padding:9px 11px!important;
+  font-size:11px!important;font-weight:900!important;
+  display:flex;align-items:center;justify-content:space-between;gap:8px;
+}
+.actionMain:hover{background:#1f2937!important}
+.actionMenu{
+  position:absolute;right:0;top:calc(100% + 6px);width:190px;
+  background:#fff;border:1px solid #e5e7eb;border-radius:13px;
+  padding:6px;box-shadow:0 16px 38px rgba(15,23,42,.20);
+  display:none;z-index:200;
+}
+.rowAction.open{z-index:300}
+.rowAction.open .actionMenu{display:block}
+.actionItem{
+  width:100%;display:flex;align-items:center;gap:8px;text-align:left;
+  background:#fff!important;color:#1f2937!important;border:0!important;
+  box-shadow:none!important;border-radius:9px!important;
+  padding:9px 10px!important;font-size:11px!important;font-weight:800!important;
+}
+.actionItem:hover{background:#f1f5f9!important}
+.actionItem .dot{width:8px;height:8px;border-radius:50%;flex:0 0 8px}
+.actionItem.edit{color:#1d4ed8!important}
+.actionItem.delete{color:#dc2626!important}
+.actionItem.status-active{background:#f1f5f9!important}
+.dot-masuk{background:#f59e0b}.dot-nunggu-sparepart{background:#f97316}
+.dot-proses{background:#2563eb}.dot-selesai{background:#16a34a}
+.dot-diambil{background:#6366f1}.dot-batal{background:#dc2626}
+.statusPill{
+  display:inline-flex;align-items:center;gap:6px;padding:6px 9px;
+  border-radius:999px;font-size:10px;font-weight:900;white-space:nowrap;
+}
+.statusPill.masuk{background:#fff7d6;color:#8a4b00}
+.statusPill.nunggu-sparepart{background:#fff0e1;color:#9a4300}
+.statusPill.proses{background:#e6f0ff;color:#174ea6}
+.statusPill.selesai{background:#dcfce9;color:#126b3a}
+.statusPill.diambil{background:#ecebff;color:#4338ca}
+.statusPill.batal{background:#ffe4e4;color:#a40000}
+@media(max-width:700px){
+  .tableWrap{margin:0 -1px}
+  .serviceTable{min-width:900px}
+}
 </style></head><body>
 <header><h1>🔧 Data Servis</h1><div class="grow"></div><button class="refresh" onclick="load()">↻ Refresh</button></header>
 <main>
-<div class="bar"><input id="search" class="search" placeholder="Cari pelanggan, HP, nota, teknisi..."><select id="filter"><option value="semua">Semua Status</option><option>masuk</option><option>proses</option><option>selesai</option><option>diambil</option><option>batal</option></select></div>
+<div class="bar"><input id="search" class="search" placeholder="Cari pelanggan, HP, nota, teknisi..."><select id="filter"><option value="semua">Semua Status</option><option value="masuk">Masuk</option><option value="nunggu-sparepart">Nunggu Sparepart</option><option value="proses">Proses</option><option value="selesai">Selesai</option><option value="diambil">Diambil</option><option value="batal">Batal</option></select></div>
 <div class="stats">☁️ Firebase `/servis` • Total: <b id="total">0</b> • <span id="akun">memeriksa akun...</span></div>
 <div id="list" class="list"><div class="empty">Memuat Firebase...</div></div>
 </main>
@@ -434,19 +502,95 @@ document.addEventListener("click",e=>{
  if(!e.target.closest(".statusWrap"))
    document.querySelectorAll(".statusWrap.open").forEach(x=>x.classList.remove("open"));
 });
+function normalizeStatus(v){
+ const x=String(v||"masuk").toLowerCase().trim();
+ if(x==="menunggu"||x==="masuk")return "masuk";
+ if(x==="nunggu sparepart"||x==="nunggu_sparepart"||x==="nunggu-sparepart")return "nunggu-sparepart";
+ if(x==="dikerjakan"||x==="proses")return "proses";
+ if(x==="selesai")return "selesai";
+ if(x==="diambil"||x==="di ambil")return "diambil";
+ if(x==="batal")return "batal";
+ return x||"masuk";
+}
+function statusLabel(v){
+ return ({
+  masuk:"Masuk","nunggu-sparepart":"Nunggu Sparepart",proses:"Proses",
+  selesai:"Selesai",diambil:"Diambil",batal:"Batal"
+ })[normalizeStatus(v)]||String(v||"Masuk");
+}
+function actionDropdown(x){
+ const cur=normalizeStatus(x.status);
+ const opts=STATUS.map(([v,l])=>`
+   <button type="button" class="actionItem ${v===cur?"status-active":""}"
+     onclick="ubahStatusDariMenu('${x.id}','${v}')">
+     <span class="dot dot-${v}"></span>${l}
+   </button>`).join("");
+ return `<div class="rowAction" id="act-${x.id}">
+   <button type="button" class="actionMain" onclick="toggleActionMenu('${x.id}')">
+     <span>⚙️ ${statusLabel(cur)}</span><span>⌄</span>
+   </button>
+   <div class="actionMenu">
+     <button type="button" class="actionItem edit" onclick="editDariMenu('${x.id}')">✏️ Edit</button>
+     <button type="button" class="actionItem delete" onclick="hapusDariMenu('${x.id}')">🗑️ Hapus</button>
+     <div style="height:1px;background:#e5e7eb;margin:5px 3px"></div>
+     ${opts}
+   </div>
+ </div>`;
+}
+window.toggleActionMenu=id=>{
+ const el=$("act-"+id);if(!el)return;
+ document.querySelectorAll(".rowAction.open").forEach(x=>{if(x!==el)x.classList.remove("open")});
+ el.classList.toggle("open");
+};
+window.editDariMenu=id=>{
+ const el=$("act-"+id);if(el)el.classList.remove("open");
+ edit(id);
+};
+window.hapusDariMenu=async id=>{
+ const el=$("act-"+id);if(el)el.classList.remove("open");
+ await hapus(id);
+};
+window.ubahStatusDariMenu=async(id,s)=>{
+ const el=$("act-"+id);if(el)el.classList.remove("open");
+ await window.ubahStatus(id,s);
+};
+document.addEventListener("click",e=>{
+ if(!e.target.closest(".rowAction"))
+   document.querySelectorAll(".rowAction.open").forEach(x=>x.classList.remove("open"));
+});
+
 function render(){
  const q=$("search").value.toLowerCase(), f=$("filter").value;
- const a=rows.filter(x=> (f==="semua" || String(x.status||"masuk")===f) && (!q || JSON.stringify(x).toLowerCase().includes(q)));
+ const a=rows.filter(x=>{
+   const st=normalizeStatus(x.status);
+   return (f==="semua" || st===f) &&
+     (!q || JSON.stringify(x).toLowerCase().includes(q));
+ });
  $("total").textContent=a.length;
- $("list").innerHTML=a.length?a.map(x=>`<article class="card">
-  <div class="top"><div><div class="name">${esc(x.pelanggan?.nama||x.namaPelanggan||"Pelanggan")}</div>
-  <div class="small">${esc(x.nomorNota||x.idServis||"-")} • ${esc(x.tanggal||"")}</div></div>
-  ${statusDropdown(x)} </div>
-  <div class="info">📱 ${esc(x.tipe||x.tipeHp||"-")}<br>📞 ${esc(x.pelanggan?.wa||x.noHp||"-")}<br>🔧 Teknisi: ${esc(x.namaTeknisi||x.teknisi||"-")}<br>📝 ${esc(x.keluhan||x.kerusakan||"-")}<br>💰 Biaya: <b>${money(x.total??x.biaya)}</b> • DP: ${money(x.dp)}</div>
-  <div class="actions">
-   <button title="Edit data" onclick="edit('${x.id}')">✏️ Edit</button>
-   <button title="Hapus data" onclick="hapus('${x.id}')">🗑️ Hapus</button>
-  </div></article>`).join(""):`<div class="empty">Tidak ada data servis.</div>`;
+ if(!a.length){
+   $("list").innerHTML=`<div class="empty">Tidak ada data servis.</div>`;
+   return;
+ }
+ $("list").innerHTML=`<div class="tableWrap"><table class="serviceTable">
+ <thead><tr>
+   <th>Pelanggan</th><th>No. Nota</th><th>Tanggal</th><th>HP</th>
+   <th>Teknisi</th><th>Status</th><th>Biaya</th><th>DP</th><th>Aksi</th>
+ </tr></thead>
+ <tbody>${a.map(x=>{
+   const st=normalizeStatus(x.status);
+   return `<tr>
+    <td><div class="customer">${esc(x.pelanggan?.nama||x.namaPelanggan||"Pelanggan")}</div>
+        <div class="small">${esc(x.pelanggan?.wa||x.noHp||"-")}</div></td>
+    <td class="nota">${esc(x.nomorNota||x.idServis||"-")}</td>
+    <td>${esc(x.tanggal||"-")}</td>
+    <td><b>${esc(x.tipe||x.tipeHp||"-")}</b></td>
+    <td>${esc(x.namaTeknisi||x.teknisi||"-")}</td>
+    <td><span class="statusPill ${st}"><span class="dot dot-${st}"></span>${statusLabel(st)}</span></td>
+    <td class="money">${money(x.total??x.biaya)}</td>
+    <td class="money">${money(x.dp)}</td>
+    <td class="actionCell">${actionDropdown(x)}</td>
+   </tr>`;
+ }).join("")}</tbody></table></div>`;
 }
 async function load(){
  if(!uid)return;$("list").innerHTML='<div class="empty">Membaca Firebase...</div>';
