@@ -139,15 +139,19 @@ function refreshHalaman(){
   window.location.reload();
 }
 
-function kembali(){
-  /* Data Penjualan dibuka di iframe index.html.
-     Arahkan window paling atas agar index tidak menumpuk. */
-  try{
-    window.top.location.href="index.html";
-  }catch(e){
-    window.location.href="index.html";
+function kembaliKeIndex(){
+  /*
+   * Dashboard dibuka di dalam iframe index.html.
+   * Jangan membuka index.html di dalam iframe lagi,
+   * karena akan membuat index bertumpuk/bersarang.
+   */
+  if(window.parent && window.parent !== window){
+    window.parent.location.href = "index.html";
+  }else{
+    window.location.href = "index.html";
   }
 }
+
 
 onAuthStateChanged(auth,async user=>{
   await load();
