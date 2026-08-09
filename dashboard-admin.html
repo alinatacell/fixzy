@@ -53,6 +53,7 @@ table{width:100%;border-collapse:collapse;min-width:850px}th,td{padding:11px 10p
 
 <main class="wrap">
   <section class="hero">
+    <div id="debugLog" style="background:#00000066;padding:10px;border-radius:10px;font-size:11px;font-family:monospace;max-height:120px;overflow:auto;margin-bottom:12px"></div>
     <h1>Ringkasan Toko - FIXZY</h1>
     <p><b>FIX v2:</b> Sekarang sudah hitung <b>Pengeluaran Toko</b> + <b>Kasbon Karyawan otomatis potong Upah</b>. Laba bersih = Pemasukan - Pengeluaran Lain - Total Upah Bruto (agar kasbon tidak double).</p>
   </section>
@@ -180,17 +181,29 @@ function wageStorageKey(){ const accountId=uid||"anon"; return WAGE_KEY+"_"+Stri
 function getWages(){ try{ const key=wageStorageKey(); const cur=JSON.parse(localStorage.getItem(key)||"{}"); if(Object.keys(cur).length) return cur; const legacy=JSON.parse(localStorage.getItem(WAGE_KEY)||"{}"); if(Object.keys(legacy).length){localStorage.setItem(key,JSON.stringify(legacy)); return legacy;} return {};}catch{return{}} }
 
 async function loadFirebaseData(){
-  const [sSnap,pSnap,kSnap,pgSnap] = await Promise.all([
-    getDocs(collection(db,"servis")),
-    getDocs(collection(db,"penjualan")),
-    getDocs(collection(db,"karyawan")),
-    getDocs(collection(db,"pengeluaran"))
-  ]);
-  servis=sSnap.docs.map(d=>({id:d.id,...d.data()}));
-  penjualan=pSnap.docs.map(d=>({id:d.id,...d.data()}));
-  karyawan=kSnap.docs.map(d=>({id:d.id,...d.data()}));
-  pengeluaran=pgSnap.docs.map(d=>({id:d.id,...d.data()}));
-  try{ const stSnap=await getDocs(collection(db,"stock")); stock=stSnap.docs.map(d=>({id:d.id,...d.data()})); }catch{}
+  const debugEl = $("debugLog");
+  const log = (msg)=>{ console.log(msg); if(debugEl) debugEl.innerHTML += "<div>"+esc(msg)+"</div>"; };
+  log("⏳ Mulai load Firebase...");
+  async function safeLoad(name){
+    try{
+      const snap = await getDocs(collection(db,name));
+      log("✅ "+name+": "+snap.size+" dokumen");
+      return snap.docs.map(d=>({id:d.id,...d.data()}));
+    }catch(e){
+      log("❌ Gagal load "+name+": "+(e.code||"")+" "+(e.message||e));
+      return [];
+    }
+  }
+  servis = await safeLoad("servis");
+  penjualan = await safeLoad("penjualan");
+  karyawan = await safeLoad("karyawan");
+  pengeluaran = await safeLoad("pengeluaran");
+  stock = await safeLoad("stock");
+  // coba alternatif nama collection kalau kosong
+  if(karyawan.length===0){ const alt = await safeLoad("data_karyawan"); if(alt.length) karyawan=alt; }
+  if(servis.length===0){ const alt = await safeLoad("data_servis"); if(alt.length) servis=alt; }
+  if(pengeluaran.length===0){ const alt = await safeLoad("pengeluaran_toko"); if(alt.length) pengeluaran=alt; }
+  log("✅ Selesai load. Servis:"+servis.length+" Jual:"+penjualan.length+" Karyawan:"+karyawan.length+" Pengeluaran:"+pengeluaran.length);
 }
 
 function getKasbonMap(period){
@@ -431,18 +444,31 @@ $("wMonth").value=new Date().toISOString().slice(0,7);
 $("periodeRingkasan").onchange=renderRingkasan;
 
 onAuthStateChanged(auth,async user=>{
-  if(!user){
-    uid=null;
-    $("brand").textContent=storeNameFromProfile(profile());
-    $("userInfo").textContent=accountNameFromProfile(profile());
-    setupYears(); renderAll(); return;
+  try{
+    if(!user){
+      uid=null;
+      $("brand").textContent=storeNameFromProfile(profile());
+      $("userInfo").textContent="Guest - Load Data...";
+      await loadFirebaseData();
+      setupYears(); renderAll();
+      $("userInfo").textContent="Guest ("+servis.length+" servis)";
+      return;
+    }
+    uid=user.uid;
+    const p=await loadRegisteredProfile(user);
+    $("brand").textContent=p.namaKonter||p.namaToko||"FIXZY";
+    $("userInfo").textContent=(p.namaPemilik||p.nama||user.email||"Admin")+" - Load...";
+    await loadFirebaseData();
+    setupYears(); renderAll();
+    $("userInfo").textContent=(p.namaPemilik||p.nama||user.email||"Admin")+" ✓";
+  }catch(e){
+    const debugEl=$("debugLog");
+    if(debugEl) debugEl.innerHTML+="<div style='color:red'>❌ Auth Error: "+esc(e.message||e)+"</div>";
+    console.error(e);
+    // tetap coba load
+    await loadFirebaseData();
+    setupYears(); renderAll();
   }
-  uid=user.uid;
-  const p=await loadRegisteredProfile(user);
-  $("brand").textContent=p.namaKonter||p.namaToko||"FIXZY";
-  $("userInfo").textContent=p.namaPemilik||p.nama||user.email||"Admin";
-  await loadFirebaseData();
-  setupYears(); renderAll();
 });
 
 window.tutupHalaman=function(){
