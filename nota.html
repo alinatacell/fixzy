@@ -47,7 +47,10 @@ input:focus,select:focus,textarea:focus{border-color:#f59e0b;box-shadow:0 0 0 3p
 
 <main class="wrap">
 <section class="card"><div class="body">
- <div id="firebaseStatus" class="status">Menghubungkan Firebase...</div>
+ <div id="firebaseStatus" class="status">Memeriksa akun Firebase...</div>
+ <div id="akunNota" style="display:none;margin-top:7px;padding:9px 11px;border-radius:10px;background:#fff8db;border:1px solid #fde68a;font-size:11px">
+  👤 Akun: <b id="namaAkun">-</b>
+ </div>
 </div></section>
 
 <section class="card">
@@ -282,11 +285,46 @@ $("manualClose").onclick=$("manualCancel").onclick=()=>{$("manualModal").classLi
 $("manualAdd").onclick=()=>{const nama=$("manualNama").value.trim(),qty=Math.max(1,num($("manualQty").value)),harga=num($("manualHarga").value);if(!nama)return alert("Nama produk wajib diisi.");if(!harga)return alert("Harga jual wajib diisi.");itemsJual.push({id:"manual-"+Date.now(),nama,qty,hargaJual:harga,stok:null,sumber:"manual"});["manualNama","manualQty","manualHarga"].forEach(id=>$(id).value="");$("manualModal").classList.remove("show");renderItems();hitung()};
 $("simpanBtn").onclick=()=>simpan(false);$("simpanCetakBtn").onclick=()=>simpan(true);$("batalBtn").onclick=resetNota;
 
+
+async function tampilkanAkun(user){
+  const box=$("akunNota"),nama=$("namaAkun");
+  if(!user){
+    box.style.display="none";
+    return;
+  }
+  let nama=user.displayName||"";
+  // Ambil nama akun dari users/{uid} bila tersedia.
+  try{
+    const snap=await getDocs(query(collection(db,"users"),where("__name__","==",user.uid)));
+    if(!snap.empty){
+      const d=snap.docs[0].data()||{};
+      nama=d.nama||d.namaToko||d.name||d.namaAkun||nama;
+    }
+  }catch(e){
+    console.warn("Nama akun users tidak terbaca:",e);
+  }
+  nama=nama||user.email||("UID "+user.uid.slice(0,8));
+  $("namaAkun").textContent=nama;
+  box.style.display="block";
+}
 onAuthStateChanged(auth,async user=>{
- if(!user){$("firebaseStatus").textContent="Belum login Firebase.";return}
+ if(!user){
+   uid=null;
+   $("firebaseStatus").textContent="Belum login Firebase. Silakan login terlebih dahulu.";
+   $("akunNota").style.display="none";
+   return;
+ }
  uid=user.uid;
- try{await Promise.all([muatKaryawan(),muatProduk()]);$("firebaseStatus").textContent="Firebase aktif • Data karyawan dan stok berhasil dimuat.";resetNota()}
- catch(e){console.error(e);$("firebaseStatus").innerHTML='<span class="error">Gagal mengambil data Firebase: '+esc(e.message)+'</span>'}
+ $("firebaseStatus").textContent="Login Firebase terdeteksi. Memuat data akun...";
+ await tampilkanAkun(user);
+ try{
+   await Promise.all([muatKaryawan(),muatProduk()]);
+   $("firebaseStatus").textContent="Firebase aktif • Data karyawan dan stok berhasil dimuat.";
+   resetNota();
+ }catch(e){
+   console.error(e);
+   $("firebaseStatus").innerHTML='<span class="error">Login berhasil, tetapi data Firebase gagal dimuat: '+esc(e.message)+'</span>';
+ }
 });
 </script>
 </body>
