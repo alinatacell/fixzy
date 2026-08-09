@@ -371,17 +371,40 @@ function isWithdrawal(r){
 }
 
 async function loadWithdrawals(){
-  let rows=await getCollectionSafe("keuangan");
-  if(!rows.length)rows=await getCollectionFallback("keuangan");
+  // Kasbon baru dicatat melalui halaman Pengeluaran -> collection pengeluaran.
+  // Tetap baca collection lama sebagai kompatibilitas data sebelumnya.
+  let rows=[];
 
-  if(!rows.length){
-    const a=await getCollectionSafe("kasbon");
-    const b=await getCollectionSafe("pengambilan_uang");
-    rows=[...a,...b];
-  }
-  withdrawals=rows.filter(isWithdrawal);
+  const pengeluaran=await getCollectionSafe("pengeluaran");
+  const kasbonBaru=pengeluaran.filter(r=>{
+    const jenis=String(r?.jenis||"").trim().toLowerCase();
+    return jenis==="kasbon karyawan";
+  });
+
+  rows.push(...kasbonBaru);
+
+  const keuangan=await getCollectionSafe("keuangan");
+  rows.push(...keuangan);
+
+  const kasbonLama=await getCollectionSafe("kasbon");
+  rows.push(...kasbonLama);
+
+  const pengambilanLama=await getCollectionSafe("pengambilan_uang");
+  rows.push(...pengambilanLama);
+
+  // Hindari duplikasi jika sumber lama berisi dokumen yang sama.
+  const seen=new Set();
+  withdrawals=rows
+    .filter(isWithdrawal)
+    .filter(r=>{
+      const key=String(r?.id||"")+"|"+String(r?.tanggal||"")+"|"+
+        String(r?.namaKaryawan||r?.namaTeknisi||r?.nama||"")+"|"+
+        String(r?.nominal??r?.jumlah??r?.amount??"");
+      if(seen.has(key))return false;
+      seen.add(key);
+      return true;
+    });
 }
-
 function activeService(r){
   // Kehadiran/upah berasal dari nota servis yang ditulis teknisi.
   // omzetEligible tidak boleh menghapus hari hadir.
