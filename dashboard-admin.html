@@ -170,7 +170,7 @@ table{width:100%;border-collapse:collapse;min-width:800px}th,td{padding:9px 8px;
   <button id="btnRefreshPage" type="button" onclick="refreshHalaman()" aria-label="Refresh halaman">
     ↻ Refresh
   </button>
-  <button id="btnTutupPage" type="button" onclick="tutupDashboard()" aria-label="Tutup dashboard">
+  <button id="btnTutupPage" type="button" onclick="tutupHalaman()" aria-label="Tutup dashboard">
     ✕ Tutup
   </button>
 
@@ -305,27 +305,7 @@ table{width:100%;border-collapse:collapse;min-width:800px}th,td{padding:9px 8px;
 
 
 <script>
-function tutupDashboard(){
-  // Jangan kembali ke halaman sebelumnya. Tutup halaman dashboard.
-  window.close();
-
-  // Pada browser yang tidak mengizinkan window.close() untuk tab yang
-  // dibuka langsung oleh pengguna, tampilkan halaman penutup sederhana.
-  setTimeout(()=>{
-    if(!document.hidden){
-      document.body.innerHTML = `
-        <div style="min-height:100vh;display:flex;align-items:center;justify-content:center;
-                    padding:24px;background:#f1f5f9;font-family:Arial,sans-serif;text-align:center">
-          <div style="background:#fff;border-radius:20px;padding:28px;max-width:420px;
-                      box-shadow:0 12px 40px rgba(15,23,42,.15)">
-            <div style="font-size:42px">✕</div>
-            <h2 style="margin:10px 0;color:#0f172a">Dashboard Ditutup</h2>
-            <p style="color:#64748b;margin:0">Silakan tutup tab ini dari browser.</p>
-          </div>
-        </div>`;
-    }
-  },180);
-}
+function tutupHalaman(){ window.close(); }
 
 async function refreshHalaman(){
   if(!uid){window.location.reload();return}
