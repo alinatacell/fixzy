@@ -288,7 +288,7 @@ textarea{min-height:75px;resize:vertical}
 
 import {initializeApp} from "https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js";
 import {getAuth,onAuthStateChanged} from "https://www.gstatic.com/firebasejs/11.10.0/firebase-auth.js";
-import {getFirestore,collection,getDocs,query,where} from "https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js";
+import {getFirestore,collection,getDocs,query,where,doc,setDoc,serverTimestamp} from "https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js";
 
 const firebaseConfig={
   apiKey:"AIzaSyCwMbJsuORhIq4QCmp4c1r6OsjAUlfxU5Y",
@@ -741,36 +741,63 @@ function bukaPopup(mode){
   document.getElementById("modal").classList.add("show");
 }
 function tutupPopup(){document.getElementById("modal").classList.remove("show")}
-function simpan(cetak){
+async function simpan(cetak){
   const d=kumpulkan();
+
+  if(!firebaseUid){
+    alert("Akun Firebase belum siap. Silakan login terlebih dahulu.");
+    return;
+  }
+
   if(jenis==="servis" && d.status==="Batal"){
-    // Batal tidak dihitung sebagai transaksi aktif/omzet.
     d.omzetEligible=false;
   }else if(jenis==="penjualan" && d.status==="Batal"){
     d.omzetEligible=false;
   }else{
     d.omzetEligible=true;
   }
-  d.disimpanPada=new Date().toISOString();
-  d.userId=getUserId();
 
-  const key=jenis==="servis"?STORAGE.savedServis:STORAGE.savedPenjualan;
+  d.disimpanPada=new Date().toISOString();
+  d.userId=firebaseUid;
+  d.uid=firebaseUid;
+
+  // Simpan seluruh isi nota ke Firestore.
+  // ID dokumen dibuat deterministik dari nomor nota agar menyimpan ulang/edit
+  // tidak membuat duplikasi nota.
+  const collectionName=jenis==="servis"?"nota_servis":"nota_penjualan";
+  const notaRef=doc(collection(db,collectionName),d.nomorNota);
+
+  // Payload Firestore tidak boleh berisi undefined.
+  const payload=JSON.parse(JSON.stringify(d));
+  payload.uid=firebaseUid;
+  payload.userId=firebaseUid;
+  payload.disimpanPada=d.disimpanPada;
+  payload.updatedAt=serverTimestamp();
+
   try{
+    await setDoc(notaRef,payload,{merge:true});
+
+    // Cache lokal hanya sebagai draft/cadangan tampilan, bukan sumber data utama.
+    const key=jenis==="servis"?STORAGE.savedServis:STORAGE.savedPenjualan;
     const list=JSON.parse(localStorage.getItem(key)||"[]");
     const idx=list.findIndex(x=>x.nomorNota===d.nomorNota);
     if(idx>=0)list[idx]=d;else list.push(d);
     localStorage.setItem(key,JSON.stringify(list));
+    localStorage.setItem(
+      jenis==="servis"?STORAGE.draftServis:STORAGE.draftPenjualan,
+      JSON.stringify(d)
+    );
 
-    // Draft juga disimpan supaya data tidak hilang jika halaman ditutup.
-    localStorage.setItem(jenis==="servis"?STORAGE.draftServis:STORAGE.draftPenjualan,JSON.stringify(d));
-
-    // Siapkan tampilan cetak.
     document.getElementById("printNota").innerHTML=buildPrint(d);
     tutupPopup();
-    toast(cetak?"Tersimpan. Menyiapkan cetak...":"Transaksi berhasil disimpan.");
+    toast(cetak?"Tersimpan ke Firebase. Menyiapkan cetak...":"Transaksi berhasil disimpan ke Firebase.");
     if(cetak)setTimeout(()=>window.print(),300);
-  }catch(e){alert("Gagal menyimpan: "+e.message)}
+  }catch(e){
+    console.error("Gagal menyimpan nota ke Firebase:",e);
+    alert("Gagal menyimpan nota ke Firebase: "+(e?.message||e));
+  }
 }
+
 function simpanDanCetak(){simpan(true)}
 function batal(){
   if(confirm("Batalkan transaksi ini? Data yang belum disimpan akan hilang.")){
