@@ -68,6 +68,7 @@ th{background:#f8fafc;color:#475569;font-size:10px}
         <div class="field"><label>Nama Karyawan / Teknisi</label><input id="nama" placeholder="Contoh: Budi"></div>
         <div class="field"><label>Jabatan</label><select id="jabatan"><option value="Teknisi">Teknisi</option><option value="Admin">Admin</option><option value="Kasir">Kasir</option><option value="Kurir">Kurir</option><option value="Lainnya">Lainnya</option></select></div>
         <div class="field"><label>No. WhatsApp / HP</label><input id="hp" inputmode="tel" placeholder="08xxxxxxxxxx"></div>
+        <div class="field"><label>Nominal Upah</label><input id="upah" type="number" inputmode="numeric" min="0" step="1000" placeholder="Contoh: 100000"></div>
         <div class="field"><label>Status</label><select id="statusKaryawan"><option value="Aktif">Aktif</option><option value="Nonaktif">Nonaktif</option></select></div>
         <div class="field full"><label>Catatan</label><input id="catatan" placeholder="Catatan karyawan"></div>
       </div>
@@ -91,8 +92,8 @@ th{background:#f8fafc;color:#475569;font-size:10px}
     </div>
     <div class="table-wrap">
       <table>
-        <thead><tr><th>Nama</th><th>Jabatan</th><th>No. HP</th><th>Status</th><th>Catatan</th><th>Aksi</th></tr></thead>
-        <tbody id="tbody"><tr><td colspan="6">Memuat Firebase...</td></tr></tbody>
+        <thead><tr><th>Nama</th><th>Jabatan</th><th>No. HP</th><th>Upah</th><th>Status</th><th>Catatan</th><th>Aksi</th></tr></thead>
+        <tbody id="tbody"><tr><td colspan="7">Memuat Firebase...</td></tr></tbody>
       </table>
     </div>
   </section>
@@ -152,20 +153,21 @@ async function muatKaryawan(){
  }catch(e){
   console.error(e);
   $("status").textContent="Gagal membaca Firebase: "+e.message;
-  $("tbody").innerHTML=`<tr><td colspan="6">${esc(e.message)}</td></tr>`;
+  $("tbody").innerHTML=`<tr><td colspan="7">${esc(e.message)}</td></tr>`;
  }
 }
 window.muatKaryawan=muatKaryawan;
 
 function render(){
  const q=$("cari").value.toLowerCase().trim();
- const data=rows.filter(r=>[r.nama,r.jabatan,r.hp,r.status,r.catatan].join(" ").toLowerCase().includes(q));
+ const data=rows.filter(r=>[r.nama,r.jabatan,r.hp,r.upah,r.status,r.catatan].join(" ").toLowerCase().includes(q));
  $("count").textContent=`${data.length} karyawan`;
- if(!data.length){$("tbody").innerHTML='<tr><td colspan="6" style="padding:22px;text-align:center;color:#64748b">Belum ada karyawan.</td></tr>';return}
+ if(!data.length){$("tbody").innerHTML='<tr><td colspan="7" style="padding:22px;text-align:center;color:#64748b">Belum ada karyawan.</td></tr>';return}
  $("tbody").innerHTML=data.map(r=>`<tr>
    <td><b>${esc(r.nama||"-")}</b></td>
    <td>${esc(r.jabatan||"-")}</td>
    <td>${esc(r.hp||"-")}</td>
+   <td><b>Rp ${Number(r.upah||0).toLocaleString("id-ID")}</b></td>
    <td><span class="badge ${r.status==="Aktif"?"active":"inactive"}">${esc(r.status||"Nonaktif")}</span></td>
    <td>${esc(r.catatan||"-")}</td>
    <td><div class="acts"><button class="mini edit" onclick="editKaryawan('${esc(r.id)}')">Edit</button><button class="mini del" onclick="hapusKaryawan('${esc(r.id)}')">Hapus</button></div></td>
@@ -174,7 +176,7 @@ function render(){
 window.render=render;
 
 function resetForm(){
- $("editId").value="";$("nama").value="";$("jabatan").value="Teknisi";$("hp").value="";$("statusKaryawan").value="Aktif";$("catatan").value="";
+ $("editId").value="";$("nama").value="";$("jabatan").value="Teknisi";$("hp").value="";$("upah").value="";$("statusKaryawan").value="Aktif";$("catatan").value="";
  $("formTitle").textContent="Tambah Karyawan";
 }
 window.resetForm=resetForm;
@@ -189,6 +191,7 @@ async function simpanKaryawan(){
   nama,
   jabatan:$("jabatan").value,
   hp:$("hp").value.trim(),
+  upah:Number($("upah").value||0),
   status:$("statusKaryawan").value,
   catatan:$("catatan").value.trim(),
   updatedAt:serverTimestamp()
@@ -208,6 +211,7 @@ window.simpanKaryawan=simpanKaryawan;
 window.editKaryawan=id=>{
  const r=rows.find(x=>x.id===id);if(!r)return;
  $("editId").value=id;$("nama").value=r.nama||"";$("jabatan").value=r.jabatan||"Teknisi";$("hp").value=r.hp||"";
+ $("upah").value=Number(r.upah||0)||"";
  $("statusKaryawan").value=r.status||"Aktif";$("catatan").value=r.catatan||"";
  $("formTitle").textContent="Edit Karyawan";
  window.scrollTo({top:0,behavior:"smooth"});
