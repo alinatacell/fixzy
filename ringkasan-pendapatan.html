@@ -80,13 +80,13 @@ td{padding:11px;border-bottom:1px solid #e5e7eb}
 import {initializeApp} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import {getFirestore,collection,getDocs} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
-const firebaseConfig = {
-  apiKey:"GANTI_DENGAN_CONFIG_FIREBASE_LAMA",
-  authDomain:"GANTI_DENGAN_CONFIG_FIREBASE_LAMA",
-  projectId:"GANTI_DENGAN_CONFIG_FIREBASE_LAMA",
-  storageBucket:"GANTI_DENGAN_CONFIG_FIREBASE_LAMA",
-  messagingSenderId:"GANTI_DENGAN_CONFIG_FIREBASE_LAMA",
-  appId:"GANTI_DENGAN_CONFIG_FIREBASE_LAMA"
+const firebaseConfig={
+  apiKey:"AIzaSyCwMbJsuORhIq4QCmp4c1r6OsjAUlfxU5Y",
+  authDomain:"fixzy-f056f.firebaseapp.com",
+  projectId:"fixzy-f056f",
+  storageBucket:"fixzy-f056f.firebasestorage.app",
+  messagingSenderId:"838081521031",
+  appId:"1:838081521031:web:50fdee909b56460b055f22"
 };
 
 const app=initializeApp(firebaseConfig);
@@ -132,75 +132,85 @@ function setInput(){
 $("periode").addEventListener("change",render);
 
 async function load(){
- try{
-   const [a,b,c]=await Promise.all([
-     getDocs(collection(db,"penjualan")),
-     getDocs(collection(db,"servis")),
-     getDocs(collection(db,"pengeluaran"))
-   ]);
-   penjualan=a.docs.map(d=>({id:d.id,...d.data()}));
-   servis=b.docs.map(d=>({id:d.id,...d.data()}));
-   pengeluaran=c.docs.map(d=>({id:d.id,...d.data()}));
-   render();
- }catch(e){
-   console.error(e);
-   alert("Gagal membaca data Firebase: "+(e.message||e));
- }
+  try{
+    const [a,b,c]=await Promise.all([
+      getDocs(collection(db,"penjualan")),
+      getDocs(collection(db,"servis")),
+      getDocs(collection(db,"pengeluaran"))
+    ]);
+
+    penjualan=a.docs.map(d=>({id:d.id,...d.data()}));
+    servis=b.docs.map(d=>({id:d.id,...d.data()}));
+    pengeluaran=c.docs.map(d=>({id:d.id,...d.data()}));
+
+    render();
+  }catch(e){
+    console.error(e);
+    alert("Gagal membaca data Firebase: "+(e.message||e));
+  }
 }
 
 window.render=function(){
- const mode=$("mode").value;
- const p=$("periode").value||today();
+  const mode=$("mode").value;
+  const p=$("periode").value||today();
 
- const sales=penjualan.filter(r=>periodeMatch(tanggal(r),mode,p)&&aktif(r));
- const services=servis.filter(r=>periodeMatch(tanggal(r),mode,p)&&aktif(r));
- const expenses=pengeluaran.filter(r=>periodeMatch(tanggal(r),mode,p));
+  const sales=penjualan.filter(r=>periodeMatch(tanggal(r),mode,p)&&aktif(r));
+  const services=servis.filter(r=>periodeMatch(tanggal(r),mode,p)&&aktif(r));
+  const expenses=pengeluaran.filter(r=>periodeMatch(tanggal(r),mode,p));
 
- const jual=sales.reduce((s,r)=>s+total(r),0);
- const servisTotal=services.reduce((s,r)=>s+total(r),0);
- const out=expenses.reduce((s,r)=>s+num(r.nominal),0);
- const income=jual+servisTotal;
- const tx=sales.length+services.length;
+  const jual=sales.reduce((s,r)=>s+total(r),0);
+  const servisTotal=services.reduce((s,r)=>s+total(r),0);
+  const out=expenses.reduce((s,r)=>s+num(r.nominal),0);
+  const income=jual+servisTotal;
+  const sisa=income-out;
 
- $("pendapatan").textContent=money(income);
- $("pengeluaran").textContent=money(out);
- $("sisa").textContent=money(income-out);
- $("transaksi").textContent=tx;
+  $("pendapatan").textContent=money(income);
+  $("pengeluaran").textContent=money(out);
+  $("sisa").textContent=money(sisa);
+  $("transaksi").textContent=sales.length+services.length;
 
- $("periodeInfo").textContent =
-   mode==="hari" ? "Ringkasan untuk tanggal "+p :
-   mode==="bulan" ? "Ringkasan bulan "+p.slice(0,7) :
-   "Ringkasan tahun "+p.slice(0,4);
+  $("periodeInfo").textContent =
+    mode==="hari" ? "Tanggal "+p+" • Penjualan "+money(jual)+" • Servis "+money(servisTotal) :
+    mode==="bulan" ? "Bulan "+p.slice(0,7)+" • Penjualan "+money(jual)+" • Servis "+money(servisTotal) :
+    "Tahun "+p.slice(0,4)+" • Penjualan "+money(jual)+" • Servis "+money(servisTotal);
 
- const year=p.slice(0,4), month=p.slice(5,7);
- let days=[];
- if(mode==="hari") days=[p];
- else if(mode==="bulan"){
-   const last=new Date(Number(year),Number(month),0).getDate();
-   for(let i=1;i<=last;i++) days.push(`${year}-${month}-${String(i).padStart(2,"0")}`);
- }else{
-   for(let m=1;m<=12;m++){
-     const mm=String(m).padStart(2,"0");
-     const last=new Date(Number(year),m,0).getDate();
-     for(let i=1;i<=last;i++) days.push(`${year}-${mm}-${String(i).padStart(2,"0")}`);
-   }
- }
+  const year=p.slice(0,4), month=p.slice(5,7);
+  let days=[];
 
- const rows=days.map(d=>{
-   const j=sales.filter(r=>tanggal(r)===d).reduce((s,r)=>s+total(r),0);
-   const sv=services.filter(r=>tanggal(r)===d).reduce((s,r)=>s+total(r),0);
-   const ex=expenses.filter(r=>tanggal(r)===d).reduce((s,r)=>s+num(r.nominal),0);
-   return {d,j,sv,ex,sisa:j+sv-ex};
- }).filter(x=>x.j||x.sv||x.ex);
+  if(mode==="hari"){
+    days=[p];
+  }else if(mode==="bulan"){
+    const last=new Date(Number(year),Number(month),0).getDate();
+    for(let i=1;i<=last;i++){
+      days.push(`${year}-${month}-${String(i).padStart(2,"0")}`);
+    }
+  }else{
+    for(let m=1;m<=12;m++){
+      const mm=String(m).padStart(2,"0");
+      const last=new Date(Number(year),m,0).getDate();
+      for(let i=1;i<=last;i++){
+        days.push(`${year}-${mm}-${String(i).padStart(2,"0")}`);
+      }
+    }
+  }
 
- $("tbody").innerHTML=rows.length?rows.map(x=>`
- <tr>
-  <td>${x.d}</td>
-  <td class="right">${money(x.j)}</td>
-  <td class="right">${money(x.sv)}</td>
-  <td class="right">${money(x.ex)}</td>
-  <td class="right">${money(x.sisa)}</td>
- </tr>`).join(""):'<tr><td colspan="5" class="empty">Belum ada data pada periode ini.</td></tr>';
+  const rows=days.map(d=>{
+    const j=sales.filter(r=>tanggal(r)===d).reduce((s,r)=>s+total(r),0);
+    const sv=services.filter(r=>tanggal(r)===d).reduce((s,r)=>s+total(r),0);
+    const ex=expenses.filter(r=>tanggal(r)===d).reduce((s,r)=>s+num(r.nominal),0);
+    return {d,j,sv,ex,sisa:j+sv-ex};
+  }).filter(x=>x.j||x.sv||x.ex);
+
+  $("tbody").innerHTML=rows.length ? rows.map(x=>`
+    <tr>
+      <td>${x.d}</td>
+      <td class="right">${money(x.j)}</td>
+      <td class="right">${money(x.sv)}</td>
+      <td class="right">${money(x.ex)}</td>
+      <td class="right">${money(x.sisa)}</td>
+    </tr>
+  `).join("") :
+  '<tr><td colspan="5" class="empty">Belum ada data pada periode ini.</td></tr>';
 };
 
 setInput();
