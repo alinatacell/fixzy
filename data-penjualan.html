@@ -24,10 +24,27 @@ table{width:100%;border-collapse:collapse;min-width:950px}th,td{padding:10px 9px
 .stats{grid-template-columns:1fr 1fr}.table-card{display:none}.mobile{display:grid;gap:8px}
 .item{background:#fff;border-radius:13px;padding:13px;box-shadow:0 5px 18px rgba(0,0,0,.06)}.item-top{display:flex;justify-content:space-between;gap:8px}.item h3{margin:0;font-size:14px}.line{display:flex;justify-content:space-between;gap:10px;padding-top:7px;font-size:12px}.line span:first-child{color:#64748b}
 }
+
+.top-actions{display:flex;align-items:center;justify-content:flex-end;gap:8px;margin-left:auto}
+.refresh,.back{border:0;background:#111827;color:#fff;border-radius:10px;padding:9px 13px;font-weight:800;white-space:nowrap}
+.refresh:active,.back:active{transform:scale(.97)}
+@media(max-width:700px){
+  .top{padding:12px 14px}
+  .brand{font-size:20px;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .top-actions{gap:5px}
+  .refresh,.back{padding:9px 10px;font-size:12px}
+}
+
 </style>
 </head>
 <body>
-<header class="top"><div class="brand" id="brand">Nama Toko</div><button class="back" onclick="kembali()">← Kembali</button></header>
+<header class="top">
+  <div class="brand" id="brand">Nama Toko</div>
+  <div class="top-actions">
+    <button class="refresh" type="button" onclick="refreshHalaman()">↻ Refresh</button>
+    <button class="back" type="button" onclick="kembali()">← Kembali</button>
+  </div>
+</header>
 <main class="wrap">
 <section class="head">
 <h1>🛒 Data Penjualan</h1><div class="sub">Semua transaksi penjualan yang disimpan dari nota penjualan.</div>
@@ -39,12 +56,63 @@ table{width:100%;border-collapse:collapse;min-width:950px}th,td{padding:10px 9px
 <section class="table-card"><div class="table-wrap"><table><thead><tr><th>Nota</th><th>Tanggal</th><th>Pelanggan</th><th>Produk</th><th>Status</th><th>Pembayaran</th><th class="num">Total</th><th class="num">Dibayar</th><th class="num">Sisa</th></tr></thead><tbody id="tbody"></tbody></table></div></section>
 <section id="mobile" class="mobile"></section>
 </main>
-<script>
+<script type="module">
+import {initializeApp} from "https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js";
+import {getAuth,onAuthStateChanged} from "https://www.gstatic.com/firebasejs/11.10.0/firebase-auth.js";
+import {getFirestore,doc,getDoc} from "https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js";
+
+const firebaseConfig={
+  apiKey:"AIzaSyCwMbJsuORhIq4QCmp4c1r6OsjAUlfxU5Y",
+  authDomain:"fixzy-f056f.firebaseapp.com",
+  projectId:"fixzy-f056f",
+  storageBucket:"fixzy-f056f.firebasestorage.app",
+  messagingSenderId:"838081521031",
+  appId:"1:838081521031:web:50fdee909b56460b055f22"
+};
+const app=initializeApp(firebaseConfig);
+const auth=getAuth(app);
+const db=getFirestore(app);
+
 const KEY="fixzy_transaksi_penjualan_saved";let rows=[];
 function rupiah(n){return new Intl.NumberFormat("id-ID",{style:"currency",currency:"IDR",maximumFractionDigits:0}).format(Number(n)||0)}
 function esc(v){return String(v??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]))}
 function profile(){try{return JSON.parse(localStorage.getItem("fixzy_user_profile")||"{}")}catch(e){return {}}}
-function load(){try{rows=JSON.parse(localStorage.getItem(KEY)||"[]")}catch(e){rows=[]}document.getElementById("brand").textContent=profile().namaToko||profile().namaUsaha||profile().toko||"Nama Toko";render()}
+async function load(){
+  try{rows=JSON.parse(localStorage.getItem(KEY)||"[]")}catch(e){rows=[]}
+
+  const p=profile();
+  document.getElementById("brand").textContent=
+    p.namaKonter||p.namaToko||p.namaUsaha||p.toko||"Nama Toko";
+  render();
+
+  try{
+    const user=auth.currentUser;
+    if(user){
+      const snap=await getDoc(doc(db,"users",user.uid));
+      if(snap.exists()){
+        const data=snap.data()||{};
+        const namaKonter=data.namaKonter||"Nama Toko";
+        document.getElementById("brand").textContent=namaKonter;
+
+        const old=profile();
+        localStorage.setItem("fixzy_user_profile",JSON.stringify({
+          ...old,
+          uid:user.uid,
+          namaKonter,
+          namaToko:namaKonter,
+          namaUsaha:namaKonter,
+          toko:namaKonter,
+          namaPemilik:data.namaPemilik||old.namaPemilik||"",
+          email:data.email||user.email||old.email||"",
+          tanggalBerakhir:data.tanggalBerakhir||old.tanggalBerakhir||"",
+          exp:data.tanggalBerakhir||old.exp||""
+        }));
+      }
+    }
+  }catch(err){
+    console.warn("Gagal mengambil nama toko dari Firebase:",err);
+  }
+}
 function active(r){return r.status!=="Batal"}
 function modalRow(r){return (r.items||[]).reduce((a,x)=>a+(Number(x.hargaModal)||0)*(Number(x.qty)||1),0)}
 function match(r){
@@ -63,7 +131,27 @@ function render(){
  }).join("")||'<tr><td colspan="9" class="empty">Belum ada data penjualan.</td></tr>';
  document.getElementById("mobile").innerHTML=arr.map(r=>`<article class="item"><div class="item-top"><h3>${esc(r.nomorNota)}</h3>${badge(r.status)}</div><div class="line"><span>Tanggal</span><b>${esc(r.tanggal)}</b></div><div class="line"><span>Pelanggan</span><b>${esc(r.pelanggan?.nama||"Umum")}</b></div><div class="line"><span>Total</span><b>${rupiah(r.total)}</b></div><div class="line"><span>Dibayar / Sisa</span><b>${rupiah(r.dibayar)} / ${rupiah(r.sisa)}</b></div></article>`).join("")||'<div class="empty">Belum ada data penjualan.</div>';
 }
-function resetFilter(){q.value="";status.value="";tanggal.value="";render()}function kembali(){if(document.referrer)history.back();else location.href="index.html"}load();
+function resetFilter(){
+  q.value="";status.value="";tanggal.value="";render();
+}
+
+function refreshHalaman(){
+  window.location.reload();
+}
+
+function kembali(){
+  /* Data Penjualan dibuka di iframe index.html.
+     Arahkan window paling atas agar index tidak menumpuk. */
+  try{
+    window.top.location.href="index.html";
+  }catch(e){
+    window.location.href="index.html";
+  }
+}
+
+onAuthStateChanged(auth,async user=>{
+  await load();
+});
 </script>
 </body>
 </html>
