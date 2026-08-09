@@ -304,10 +304,23 @@ body{overflow:hidden}
     margin-top:5px;
   }
 }
+
+/* LOGIN POPUP - struktur index asli dipertahankan */
+.login-overlay{position:fixed;inset:0;z-index:100;background:rgba(15,23,42,.62);display:none;align-items:center;justify-content:center;padding:14px}
+.login-overlay.show{display:flex}
+.login-box{width:min(440px,100%);height:min(720px,92vh);background:#fff;border-radius:18px;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,.28);position:relative}
+.login-box iframe{width:100%;height:100%;border:0;background:#fff}
+.login-close{position:absolute;right:10px;top:10px;z-index:2;width:34px;height:34px;border:0;border-radius:10px;background:#111827;color:#fff;font-size:20px;display:none}
 </style>
 </head>
 
 <body>
+<div class="login-overlay" id="loginOverlay">
+  <div class="login-box">
+    <iframe id="loginFrame" title="Login FIXZY"></iframe>
+  </div>
+</div>
+
 
 <!-- ================= HEADER ================= -->
 <header class="header">
@@ -375,6 +388,13 @@ body{overflow:hidden}
     </button>
 
     <button class="menu-link"
+      data-page="data-karyawan.html"
+      onclick="bukaHalaman(this)">
+      <span class="ico">👥</span>
+      Data Karyawan
+    </button>
+
+    <button class="menu-link"
       data-page="nota.html"
       onclick="bukaHalaman(this)">
       <span class="ico">🧾</span>
@@ -407,37 +427,14 @@ function tutupMenu(){
 }
 
 /* ================= HALAMAN LOGIN ================= */
-
-let firebaseBridgeFrame=null;
-
-function siapkanFirebaseBridge(){
-  if(firebaseBridgeFrame && firebaseBridgeFrame.isConnected) return firebaseBridgeFrame;
-  const f=document.createElement("iframe");
-  f.title="FIXZY Firebase Bridge";
-  f.src="login.html?bridge=1";
-  f.style.cssText="position:fixed;left:-10000px;top:-10000px;width:1px;height:1px;border:0;opacity:0;pointer-events:none;";
-  f.addEventListener("load",()=>{firebaseBridgeReady=true;while(firebaseProxyQueue.length) firebaseProxyQueue.shift().forward();});
-  document.body.appendChild(f);
-  firebaseBridgeFrame=f;
-  return f;
-}
-
 function tampilkanLogin(){
-  const area = document.getElementById("contentArea");
-
-  area.innerHTML = "";
-
-  const frame = document.createElement("iframe");
-  frame.title = "Login FIXZY";
-  frame.src = "login.html?v=3";
-  frame.style.cssText =
-    "width:100%;height:calc(100vh - 120px);min-height:620px;border:0;display:block;background:#fff;";
-
-  area.appendChild(frame);
-  pasangFrameAuth(frame);
-
-  document.querySelectorAll(".menu-link")
-    .forEach(x => x.classList.remove("active"));
+  const overlay=document.getElementById("loginOverlay");
+  const frame=document.getElementById("loginFrame");
+  if(!frame.getAttribute("src")){
+    frame.src="login.html?v=2";
+  }
+  overlay.classList.add("show");
+  document.querySelectorAll(".menu-link").forEach(x=>x.classList.remove("active"));
 }
 
 /* ================= HALAMAN SAMBUTAN ================= */
@@ -498,7 +495,6 @@ function bukaHalaman(btn){
     "width:100%;height:100%;border:0;display:block;background:#fff;";
 
   area.appendChild(frame);
-  pasangFrameAuth(frame);
 
   document.querySelectorAll(".menu-link")
     .forEach(x => x.classList.remove("active"));
@@ -509,71 +505,32 @@ function bukaHalaman(btn){
 }
 
 /* ================= PESAN DARI LOGIN ================= */
-
-let firebaseBridgeReady=false;
-const firebaseProxyClients=new Map();
-const firebaseProxyQueue=[];
-
-function kirimKeBridge(d,source){
-  const bridge=siapkanFirebaseBridge();
-  const forward=()=>{
-    try{
-      firebaseProxyClients.set(d.requestId,source);
-      bridge.contentWindow.postMessage(d,"*");
-    }catch(err){
-      firebaseProxyClients.delete(d.requestId);
-      source?.postMessage({type:"FIXZY_FIREBASE_PROXY_RESULT",requestId:d.requestId,ok:false,error:err.message},"*");
-    }
-  };
-  if(firebaseBridgeReady) forward();
-  else firebaseProxyQueue.push({forward});
-}
-
-window.addEventListener("message",function(e){
-  const d=e.data||{};
-  if(d.type==="FIXZY_FIREBASE_BRIDGE_READY"){
-    firebaseBridgeReady=true;
-    while(firebaseProxyQueue.length) firebaseProxyQueue.shift().forward();
-    return;
-  }
-  if(d.type==="FIXZY_FIREBASE_PROXY"){
-    kirimKeBridge(d,e.source);
-    return;
-  }
-  if(d.type==="FIXZY_FIREBASE_PROXY_RESULT"){
-    const client=firebaseProxyClients.get(d.requestId);
-    if(client){
-      firebaseProxyClients.delete(d.requestId);
-      try{client.postMessage(d,"*")}catch(err){}
-    }
-  }
-});
-
-/* ================= HASIL LOGIN FIREBASE ================= */
 window.addEventListener("message", function(e){
-  const d=e.data||{};
+  const d = e.data || {};
 
-  if(d.type==="FIXZY_LOGIN_SUCCESS"){
-    // Sesi Dashboard harus mengikuti login Firebase yang baru berhasil.
-    sessionStorage.setItem("fixzy_logged_in","1");
+  if(d.type === "FIXZY_LOGIN_SUCCESS"){
 
-    const profile={
-      uid:d.uid||"",
-      email:d.email||"",
-      nama:d.nama||"Akun",
-      exp:d.exp||"-",
-      role:d.role||"user"
-    };
+    sessionStorage.setItem("fixzy_logged_in", "1");
 
-    localStorage.setItem("fixzy_uid",profile.uid);
-    localStorage.setItem("fixzy_user_profile",JSON.stringify(profile));
+    localStorage.setItem(
+      "fixzy_user_profile",
+      JSON.stringify({
+        nama: d.nama || "Akun",
+        exp: d.exp || "-",
+        role: d.role || "user"
+      })
+    );
 
     bacaProfil();
-    tampilkanBeranda();
 
-    // Siapkan Firebase bridge setelah login benar-benar berhasil.
-    setTimeout(()=>siapkanFirebaseBridge(),100);
-    return;
+    /* Setelah login berhasil: tutup popup lalu masuk halaman utama */
+    document.getElementById("loginOverlay").classList.remove("show");
+    tampilkanBeranda();
+  }
+
+  if(d.type === "FIXZY_REGISTER_SUCCESS"){
+    /* Setelah registrasi, tampilkan kembali halaman login */
+    tampilkanLogin();
   }
 });
 
@@ -610,36 +567,14 @@ function bacaProfil(){
   document.getElementById("accountExp").textContent = exp;
 }
 
-
-/* ================= KIRIM PROFIL KE HALAMAN ANAK ================= */
-function kirimProfilKeFrame(frame){
-  if(!frame || !frame.contentWindow) return;
-  let p={};
-  try{p=JSON.parse(localStorage.getItem("fixzy_user_profile")||"{}")}catch(e){}
-  frame.contentWindow.postMessage({
-    type:"FIXZY_PARENT_AUTH",
-    uid:p.uid||localStorage.getItem("fixzy_uid")||"",
-    email:p.email||"",
-    nama:p.nama||"Akun",
-    exp:p.exp||"-",
-    role:p.role||"user",
-    loggedIn:sessionStorage.getItem("fixzy_logged_in")==="1"
-  },"*");
-}
-
-function pasangFrameAuth(frame){
-  if(!frame) return;
-  frame.addEventListener("load",()=>kirimProfilKeFrame(frame));
-  setTimeout(()=>kirimProfilKeFrame(frame),500);
-}
-
 /* ================= START ================= */
 bacaProfil();
 
 if(sudahLogin()){
   tampilkanBeranda();
-  setTimeout(()=>siapkanFirebaseBridge(),300);
 }else{
+  /* Saat index pertama dibuka dan belum login,
+     langsung tampilkan login.html */
   tampilkanLogin();
 }
 </script>
