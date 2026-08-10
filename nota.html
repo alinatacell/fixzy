@@ -28,9 +28,9 @@ textarea{min-height:75px;resize:vertical}
 .actions{display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap}
 .toast{position:fixed;bottom:18px;left:50%;transform:translateX(-50%);background:#111827;color:#fff;padding:11px 15px;border-radius:9px;display:none;z-index:50}
 .product-search-wrap{position:relative}
-.product-results{position:absolute;left:0;right:0;top:calc(100% + 5px);max-height:260px;overflow:auto;background:#fff;border:1px solid #d1d5db;border-radius:10px;box-shadow:0 10px 25px rgba(0,0,0,.12);z-index:30;display:none}
+.product-results{position:absolute;left:0;right:0;top:calc(100% + 5px);max-height:300px;overflow-y:auto;overflow-x:hidden;background:#fff;border:1px solid #d1d5db;border-radius:10px;box-shadow:0 10px 25px rgba(0,0,0,.18);z-index:9999;display:none;pointer-events:auto}
 .product-results.show{display:block}
-.product-result{width:100%;display:block;text-align:left;background:#fff;border:0;border-bottom:1px solid #f0f0f0;border-radius:0;padding:10px 12px;cursor:pointer}
+.product-result{width:100%;display:block;text-align:left;background:#fff;border:0;border-bottom:1px solid #f0f0f0;border-radius:0;padding:12px;cursor:pointer;touch-action:manipulation;pointer-events:auto}
 .product-result:hover{background:#f9fafb}
 .product-result .pname{font-weight:900;font-size:13px;color:#111827}
 .product-result .pmeta{font-size:11px;color:#6b7280;margin-top:3px}
@@ -211,7 +211,7 @@ function filterProduk(keyword=""){
  }else{
    box.innerHTML=list.map(p=>{
      const kode=kodeProduk(p),stok=stokProduk(p),harga=hargaProduk(p);
-     return `<button type="button" class="product-result" onclick="pilihProduk(${JSON.stringify(p.id)})"><div class="pname">${esc(namaProduk(p))}</div><div class="pmeta">${kode?`Kode: ${esc(kode)} • `:""}<span class="pstock">Stok: ${stok}</span>${harga?` • Rp ${harga.toLocaleString("id-ID")}`:""}</div></button>`;
+     return `<button type="button" class="product-result" data-product-id="${esc(p.id)}"><div class="pname">${esc(namaProduk(p))}</div><div class="pmeta">${kode?`Kode: ${esc(kode)} • `:""}<span class="pstock">Stok: ${stok}</span>${harga?` • Rp ${harga.toLocaleString("id-ID")}`:""}</div></button>`;
    }).join("");
  }
  box.classList.add("show");
@@ -231,9 +231,17 @@ window.pilihProduk=function(id){
  updateTotalJual();
 };
 
+$("hasilProduk").addEventListener("click",e=>{
+  const btn=e.target.closest(".product-result[data-product-id]");
+  if(!btn)return;
+  e.preventDefault();
+  e.stopPropagation();
+  window.pilihProduk(btn.dataset.productId);
+});
+
 document.addEventListener("click",e=>{
- const wrap=document.querySelector(".product-search-wrap");
- if(wrap && !wrap.contains(e.target)) $("hasilProduk")?.classList.remove("show");
+  const wrap=document.querySelector(".product-search-wrap");
+  if(wrap && !wrap.contains(e.target)) $("hasilProduk").classList.remove("show");
 });
 
 $("produk").addEventListener("change",()=>{
