@@ -273,9 +273,11 @@ window.openIncome=function(item){
 window.closeIncome=function(){incomePending=null;const m=$("incomeModal");m.classList.remove("show");m.style.display="none";m.setAttribute("aria-hidden","true")};
 $("incomeDp").addEventListener("input",updateIncomePreview);$("incomeDiskon").addEventListener("input",updateIncomePreview);
 
+let incomeSaving=false;
 window.saveIncome=async function(){
- const item=incomePending;if(!item)return;const v=updateIncomePreview();
- if(!(await fixzyConfirm(`Simpan transaksi sebagai TUNAI?\n\nTotal: ${money(v.total)}\nDP / Dibayar: ${money(v.dp)}\nDiskon: ${money(v.diskon)}\nPendapatan: ${money(v.pendapatan)}\nSisa: ${money(v.sisa)}`,"Konfirmasi Tunai")))return;
+ const item=incomePending;if(!item||incomeSaving)return;
+ incomeSaving=true;
+ const v=updateIncomePreview();
  try{
   await updateDoc(doc(db,"penjualan",item.id),{
    pembayaran:"Tunai",status:"dibayar",dibayar:v.dp,sisa:v.sisa,
