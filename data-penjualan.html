@@ -1,6 +1,6 @@
 <!doctype html><html lang="id"><head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>FIXZY | Data Penjualan</title>
+<title>FIXZY | Data Penjualan v2 Pendapatan</title>
 <style>
 *{box-sizing:border-box}
 body{margin:0;background:#f4f5f7;color:#111827;font-family:Arial,sans-serif}
@@ -58,6 +58,22 @@ input,select{padding:11px;border:1px solid #cbd5e1;border-radius:10px;background
 .salesTable tbody tr:hover{background:#fafafa}.salesTable tbody tr:last-child td{border-bottom:0}
 .salesTable .customer{font-weight:900;color:#111827}.salesTable .nota{font-weight:800;color:#334155;white-space:nowrap}.salesTable .money{font-weight:900;color:#111827;white-space:nowrap}
 .salesTable .actionCell{min-width:170px;text-align:right}.salesTable .badge{display:inline-flex}
+
+/* ===== POPUP FIXZY PENJUALAN ===== */
+.fixzyOverlay{display:none;position:fixed;inset:0;background:rgba(15,23,42,.68);z-index:1000;align-items:center;justify-content:center;padding:14px;backdrop-filter:blur(3px)}
+.fixzyOverlay.show{display:flex}
+.fixzyBox{width:min(470px,100%);max-height:92vh;overflow:auto;background:#fff;border-radius:20px;padding:18px;box-shadow:0 20px 60px rgba(0,0,0,.28)}
+.fixzyHead{display:flex;align-items:center;gap:9px;margin-bottom:13px}.fixzyHead h2{margin:0;font-size:18px;color:#111827}
+.fixzyClose{margin-left:auto;background:#eef2f7;color:#111827;width:36px;height:36px;padding:0}
+.fixzyInfo{background:#f8fafc;border:1px solid #e5e7eb;border-radius:13px;padding:11px 12px;font-size:12px;line-height:1.55;margin-bottom:11px}
+.fixzyGrid{display:grid;grid-template-columns:1fr 1fr;gap:9px}.fixzyField label{display:block;font-size:10px;font-weight:900;color:#64748b;margin-bottom:5px}
+.fixzyField input{width:100%;padding:11px;border:1px solid #d7dce5;border-radius:11px;font-weight:800}.fixzyField input[readonly]{background:#f8fafc}
+.fixzyField.full{grid-column:1/-1}.fixzyResult{margin-top:11px;background:#111827;color:#fff;border-radius:14px;padding:13px}
+.fixzyLine{display:flex;justify-content:space-between;gap:10px;font-size:12px;margin:5px 0}.fixzyLine.total{border-top:1px solid rgba(255,255,255,.18);padding-top:9px;margin-top:9px;font-size:16px;font-weight:900}
+.fixzyActions{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-top:14px}.fixzyActions button{padding:12px}
+.fixzyCancel{background:#e5e7eb;color:#111827}.fixzySave{background:#ffc107;color:#111827}
+.salesTable .income{font-weight:900;color:#15803d;white-space:nowrap}
+@media(max-width:480px){.fixzyGrid{grid-template-columns:1fr}.fixzyField.full{grid-column:auto}}
 </style></head><body>
 
 <header>
@@ -84,6 +100,50 @@ input,select{padding:11px;border:1px solid #cbd5e1;border-radius:10px;background
   <div class="stats">☁️ Firebase <b>/penjualan</b> • Total: <b id="total">0</b> • <span id="akun">memeriksa akun...</span></div>
   <div id="list" class="list"><div class="empty">Memuat Firebase...</div></div>
 </main>
+
+<!-- POPUP FIXZY KONFIRMASI -->
+<div id="fixzyConfirm" class="fixzyOverlay" aria-hidden="true">
+ <div class="fixzyBox">
+  <div class="fixzyHead"><span style="font-size:24px">⚡</span><h2 id="fixzyConfirmTitle">FIXZY</h2></div>
+  <div id="fixzyConfirmMsg" class="fixzyInfo"></div>
+  <div class="fixzyActions">
+   <button class="fixzyCancel" onclick="fixzyNo()">Batal</button>
+   <button class="fixzySave" onclick="fixzyYes()">OK</button>
+  </div>
+ </div>
+</div>
+
+<!-- POPUP PENDAPATAN TUNAI -->
+<div id="incomeModal" class="fixzyOverlay" aria-hidden="true">
+ <div class="fixzyBox">
+  <div class="fixzyHead"><span style="font-size:24px">💰</span><h2>Konfirmasi Pendapatan Penjualan</h2><button class="fixzyClose" onclick="closeIncome()">✕</button></div>
+  <div id="incomeInfo" class="fixzyInfo"></div>
+  <div class="fixzyGrid">
+   <div class="fixzyField"><label>TOTAL PENJUALAN</label><input id="incomeTotal" readonly></div>
+   <div class="fixzyField"><label>DP / DIBAYAR</label><input id="incomeDp" inputmode="numeric"></div>
+   <div class="fixzyField full"><label>DISKON / POTONGAN</label><input id="incomeDiskon" inputmode="numeric" value="0"></div>
+   <div class="fixzyField full"><label>PENDAPATAN — HASIL AKHIR</label><input id="incomePendapatan" readonly></div>
+  </div>
+  <div class="fixzyResult">
+   <div class="fixzyLine"><span>Total</span><b id="incomeTotalPrev">Rp 0</b></div>
+   <div class="fixzyLine"><span>DP / Dibayar</span><b id="incomeDpPrev">Rp 0</b></div>
+   <div class="fixzyLine"><span>Diskon</span><b id="incomeDiskonPrev">Rp 0</b></div>
+   <div class="fixzyLine"><span>Sisa</span><b id="incomeSisaPrev">Rp 0</b></div>
+   <div class="fixzyLine total"><span>PENDAPATAN</span><b id="incomeFinalPrev">Rp 0</b></div>
+  </div>
+  <div class="fixzyActions"><button class="fixzyCancel" onclick="closeIncome()">Batal</button><button class="fixzySave" onclick="saveIncome()">Simpan</button></div>
+ </div>
+</div>
+
+<!-- POPUP WHATSAPP -->
+<div id="waModal" class="fixzyOverlay" aria-hidden="true">
+ <div class="fixzyBox">
+  <div class="fixzyHead"><span style="font-size:24px">📲</span><h2>Pesan WhatsApp FIXZY</h2><button class="fixzyClose" onclick="closeWA()">✕</button></div>
+  <div id="waInfo" class="fixzyInfo"></div>
+  <div id="waPreview" style="white-space:pre-line;background:#f8fafc;border:1px solid #e5e7eb;border-radius:13px;padding:12px;font-size:12px;line-height:1.6"></div>
+  <div class="fixzyActions"><button class="fixzyCancel" onclick="closeWA()">Tutup</button><button id="waSend" class="fixzySave" onclick="sendWA()">📲 Kirim WhatsApp</button></div>
+ </div>
+</div>
 
 <div id="editModal" class="modal">
   <div class="modalBox">
@@ -145,7 +205,7 @@ function render(){
   $("list").innerHTML=a.length?`<div class="tableWrap"><table class="salesTable">
     <thead><tr>
       <th>Pelanggan</th><th>No. Nota</th><th>Tanggal</th><th>Produk</th>
-      <th>Qty</th><th>Status</th><th>Total</th><th>Dibayar</th><th>Sisa</th><th>Aksi</th>
+      <th>Qty</th><th>Status</th><th>Total</th><th>Dibayar</th><th>Sisa</th><th>Pendapatan</th><th>Aksi</th>
     </tr></thead><tbody>${a.map(x=>{
       const id=esc(x.id), status=statusLabel(x);
       return `<tr>
@@ -158,6 +218,7 @@ function render(){
         <td class="money">${money(x.total)}</td>
         <td class="money">${money(x.dibayar)}</td>
         <td class="money">${money(x.sisa)}</td>
+        <td class="money income">${money(x.pendapatan||0)}</td>
         <td class="actionCell">
           <div class="actionWrap" id="aw-${id}">
             <button class="actionMain" onclick="toggleAction('${id}')"><span>⚙️ Aksi</span><span>⌄</span></button>
@@ -173,6 +234,88 @@ function render(){
     }).join("")}</tbody></table></div>`:`<div class="empty">Tidak ada data penjualan.</div>`;
 }
 
+
+let fixzyConfirmResolve=null;
+window.fixzyConfirm=function(message,title="FIXZY"){
+ return new Promise(resolve=>{
+  fixzyConfirmResolve=resolve;
+  $("fixzyConfirmTitle").textContent=title;
+  $("fixzyConfirmMsg").textContent=String(message??"");
+  const m=$("fixzyConfirm");m.classList.add("show");m.style.display="flex";m.setAttribute("aria-hidden","false");
+ });
+};
+window.fixzyYes=function(){const r=fixzyConfirmResolve;fixzyConfirmResolve=null;closeFixzyConfirm();if(r)r(true)};
+window.fixzyNo=function(){const r=fixzyConfirmResolve;fixzyConfirmResolve=null;closeFixzyConfirm();if(r)r(false)};
+window.closeFixzyConfirm=function(){const m=$("fixzyConfirm");m.classList.remove("show");m.style.display="none";m.setAttribute("aria-hidden","true")};
+
+let incomePending=null;
+function cleanMoney(v){return Number(String(v??"").replace(/[^\d-]/g,""))||0}
+function updateIncomePreview(){
+ const total=cleanMoney($("incomeTotal").value);
+ const dp=Math.min(total,Math.max(0,cleanMoney($("incomeDp").value)));
+ const diskon=Math.min(total,Math.max(0,cleanMoney($("incomeDiskon").value)));
+ const pendapatan=Math.max(0,total-diskon);
+ const sisa=Math.max(0,total-dp);
+ $("incomeTotalPrev").textContent=money(total);$("incomeDpPrev").textContent=money(dp);
+ $("incomeDiskonPrev").textContent=money(diskon);$("incomeSisaPrev").textContent=money(sisa);
+ $("incomeFinalPrev").textContent=money(pendapatan);$("incomePendapatan").value=pendapatan;
+ return {total,dp,diskon,pendapatan,sisa};
+}
+window.openIncome=function(item){
+ incomePending=item;
+ $("incomeInfo").innerHTML=`<b>${esc(item.pelanggan?.nama||item.namaPelanggan||"Pelanggan umum")}</b><br>No. Nota: ${esc(item.nomorNota||item.idPenjualan||item.id||"-")}`;
+ $("incomeTotal").value=cleanMoney(item.total);
+ $("incomeDp").value=cleanMoney(item.dibayar??item.dp??item.total);
+ $("incomeDiskon").value=cleanMoney(item.diskon??item.discount??0);
+ updateIncomePreview();
+ const m=$("incomeModal");m.classList.add("show");m.style.display="flex";m.setAttribute("aria-hidden","false");
+};
+window.closeIncome=function(){incomePending=null;const m=$("incomeModal");m.classList.remove("show");m.style.display="none";m.setAttribute("aria-hidden","true")};
+$("incomeDp").addEventListener("input",updateIncomePreview);$("incomeDiskon").addEventListener("input",updateIncomePreview);
+
+window.saveIncome=async function(){
+ const item=incomePending;if(!item)return;const v=updateIncomePreview();
+ if(!(await fixzyConfirm(`Simpan transaksi sebagai TUNAI?\n\nTotal: ${money(v.total)}\nDP / Dibayar: ${money(v.dp)}\nDiskon: ${money(v.diskon)}\nPendapatan: ${money(v.pendapatan)}\nSisa: ${money(v.sisa)}`,"Konfirmasi Tunai")))return;
+ try{
+  await updateDoc(doc(db,"penjualan",item.id),{
+   pembayaran:"Tunai",status:"dibayar",dibayar:v.dp,sisa:v.sisa,
+   diskon:v.diskon,discount:v.diskon,pendapatan:v.pendapatan,jumlahTotal:v.pendapatan,
+   updatedAt:serverTimestamp()
+  });
+  closeIncome();await load();
+ }catch(e){fixzyConfirm("Gagal menyimpan pendapatan: "+e.message,"Gagal Menyimpan")}
+};
+
+let waPending=null;
+function normalizeWA(v){let n=String(v||"").replace(/\D/g,"");if(n.startsWith("0"))n="62"+n.slice(1);if(!n.startsWith("62"))n="62"+n;return n}
+window.openWA=function(item,text){
+ const n=normalizeWA(item.noHp||item.pelanggan?.wa||item.whatsapp||"");
+ waPending=n?{number:n,text}:null;$("waInfo").textContent=n?"Nomor WhatsApp tersedia.":"Nomor WhatsApp belum tersedia.";
+ $("waPreview").textContent=text;$("waSend").style.display=n?"block":"none";
+ const m=$("waModal");m.classList.add("show");m.style.display="flex";m.setAttribute("aria-hidden","false");
+};
+window.closeWA=function(){waPending=null;const m=$("waModal");m.classList.remove("show");m.style.display="none";m.setAttribute("aria-hidden","true")};
+window.sendWA=function(){if(!waPending){closeWA();return}const {number,text}=waPending,encoded=encodeURIComponent(text);const desktop=!/Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent);const url=desktop?"https://web.whatsapp.com/send?phone="+number+"&text="+encoded:"https://wa.me/"+number+"?text="+encoded;closeWA();window.open(url,"_blank")};
+function makeTagihanWA(item){
+ const nama=item.pelanggan?.nama||item.namaPelanggan||"Pelanggan";
+ const total=Number(item.total||0),dp=Number(item.dibayar??item.dp??0),sisa=Math.max(0,total-dp);
+ const nota=item.nomorNota||item.idPenjualan||item.id||"-";
+ return `Halo ${nama},
+
+📍 *FIXZY*
+
+Informasi penjualan Anda:
+
+🧾 No. Nota: ${nota}
+📌 Status: *Masuk Tagihan*
+
+💰 Total tagihan: *${money(total)}*
+💵 DP: *${money(dp)}*
+📌 Sisa pembayaran: *${money(sisa)}*
+
+Terima kasih 🙏`;
+}
+
 window.toggleAction=id=>{
   document.querySelectorAll(".actionWrap.open").forEach(e=>{if(e.id!=="aw-"+id)e.classList.remove("open")});
   const el=$("aw-"+id);if(el)el.classList.toggle("open");
@@ -184,28 +327,17 @@ document.addEventListener("click",e=>{
 });
 
 window.ubahPembayaran=async(id,mode)=>{
-  document.querySelectorAll(".actionWrap.open").forEach(x=>x.classList.remove("open"));
-  const item=rows.find(x=>x.id===id);if(!item)return;
+ document.querySelectorAll(".actionWrap.open").forEach(x=>x.classList.remove("open"));
+ const item=rows.find(x=>x.id===id);if(!item)return;
+ if(mode==="tunai"){openIncome(item);return}
+ if(mode==="tagihan"){
+  if(!(await fixzyConfirm(`Ubah transaksi menjadi MASUK TAGIHAN?\n\nTotal tagihan: ${money(Number(item.total)||0)}\nDP saat ini: ${money(Number(item.dibayar??item.dp??0))}`,"Konfirmasi Tagihan")))return;
   try{
-    if(mode==="tagihan"){
-      await updateDoc(doc(db,"penjualan",id),{
-        pembayaran:"Tagihan",
-        status:"piutang",
-        dibayar:0,
-        sisa:Number(item.total)||0,
-        updatedAt:serverTimestamp()
-      });
-    }else{
-      await updateDoc(doc(db,"penjualan",id),{
-        pembayaran:"Tunai",
-        status:"dibayar",
-        dibayar:Number(item.total)||0,
-        sisa:0,
-        updatedAt:serverTimestamp()
-      });
-    }
-    await load();
-  }catch(e){alert("Gagal mengubah pembayaran: "+e.message)}
+   const dp=Number(item.dibayar??item.dp??0)||0,total=Number(item.total)||0;
+   await updateDoc(doc(db,"penjualan",id),{pembayaran:"Tagihan",status:"piutang",dibayar:dp,sisa:Math.max(0,total-dp),updatedAt:serverTimestamp()});
+   await load();openWA({...item,dibayar:dp,total},makeTagihanWA({...item,dibayar:dp,total}));
+  }catch(e){fixzyConfirm("Gagal mengubah pembayaran: "+e.message,"Gagal Mengubah")}
+ }
 };
 
 window.editPenjualan=id=>{
@@ -239,13 +371,13 @@ window.saveEdit=async()=>{
       updatedAt:serverTimestamp()
     });
     closeEdit();await load();
-  }catch(e){alert("Gagal menyimpan perubahan: "+e.message)}
+  }catch(e){fixzyConfirm("Gagal menyimpan perubahan: "+e.message,"Gagal Menyimpan")}
 };
 
 window.hapus=async id=>{
-  if(!confirm("Hapus transaksi penjualan ini dari Firebase?"))return;
+  if(!(await fixzyConfirm("Hapus transaksi penjualan ini dari Firebase?","Konfirmasi Hapus")))return;
   try{await deleteDoc(doc(db,"penjualan",id));await load();}
-  catch(e){alert("Gagal hapus penjualan: "+e.message)}
+  catch(e){fixzyConfirm("Gagal hapus penjualan: "+e.message,"Gagal Hapus")}
 };
 
 async function load(){
