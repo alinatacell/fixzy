@@ -1,6 +1,6 @@
 <!doctype html><html lang="id"><head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>FIXZY | Data Servis v18 Pendapatan 1</title>
+<title>FIXZY | Data Servis v19 Pendapatan Kolom</title>
 <style>
 *{box-sizing:border-box}
 body{margin:0;background:#f3f5f8;color:#172033;font-family:Inter,Arial,sans-serif}
@@ -137,7 +137,7 @@ input:focus,select:focus{border-color:#ffc107;box-shadow:0 0 0 3px rgba(255,193,
 .incomeResult .total{border-top:1px solid rgba(255,255,255,.18);margin-top:8px;padding-top:9px;font-size:16px;font-weight:900}
 .incomeActions{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-top:14px}
 .incomeActions button{padding:12px 10px}.incomeCancel{background:#e5e7eb;color:#111827}.incomeSave{background:#ffc107;color:#111827}
-.serviceTable .income1{font-weight:900;white-space:nowrap;color:#15803d}
+.serviceTable .income1{font-weight:900;white-space:nowrap;color:#15803d;font-size:13px}
 @media(max-width:480px){.incomeGrid{grid-template-columns:1fr}.incomeField.full{grid-column:auto}}
 
 
@@ -677,7 +677,7 @@ function render(){
  $("list").innerHTML=`<div class="tableWrap"><table class="serviceTable">
  <thead><tr>
    <th>Pelanggan</th><th>No. Nota</th><th>Tanggal</th><th>HP</th>
-   <th>Teknisi</th><th>Status</th><th>Biaya</th><th>DP</th><th>Pendapatan 1</th><th>Aksi</th>
+   <th>Teknisi</th><th>Biaya</th><th>DP</th><th>Pendapatan 1</th><th>Aksi</th>
  </tr></thead>
  <tbody>${a.map(x=>{
    const st=normalizeStatus(x.status);
@@ -688,9 +688,9 @@ function render(){
     <td>${esc(x.tanggal||"-")}</td>
     <td><b>${esc(x.tipe||x.tipeHp||"-")}</b></td>
     <td>${esc(x.namaTeknisi||x.teknisi||"-")}</td>
-    <td><span class="statusPill ${st}"><span class="dot dot-${st}"></span>${statusLabel(st)}</span></td>
     <td class="money">${money(x.total??x.biaya)}</td>
     <td class="money">${money(x.dp)}</td>
+    <td class="money income1">${money(x.pendapatan1||0)}</td>
     <td class="actionCell">${actionDropdown(x)}</td>
    </tr>`;
  }).join("")}</tbody></table></div>`;
