@@ -359,6 +359,11 @@ body{overflow:hidden}
 
   <nav class="menu-list">
 
+    <button class="menu-link" onclick="refreshIndex()">
+      <span class="ico">🔄</span>
+      Refresh Halaman
+    </button>
+
     <button class="menu-link"
       data-page="dashboard-admin.html"
       onclick="bukaHalaman(this)">
@@ -447,6 +452,15 @@ function bukaMenu(){
 function tutupMenu(){
   document.getElementById("menu").classList.remove("show");
   document.getElementById("overlay").classList.remove("show");
+}
+
+/* ================= REFRESH INDEX =================
+   Cache-busting agar versi index terbaru lebih cepat terbaca.
+*/
+function refreshIndex(){
+  const url = new URL(window.location.href);
+  url.searchParams.set("v", Date.now().toString());
+  window.location.replace(url.toString());
 }
 
 /* ================= HALAMAN LOGIN ================= */
