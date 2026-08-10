@@ -82,7 +82,7 @@ body{background:#0d0d0d;background-image:radial-gradient(circle at top, rgba(255
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js";
-import { getAuth, signInWithEmailAndPassword, signOut, sendPasswordResetEmail, setPersistence, browserLocalPersistence } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-auth.js";
+import { getAuth, signInWithEmailAndPassword, signOut, sendPasswordResetEmail } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-auth.js";
 import { getFirestore, doc, getDoc, updateDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js";
 
 const firebaseConfig = {
@@ -96,10 +96,6 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
-
-// Sesi Firebase disimpan secara lokal agar akun admin tetap login
-// meskipun halaman/browser ditutup lalu dibuka kembali.
-const authPersistenceReady = setPersistence(auth, browserLocalPersistence);
 
 const form = document.getElementById("loginForm");
 const btn = document.getElementById("btnLogin");
@@ -115,7 +111,6 @@ form.addEventListener("submit", async (e)=>{
   const email=document.getElementById("email").value.trim();
   const password=document.getElementById("password").value;
   try{
-    await authPersistenceReady;
     const cred = await signInWithEmailAndPassword(auth,email,password);
     const uid=cred.user.uid;
     const ref=doc(db,"users",uid);
@@ -133,8 +128,29 @@ form.addEventListener("submit", async (e)=>{
 
     if(data.role==="admin"){
       await updateDoc(ref,{lastLogin:serverTimestamp()});
-      tampilPopup("Fixzy","Login Admin Berhasil!");
-      setTimeout(()=>location.href="admin.html",1000);
+
+      const loginMessage = {
+        type: "FIXZY_LOGIN_SUCCESS",
+        uid: uid,
+        email: cred.user.email || "",
+        nama: data.namaKonter || data.nama || "Admin",
+        exp: data.tanggalBerakhir || "-",
+        role: "admin"
+      };
+
+      localStorage.setItem("fixzy_user_profile", JSON.stringify({
+        uid: uid,
+        email: cred.user.email || "",
+        nama: data.namaKonter || data.nama || "Admin",
+        exp: data.tanggalBerakhir || "-",
+        role: "admin"
+      }));
+
+      if(window.parent && window.parent !== window){
+        window.parent.postMessage(loginMessage, "*");
+      }else{
+        location.href = "index.html";
+      }
       return;
     }
 
@@ -161,8 +177,33 @@ form.addEventListener("submit", async (e)=>{
     }
 
     await updateDoc(ref,{lastLogin:serverTimestamp()});
-    tampilPopup("Fixzy",`Halo ${data.namaKonter||""}!\nTrial Aktif sampai ${new Date(data.tanggalBerakhir).toLocaleDateString("id-ID")}`);
-    setTimeout(()=>location.href="dashboard.html",1200);
+
+    const expText = data.tanggalBerakhir
+      ? new Date(data.tanggalBerakhir).toLocaleDateString("id-ID")
+      : "-";
+
+    const loginMessage = {
+      type: "FIXZY_LOGIN_SUCCESS",
+      uid: uid,
+      email: cred.user.email || "",
+      nama: data.namaKonter || data.nama || "Akun",
+      exp: expText,
+      role: data.role || "user"
+    };
+
+    localStorage.setItem("fixzy_user_profile", JSON.stringify({
+      uid: uid,
+      email: cred.user.email || "",
+      nama: data.namaKonter || data.nama || "Akun",
+      exp: data.tanggalBerakhir || "-",
+      role: data.role || "user"
+    }));
+
+    if(window.parent && window.parent !== window){
+      window.parent.postMessage(loginMessage, "*");
+    }else{
+      location.href = "index.html";
+    }
 
   }catch(err){
     let msg=err.message;
