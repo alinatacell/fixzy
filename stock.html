@@ -668,27 +668,86 @@ window.closeManual = closeManual;
 window.resetFilter = resetFilter;
 
 
+
+// ===== CEKLIS & HAPUS TERPILIH — Firebase module =====
+async function generateNextStockCode(){
+  if(!uid) return "STK001";
+  const snap=await getDocs(query(collection(db,"stok"),where("uid","==",uid)));
+  const used=new Set();
+  snap.forEach(d=>{
+    const k=String(d.data()?.kode||"").trim().toUpperCase();
+    const m=k.match(/^STK(\d+)$/);
+    if(m) used.add(Number(m[1]));
+  });
+  let n=1;
+  while(used.has(n)) n++;
+  return "STK"+String(n).padStart(3,"0");
+}
+
+window.setNextStockCode=async function(){
+  const el=$("fKode");
+  if(!el || editingId) return;
+  try{ el.value=await generateNextStockCode(); }
+  catch(e){ console.error("Gagal membuat kode stok:",e); }
+};
+
+window.toggleAllStock=function(checked){
+  document.querySelectorAll(".stockCheck[data-stock-id]").forEach(el=>{
+    el.checked=!!checked;
+  });
+  updateSelectedStockCount();
+};
+
+window.updateSelectedStockCount=function(){
+  // Desktop dan HP menampilkan produk yang sama, jadi deduplikasi berdasarkan ID.
+  const ids=new Set(
+    [...document.querySelectorAll(".stockCheck[data-stock-id]:checked")]
+      .map(el=>el.dataset.stockId)
+      .filter(Boolean)
+  );
+  const info=$("stockSelectedInfo");
+  if(info) info.textContent=`${ids.size} dipilih`;
+};
+
+window.hapusStockTerpilih=async function(){
+  const ids=[...new Set(
+    [...document.querySelectorAll(".stockCheck[data-stock-id]:checked")]
+      .map(el=>el.dataset.stockId)
+      .filter(Boolean)
+  )];
+
+  if(!ids.length){
+    toast("Pilih produk yang akan dihapus.");
+    return;
+  }
+
+  if(!confirm(`Hapus ${ids.length} produk terpilih dari Firebase?`)) return;
+
+  showLoading(true,`Menghapus ${ids.length} produk...`);
+  try{
+    // Gunakan nama koleksi yang sama persis dengan hapus satuan.
+    await Promise.all(ids.map(id=>deleteDoc(doc(db,"stok",id))));
+
+    // Baca ulang Firebase, bukan hanya menghilangkan card dari layar.
+    await loadProducts();
+
+    const all=$("stockSelectAll");
+    if(all) all.checked=false;
+    updateSelectedStockCount();
+
+    toast(`${ids.length} produk berhasil dihapus dari Firebase.`);
+  }catch(e){
+    console.error("Hapus terpilih gagal:",e);
+    toast("Gagal menghapus: "+e.message);
+  }finally{
+    showLoading(false);
+  }
+};
+
 onAuthStateChanged(auth,async user=>{
   if(user){uid=user.uid;await loadProducts()}
   else{location.href="login.html"}
 });
 </script>
-<script id="stock-logic-js">
-async function generateNextStockCode(){
- if(!currentUid)return "STK001";
- const snap=await getDocs(query(collection(db,STOCK_COLLECTION),where("uid","==",currentUid)));
- const used=new Set();snap.forEach(d=>{const m=String(d.data()?.kode||"").toUpperCase().match(/^STK(\d+)$/);if(m)used.add(+m[1]);});
- let n=1;while(used.has(n))n++;return "STK"+String(n).padStart(3,"0");
-}
-window.toggleAllStock=function(v){document.querySelectorAll(".stockCheck[data-stock-id]").forEach(e=>e.checked=v);updateSelectedStockCount()};
-window.updateSelectedStockCount=function(){const n=document.querySelectorAll(".stockCheck[data-stock-id]:checked").length,e=document.getElementById("stockSelectedInfo");if(e)e.textContent=n+" dipilih"};
-window.hapusStockTerpilih=async function(){
- const ids=[...document.querySelectorAll(".stockCheck[data-stock-id]:checked")].map(e=>e.dataset.stockId);
- if(!ids.length){showMsg("Pilih stok yang akan dihapus.");return}
- if(!confirm("Hapus "+ids.length+" stok terpilih?"))return;
- try{await Promise.all(ids.map(id=>deleteDoc(doc(db,STOCK_COLLECTION,id))));await loadProducts();showMsg(ids.length+" stok berhasil dihapus.");}
- catch(e){showMsg("Gagal menghapus stok: "+e.message)}
-};
-window.setNextStockCode=async function(){const e=document.getElementById("fKode");if(e)e.value=await generateNextStockCode()};
-</script><script>document.addEventListener("DOMContentLoaded",()=>{if(document.getElementById("fKode"))setNextStockCode();});</script></body>
+<script>document.addEventListener("DOMContentLoaded",()=>{if(document.getElementById("fKode"))setNextStockCode();});</script></body>
 </html>
