@@ -57,7 +57,14 @@ body{overflow:hidden}
   border-radius:4px;
 }
 
-/* Logo HEADER sengaja DIHAPUS */
+/* Logo HEADER */
+.header-logo{
+  width:72px;
+  max-height:42px;
+  object-fit:contain;
+  margin-left:10px;
+  border-radius:7px;
+}
 
 .header-account{
   margin-left:auto;
@@ -269,6 +276,15 @@ body{overflow:hidden}
   font-size:16px;
 }
 
+.logout-link{
+  color:#dc2626;
+  font-weight:900;
+}
+
+.logout-link:hover{
+  background:#fef2f2;
+}
+
 .menu-divider{
   height:1px;
   background:#e5e7eb;
@@ -330,7 +346,7 @@ body{overflow:hidden}
     <span></span>
   </button>
 
-  <!-- Logo header DIHAPUS sesuai permintaan -->
+  <img src="logo.png?v=2" class="header-logo" alt="FIXZY">
 
   <div class="header-account">
     <div class="account-name" id="accountName">Akun</div>
@@ -429,6 +445,15 @@ body{overflow:hidden}
       About
     </button>
 
+    <div class="menu-divider"></div>
+
+    <button class="menu-link logout-link"
+      type="button"
+      onclick="logoutFixzy()">
+      <span class="ico">🚪</span>
+      Logout
+    </button>
+
   </nav>
 </aside>
 
@@ -442,6 +467,44 @@ body{overflow:hidden}
 
 function sudahLogin(){
   return sessionStorage.getItem("fixzy_logged_in") === "1";
+}
+
+/* ================= LOGOUT ================= */
+window.logoutFixzy = async function(){
+  if(!confirm("Yakin ingin logout dari FIXZY?")) return;
+
+  try{
+    const { initializeApp } =
+      await import("https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js");
+    const { getAuth, signOut } =
+      await import("https://www.gstatic.com/firebasejs/11.10.0/firebase-auth.js");
+
+    const firebaseConfig = {
+      apiKey:"AIzaSyCwMbJsuORhIq4QCmp4c1r6OsjAUlfxU5Y",
+      authDomain:"fixzy-f056f.firebaseapp.com",
+      projectId:"fixzy-f056f",
+      storageBucket:"fixzy-f056f.firebasestorage.app",
+      messagingSenderId:"838081521031",
+      appId:"1:838081521031:web:50fdee909b56460b055f22"
+    };
+
+    const app = initializeApp(firebaseConfig,"FIXZY_LOGOUT");
+    await signOut(getAuth(app));
+  }catch(e){
+    console.warn("Logout Firebase:",e);
+  }
+
+  sessionStorage.removeItem("fixzy_logged_in");
+  localStorage.removeItem("fixzy_logged_in");
+  localStorage.removeItem("fixzy_uid");
+  localStorage.removeItem("fixzy_role");
+  localStorage.removeItem("fixzy_user_profile");
+
+  document.getElementById("accountName").textContent="Akun";
+  document.getElementById("accountExp").textContent="-";
+
+  tutupMenu();
+  window.location.replace("login.html");
 }
 
 function bukaMenu(){
@@ -465,13 +528,7 @@ function refreshIndex(){
 
 /* ================= HALAMAN LOGIN ================= */
 function tampilkanLogin(){
-  const overlay=document.getElementById("loginOverlay");
-  const frame=document.getElementById("loginFrame");
-  if(!frame.getAttribute("src")){
-    frame.src="login.html?v=2";
-  }
-  overlay.classList.add("show");
-  document.querySelectorAll(".menu-link").forEach(x=>x.classList.remove("active"));
+  window.location.replace("login.html");
 }
 
 /* ================= HALAMAN SAMBUTAN ================= */
@@ -610,9 +667,9 @@ bacaProfil();
 if(sudahLogin()){
   tampilkanBeranda();
 }else{
-  /* Saat index pertama dibuka dan belum login,
-     langsung tampilkan login.html */
-  tampilkanLogin();
+  /* Login berada di login.html.
+     Setelah login berhasil, login.html kembali ke index.html. */
+  window.location.replace("login.html");
 }
 </script>
 

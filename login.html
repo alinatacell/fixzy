@@ -129,28 +129,19 @@ form.addEventListener("submit", async (e)=>{
     if(data.role==="admin"){
       await updateDoc(ref,{lastLogin:serverTimestamp()});
 
-      const loginMessage = {
-        type: "FIXZY_LOGIN_SUCCESS",
-        uid: uid,
-        email: cred.user.email || "",
-        nama: data.namaKonter || data.nama || "Admin",
-        exp: data.tanggalBerakhir || "-",
-        role: "admin"
-      };
-
-      localStorage.setItem("fixzy_user_profile", JSON.stringify({
-        uid: uid,
-        email: cred.user.email || "",
-        nama: data.namaKonter || data.nama || "Admin",
-        exp: data.tanggalBerakhir || "-",
-        role: "admin"
+      sessionStorage.setItem("fixzy_logged_in","1");
+      localStorage.setItem("fixzy_uid",uid);
+      localStorage.setItem("fixzy_role","admin");
+      localStorage.setItem("fixzy_user_profile",JSON.stringify({
+        uid:uid,
+        email:cred.user.email || "",
+        nama:data.namaKonter || data.nama || "Admin",
+        exp:data.tanggalBerakhir || "-",
+        role:"admin"
       }));
 
-      if(window.parent && window.parent !== window){
-        window.parent.postMessage(loginMessage, "*");
-      }else{
-        location.href = "index.html";
-      }
+      tampilPopup("Fixzy","Login Admin Berhasil!\nMembuka FIXZY...");
+      setTimeout(()=>location.href="index.html",700);
       return;
     }
 
@@ -178,32 +169,19 @@ form.addEventListener("submit", async (e)=>{
 
     await updateDoc(ref,{lastLogin:serverTimestamp()});
 
-    const expText = data.tanggalBerakhir
-      ? new Date(data.tanggalBerakhir).toLocaleDateString("id-ID")
-      : "-";
-
-    const loginMessage = {
-      type: "FIXZY_LOGIN_SUCCESS",
-      uid: uid,
-      email: cred.user.email || "",
-      nama: data.namaKonter || data.nama || "Akun",
-      exp: expText,
-      role: data.role || "user"
-    };
-
-    localStorage.setItem("fixzy_user_profile", JSON.stringify({
-      uid: uid,
-      email: cred.user.email || "",
-      nama: data.namaKonter || data.nama || "Akun",
-      exp: data.tanggalBerakhir || "-",
-      role: data.role || "user"
+    sessionStorage.setItem("fixzy_logged_in","1");
+    localStorage.setItem("fixzy_uid",uid);
+    localStorage.setItem("fixzy_role",data.role || "user");
+    localStorage.setItem("fixzy_user_profile",JSON.stringify({
+      uid:uid,
+      email:cred.user.email || "",
+      nama:data.namaKonter || data.nama || "Akun",
+      exp:data.tanggalBerakhir || "-",
+      role:data.role || "user"
     }));
 
-    if(window.parent && window.parent !== window){
-      window.parent.postMessage(loginMessage, "*");
-    }else{
-      location.href = "index.html";
-    }
+    tampilPopup("Fixzy",`Login Berhasil!\nHalo ${data.namaKonter||""}.\nMembuka FIXZY...`);
+    setTimeout(()=>location.href="index.html",700);
 
   }catch(err){
     let msg=err.message;
