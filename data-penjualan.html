@@ -1,6 +1,6 @@
 <!doctype html><html lang="id"><head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>FIXZY | Data Penjualan v2 Pendapatan</title>
+<title>A YUDI THEA | Data Penjualan v3</title>
 <style>
 *{box-sizing:border-box}
 body{margin:0;background:#f4f5f7;color:#111827;font-family:Arial,sans-serif}
@@ -97,7 +97,7 @@ input,select{padding:11px;border:1px solid #cbd5e1;border-radius:10px;background
     </select>
   </div>
 
-  <div class="stats">☁️ Firebase <b>/penjualan</b> • Total: <b id="total">0</b> • <span id="akun">memeriksa akun...</span></div>
+  <div class="stats">☁️ Data <b>/penjualan</b> • Total: <b id="total">0</b> • <span id="akun">memeriksa akun...</span></div>
   <div id="list" class="list"><div class="empty">Memuat Firebase...</div></div>
 </main>
 
@@ -138,7 +138,7 @@ input,select{padding:11px;border:1px solid #cbd5e1;border-radius:10px;background
 <!-- POPUP WHATSAPP -->
 <div id="waModal" class="fixzyOverlay" aria-hidden="true">
  <div class="fixzyBox">
-  <div class="fixzyHead"><span style="font-size:24px">📲</span><h2>Pesan WhatsApp FIXZY</h2><button class="fixzyClose" onclick="closeWA()">✕</button></div>
+  <div class="fixzyHead"><span style="font-size:24px">📲</span><h2>Pesan WhatsApp</h2><button class="fixzyClose" onclick="closeWA()">✕</button></div>
   <div id="waInfo" class="fixzyInfo"></div>
   <div id="waPreview" style="white-space:pre-line;background:#f8fafc;border:1px solid #e5e7eb;border-radius:13px;padding:12px;font-size:12px;line-height:1.6"></div>
   <div class="fixzyActions"><button class="fixzyCancel" onclick="closeWA()">Tutup</button><button id="waSend" class="fixzySave" onclick="sendWA()">📲 Kirim WhatsApp</button></div>
@@ -184,6 +184,7 @@ let uid="",rows=[],editId="";
 const $=id=>document.getElementById(id);
 const esc=v=>String(v??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]));
 const money=v=>"Rp "+Number(v||0).toLocaleString("id-ID");
+const NAMA_KONTER="A YUDI THEA";
 
 function statusLabel(x){
   const s=String(x.status||"").toLowerCase();
@@ -226,7 +227,7 @@ function render(){
               <button class="edit" onclick="editPenjualan('${id}')">✏️ Edit</button>
               <button class="delete" onclick="hapus('${id}')">🗑️ Hapus</button>
               <button class="bill" onclick="ubahPembayaran('${id}','tagihan')">🧾 Masuk Tagihan</button>
-              <button class="cash" onclick="ubahPembayaran('${id}','tunai')">💵 Tunai</button>
+              <button class="cash" onclick="ubahPembayaran('${id}','tunai')">💵 Tunai</button>               <button class="cancel" onclick="ubahPembayaran(\'${id}\',\'batal\')">✖️ Batal</button>
             </div>
           </div>
         </td>
@@ -304,7 +305,7 @@ function makeTagihanWA(item){
  const nota=item.nomorNota||item.idPenjualan||item.id||"-";
  return `Halo ${nama},
 
-📍 *FIXZY*
+📍 *${NAMA_KONTER}*
 
 Informasi penjualan Anda:
 
@@ -314,6 +315,26 @@ Informasi penjualan Anda:
 💰 Total tagihan: *${money(total)}*
 💵 DP: *${money(dp)}*
 📌 Sisa pembayaran: *${money(sisa)}*
+
+Terima kasih 🙏`;
+}
+
+function makeBatalWA(item){
+ const nama=item.pelanggan?.nama||item.namaPelanggan||"Pelanggan";
+ const nota=item.nomorNota||item.idPenjualan||item.id||"-";
+ const total=Number(item.total||0);
+ return `Halo ${nama},
+
+📍 *${NAMA_KONTER}*
+
+Informasi penjualan Anda:
+
+🧾 No. Nota: ${nota}
+📌 Status: *BATAL*
+
+💰 Total transaksi: *${money(total)}*
+
+Transaksi penjualan tersebut telah dibatalkan.
 
 Terima kasih 🙏`;
 }
@@ -332,6 +353,18 @@ window.ubahPembayaran=async(id,mode)=>{
  document.querySelectorAll(".actionWrap.open").forEach(x=>x.classList.remove("open"));
  const item=rows.find(x=>x.id===id);if(!item)return;
  if(mode==="tunai"){openIncome(item);return}
+ if(mode==="batal"){
+  if(!(await fixzyConfirm("Batalkan transaksi penjualan ini?\n\nPendapatan akan menjadi Rp 0.","Konfirmasi Batal")))return;
+  try{
+   await updateDoc(doc(db,"penjualan",id),{
+    status:"batal",pembayaran:"Batal",pendapatan:0,jumlahTotal:0,sisa:0,
+    updatedAt:serverTimestamp()
+   });
+   await load();
+   openWA({...item,status:"batal",pembayaran:"Batal",pendapatan:0,jumlahTotal:0,sisa:0},makeBatalWA({...item,status:"batal"}));
+  }catch(e){fixzyConfirm("Gagal membatalkan transaksi: "+e.message,"Gagal Membatalkan")}
+  return;
+ }
  if(mode==="tagihan"){
   if(!(await fixzyConfirm(`Ubah transaksi menjadi MASUK TAGIHAN?\n\nTotal tagihan: ${money(Number(item.total)||0)}\nDP saat ini: ${money(Number(item.dibayar??item.dp??0))}`,"Konfirmasi Tagihan")))return;
   try{
