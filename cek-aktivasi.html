@@ -9,9 +9,11 @@
 *{box-sizing:border-box}
 body{margin:0;font-family:Arial,Helvetica,sans-serif;background:#f1f3f7;color:#111827}
 header{background:#111827;color:#fff;padding:14px 18px;position:sticky;top:0;z-index:5}
-.head{max-width:760px;margin:auto;display:flex;align-items:center;gap:12px}
-.back{width:48px;height:48px;border:0;border-radius:14px;background:#1e293b;color:#fff;font-size:30px;cursor:pointer}
-.brand{flex:1}.brand h1{margin:0;font-size:21px}.brand p{margin:4px 0 0;color:#cbd5e1;font-size:13px}
+.head{max-width:760px;margin:auto;display:flex;align-items:center;gap:10px}
+.back,.headbtn{width:48px;height:48px;border:0;border-radius:14px;background:#1e293b;color:#fff;font-size:30px;cursor:pointer;display:flex;align-items:center;justify-content:center}
+.headbtn{font-size:22px;background:#fbbf24;color:#111827}
+.closebtn{background:#dc2626;color:#fff}
+.brand{flex:1;min-width:0}.brand h1{margin:0;font-size:21px}.brand p{margin:4px 0 0;color:#cbd5e1;font-size:13px}
 .wrap{max-width:760px;margin:auto;padding:16px}
 .card{background:#fff;border:1px solid #e2e8f0;border-radius:22px;padding:18px;margin-bottom:16px;box-shadow:0 5px 20px rgba(0,0,0,.06)}
 .hero{background:#111827;color:#fff;border-radius:22px;padding:22px}
@@ -37,11 +39,13 @@ select{width:100%;padding:14px;border:1px solid #cbd5e1;border-radius:13px;backg
 <body>
 <header>
   <div class="head">
-    <button class="back" onclick="tutupHalaman()" aria-label="Kembali">‹</button>
+    <button class="back" onclick="tutupHalaman()" aria-label="Kembali" title="Kembali">‹</button>
     <div class="brand">
       <h1>FIXZY</h1>
       <p>🔐 Cek Aktivasi</p>
     </div>
+    <button class="headbtn" onclick="refreshAktivasi()" aria-label="Refresh" title="Refresh">↻</button>
+    <button class="headbtn closebtn" onclick="tutupHalaman()" aria-label="Tutup" title="Tutup">×</button>
   </div>
 </header>
 
@@ -89,6 +93,12 @@ select{width:100%;padding:14px;border:1px solid #cbd5e1;border-radius:13px;backg
 </main>
 
 <script>
+function refreshAktivasi(){
+  const url=new URL(window.location.href);
+  url.searchParams.set("v",Date.now().toString());
+  window.location.replace(url.toString());
+}
+
 function tutupHalaman(){
   try{
     if(window.frameElement){window.frameElement.remove();return}
@@ -204,6 +214,8 @@ async function loadFirebase(){
     const app=initializeApp(firebaseConfig);
     const auth=getAuth(app);
     db=getFirestore(app);
+    // Expose Firestore helpers to functions outside loadFirebase().
+    window.fixzyFS={doc,getDoc,collection,addDoc,getDocs,query,where,serverTimestamp};
 
     onAuthStateChanged(auth,async user=>{
       currentUser=user;
@@ -264,11 +276,11 @@ async function muatPengajuan(){
   }
 
   try{
-    const q=query(
-      collection(db,"aktivasi_pengajuan"),
-      where("uid","==",currentUser.uid)
+    const q=window.fixzyFS.query(
+      window.fixzyFS.collection(db,"aktivasi_pengajuan"),
+      window.fixzyFS.where("uid","==",currentUser.uid)
     );
-    const snap=await getDocs(q);
+    const snap=await window.fixzyFS.getDocs(q);
 
     if(snap.empty){
       el.className="status";
@@ -329,11 +341,11 @@ async function kirimWA(){
   const paket=`${pilihan.bulan} Bulan`;
 
   try{
-    const q=query(
-      collection(db,"aktivasi_pengajuan"),
-      where("uid","==",currentUser.uid)
+    const q=window.fixzyFS.query(
+      window.fixzyFS.collection(db,"aktivasi_pengajuan"),
+      window.fixzyFS.where("uid","==",currentUser.uid)
     );
-    const snap=await getDocs(q);
+    const snap=await window.fixzyFS.getDocs(q);
 
     const adaPending=snap.docs.some(d=>{
       const x=d.data()||{};
@@ -361,7 +373,7 @@ Pengajuan perpanjangan saya sudah tercatat di sistem. Saya mengirim bukti transf
       return;
     }
 
-    await addDoc(collection(db,"aktivasi_pengajuan"),{
+    await window.fixzyFS.addDoc(window.fixzyFS.collection(db,"aktivasi_pengajuan"),{
       uid:currentUser.uid,
       email:currentUser.email||profil.email||"",
       namaKonter:nama,
@@ -372,7 +384,7 @@ Pengajuan perpanjangan saya sudah tercatat di sistem. Saya mengirim bukti transf
       tanggalExpiredLama:exp,
       status:"menunggu",
       buktiPembayaran:"",
-      createdAt:serverTimestamp()
+      createdAt:window.fixzyFS.serverTimestamp()
     });
 
     await muatPengajuan();
