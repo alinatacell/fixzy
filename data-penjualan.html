@@ -1,6 +1,6 @@
 <!doctype html><html lang="id"><head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>A YUDI THEA | Data Penjualan v3</title>
+<title>A YUDI THEA | Data Penjualan</title>
 <style>
 *{box-sizing:border-box}
 body{margin:0;background:#f4f5f7;color:#111827;font-family:Arial,sans-serif}
@@ -59,21 +59,32 @@ input,select{padding:11px;border:1px solid #cbd5e1;border-radius:10px;background
 .salesTable .customer{font-weight:900;color:#111827}.salesTable .nota{font-weight:800;color:#334155;white-space:nowrap}.salesTable .money{font-weight:900;color:#111827;white-space:nowrap}
 .salesTable .actionCell{min-width:170px;text-align:right}.salesTable .badge{display:inline-flex}
 
-/* ===== POPUP FIXZY PENJUALAN ===== */
-.fixzyOverlay{display:none;position:fixed;inset:0;background:rgba(15,23,42,.68);z-index:1000;align-items:center;justify-content:center;padding:14px;backdrop-filter:blur(3px)}
+/* ===== FIXZY POPUP / PENDAPATAN PENJUALAN ===== */
+.fixzyOverlay{display:none;position:fixed;inset:0;background:rgba(15,23,42,.68);z-index:500;align-items:center;justify-content:center;padding:14px;backdrop-filter:blur(3px)}
 .fixzyOverlay.show{display:flex}
 .fixzyBox{width:min(470px,100%);max-height:92vh;overflow:auto;background:#fff;border-radius:20px;padding:18px;box-shadow:0 20px 60px rgba(0,0,0,.28)}
-.fixzyHead{display:flex;align-items:center;gap:9px;margin-bottom:13px}.fixzyHead h2{margin:0;font-size:18px;color:#111827}
+.fixzyHead{display:flex;align-items:center;gap:9px;margin-bottom:13px}
+.fixzyHead h2{margin:0;font-size:18px;color:#111827}
 .fixzyClose{margin-left:auto;background:#eef2f7;color:#111827;width:36px;height:36px;padding:0}
 .fixzyInfo{background:#f8fafc;border:1px solid #e5e7eb;border-radius:13px;padding:11px 12px;font-size:12px;line-height:1.55;margin-bottom:11px}
-.fixzyGrid{display:grid;grid-template-columns:1fr 1fr;gap:9px}.fixzyField label{display:block;font-size:10px;font-weight:900;color:#64748b;margin-bottom:5px}
-.fixzyField input{width:100%;padding:11px;border:1px solid #d7dce5;border-radius:11px;font-weight:800}.fixzyField input[readonly]{background:#f8fafc}
-.fixzyField.full{grid-column:1/-1}.fixzyResult{margin-top:11px;background:#111827;color:#fff;border-radius:14px;padding:13px}
-.fixzyLine{display:flex;justify-content:space-between;gap:10px;font-size:12px;margin:5px 0}.fixzyLine.total{border-top:1px solid rgba(255,255,255,.18);padding-top:9px;margin-top:9px;font-size:16px;font-weight:900}
-.fixzyActions{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-top:14px}.fixzyActions button{padding:12px}
-.fixzyCancel{background:#e5e7eb;color:#111827}.fixzySave{background:#ffc107;color:#111827}
+.fixzyGrid{display:grid;grid-template-columns:1fr 1fr;gap:9px}
+.fixzyField label{display:block;font-size:10px;font-weight:900;color:#64748b;margin-bottom:5px}
+.fixzyField input{width:100%;padding:11px;border:1px solid #d7dce5;border-radius:11px;font-weight:800}
+.fixzyField input[readonly]{background:#f8fafc}
+.fixzyField.full{grid-column:1/-1}
+.fixzyResult{margin-top:11px;background:#111827;color:#fff;border-radius:14px;padding:13px}
+.fixzyLine{display:flex;justify-content:space-between;gap:10px;font-size:12px;margin:5px 0}
+.fixzyLine.total{border-top:1px solid rgba(255,255,255,.18);padding-top:9px;margin-top:9px;font-size:16px;font-weight:900}
+.fixzyActions{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-top:14px}
+.fixzyActions button{padding:12px}
+.fixzyCancel{background:#e5e7eb;color:#111827}
+.fixzySave{background:#ffc107;color:#111827}
 .salesTable .income{font-weight:900;color:#15803d;white-space:nowrap}
-@media(max-width:480px){.fixzyGrid{grid-template-columns:1fr}.fixzyField.full{grid-column:auto}}
+.actionMenu .cancelStatus{color:#dc2626}
+@media(max-width:480px){
+ .fixzyGrid{grid-template-columns:1fr}
+ .fixzyField.full{grid-column:auto}
+}
 </style></head><body>
 
 <header>
@@ -101,10 +112,11 @@ input,select{padding:11px;border:1px solid #cbd5e1;border-radius:10px;background
   <div id="list" class="list"><div class="empty">Memuat Firebase...</div></div>
 </main>
 
-<!-- POPUP FIXZY KONFIRMASI -->
+
+<!-- POPUP KONFIRMASI / ERROR FIXZY -->
 <div id="fixzyConfirm" class="fixzyOverlay" aria-hidden="true">
  <div class="fixzyBox">
-  <div class="fixzyHead"><span style="font-size:24px">⚡</span><h2 id="fixzyConfirmTitle">FIXZY</h2></div>
+  <div class="fixzyHead"><span style="font-size:24px">⚡</span><h2 id="fixzyConfirmTitle">A YUDI THEA</h2></div>
   <div id="fixzyConfirmMsg" class="fixzyInfo"></div>
   <div class="fixzyActions">
    <button class="fixzyCancel" onclick="fixzyNo()">Batal</button>
@@ -116,32 +128,44 @@ input,select{padding:11px;border:1px solid #cbd5e1;border-radius:10px;background
 <!-- POPUP PENDAPATAN TUNAI -->
 <div id="incomeModal" class="fixzyOverlay" aria-hidden="true">
  <div class="fixzyBox">
-  <div class="fixzyHead"><span style="font-size:24px">💰</span><h2>Konfirmasi Pendapatan Penjualan</h2><button class="fixzyClose" onclick="closeIncome()">✕</button></div>
+  <div class="fixzyHead">
+   <span style="font-size:24px">💰</span><h2>Pendapatan Penjualan Tunai</h2>
+   <button class="fixzyClose" onclick="closeIncome()">✕</button>
+  </div>
   <div id="incomeInfo" class="fixzyInfo"></div>
   <div class="fixzyGrid">
    <div class="fixzyField"><label>TOTAL PENJUALAN</label><input id="incomeTotal" readonly></div>
    <div class="fixzyField"><label>DP / DIBAYAR</label><input id="incomeDp" inputmode="numeric"></div>
    <div class="fixzyField full"><label>DISKON / POTONGAN</label><input id="incomeDiskon" inputmode="numeric" value="0"></div>
-   <div class="fixzyField full"><label>PENDAPATAN — HASIL AKHIR</label><input id="incomePendapatan" readonly></div>
+   <div class="fixzyField full"><label>PENDAPATAN 1 — HASIL AKHIR</label><input id="incomePendapatan" readonly></div>
   </div>
   <div class="fixzyResult">
    <div class="fixzyLine"><span>Total</span><b id="incomeTotalPrev">Rp 0</b></div>
    <div class="fixzyLine"><span>DP / Dibayar</span><b id="incomeDpPrev">Rp 0</b></div>
    <div class="fixzyLine"><span>Diskon</span><b id="incomeDiskonPrev">Rp 0</b></div>
    <div class="fixzyLine"><span>Sisa</span><b id="incomeSisaPrev">Rp 0</b></div>
-   <div class="fixzyLine total"><span>PENDAPATAN</span><b id="incomeFinalPrev">Rp 0</b></div>
+   <div class="fixzyLine total"><span>PENDAPATAN 1</span><b id="incomeFinalPrev">Rp 0</b></div>
   </div>
-  <div class="fixzyActions"><button class="fixzyCancel" onclick="closeIncome()">Batal</button><button class="fixzySave" onclick="saveIncome()">Simpan</button></div>
+  <div class="fixzyActions">
+   <button class="fixzyCancel" onclick="closeIncome()">Batal</button>
+   <button class="fixzySave" onclick="saveIncome()">Simpan</button>
+  </div>
  </div>
 </div>
 
 <!-- POPUP WHATSAPP -->
 <div id="waModal" class="fixzyOverlay" aria-hidden="true">
  <div class="fixzyBox">
-  <div class="fixzyHead"><span style="font-size:24px">📲</span><h2>Pesan WhatsApp</h2><button class="fixzyClose" onclick="closeWA()">✕</button></div>
+  <div class="fixzyHead">
+   <span style="font-size:24px">📲</span><h2>Pesan WhatsApp</h2>
+   <button class="fixzyClose" onclick="closeWA()">✕</button>
+  </div>
   <div id="waInfo" class="fixzyInfo"></div>
   <div id="waPreview" style="white-space:pre-line;background:#f8fafc;border:1px solid #e5e7eb;border-radius:13px;padding:12px;font-size:12px;line-height:1.6"></div>
-  <div class="fixzyActions"><button class="fixzyCancel" onclick="closeWA()">Tutup</button><button id="waSend" class="fixzySave" onclick="sendWA()">📲 Kirim WhatsApp</button></div>
+  <div class="fixzyActions">
+   <button class="fixzyCancel" onclick="closeWA()">Tutup</button>
+   <button id="waSend" class="fixzySave" onclick="sendWA()">📲 Kirim WhatsApp</button>
+  </div>
  </div>
 </div>
 
@@ -184,7 +208,6 @@ let uid="",rows=[],editId="";
 const $=id=>document.getElementById(id);
 const esc=v=>String(v??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]));
 const money=v=>"Rp "+Number(v||0).toLocaleString("id-ID");
-const NAMA_KONTER="A YUDI THEA";
 
 function statusLabel(x){
   const s=String(x.status||"").toLowerCase();
@@ -227,7 +250,8 @@ function render(){
               <button class="edit" onclick="editPenjualan('${id}')">✏️ Edit</button>
               <button class="delete" onclick="hapus('${id}')">🗑️ Hapus</button>
               <button class="bill" onclick="ubahPembayaran('${id}','tagihan')">🧾 Masuk Tagihan</button>
-              <button class="cash" onclick="ubahPembayaran('${id}','tunai')">💵 Tunai</button>               <button class="cancel" onclick="ubahPembayaran(\'${id}\',\'batal\')">✖️ Batal</button>
+              <button class="cash" onclick="ubahPembayaran('${id}','tunai')">💵 Tunai</button>
+              <button class="cancelStatus" onclick="ubahPembayaran('${id}','batal')">✖️ Batal</button>
             </div>
           </div>
         </td>
@@ -235,9 +259,19 @@ function render(){
     }).join("")}</tbody></table></div>`:`<div class="empty">Tidak ada data penjualan.</div>`;
 }
 
+window.toggleAction=id=>{
+  document.querySelectorAll(".actionWrap.open").forEach(e=>{if(e.id!=="aw-"+id)e.classList.remove("open")});
+  const el=$("aw-"+id);if(el)el.classList.toggle("open");
+};
+
+document.addEventListener("click",e=>{
+  if(!e.target.closest(".actionWrap"))
+    document.querySelectorAll(".actionWrap.open").forEach(x=>x.classList.remove("open"));
+});
+
 
 let fixzyConfirmResolve=null;
-window.fixzyConfirm=function(message,title="FIXZY"){
+window.fixzyConfirm=function(message,title="A YUDI THEA"){
  return new Promise(resolve=>{
   fixzyConfirmResolve=resolve;
   $("fixzyConfirmTitle").textContent=title;
@@ -245,23 +279,41 @@ window.fixzyConfirm=function(message,title="FIXZY"){
   const m=$("fixzyConfirm");m.classList.add("show");m.style.display="flex";m.setAttribute("aria-hidden","false");
  });
 };
-window.fixzyYes=function(){const r=fixzyConfirmResolve;fixzyConfirmResolve=null;closeFixzyConfirm();if(r)r(true)};
-window.fixzyNo=function(){const r=fixzyConfirmResolve;fixzyConfirmResolve=null;closeFixzyConfirm();if(r)r(false)};
-window.closeFixzyConfirm=function(){const m=$("fixzyConfirm");m.classList.remove("show");m.style.display="none";m.setAttribute("aria-hidden","true")};
+window.fixzyYes=function(){
+ const r=fixzyConfirmResolve;fixzyConfirmResolve=null;closeFixzyConfirm();if(r)r(true);
+};
+window.fixzyNo=function(){
+ const r=fixzyConfirmResolve;fixzyConfirmResolve=null;closeFixzyConfirm();if(r)r(false);
+};
+window.closeFixzyConfirm=function(){
+ const m=$("fixzyConfirm");m.classList.remove("show");m.style.display="none";m.setAttribute("aria-hidden","true");
+};
 
-let incomePending=null;
-function cleanMoney(v){return Number(String(v??"").replace(/[^\d-]/g,""))||0}
+const NAMA_KONTER="A YUDI THEA";
+
+function cleanMoney(v){
+ return Number(String(v??"").replace(/[^\d-]/g,""))||0;
+}
+
+let incomePending=null,incomeSaving=false;
+
 function updateIncomePreview(){
  const total=cleanMoney($("incomeTotal").value);
  const dp=Math.min(total,Math.max(0,cleanMoney($("incomeDp").value)));
  const diskon=Math.min(total,Math.max(0,cleanMoney($("incomeDiskon").value)));
  const pendapatan=Math.max(0,total-diskon);
  const sisa=Math.max(0,total-dp);
- $("incomeTotalPrev").textContent=money(total);$("incomeDpPrev").textContent=money(dp);
- $("incomeDiskonPrev").textContent=money(diskon);$("incomeSisaPrev").textContent=money(sisa);
- $("incomeFinalPrev").textContent=money(pendapatan);$("incomePendapatan").value=pendapatan;
+
+ $("incomeTotalPrev").textContent=money(total);
+ $("incomeDpPrev").textContent=money(dp);
+ $("incomeDiskonPrev").textContent=money(diskon);
+ $("incomeSisaPrev").textContent=money(sisa);
+ $("incomeFinalPrev").textContent=money(pendapatan);
+ $("incomePendapatan").value=pendapatan;
+
  return {total,dp,diskon,pendapatan,sisa};
 }
+
 window.openIncome=function(item){
  incomePending=item;
  $("incomeInfo").innerHTML=`<b>${esc(item.pelanggan?.nama||item.namaPelanggan||"Pelanggan umum")}</b><br>No. Nota: ${esc(item.nomorNota||item.idPenjualan||item.id||"-")}`;
@@ -269,40 +321,85 @@ window.openIncome=function(item){
  $("incomeDp").value=cleanMoney(item.dibayar??item.dp??item.total);
  $("incomeDiskon").value=cleanMoney(item.diskon??item.discount??0);
  updateIncomePreview();
- const m=$("incomeModal");m.classList.add("show");m.style.display="flex";m.setAttribute("aria-hidden","false");
-};
-window.closeIncome=function(){incomePending=null;const m=$("incomeModal");m.classList.remove("show");m.style.display="none";m.setAttribute("aria-hidden","true")};
-$("incomeDp").addEventListener("input",updateIncomePreview);$("incomeDiskon").addEventListener("input",updateIncomePreview);
 
-let incomeSaving=false;
+ const m=$("incomeModal");
+ m.classList.add("show");m.style.display="flex";m.setAttribute("aria-hidden","false");
+};
+
+window.closeIncome=function(){
+ incomePending=null;incomeSaving=false;
+ const m=$("incomeModal");m.classList.remove("show");m.style.display="none";m.setAttribute("aria-hidden","true");
+};
+
+$("incomeDp").addEventListener("input",updateIncomePreview);
+$("incomeDiskon").addEventListener("input",updateIncomePreview);
+
 window.saveIncome=async function(){
- const item=incomePending;if(!item||incomeSaving)return;
+ const item=incomePending;
+ if(!item||incomeSaving)return;
  incomeSaving=true;
+
  const v=updateIncomePreview();
  try{
   await updateDoc(doc(db,"penjualan",item.id),{
-   pembayaran:"Tunai",status:"dibayar",dibayar:v.dp,sisa:v.sisa,
-   diskon:v.diskon,discount:v.diskon,pendapatan:v.pendapatan,jumlahTotal:v.pendapatan,
+   pembayaran:"Tunai",
+   status:"dibayar",
+   dibayar:v.dp,
+   sisa:v.sisa,
+   diskon:v.diskon,
+   discount:v.diskon,
+   pendapatan:v.pendapatan,
+   jumlahTotal:v.pendapatan,
    updatedAt:serverTimestamp()
   });
-  closeIncome();await load();
- }catch(e){fixzyConfirm("Gagal menyimpan pendapatan: "+e.message,"Gagal Menyimpan")}
+  closeIncome();
+  await load();
+ }catch(e){
+  incomeSaving=false;
+  fixzyConfirm("Gagal menyimpan pendapatan: "+e.message,"Gagal Menyimpan");
+ }
 };
 
 let waPending=null;
-function normalizeWA(v){let n=String(v||"").replace(/\D/g,"");if(n.startsWith("0"))n="62"+n.slice(1);if(!n.startsWith("62"))n="62"+n;return n}
+
+function normalizeWA(v){
+ let n=String(v||"").replace(/\D/g,"");
+ if(n.startsWith("0"))n="62"+n.slice(1);
+ return n;
+}
+
 window.openWA=function(item,text){
  const n=normalizeWA(item.noHp||item.pelanggan?.wa||item.whatsapp||"");
- waPending=n?{number:n,text}:null;$("waInfo").textContent=n?"Nomor WhatsApp tersedia.":"Nomor WhatsApp belum tersedia.";
- $("waPreview").textContent=text;$("waSend").style.display=n?"block":"none";
+ waPending=n?{number:n,text}:null;
+ $("waInfo").textContent=n?"Nomor WhatsApp tersedia.":"Nomor WhatsApp belum tersedia.";
+ $("waPreview").textContent=text;
+ $("waSend").style.display=n?"block":"none";
+
  const m=$("waModal");m.classList.add("show");m.style.display="flex";m.setAttribute("aria-hidden","false");
 };
-window.closeWA=function(){waPending=null;const m=$("waModal");m.classList.remove("show");m.style.display="none";m.setAttribute("aria-hidden","true")};
-window.sendWA=function(){if(!waPending){closeWA();return}const {number,text}=waPending,encoded=encodeURIComponent(text);const desktop=!/Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent);const url=desktop?"https://web.whatsapp.com/send?phone="+number+"&text="+encoded:"https://wa.me/"+number+"?text="+encoded;closeWA();window.open(url,"_blank")};
+
+window.closeWA=function(){
+ waPending=null;
+ const m=$("waModal");m.classList.remove("show");m.style.display="none";m.setAttribute("aria-hidden","true");
+};
+
+window.sendWA=function(){
+ if(!waPending){closeWA();return}
+ const {number,text}=waPending,encoded=encodeURIComponent(text);
+ const desktop=!/Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent);
+ const url=desktop
+  ?"https://web.whatsapp.com/send?phone="+number+"&text="+encoded
+  :"https://wa.me/"+number+"?text="+encoded;
+ closeWA();window.open(url,"_blank");
+};
+
 function makeTagihanWA(item){
  const nama=item.pelanggan?.nama||item.namaPelanggan||"Pelanggan";
- const total=Number(item.total||0),dp=Number(item.dibayar??item.dp??0),sisa=Math.max(0,total-dp);
+ const total=Number(item.total||0);
+ const dp=Number(item.dibayar??item.dp??0);
+ const sisa=Math.max(0,total-dp);
  const nota=item.nomorNota||item.idPenjualan||item.id||"-";
+
  return `Halo ${nama},
 
 📍 *${NAMA_KONTER}*
@@ -323,6 +420,7 @@ function makeBatalWA(item){
  const nama=item.pelanggan?.nama||item.namaPelanggan||"Pelanggan";
  const nota=item.nomorNota||item.idPenjualan||item.id||"-";
  const total=Number(item.total||0);
+
  return `Halo ${nama},
 
 📍 *${NAMA_KONTER}*
@@ -339,39 +437,67 @@ Transaksi penjualan tersebut telah dibatalkan.
 Terima kasih 🙏`;
 }
 
-window.toggleAction=id=>{
-  document.querySelectorAll(".actionWrap.open").forEach(e=>{if(e.id!=="aw-"+id)e.classList.remove("open")});
-  const el=$("aw-"+id);if(el)el.classList.toggle("open");
-};
-
-document.addEventListener("click",e=>{
-  if(!e.target.closest(".actionWrap"))
-    document.querySelectorAll(".actionWrap.open").forEach(x=>x.classList.remove("open"));
-});
-
 window.ubahPembayaran=async(id,mode)=>{
  document.querySelectorAll(".actionWrap.open").forEach(x=>x.classList.remove("open"));
- const item=rows.find(x=>x.id===id);if(!item)return;
- if(mode==="tunai"){openIncome(item);return}
- if(mode==="batal"){
-  if(!(await fixzyConfirm("Batalkan transaksi penjualan ini?\n\nPendapatan akan menjadi Rp 0.","Konfirmasi Batal")))return;
-  try{
-   await updateDoc(doc(db,"penjualan",id),{
-    status:"batal",pembayaran:"Batal",pendapatan:0,jumlahTotal:0,sisa:0,
-    updatedAt:serverTimestamp()
-   });
-   await load();
-   openWA({...item,status:"batal",pembayaran:"Batal",pendapatan:0,jumlahTotal:0,sisa:0},makeBatalWA({...item,status:"batal"}));
-  }catch(e){fixzyConfirm("Gagal membatalkan transaksi: "+e.message,"Gagal Membatalkan")}
+ const item=rows.find(x=>x.id===id);
+ if(!item)return;
+
+ if(mode==="tunai"){
+  openIncome(item);
   return;
  }
+
  if(mode==="tagihan"){
-  if(!(await fixzyConfirm(`Ubah transaksi menjadi MASUK TAGIHAN?\n\nTotal tagihan: ${money(Number(item.total)||0)}\nDP saat ini: ${money(Number(item.dibayar??item.dp??0))}`,"Konfirmasi Tagihan")))return;
+  if(!(await fixzyConfirm(
+   `Ubah transaksi menjadi MASUK TAGIHAN?\n\nTotal tagihan: ${money(Number(item.total)||0)}\nDP saat ini: ${money(Number(item.dibayar??item.dp??0))}`,
+   "Konfirmasi Tagihan"
+  )))return;
+
   try{
-   const dp=Number(item.dibayar??item.dp??0)||0,total=Number(item.total)||0;
-   await updateDoc(doc(db,"penjualan",id),{pembayaran:"Tagihan",status:"piutang",dibayar:dp,sisa:Math.max(0,total-dp),updatedAt:serverTimestamp()});
-   await load();openWA({...item,dibayar:dp,total},makeTagihanWA({...item,dibayar:dp,total}));
-  }catch(e){fixzyConfirm("Gagal mengubah pembayaran: "+e.message,"Gagal Mengubah")}
+   const total=Number(item.total)||0;
+   const dp=Number(item.dibayar??item.dp??0)||0;
+
+   await updateDoc(doc(db,"penjualan",id),{
+    pembayaran:"Tagihan",
+    status:"piutang",
+    dibayar:dp,
+    sisa:Math.max(0,total-dp),
+    pendapatan:0,
+    updatedAt:serverTimestamp()
+   });
+
+   await load();
+   openWA({...item,pembayaran:"Tagihan",status:"piutang",dibayar:dp,total},
+           makeTagihanWA({...item,pembayaran:"Tagihan",status:"piutang",dibayar:dp,total}));
+  }catch(e){
+   fixzyConfirm("Gagal mengubah pembayaran: "+e.message,"Gagal Mengubah");
+  }
+  return;
+ }
+
+ if(mode==="batal"){
+  if(!(await fixzyConfirm(
+   "Batalkan transaksi penjualan ini?\n\nPendapatan akan menjadi Rp 0.",
+   "Konfirmasi Batal"
+  )))return;
+
+  try{
+   await updateDoc(doc(db,"penjualan",id),{
+    pembayaran:"Batal",
+    status:"batal",
+    pendapatan:0,
+    jumlahTotal:0,
+    dibayar:0,
+    sisa:0,
+    updatedAt:serverTimestamp()
+   });
+
+   await load();
+   openWA({...item,pembayaran:"Batal",status:"batal",pendapatan:0,jumlahTotal:0,dibayar:0,sisa:0},
+           makeBatalWA({...item,status:"batal"}));
+  }catch(e){
+   fixzyConfirm("Gagal membatalkan transaksi: "+e.message,"Gagal Membatalkan");
+  }
  }
 };
 
