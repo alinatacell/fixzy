@@ -1,6 +1,6 @@
 <!doctype html><html lang="id"><head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>FIXZY | Data Servis v21 Popup FIXZY</title>
+<title>FIXZY | Data Servis v23 WA Sisa Pembayaran</title>
 <style>
 *{box-sizing:border-box}
 body{margin:0;background:#f3f5f8;color:#172033;font-family:Inter,Arial,sans-serif}
@@ -483,7 +483,9 @@ Kami menginformasikan status servis HP Anda:
 🧾 No. Nota: ${nomor}
 📌 Status: *${label}*${status==="selesai" ? `
 
-💰 Harga servis: *${money(hargaSelesai)}*` : ""}
+💰 Harga servis: *${money(hargaSelesai)}*
+💵 DP: *${money(Number(item.dp||0))}*
+📌 Sisa pembayaran: *${money(Math.max(0,Number(item.biaya ?? item.total ?? 0)-Number(item.dp||0)))}*` : ""}
 
 Jika ada yang ingin ditanyakan, silakan hubungi kami.
 
@@ -545,6 +547,32 @@ window.fixzyCloseAlert=function(){
  const m=$("fixzyAlert");
  m.classList.remove("show");m.style.display="none";m.setAttribute("aria-hidden","true");
 };
+
+let fixzyConfirmResolve=null;
+window.fixzyConfirm=function(message,title="FIXZY"){
+ return new Promise(resolve=>{
+  fixzyConfirmResolve=resolve;
+  const m=$("fixzyAlert");
+  $("fixzyAlertTitle").textContent=title;
+  $("fixzyAlertMessage").textContent=String(message??"");
+  const actions=m.querySelector(".incomeActions");
+  actions.style.gridTemplateColumns="1fr 1fr";
+  actions.innerHTML=`
+   <button type="button" class="incomeCancel" onclick="fixzyConfirmNo()">Batal</button>
+   <button type="button" class="incomeSave" onclick="fixzyConfirmYes()">OK</button>`;
+  m.classList.add("show");m.style.display="flex";m.setAttribute("aria-hidden","false");
+ });
+};
+window.fixzyConfirmYes=function(){
+ const r=fixzyConfirmResolve;fixzyConfirmResolve=null;
+ fixzyCloseAlert();
+ if(r)r(true);
+};
+window.fixzyConfirmNo=function(){
+ const r=fixzyConfirmResolve;fixzyConfirmResolve=null;
+ fixzyCloseAlert();
+ if(r)r(false);
+};
 let incomePending=null;
 function cleanMoney(v){return Number(String(v??"").replace(/[^\d-]/g,""))||0}
 function setIncomePreview(){
@@ -571,7 +599,7 @@ window.batalPendapatan=function(){incomePending=null;const m=$("incomeModal");m.
 $("incomeDiskon").addEventListener("input",setIncomePreview);
 window.simpanPendapatan=async function(){
  const x=incomePending;if(!x)return;const {biaya,dp,bruto,diskon,total,sisa}=setIncomePreview();
- if(!confirm(`Simpan pendapatan servis?\n\nBiaya: ${money(biaya)}\nDP: ${money(dp)}\nBiaya + DP: ${money(bruto)}\nDiskon: ${money(diskon)}\nPendapatan 1 / Hasil Akhir: ${money(total)}`))return;
+ if(!(await fixzyConfirm(`Simpan pendapatan servis?\n\nBiaya: ${money(biaya)}\nDP: ${money(dp)}\nBiaya + DP: ${money(bruto)}\nDiskon: ${money(diskon)}\nPendapatan 1 / Hasil Akhir: ${money(total)}`,"Konfirmasi Pendapatan")))return;
  try{
   await updateDoc(doc(db,"servis",x.id),{status:"diambil",biaya,dp,pendapatan1:total,diskon,discount:diskon,jumlahTotal:total,total:bruto,sisa,updatedAt:serverTimestamp()});
   batalPendapatan();await load();waStatus("diambil",{...x,status:"diambil",biaya,dp,pendapatan1:total,diskon});
@@ -746,19 +774,19 @@ window.ubahStatus=async(id,s)=>{
  const old=normalizeStatus(x.status||"masuk");s=normalizeStatus(s);if(old===s)return;
  if(s==="diambil"){bukaPopupPendapatan({...x,status:"diambil"});return}
  if(s==="batal"){
-  if(!confirm("Ubah status menjadi BATAL? Pendapatan 1 akan menjadi Rp 0.")){await load();return}
+  if(!(await fixzyConfirm("Ubah status menjadi BATAL? Pendapatan 1 akan menjadi Rp 0.","Konfirmasi Status"))){await load();return}
   try{
    await updateDoc(doc(db,"servis",id),{status:"batal",pendapatan1:0,jumlahTotal:0,diskon:0,discount:0,updatedAt:serverTimestamp()});
    await load();waStatus("batal",{...x,status:"batal",pendapatan1:0});
   }catch(e){fixzyAlert("Gagal mengubah status:\n"+e.message,"Gagal Mengubah Status");await load()}
   return;
  }
- if(!confirm(`Ubah status menjadi "${STATUS.find(a=>a[0]===s)?.[1]||s}"?`)){await load();return}
+ if(!(await fixzyConfirm(`Ubah status menjadi "${STATUS.find(a=>a[0]===s)?.[1]||s}"?`,"Konfirmasi Status"))){await load();return}
  try{await updateDoc(doc(db,"servis",id),{status:s,updatedAt:serverTimestamp()});await load();waStatus(s,{...x,status:s})}
  catch(e){fixzyAlert("Gagal mengubah status:\n"+e.message,"Gagal Mengubah Status");await load()}
 };
 window.status=async(id,s)=>{ await window.ubahStatus(id,normalizeStatus(s)); };
-window.hapus=async id=>{if(!confirm("Hapus data servis ini?"))return;try{await deleteDoc(doc(db,"servis",id));await load()}catch(e){fixzyAlert(e.message,"FIXZY")}};
+window.hapus=async id=>{if(!(await fixzyConfirm("Hapus data servis ini?","Konfirmasi Hapus")))return;try{await deleteDoc(doc(db,"servis",id));await load()}catch(e){fixzyAlert(e.message,"FIXZY")}};
 $("search").oninput=render;$("filter").onchange=render;
 onAuthStateChanged(auth,async u=>{
  if(!u){location.href="login.html";return}
