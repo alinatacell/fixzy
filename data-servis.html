@@ -1,6 +1,6 @@
 <!doctype html><html lang="id"><head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>FIXZY | Data Servis v19 Pendapatan Kolom</title>
+<title>FIXZY | Data Servis v20 Pendapatan Final</title>
 <style>
 *{box-sizing:border-box}
 body{margin:0;background:#f3f5f8;color:#172033;font-family:Inter,Arial,sans-serif}
@@ -137,7 +137,12 @@ input:focus,select:focus{border-color:#ffc107;box-shadow:0 0 0 3px rgba(255,193,
 .incomeResult .total{border-top:1px solid rgba(255,255,255,.18);margin-top:8px;padding-top:9px;font-size:16px;font-weight:900}
 .incomeActions{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-top:14px}
 .incomeActions button{padding:12px 10px}.incomeCancel{background:#e5e7eb;color:#111827}.incomeSave{background:#ffc107;color:#111827}
-.serviceTable .income1{font-weight:900;white-space:nowrap;color:#15803d;font-size:13px}
+.serviceTable .income1{font-weight:900;white-space:nowrap;color:#15803d;font-size:13px;text-align:right;min-width:110px}
+@media(max-width:700px){
+  .serviceTable .income1{display:table-cell!important;visibility:visible!important}
+  .serviceTable th:nth-last-child(2),.serviceTable td:nth-last-child(2){display:table-cell!important}
+  .serviceTable .actionCell{display:table-cell!important}
+}
 @media(max-width:480px){.incomeGrid{grid-template-columns:1fr}.incomeField.full{grid-column:auto}}
 
 
@@ -690,7 +695,7 @@ function render(){
     <td>${esc(x.namaTeknisi||x.teknisi||"-")}</td>
     <td class="money">${money(x.total??x.biaya)}</td>
     <td class="money">${money(x.dp)}</td>
-    <td class="money income1">${money(x.pendapatan1||0)}</td>
+    <td class="money income1">${money(x.pendapatan1 ?? (st==="diambil" ? Math.max(0,Number(x.biaya??x.total??0)+Number(x.dp||0)-Number(x.diskon??x.discount??0)) : 0))}</td>
     <td class="actionCell">${actionDropdown(x)}</td>
    </tr>`;
  }).join("")}</tbody></table></div>`;
