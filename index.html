@@ -57,13 +57,41 @@ body{overflow:hidden}
   border-radius:4px;
 }
 
-/* Logo HEADER */
-.header-logo{
-  width:72px;
-  max-height:42px;
-  object-fit:contain;
-  margin-left:10px;
-  border-radius:7px;
+/* RUNNING TEXT HEADER */
+.header-running{
+  flex:1;
+  min-width:0;
+  height:42px;
+  margin-left:12px;
+  margin-right:8px;
+  overflow:hidden;
+  display:flex;
+  align-items:center;
+  position:relative;
+  border-radius:10px;
+  background:#fff;
+}
+
+.running-track{
+  display:flex;
+  align-items:center;
+  width:max-content;
+  white-space:nowrap;
+  animation:fixzyRunning 28s linear infinite;
+  font-size:12px;
+  font-weight:800;
+  color:#374151;
+}
+
+.running-track span{
+  display:inline-flex;
+  align-items:center;
+  margin-right:42px;
+}
+
+@keyframes fixzyRunning{
+  from{transform:translateX(100%)}
+  to{transform:translateX(-100%)}
 }
 
 .header-account{
@@ -293,6 +321,17 @@ body{overflow:hidden}
 
 /* ================= MOBILE ================= */
 @media(max-width:480px){
+  .header-running{
+    margin-left:8px;
+    margin-right:5px;
+    height:38px;
+  }
+
+  .running-track{
+    font-size:10px;
+    animation-duration:24s;
+  }
+
   .header-account{
     margin-right:9px;
   }
@@ -346,7 +385,15 @@ body{overflow:hidden}
     <span></span>
   </button>
 
-  <img src="logo.png?v=2" class="header-logo" alt="FIXZY">
+  <div class="header-running">
+    <div class="running-track">
+      <span>🌟 Selamat Datang di FIXZY</span>
+      <span>🤲 Semoga usaha hari ini lancar</span>
+      <span>💰 Semoga rezeki bertambah dan berkah</span>
+      <span>🙏 Semoga semua urusan dimudahkan</span>
+      <span>📱 FIXZY — Pembukuan Servis HP</span>
+    </div>
+  </div>
 
   <div class="header-account">
     <div class="account-name" id="accountName">Akun</div>
@@ -427,6 +474,14 @@ body{overflow:hidden}
       onclick="bukaHalaman(this)">
       <span class="ico">🧾</span>
       Nota
+    </button>
+
+
+    <button class="menu-link"
+      data-page="pengeluaran.html"
+      onclick="bukaHalaman(this)">
+      <span class="ico">💸</span>
+      Pengeluaran
     </button>
 
     <div class="menu-divider"></div>
