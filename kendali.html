@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 <meta name="theme-color" content="#FFC107">
 <title>FIXZY | Kendali Admin</title>
-<meta name="fixzy-version" content="kendali-fixed-20260810-01">
+<meta name="fixzy-version" content="kendali-fixed-20260810-02-exp-base-fix">
 
 <style>
 *{box-sizing:border-box}
@@ -761,7 +761,36 @@ window.renderRequests=function(){
     const nominal=val(r,["nominal","harga","jumlah","total"],"");
     const bukti=val(r,["buktiPembayaran","bukti","paymentProof","buktiTransfer","buktiTransferUrl"],"");
     const oldExp=user?expOf(user):val(r,["expLama","tanggalExpiredLama","masaAktifLama"],"");
-    const newExp=val(r,["tanggalExpiredBaru","expBaru","expiryBaru"],"");
+
+    /*
+     * PENTING:
+     * Tanggal "Exp setelah persetujuan" harus dihitung dari EXP AKUN,
+     * bukan dari tanggal pengajuan / tanggal hari ini dan bukan dari
+     * tanggalExpiredBaru yang mungkin sudah tersimpan saat user membuat request.
+     *
+     * Jika akun masih punya EXP, perpanjangan dimulai dari EXP tersebut.
+     * Jika EXP sudah lewat atau belum ada, baru mulai dari hari ini.
+     */
+    let previewNewExp="";
+    const previewOldDate=dateOnly(oldExp);
+    const previewMonths=requestMonths(r);
+    const previewDays=requestDays(r);
+
+    if(previewOldDate || previewMonths || previewDays){
+      let previewBase;
+      if(previewOldDate && previewOldDate>=today()){
+        previewBase=new Date(previewOldDate+"T00:00:00");
+      }else{
+        previewBase=new Date(today()+"T00:00:00");
+      }
+
+      if(previewMonths){
+        previewNewExp=dateString(addMonthsToDate(previewBase,previewMonths));
+      }else if(previewDays){
+        previewBase.setDate(previewBase.getDate()+previewDays);
+        previewNewExp=dateString(previewBase);
+      }
+    }
 
     let proofHtml="";
     if(bukti){
@@ -792,7 +821,7 @@ window.renderRequests=function(){
           <div class="req-box"><small>Nominal</small><b>${nominal!==""?money(nominal):"-"}</b></div>
         </div>
 
-        ${newExp?`<div class="req-meta">Exp setelah persetujuan: <b>${formatDate(newExp)}</b></div>`:""}
+        ${previewNewExp?`<div class="req-meta">Exp setelah persetujuan: <b>${formatDate(previewNewExp)}</b></div>`:""}
         ${proofHtml}
 
         ${s==="menunggu"?`
@@ -841,9 +870,20 @@ window.setujui=async function(requestId){
   const oldExp=expOf(user);
   const oldDate=dateOnly(oldExp);
 
+  /*
+   * Dasar perpanjangan:
+   * - Jika akun mempunyai tanggal EXP, gunakan tanggal EXP tersebut.
+   * - Jangan mengganti EXP aktif dengan tanggal hari ini.
+   * - Jika EXP memang sudah lewat / kosong, barulah mulai dari hari ini.
+   */
   let base;
-  if(oldDate&&oldDate>=today()){
-    base=new Date(oldDate+"T00:00:00");
+  if(oldDate){
+    const oldDateObj=new Date(oldDate+"T00:00:00");
+    if(!Number.isNaN(oldDateObj.getTime()) && oldDate>=today()){
+      base=oldDateObj;
+    }else{
+      base=new Date(today()+"T00:00:00");
+    }
   }else{
     base=new Date(today()+"T00:00:00");
   }
