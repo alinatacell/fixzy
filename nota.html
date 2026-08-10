@@ -158,7 +158,7 @@ textarea{min-height:75px;resize:vertical}
 <script type="module">
 import {initializeApp} from "https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js";
 import {getAuth,onAuthStateChanged} from "https://www.gstatic.com/firebasejs/11.10.0/firebase-auth.js";
-import {getFirestore,collection,query,where,getDocs,doc,setDoc,serverTimestamp} from "https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js";
+import {getFirestore,collection,query,where,getDocs,doc,setDoc,runTransaction,serverTimestamp} from "https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js";
 
 const config={
  apiKey:"AIzaSyCwMbJsuORhIq4QCmp4c1r6OsjAUlfxU5Y",
@@ -274,6 +274,7 @@ function collectNota(){
    wa:$("wa").value.trim()
   },
   metode:$("metode").value,
+  status:$("metode").value,
   dibayar:num("dibayar"),
   catatan:$("catatan").value.trim(),
   updatedAt:serverTimestamp()
@@ -300,7 +301,8 @@ function collectNota(){
 
   d.items=[{
    produkId:p?.id||null,
-   nama:p?.nama||manual,
+   nama:p?namaProduk(p):manual,
+   kode:p?kodeProduk(p):"",
    qty,
    harga,
    sumber:p?"firebase":"manual"
@@ -349,22 +351,79 @@ async function simpan(cetak){
  const col=jenis;
  const notaId=d.nomorNota;
  $("saveStatus").textContent="Menyimpan ke Firebase...";
+
  try{
-  /*
-   * Nomor nota dipakai sebagai ID dokumen.
-   * Dengan setDoc, penyimpanan tidak membuat nota baru berulang
-   * dan halaman tidak perlu di-reset setelah berhasil.
-   */
-  await setDoc(doc(db,col,notaId),{
-   ...d,
-   createdAt:serverTimestamp(),
-   updatedAt:serverTimestamp()
-  },{merge:true});
+  const notaRef=doc(db,col,notaId);
 
-  $("saveStatus").textContent=`Tersimpan di Firebase • ${col}/${notaId}`;
-  toast(cetak?"Tersimpan. Menyiapkan cetak...":"Berhasil tersimpan di Firebase.");
+  // PENJUALAN:
+  // Jika metode/status TUNAI dan produknya berasal dari stok Firebase,
+  // stok dikurangi langsung di dokumen stok yang dipilih.
+  if(jenis==="penjualan" && String(d.metode||"").toLowerCase()==="tunai"){
+    const p=products.find(x=>x.id===$("produk").value);
 
-  // Setelah transaksi berhasil tersimpan, form selalu kembali kosong.
+    if(!p){
+      throw new Error("Pilih produk dari Stok Firebase terlebih dahulu. Produk manual tidak mengurangi stok.");
+    }
+
+    const qty=Number(d.qty)||0;
+    if(qty<=0) throw new Error("Qty produk tidak valid.");
+
+    const stockRef=doc(db,"stok",p.id);
+
+    await runTransaction(db,async(transaction)=>{
+      const stockSnap=await transaction.get(stockRef);
+      if(!stockSnap.exists()){
+        throw new Error("Data produk tidak ditemukan lagi di Stok Firebase.");
+      }
+
+      const stock=stockSnap.data()||{};
+      const stokLama=Number(stock.sisa??stock.stok??stock.stock??0)||0;
+
+      if(stokLama<qty){
+        throw new Error(`Stok ${namaProduk(stock)} tidak cukup. Stok tersedia: ${stokLama}.`);
+      }
+
+      const stokBaru=stokLama-qty;
+
+      // Update stok memakai field sisa DAN stok supaya tetap cocok
+      // dengan struktur data stok yang sedang dipakai.
+      const update={
+        sisa:stokBaru,
+        stok:stokBaru,
+        status:stokBaru>0?"tersedia":"kosong",
+        updatedAt:serverTimestamp()
+      };
+
+      // Nota dan pengurangan stok dilakukan dalam transaksi yang sama.
+      transaction.update(stockRef,update);
+      transaction.set(notaRef,{
+        ...d,
+        stokDikurangi:true,
+        stokProdukId:p.id,
+        stokSebelum:stokLama,
+        stokSesudah:stokBaru,
+        createdAt:serverTimestamp(),
+        updatedAt:serverTimestamp()
+      },{merge:true});
+    });
+
+    $("saveStatus").textContent=`Tersimpan • stok ${namaProduk(p)}: ${Math.max(0,stokProduk(p)-qty)}`;
+    toast(`Penjualan tersimpan. Stok berkurang ${qty}.`);
+
+  }else{
+    // Masuk Tagihan / Batal / servis:
+    // tidak mengurangi stok pada saat nota ini disimpan.
+    await setDoc(notaRef,{
+      ...d,
+      stokDikurangi:false,
+      createdAt:serverTimestamp(),
+      updatedAt:serverTimestamp()
+    },{merge:true});
+
+    $("saveStatus").textContent=`Tersimpan di Firebase • ${col}/${notaId}`;
+    toast(cetak?"Tersimpan. Menyiapkan cetak...":"Berhasil tersimpan di Firebase.");
+  }
+
   if(cetak){
     buatNotaCetak(d);
     setTimeout(()=>window.print(),250);
@@ -372,13 +431,13 @@ async function simpan(cetak){
   }else{
     setTimeout(()=>resetForm(),250);
   }
+
  }catch(e){
   console.error("Gagal menyimpan:",e);
   $("saveStatus").textContent="Gagal menyimpan ke Firebase.";
   alert("Gagal menyimpan ke Firebase:\n"+(e?.message||e));
  }
 }
-
 
 function buatNotaCetak(d){
  const area=$("printArea");
