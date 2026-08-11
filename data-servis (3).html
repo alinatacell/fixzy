@@ -1,0 +1,871 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Data Servis - FIXZY</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;background:#f5f7fa;font-family:Arial,sans-serif;color:#17202a}
+header{background:#050505;color:#fff;padding:11px 18px;display:flex;align-items:center;gap:12px;position:sticky;top:0;z-index:20;min-height:64px;border-bottom:1px solid #242424;box-shadow:0 4px 18px rgba(0,0,0,.22)}
+header h1{font-size:18px;margin:0;flex:1;letter-spacing:.2px}
+button,select,input,textarea{font:inherit}
+.btn{border:0;border-radius:8px;padding:9px 13px;cursor:pointer;font-weight:700}
+.btn.refresh{background:#2563eb;color:#fff}
+.btn.close{background:#dc2626;color:#fff}
+.wrap{max-width:1200px;margin:18px auto;padding:0 14px}
+.card{background:#fff;border:1px solid #e5e7eb;border-radius:12px;padding:16px;margin-bottom:14px;box-shadow:0 2px 8px rgba(0,0,0,.04)}
+.top{display:grid;grid-template-columns:1fr 220px 160px;gap:10px}
+input,select,textarea{width:100%;border:1px solid #d1d5db;border-radius:8px;padding:10px;background:#fff}
+.search{position:relative}
+table{width:100%;border-collapse:collapse}
+th,td{padding:10px 8px;border-bottom:1px solid #edf0f2;text-align:left;vertical-align:top;font-size:13px}
+th{background:#f8fafc;font-size:12px}
+.status{display:inline-block;padding:5px 9px;border-radius:999px;font-size:11px;font-weight:800;background:#eef2ff}
+.status.diambil{background:#dcfce7}
+.status.batal{background:#fee2e2}
+.status.proses{background:#fef3c7}
+.status.selesai{background:#dbeafe}
+.status.nunggu-sparepart{background:#f3e8ff}
+.actions{display:flex;gap:6px;flex-wrap:wrap}
+.actions button{padding:6px 9px;border:1px solid #d1d5db;background:#fff;border-radius:7px;cursor:pointer;font-size:12px;font-weight:700}
+.empty{padding:35px;text-align:center;color:#98a2b3}
+.summary{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:14px}
+.sum{background:#fff;border:1px solid #e5e7eb;border-radius:12px;padding:14px 15px;box-shadow:0 2px 8px rgba(16,24,40,.04)}
+.sum small{display:block;color:#667085;margin-bottom:5px}
+.sum b{font-size:18px}
+.modal{position:fixed;inset:0;background:rgba(0,0,0,.5);display:none;align-items:center;justify-content:center;padding:15px;z-index:50}
+.modal.show{display:flex}
+.modalbox{background:#fff;border-radius:14px;max-width:900px;width:100%;max-height:92vh;overflow:auto;padding:18px}
+.modalhead{display:flex;align-items:center;gap:10px;margin-bottom:12px}
+.modalhead h2{margin:0;flex:1;font-size:18px}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.full{grid-column:1/-1}
+label{display:block;font-size:11px;font-weight:800;color:#667085;margin-bottom:5px}
+.read{padding:9px;background:#f8fafc;border-radius:8px;min-height:38px;white-space:pre-wrap}
+.modal-actions{display:flex;gap:8px;justify-content:flex-end;margin-top:15px}
+
+.toast{
+ position:fixed;right:18px;bottom:18px;z-index:120;
+ background:#111827;color:#fff;padding:12px 16px;border-radius:12px;
+ box-shadow:0 12px 35px rgba(0,0,0,.22);font-size:13px;font-weight:700;
+ opacity:0;transform:translateY(12px);pointer-events:none;transition:.22s;
+}
+.toast.show{opacity:1;transform:translateY(0)}
+.wa-modal{position:fixed;inset:0;background:rgba(15,23,42,.62);backdrop-filter:blur(5px);
+ display:none;align-items:center;justify-content:center;padding:15px;z-index:100}
+.wa-modal.show{display:flex}
+.wa-box{width:min(620px,100%);background:#fff;border-radius:20px;overflow:hidden;
+ box-shadow:0 25px 70px rgba(0,0,0,.30);animation:popIn .18s ease}
+@keyframes popIn{from{opacity:0;transform:scale(.96) translateY(8px)}to{opacity:1;transform:scale(1) translateY(0)}}
+.wa-head{padding:17px 18px;background:linear-gradient(135deg,#111827,#1f2937);color:#fff;
+ display:flex;align-items:center;gap:12px}
+.wa-head .icon{width:42px;height:42px;border-radius:12px;background:#22c55e;display:grid;place-items:center;font-size:22px}
+.wa-head h3{margin:0;font-size:17px}.wa-head small{display:block;color:#cbd5e1;margin-top:3px}
+.wa-body{padding:18px}
+.wa-info{background:#f8fafc;border:1px solid #e5e7eb;border-radius:13px;padding:12px;margin-bottom:12px;font-size:13px;line-height:1.55}
+.wa-info b{color:#111827}
+.wa-body textarea{min-height:190px;resize:vertical;line-height:1.5}
+.wa-actions{display:flex;gap:8px;justify-content:flex-end;margin-top:13px}
+.wa-actions button{border:0;border-radius:10px;padding:11px 15px;font-weight:800;cursor:pointer}
+.wa-cancel{background:#eef2f7;color:#334155}.wa-send{background:#22c55e;color:#fff}
+.status-select{min-width:145px;border:1px solid #d1d5db;border-radius:8px;padding:7px 9px;background:#fff;font-size:12px;font-weight:700}
+.confirm-modal{position:fixed;inset:0;background:rgba(15,23,42,.62);backdrop-filter:blur(5px);
+ display:none;align-items:center;justify-content:center;padding:15px;z-index:110}
+.confirm-modal.show{display:flex}
+.confirm-box{width:min(430px,100%);background:#fff;border-radius:18px;padding:20px;box-shadow:0 25px 70px rgba(0,0,0,.3)}
+.confirm-box h3{margin:0 0 7px}.confirm-box p{color:#667085;font-size:13px;line-height:1.5}
+.confirm-actions{display:flex;justify-content:flex-end;gap:8px}.confirm-actions button{border:0;border-radius:9px;padding:10px 14px;font-weight:800;cursor:pointer}
+.danger{background:#dc2626;color:#fff}
+
+@media(max-width:800px){
+ .top,.summary{grid-template-columns:1fr 1fr}
+ .table-wrap{overflow-x:auto}
+ table{min-width:1380px}
+}
+@media(max-width:520px){.header-logo{width:38px;height:38px}
+ .top,.summary,.grid{grid-template-columns:1fr}
+ .full{grid-column:auto}
+ header{flex-wrap:wrap}
+ header h1{width:100%;flex:auto}
+}
+.header-logo{width:42px;height:42px;object-fit:contain;display:block}
+th,td{padding:11px 10px;border-bottom:1px solid #edf0f2;text-align:left;vertical-align:top;font-size:12.5px}
+th{background:#f8fafc;font-size:11px;color:#667085;text-transform:uppercase;letter-spacing:.35px;white-space:nowrap}
+tbody tr:hover{background:#fafbfc}
+.money{font-weight:800;white-space:nowrap;color:#111827}
+.subline{display:block;color:#667085;font-size:11px;margin-top:3px}
+.customer{font-weight:800;color:#111827}
+.phone{font-size:11px;color:#667085;margin-top:3px;white-space:nowrap}
+.device{font-weight:700;color:#1f2937}
+.note-no{font-weight:800;color:#111827;white-space:nowrap}
+'' 
+/* TABEL DATA SERVIS: setiap data memiliki kolom sendiri */
+.table-wrap{overflow-x:auto;border-radius:10px}
+table{min-width:1380px;table-layout:auto}
+th,td{white-space:nowrap}
+th:nth-child(3),td:nth-child(3){min-width:150px}
+th:nth-child(4),td:nth-child(4){min-width:125px}
+th:nth-child(5),td:nth-child(5){min-width:145px}
+th:nth-child(6),td:nth-child(6){min-width:125px}
+th:nth-child(7),td:nth-child(7){min-width:105px}
+th:nth-child(8),td:nth-child(8),
+th:nth-child(9),td:nth-child(9),
+th:nth-child(10),td:nth-child(10),
+th:nth-child(12),td:nth-child(12){text-align:right}
+th:nth-child(11),td:nth-child(11){text-align:center}
+th:nth-child(13),td:nth-child(13){min-width:145px}
+.action-select{width:145px;border:1px solid #d1d5db;border-radius:8px;padding:8px 9px;background:#fff;font-size:12px;font-weight:700;color:#111827}
+.action-select:focus{outline:2px solid rgba(37,99,235,.18);border-color:#2563eb}
+
+/* =========================================================
+   RESPONSIVE DATA SERVIS - DESKTOP / TABLET / HP
+   ========================================================= */
+
+/* Desktop */
+@media (min-width: 1101px){
+  .wrap{max-width:1440px}
+  .table-wrap{overflow-x:auto}
+  table{min-width:1380px}
+}
+
+/* Laptop kecil / tablet landscape */
+@media (min-width: 701px) and (max-width:1100px){
+  .wrap{max-width:100%;padding:0 10px}
+  .summary{grid-template-columns:repeat(2,1fr)}
+  .top{grid-template-columns:1fr 190px 130px}
+  .table-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
+  table{min-width:1250px}
+  th,td{padding:9px 8px;font-size:12px}
+  .action-select{width:130px}
+}
+
+/* Tablet portrait / HP */
+@media (max-width:700px){
+  body{background:#f3f5f8}
+  header{
+    min-height:58px;
+    padding:9px 11px;
+    gap:8px;
+  }
+  .header-logo{width:36px;height:36px}
+  header h1{font-size:16px}
+  header .btn{padding:8px 10px;font-size:11px}
+
+  .wrap{width:100%;padding:9px}
+  .card{padding:11px;border-radius:11px}
+
+  .top{grid-template-columns:1fr}
+  .top .btn{width:100%}
+
+  .summary{
+    grid-template-columns:repeat(2,1fr);
+    gap:8px;
+  }
+  .sum{padding:11px}
+  .sum b{font-size:16px}
+
+  /* Table becomes vertical service cards */
+  .table-wrap{
+    overflow:visible;
+    border:0;
+  }
+  table{
+    min-width:0!important;
+    width:100%;
+    border-collapse:separate;
+    border-spacing:0;
+  }
+  thead{display:none}
+
+  tbody{
+    display:block;
+    width:100%;
+  }
+
+  tbody tr{
+    display:block;
+    width:100%;
+    background:#fff;
+    border:1px solid #e3e7ec;
+    border-radius:13px;
+    margin-bottom:10px;
+    padding:7px 11px;
+    box-shadow:0 2px 8px rgba(16,24,40,.045);
+  }
+
+  tbody td{
+    display:flex;
+    align-items:flex-start;
+    justify-content:space-between;
+    gap:12px;
+    width:100%;
+    min-width:0!important;
+    padding:8px 2px;
+    border-bottom:1px solid #f0f2f5;
+    text-align:right!important;
+    white-space:normal!important;
+    font-size:12px;
+  }
+
+  tbody td:last-child{border-bottom:0;padding-bottom:5px}
+  tbody td::before{
+    flex:0 0 40%;
+    text-align:left;
+    color:#667085;
+    font-size:10px;
+    font-weight:800;
+    text-transform:uppercase;
+    letter-spacing:.25px;
+    content:"";
+  }
+  tbody td:nth-child(1)::before{content:"Nota"}
+  tbody td:nth-child(2)::before{content:"Tanggal"}
+  tbody td:nth-child(3)::before{content:"Nama Pelanggan"}
+  tbody td:nth-child(4)::before{content:"No. WA"}
+  tbody td:nth-child(5)::before{content:"Brand / Tipe"}
+  tbody td:nth-child(6)::before{content:"IMEI"}
+  tbody td:nth-child(7)::before{content:"Teknisi"}
+  tbody td:nth-child(8)::before{content:"Biaya Service"}
+  tbody td:nth-child(9)::before{content:"DP"}
+  tbody td:nth-child(10)::before{content:"Diskon"}
+  tbody td:nth-child(11)::before{content:"Status"}
+  tbody td:nth-child(12)::before{content:"Pendapatan"}
+  tbody td:nth-child(13)::before{content:"Aksi"}
+
+  tbody td:nth-child(1),
+  tbody td:nth-child(3),
+  tbody td:nth-child(5),
+  tbody td:nth-child(11),
+  tbody td:nth-child(12){font-weight:700}
+
+  .note-no,.customer,.device,.money{white-space:normal}
+  .action-select{
+    width:min(180px,55vw);
+    max-width:55vw;
+    padding:8px;
+  }
+
+  .status{white-space:nowrap}
+
+  .modalbox{width:100%;max-height:94vh;border-radius:15px}
+  .grid{grid-template-columns:1fr}
+  .full{grid-column:auto}
+  .wa-actions,.modal-actions{
+    flex-direction:column-reverse;
+  }
+  .wa-actions button,.modal-actions button{width:100%}
+}
+
+/* HP kecil */
+@media (max-width:430px){
+  header h1{font-size:15px}
+  header .btn.close{display:none}
+
+  .summary{grid-template-columns:1fr 1fr}
+  .sum small{font-size:9px}
+  .sum b{font-size:14px}
+
+  tbody tr{padding:6px 9px}
+  tbody td{
+    gap:8px;
+    padding:7px 1px;
+    font-size:11.5px;
+  }
+  tbody td::before{
+    flex-basis:43%;
+    font-size:9px;
+  }
+
+  .action-select{
+    width:52vw;
+    max-width:52vw;
+    font-size:11px;
+  }
+
+  input,select,textarea{font-size:13px}
+}
+
+/* HP sangat kecil */
+@media (max-width:350px){
+  .wrap{padding:6px}
+  .summary{gap:6px}
+  .sum{padding:9px}
+  .sum small{font-size:8px}
+  .sum b{font-size:13px}
+  tbody td::before{font-size:8px}
+  tbody td{font-size:11px}
+}
+
+</style>
+</head>
+<body>
+<header>
+ <img class="header-logo" src="logo.png" alt="FIXZY"><h1>Data Servis</h1>
+ <button class="btn refresh" onclick="location.reload()">↻ Refresh</button>
+</header>
+
+<main class="wrap">
+ <div class="card">
+  <div class="top">
+   <div class="search"><input id="cari" placeholder="Cari nomor nota / pelanggan / WA / HP / IMEI..." oninput="render()"></div>
+   <select id="filterStatus" onchange="render()">
+    <option value="">Semua Status</option>
+    <option value="masuk">Masuk</option>
+    <option value="nunggu sparepart">Nunggu Sparepart</option>
+    <option value="proses">Proses</option>
+    <option value="selesai">Selesai</option>
+    <option value="diambil">Diambil</option>
+    <option value="batal">Batal</option>
+   </select>
+   <button class="btn refresh" onclick="loadData()">↻ Muat Data</button>
+  </div>
+ </div>
+
+ <div class="summary">
+  <div class="sum"><small>Total Nota</small><b id="sumTotal">0</b></div>
+  <div class="sum"><small>Masuk / Proses</small><b id="sumAktif">0</b></div>
+  <div class="sum"><small>Diambil</small><b id="sumDiambil">0</b></div>
+  <div class="sum"><small>Pendapatan Diambil</small><b id="sumPendapatan">Rp 0</b></div>
+ </div>
+
+ <div class="card">
+  <div class="table-wrap">
+   <table>
+    <thead><tr>
+     <th>Nota</th>
+     <th>Tanggal</th>
+     <th>Nama Pelanggan</th>
+     <th>No. WA</th>
+     <th>Brand / Tipe</th>
+     <th>IMEI</th>
+     <th>Teknisi</th>
+     <th>Biaya Service</th>
+     <th>DP</th>
+     <th>Diskon</th>
+     <th>Status</th>
+     <th>Pendapatan</th>
+     <th>Aksi</th>
+    </tr></thead>
+    <tbody id="tbody"><tr><td colspan="13" class="empty">Memuat data Firebase...</td></tr></tbody>
+   </table>
+  </div>
+ </div>
+</main>
+
+<div id="detailModal" class="modal">
+ <div class="modalbox">
+  <div class="modalhead"><h2 id="detailTitle">Detail Servis</h2><button class="btn close" onclick="closeModal()">✕</button></div>
+  <div id="detail"></div>
+ </div>
+</div>
+
+
+<div id="waModal" class="wa-modal">
+ <div class="wa-box">
+  <div class="wa-head">
+   <div class="icon">💬</div>
+   <div><h3 id="waTitle">Kirim update ke pelanggan?</h3><small id="waSub">Status servis berubah</small></div>
+  </div>
+  <div class="wa-body">
+   <div class="wa-info" id="waInfo"></div>
+   <label>PESAN WHATSAPP</label>
+   <textarea id="waMessage"></textarea>
+   <div class="wa-actions">
+    <button class="wa-cancel" onclick="tutupWaPopup()">Tidak, simpan saja</button>
+    <button class="wa-send" onclick="kirimWa()">💬 Kirim ke WhatsApp</button>
+   </div>
+  </div>
+ </div>
+</div>
+
+<div id="confirmModal" class="confirm-modal">
+ <div class="confirm-box">
+  <h3 id="confirmTitle">Konfirmasi</h3>
+  <p id="confirmText"></p>
+  <div class="confirm-actions">
+   <button onclick="tutupConfirm()">Batal</button>
+   <button class="danger" id="confirmOk">Hapus</button>
+  </div>
+ </div>
+</div>
+
+<div id="toast" class="toast"></div>
+
+<div id="editModal" class="modal">
+ <div class="modalbox">
+  <div class="modalhead"><h2>Edit Data Servis</h2><button class="btn close" onclick="closeEdit()">✕</button></div>
+  <input id="editId" type="hidden">
+  <div class="grid">
+   <div><label>NAMA PELANGGAN</label><input id="eNama"></div>
+   <div><label>NO WA</label><input id="eWa"></div>
+   <div class="full"><label>ALAMAT</label><textarea id="eAlamat"></textarea></div>
+   <div><label>BRAND / TIPE</label><input id="eHp"></div>
+   <div><label>IMEI</label><input id="eImei"></div>
+   <div class="full"><label>JENIS KERUSAKAN</label><textarea id="eKerusakan"></textarea></div>
+   <div class="full"><label>KELENGKAPAN</label><input id="eKelengkapan"></div>
+   <div><label>SANDI / POLA</label><input id="ePola"></div>
+   <div><label>TEKNISI</label><input id="eTeknisi"></div>
+   <div><label>BIAYA SERVICE</label><input id="eBiaya" inputmode="numeric"></div>
+   <div><label>DP</label><input id="eDp" inputmode="numeric"></div>
+   <div><label>DISKON</label><input id="eDiskon" inputmode="numeric"></div>
+   <div><label>UANG DITERIMA</label><input id="eDiterima" inputmode="numeric"></div>
+   <div><label>METODE PEMBAYARAN</label><input id="eMetode"></div>
+   <div class="full"><label>CATATAN</label><textarea id="eCatatan"></textarea></div>
+  </div>
+  <div class="modal-actions">
+   <button class="btn" onclick="closeEdit()">Batal</button>
+   <button class="btn refresh" onclick="saveEdit()">Simpan Perubahan</button>
+  </div>
+ </div>
+</div>
+
+<script type="module">
+import {initializeApp} from "https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js";
+import {getAuth,onAuthStateChanged} from "https://www.gstatic.com/firebasejs/11.10.0/firebase-auth.js";
+import {getFirestore,collection,query,where,getDocs,doc,setDoc,deleteDoc,runTransaction,serverTimestamp} from "https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js";
+
+const config={
+ apiKey:"AIzaSyCwMbJsuORhIq4QCmp4c1r6OsjAUlfxU5Y",
+ authDomain:"fixzy-f056f.firebaseapp.com",projectId:"fixzy-f056f",
+ storageBucket:"fixzy-f056f.firebasestorage.app",
+ messagingSenderId:"838081521031",appId:"1:838081521031:web:50fdee909b56460b055f22"
+};
+const app=initializeApp(config);
+const auth=getAuth(app);
+const db=getFirestore(app);
+
+let uid=null, data=[];
+let waPending={data:null,status:""}; 
+let confirmAction=null;
+let toastTimer=null;
+
+const $=id=>document.getElementById(id);
+const esc=v=>String(v??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]));
+const rupiah=n=>"Rp "+(Number(n)||0).toLocaleString("id-ID");
+const n=v=>Number(String(v??"").replace(/[^\d]/g,""))||0;
+
+function tutup(){if(history.length>1)history.back();else window.close()}
+window.tutup=tutup;
+
+function getStatus(d){return String(d.status||"masuk").toLowerCase()}
+function pelanggan(d){return d.pelanggan||{}}
+function servisan(d){return d.servisan||{}}
+function estimasi(d){return d.estimasi||{}}
+function pembayaran(d){return d.pembayaran||{}}
+function produk(d){return d.penggunaanProduk||null}
+
+function biayaService(d){return n(estimasi(d).biayaService??d.biayaService??d.biaya)}
+function dp(d){return n(estimasi(d).dp??d.dp)}
+function diskon(d){return n(estimasi(d).diskon??d.diskon)}
+
+function pendapatanStatus(d){
+ const st=getStatus(d);
+ if(st==="diambil") return Math.max(0,biayaService(d)-diskon(d));
+ return 0;
+}
+
+function statusClass(st){return st.replace(/\s+/g,"-")}
+function statusLabel(st){
+ return st==="nunggu sparepart"?"Nunggu Sparepart":st.charAt(0).toUpperCase()+st.slice(1);
+}
+
+async function loadData(){
+ if(!uid)return;
+ $("tbody").innerHTML='<tr><td colspan="13" class="empty">Membaca data servis Firebase...</td></tr>';
+ try{
+   const snap=await getDocs(query(collection(db,"servis"),where("uid","==",uid)));
+   data=snap.docs.map(d=>({id:d.id,...d.data()}));
+   data.sort((a,b)=>String(b.tanggal||"").localeCompare(String(a.tanggal||""))||
+                     String(b.nomorNota||"").localeCompare(String(a.nomorNota||"")));
+   render();
+ }catch(e){
+   console.error(e);
+   $("tbody").innerHTML=`<tr><td colspan="13" class="empty">Gagal membaca Firebase: ${esc(e.message||e)}</td></tr>`;
+ }
+}
+window.loadData=loadData;
+
+
+function pilihAksi(id,aksi){
+ const d=data.find(x=>x.id===id);
+ if(!d)return;
+ if(!aksi)return;
+ resetActionSelect();
+
+ if(aksi==="__lihat"){lihat(id);return}
+ if(aksi==="__edit"){editData(id);return}
+ if(aksi==="__hapus"){hapus(id);return}
+
+ ubahStatus(id,aksi);
+}
+window.pilihAksi=pilihAksi;
+
+function resetActionSelect(){
+ document.querySelectorAll(".status-select").forEach(x=>x.value="");
+}
+
+function toast(msg){
+ const el=$("toast");
+ el.textContent=msg;
+ el.classList.add("show");
+ clearTimeout(toastTimer);
+ toastTimer=setTimeout(()=>el.classList.remove("show"),2800);
+}
+window.toast=toast;
+
+function tutupWaPopup(){
+ $("waModal").classList.remove("show");
+ waPending={data:null,status:""};
+}
+window.tutupWaPopup=tutupWaPopup;
+
+function normalWa(v){
+ let x=String(v||"").replace(/[^\d+]/g,"");
+ if(x.startsWith("08")) x="62"+x.slice(1);
+ if(x.startsWith("+")) x=x.slice(1);
+ return x;
+}
+
+function statusMessage(d,status){
+  const p=pelanggan(d), s=servisan(d);
+  const hp=s.brandTipe||s.tipe||"-";
+  const nota=d.nomorNota||"-";
+  const nama=p.nama||"Pelanggan";
+  const konter=d.namaKonter||"konter kami";
+
+  const teks={
+   "masuk":`Halo kak ${nama}, kami dari konter ${konter}. HP kakak ${hp}, dengan nomor nota ${nota}, sudah kami terima dan akan segera kami proses.
+
+Terima kasih sudah mempercayakan HP kakak kepada kami. 🙏`,
+
+   "nunggu sparepart":`Halo kak ${nama}, kami dari konter ${konter}. HP kakak ${hp}, dengan nomor nota ${nota}, saat ini masih MENUNGGU SPAREPART untuk melanjutkan proses perbaikan. 📦
+
+Kami akan menghubungi kakak kembali setelah sparepart tersedia dan proses perbaikan dapat dilanjutkan.
+
+Terima kasih atas pengertiannya dan kepercayaannya. 🙏`,
+
+   "proses":`Halo kak ${nama}, kami dari konter ${konter}. HP kakak ${hp}, dengan nomor nota ${nota}, saat ini sedang DALAM PROSES PERBAIKAN oleh teknisi kami. 🔧
+
+Kami akan memberikan informasi kembali setelah proses perbaikan selesai.
+
+Terima kasih atas kepercayaannya. 🙏`,
+
+   "selesai":`Halo kak ${nama}, kami dari konter ${konter}. HP kakak ${hp}, dengan nomor nota ${nota}: sudah SELESAI diperbaiki.
+
+Rincian pembayaran:
+Biaya Servis: ${rupiah(biayaService(d))}
+DP: ${rupiah(dp(d))}
+Diskon: ${rupiah(diskon(d))}
+Sisa Pembayaran: ${rupiah(Math.max(0,biayaService(d)-dp(d)-diskon(d)))}
+
+Silakan melakukan pembayaran saat pengambilan.
+
+Terima kasih atas kepercayaannya. 🙏`,
+
+   "diambil":`Halo kak ${nama}, HP ${hp} dengan nomor nota ${nota} sudah DIAMBIL. ✅
+
+Terima kasih sudah mempercayakan perbaikan HP kakak kepada ${konter}. 🙏
+
+Semoga pelayanan kami memuaskan. Kami tunggu kakak untuk terus berlangganan dan kembali menggunakan layanan kami. 😊
+
+Terima kasih atas kepercayaannya.`,
+
+   "batal":`Halo kak ${nama}, kami dari konter ${konter}. HP kakak ${hp}, dengan nomor nota ${nota}, status servis dinyatakan BATAL.
+
+Silakan hubungi kami jika ada yang perlu dikonfirmasi.
+
+Terima kasih. 🙏`
+  };
+
+  return teks[status]||`Halo kak ${nama}, status servis HP ${hp} dengan nomor nota ${nota} berubah menjadi ${statusLabel(status)}.`;
+}
+
+function bukaWaPopup(d,status){
+ const p=pelanggan(d),s=servisan(d);
+ const hp=s.brandTipe||s.tipe||"-";
+ const wa=p.wa||d.wa||"";
+ waPending={data:d,status};
+ $("waTitle").textContent=`Status → ${statusLabel(status)}`;
+ $("waSub").textContent=wa ? `WA pelanggan: ${wa}` : "Nomor WA pelanggan belum tersedia";
+ let infoExtra = "";
+  if(status==="selesai"){
+    const biaya=biayaService(d), uangDp=dp(d), potongan=diskon(d);
+    const sisa=Math.max(0,biaya-uangDp-potongan);
+    infoExtra = `<hr style="border:0;border-top:1px solid #e5e7eb;margin:10px 0">
+      <b>Rincian Pembayaran</b><br>
+      Biaya Servis: <b>${rupiah(biaya)}</b><br>
+      DP: <b>${rupiah(uangDp)}</b><br>
+      Diskon: <b>${rupiah(potongan)}</b><br>
+      <strong>Sisa Pembayaran: ${rupiah(sisa)}</strong>`;
+  }else if(status==="diambil"){
+    const nilaiPendapatan=Math.max(0,biayaService(d)-diskon(d));
+    infoExtra = `<hr style="border:0;border-top:1px solid #e5e7eb;margin:10px 0">
+      <b>Pendapatan Diambil</b>: <strong>${rupiah(nilaiPendapatan)}</strong>`;
+  }
+  $("waInfo").innerHTML=`<b>${esc(p.nama||"Pelanggan")}</b><br>HP: <b>${esc(hp)}</b> · IMEI: <b>${esc(s.imei||"-")}</b><br>Nota: <b>${esc(d.nomorNota||"-")}</b>${infoExtra}`;
+ $("waMessage").value=statusMessage(d,status);
+ $("waModal").classList.add("show");
+}
+
+function kirimWa(){
+ const d=waPending.data,status=waPending.status;
+ if(!d)return;
+ const p=pelanggan(d),raw=p.wa||d.wa||"",phone=normalWa(raw);
+ if(!phone){
+   toast("Nomor WA pelanggan belum tersedia.");
+   return;
+ }
+ const text=$("waMessage").value.trim();
+ const url=`https://wa.me/${phone}?text=${encodeURIComponent(text)}`;
+ window.open(url,"_blank","noopener");
+ tutupWaPopup();
+ toast("WhatsApp dibuka untuk mengirim pesan.");
+}
+window.kirimWa=kirimWa;
+
+function filtered(){
+ const q=String($("cari").value||"").toLowerCase().trim();
+ const st=$("filterStatus").value;
+ return data.filter(d=>{
+   const p=pelanggan(d),s=servisan(d);
+   const text=[
+    d.nomorNota,d.tanggal,p.nama,p.wa,p.alamat,s.brandTipe,s.imei,
+    s.jenisKerusakan,d.namaTeknisi,d.teknisi
+   ].join(" ").toLowerCase();
+   return (!q||text.includes(q))&&(!st||getStatus(d)===st);
+ });
+}
+
+function render(){
+ const rows=filtered();
+ $("sumTotal").textContent=rows.length;
+ $("sumAktif").textContent=rows.filter(d=>!["diambil","batal"].includes(getStatus(d))).length;
+ $("sumDiambil").textContent=rows.filter(d=>getStatus(d)==="diambil").length;
+ $("sumPendapatan").textContent=rupiah(rows.reduce((a,d)=>a+pendapatanStatus(d),0));
+
+ if(!rows.length){
+   $("tbody").innerHTML='<tr><td colspan="13" class="empty">Tidak ada data servis.</td></tr>';
+   return;
+ }
+
+ $("tbody").innerHTML=rows.map(d=>{
+   const p=pelanggan(d),s=servisan(d),st=getStatus(d),e=estimasi(d);
+   return `<tr>
+    <td><span class="note-no">${esc(d.nomorNota||d.id)}</span></td>
+    <td>${esc(d.tanggal||"-")}</td>
+    <td><span class="customer">${esc(p.nama||"-")}</span></td>
+    <td>${esc(p.wa||"-")}</td>
+    <td><span class="device">${esc(s.brandTipe||s.tipe||"-")}</span></td>
+    <td>${esc(s.imei||"-")}</td>
+    <td>${esc(d.namaTeknisi||d.teknisi||"-")}</td>
+    <td class="money">${rupiah(biayaService(d))}</td>
+    <td class="money">${rupiah(dp(d))}</td>
+    <td class="money">${rupiah(diskon(d))}</td>
+    <td><span class="status ${statusClass(st)}">${esc(statusLabel(st))}</span></td>
+    <td class="money">${rupiah(pendapatanStatus(d))}</td>
+    <td>
+      <select class="action-select" onchange="pilihAksi('${esc(d.id)}',this.value)">
+       <option value="" selected>Pilih...</option>
+       <option value="__lihat">Lihat Data</option>
+       <option value="__edit">Edit Data</option>
+       <option value="masuk">Masuk</option>
+       <option value="nunggu sparepart">Nunggu Sparepart</option>
+       <option value="proses">Proses</option>
+       <option value="selesai">Selesai</option>
+       <option value="diambil">Diambil</option>
+       <option value="batal">Batal</option>
+       <option value="__hapus">Hapus</option>
+      </select>
+    </td>
+   </tr>`;
+ }).join("");
+}
+window.render=render;
+
+function lihat(id){
+ const d=data.find(x=>x.id===id); if(!d)return;
+ const p=pelanggan(d),s=servisan(d),e=estimasi(d),pay=pembayaran(d),pr=produk(d),st=getStatus(d);
+ $("detailTitle").textContent="Nota "+(d.nomorNota||id);
+ $("detail").innerHTML=`
+  <div class="grid">
+   <div><label>AKUN</label><div class="read">${esc(d.akunTerdaftar||d.uid||"-")}</div></div>
+   <div><label>NAMA KONTER</label><div class="read">${esc(d.namaKonter||"-")}</div></div>
+   <div><label>NOMOR NOTA</label><div class="read">${esc(d.nomorNota||id)}</div></div>
+   <div><label>TANGGAL</label><div class="read">${esc(d.tanggal||"-")}</div></div>
+   <div><label>TEKNISI</label><div class="read">${esc(d.namaTeknisi||d.teknisi||"-")}</div></div>
+   <div><label>STATUS</label><div class="read">${esc(statusLabel(st))}</div></div>
+
+   <div><label>NAMA PELANGGAN</label><div class="read">${esc(p.nama||"-")}</div></div>
+   <div><label>NO WA</label><div class="read">${esc(p.wa||"-")}</div></div>
+   <div class="full"><label>ALAMAT</label><div class="read">${esc(p.alamat||"-")}</div></div>
+
+   <div><label>BRAND / TIPE</label><div class="read">${esc(s.brandTipe||s.tipe||"-")}</div></div>
+   <div><label>IMEI</label><div class="read">${esc(s.imei||"-")}</div></div>
+   <div class="full"><label>JENIS KERUSAKAN</label><div class="read">${esc(s.jenisKerusakan||s.keluhan||"-")}</div></div>
+   <div><label>KELENGKAPAN</label><div class="read">${esc((s.kelengkapan||[]).join(", ")||"-")}</div></div>
+   <div><label>SANDI / POLA</label><div class="read">${esc(s.sandiPola||s.pola||"-")}</div></div>
+
+   <div><label>PRODUK DIGUNAKAN</label><div class="read">${esc(pr?.nama||"-")}</div></div>
+   <div><label>SUMBER</label><div class="read">${esc(pr?.sumber||"-")}</div></div>
+   <div><label>QTY</label><div class="read">${pr?.qty??"-"}</div></div>
+   <div><label>HARGA PRODUK</label><div class="read">${pr?rupiah(pr.harga):"-"}</div></div>
+
+   <div><label>BIAYA SERVICE</label><div class="read">${rupiah(biayaService(d))}</div></div>
+   <div><label>DP</label><div class="read">${rupiah(dp(d))}</div></div>
+   <div><label>DISKON</label><div class="read">${rupiah(diskon(d))}</div></div>
+   <div><label>PENDAPATAN BERDASARKAN STATUS</label><div class="read"><b>${rupiah(pendapatanStatus(d))}</b></div></div>
+
+   <div><label>METODE PEMBAYARAN</label><div class="read">${esc(pay.metode||"-")}</div></div>
+   <div><label>UANG DITERIMA</label><div class="read">${rupiah(pay.uangDiterima??d.dibayar)}</div></div>
+   <div class="full"><label>CATATAN</label><div class="read">${esc(pay.catatan||d.catatan||"-")}</div></div>
+  </div>`;
+ $("detailModal").classList.add("show");
+}
+window.lihat=lihat;
+
+function closeModal(){$("detailModal").classList.remove("show")}
+window.closeModal=closeModal;
+
+async function ubahStatus(id,status){
+ const d=data.find(x=>x.id===id); if(!d)return;
+ const statusLama=getStatus(d);
+ if(statusLama===status)return;
+
+ try{
+   const dataBaru={...d,status};
+   const pend=pendapatanStatus(dataBaru);
+   await setDoc(doc(db,"servis",id),{
+     status,
+     pendapatan:pend,
+     updatedAt:serverTimestamp()
+   },{merge:true});
+
+   d.status=status;
+   d.pendapatan=pend;
+   render();
+   toast(`Status nota ${d.nomorNota||id} → ${statusLabel(status)}`);
+
+   // Setelah status tersimpan, tampilkan popup pilihan WA.
+   bukaWaPopup(d,status);
+ }catch(e){
+   console.error(e);
+   toast("Gagal mengubah status: "+(e.message||e));
+   render();
+ }
+}
+window.ubahStatus=ubahStatus;
+
+function editData(id){
+ const d=data.find(x=>x.id===id);if(!d)return;
+ const p=pelanggan(d),s=servisan(d),e=estimasi(d),pay=pembayaran(d);
+ $("editId").value=id;
+ $("eNama").value=p.nama||"";
+ $("eWa").value=p.wa||"";
+ $("eAlamat").value=p.alamat||"";
+ $("eHp").value=s.brandTipe||s.tipe||"";
+ $("eImei").value=s.imei||"";
+ $("eKerusakan").value=s.jenisKerusakan||s.keluhan||"";
+ $("eKelengkapan").value=(s.kelengkapan||[]).join(", ");
+ $("ePola").value=s.sandiPola||s.pola||"";
+ $("eTeknisi").value=d.namaTeknisi||d.teknisi||"";
+ $("eBiaya").value=biayaService(d)||"";
+ $("eDp").value=dp(d)||"";
+ $("eDiskon").value=diskon(d)||"";
+ $("eDiterima").value=pay.uangDiterima??d.dibayar??"";
+ $("eMetode").value=pay.metode||"";
+ $("eCatatan").value=pay.catatan||d.catatan||"";
+ $("editModal").classList.add("show");
+}
+window.editData=editData;
+
+function closeEdit(){$("editModal").classList.remove("show")}
+window.closeEdit=closeEdit;
+
+async function saveEdit(){
+ const id=$("editId").value,d=data.find(x=>x.id===id);if(!d)return;
+ const update={
+  pelanggan:{...pelanggan(d),nama:$("eNama").value.trim(),wa:$("eWa").value.trim(),alamat:$("eAlamat").value.trim()},
+  servisan:{...servisan(d),brandTipe:$("eHp").value.trim(),imei:$("eImei").value.trim(),jenisKerusakan:$("eKerusakan").value.trim(),kelengkapan:$("eKelengkapan").value.split(",").map(x=>x.trim()).filter(Boolean),sandiPola:$("ePola").value.trim()},
+  namaTeknisi:$("eTeknisi").value.trim(),
+  estimasi:{...estimasi(d),biayaService:n("eBiaya"),dp:n("eDp"),diskon:n("eDiskon")},
+  pembayaran:{...pembayaran(d),metode:$("eMetode").value.trim(),uangDiterima:n("eDiterima"),catatan:$("eCatatan").value.trim()},
+  updatedAt:serverTimestamp()
+ };
+ // Status tetap menjadi sumber penentuan pendapatan.
+ update.pendapatan=getStatus(d)==="diambil"
+    ? Math.max(0,update.estimasi.biayaService-update.estimasi.diskon)
+   : 0;
+ try{
+   await setDoc(doc(db,"servis",id),update,{merge:true});
+   Object.assign(d,update);
+   closeEdit();render();
+   toast("Perubahan data servis tersimpan.");
+ }catch(e){toast("Gagal menyimpan perubahan: "+(e.message||e))}
+}
+window.saveEdit=saveEdit;
+
+function hapus(id){
+ const d=data.find(x=>x.id===id);if(!d)return;
+ confirmAction=()=>prosesHapus(id);
+ $("confirmTitle").textContent="Hapus nota servis?";
+ $("confirmText").textContent=`Nota ${d.nomorNota||id} milik ${pelanggan(d).nama||"pelanggan"} akan dihapus. Jika stok produk pada nota sudah dipotong, stok akan dikembalikan.`;
+ $("confirmOk").textContent="Hapus Nota";
+ $("confirmModal").classList.add("show");
+}
+window.hapus=hapus;
+
+function tutupConfirm(){
+ $("confirmModal").classList.remove("show");
+ confirmAction=null;
+}
+window.tutupConfirm=tutupConfirm;
+
+$("confirmOk").onclick=async()=>{
+ const fn=confirmAction;
+ tutupConfirm();
+ if(fn)await fn();
+};
+
+async function prosesHapus(id){
+ const d=data.find(x=>x.id===id);if(!d)return;
+ try{
+   const pr=produk(d);
+   if(d.stokDikurangi && pr?.produkId && pr?.qty){
+     const stockRef=doc(db,"stok",pr.produkId);
+     await runTransaction(db,async(transaction)=>{
+       const snap=await transaction.get(stockRef);
+       if(snap.exists()){
+         const st=snap.data()||{};
+         const sekarang=Number(st.sisa??st.stok??st.stock??0)||0;
+         const kembali=Number(pr.qty)||0;
+         const baru=sekarang+kembali;
+         transaction.update(stockRef,{
+           sisa:baru,stok:baru,status:"tersedia",updatedAt:serverTimestamp()
+         });
+       }
+       transaction.delete(doc(db,"servis",id));
+     });
+   }else{
+     await deleteDoc(doc(db,"servis",id));
+   }
+   data=data.filter(x=>x.id!==id);
+   render();
+   toast("Nota servis berhasil dihapus.");
+ }catch(e){
+   toast("Gagal menghapus nota: "+(e.message||e));
+ }
+}
+window.hapus=hapus;
+
+onAuthStateChanged(auth,async user=>{
+ if(!user){
+   $("tbody").innerHTML='<tr><td colspan="13" class="empty">Silakan login terlebih dahulu.</td></tr>';
+   return;
+ }
+ uid=user.uid;
+ await loadData();
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,533 @@
+<!DOCTYPE html>
+<html lang="id"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>FIXZY | Nota Servis</title>
+<style>
+*{box-sizing:border-box}
+:root{--ink:#111827;--muted:#667085;--line:#e5e7eb;--bg:#f3f5f7;--card:#fff;--danger:#dc2626}
+html,body{margin:0;padding:0}
+body{background:var(--bg);font-family:Arial,Helvetica,sans-serif;color:#17202a;min-height:100vh}
+header{background:var(--ink);color:#fff;padding:10px 14px;position:sticky;top:0;z-index:100;box-shadow:0 2px 10px #0002}
+.header-top{width:min(960px,100%);margin:auto;display:flex;align-items:center;gap:12px}
+.brand{display:flex;align-items:center;gap:10px;min-width:0}
+.brand-logo{width:42px;height:42px;flex:0 0 42px;display:block;object-fit:contain;background:#000;border-radius:8px;padding:2px}
+.brand-text{min-width:0}
+header h1{margin:0;font-size:18px;line-height:1.15;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.brand-sub{font-size:11px;color:#d1d5db;margin-top:3px}
+.header-actions{display:flex;gap:7px;margin-left:auto}
+.header-actions button{padding:8px 10px;border:1px solid #ffffff44;background:#ffffff12;color:#fff;border-radius:8px;font-weight:700;cursor:pointer}
+main{width:min(960px,100%);margin:auto;padding:14px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:15px;margin-bottom:12px;box-shadow:0 2px 10px #0000000b}
+.title{font-weight:800;font-size:15px;margin-bottom:12px;border-bottom:1px solid var(--line);padding-bottom:9px}
+.firebase-info{border:1px solid var(--line);border-radius:10px;overflow:hidden;background:#fafafa}
+.info-row{display:grid;grid-template-columns:150px minmax(0,1fr);align-items:center;gap:12px;padding:10px 12px;border-bottom:1px solid var(--line)}
+.info-row:last-child{border-bottom:0}
+.info-row span{color:var(--muted);font-size:12px;font-weight:700}
+.info-row b{text-align:right;font-size:13px;overflow-wrap:anywhere}
+.teknisi-select{width:100%;min-width:0;padding:8px 10px;background:#fff;border:1px solid #d1d5db;border-radius:8px;font:inherit}
+.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:11px}
+.full{grid-column:1/-1}
+label{display:block;font-size:12px;font-weight:700;margin-bottom:5px;color:#4b5563}
+input,select,textarea{width:100%;padding:11px;border:1px solid #d1d5db;border-radius:9px;font:inherit;background:#fff;color:#111827;outline:none}
+input:focus,select:focus,textarea:focus{border-color:#111827;box-shadow:0 0 0 2px #11182714}
+textarea{min-height:78px;resize:vertical}
+.checks{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.check{border:1px solid var(--line);padding:7px 9px;margin:0;border-radius:8px;font-size:12px;font-weight:600;color:#4b5563;display:flex;align-items:center;gap:5px;background:#fafafa}
+.check input{width:auto;margin:0}
+.product-search-wrap{position:relative}
+.product-results{display:none;position:absolute;left:0;right:0;top:calc(100% + 4px);z-index:300;background:#fff;border:1px solid #ddd;border-radius:9px;max-height:280px;overflow:auto;box-shadow:0 8px 22px #0002}
+.product-results.show{display:block}
+.product-result{display:block;width:100%;text-align:left;border:0;border-bottom:1px solid #eee;background:#fff;padding:10px;cursor:pointer}
+.product-result:last-child{border-bottom:0}
+.product-result:disabled{cursor:not-allowed}
+.pname{font-weight:700}.pmeta{font-size:12px;color:#667085;margin-top:3px}
+.selected-product{margin-top:8px;padding:10px;border:1px dashed #bbb;border-radius:9px;font-size:13px;background:#fafafa;overflow-wrap:anywhere}
+.selected-product.ok{border-color:#16a34a;background:#f0fdf4}
+.actions{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
+button{border:0;border-radius:9px;padding:11px 12px;font-weight:800;cursor:pointer}
+.actions .danger{background:var(--danger);color:#fff}
+.actions .light,.actions .primary{background:#111827;color:#fff}
+.status{font-size:12px;color:#667085;margin-top:9px;line-height:1.5}
+.printArea{display:none}
+@media(max-width:720px){
+  header{padding:9px 10px}
+  .header-top{align-items:center}
+  .brand-logo{width:38px;height:38px;flex-basis:38px;object-fit:contain;background:#000;border-radius:7px;padding:2px}
+  header h1{font-size:16px}
+  .brand-sub{display:none}
+  .header-actions button{padding:7px 8px;font-size:12px}
+  main{padding:10px}
+  .card{padding:13px;border-radius:12px}
+  .grid{grid-template-columns:1fr}
+  .full{grid-column:auto}
+  .actions{grid-template-columns:1fr 1fr}
+  .info-row{grid-template-columns:1fr;gap:4px}
+  .info-row b{text-align:left}
+}
+@media(max-width:430px){
+  .header-top{gap:7px}
+  .brand{gap:7px}
+  .brand-logo{width:34px;height:34px;flex-basis:34px;object-fit:contain;background:#000;border-radius:7px;padding:2px}
+  header h1{font-size:14px}
+  .header-actions{gap:4px}
+  .header-actions button{font-size:11px;padding:7px 6px}
+  main{padding:8px}
+  .card{padding:11px;margin-bottom:9px}
+  .title{font-size:14px}
+  .checks{gap:7px}
+  .check{font-size:11px;padding:6px 7px}
+  .actions{grid-template-columns:1fr}
+}
+@media print{
+  body>*:not(#printArea){display:none!important}
+  #printArea{display:block!important}
+  body{background:#fff}
+  .printNota{font:11px Arial;color:#000}
+  .printNota h2,.center{text-align:center}
+  .printNota table{width:100%;border-collapse:collapse}
+  .printNota td{padding:2px;vertical-align:top}
+  .printHeader{position:relative;min-height:45px;text-align:center}
+  .printLogo{position:absolute;left:0;top:0;width:42px;height:42px;object-fit:contain;background:#000;border-radius:6px;padding:2px}
+  .printHeader h2{margin:0;padding-top:2px;font-size:16px}
+}
+</style></head><body>
+<header>
+ <div class="header-top">
+  <div class="brand">
+   <img class="brand-logo" src="logo.png" alt="Logo FIXZY">
+   <div class="brand-text">
+    <h1>Nota Servis HP</h1>
+    <div class="brand-sub">FIXZY • Pembukuan Servis</div>
+   </div>
+  </div>
+  <div class="header-actions">
+   <button type="button" onclick="refreshHalaman()">↻ Refresh</button>
+  </div>
+ </div>
+</header><main>
+
+<div class="card">
+<div class="title">1. Informasi Nota</div>
+<div class="firebase-info">
+ <div class="info-row"><span>Akun Terdaftar</span><b id="infoAkun">Memuat...</b></div>
+ <div class="info-row"><span>Nama Konter</span><b id="infoKonter">Memuat...</b></div>
+ <div class="info-row"><span>Nomor Nota</span><b id="infoNomor">Memuat...</b></div>
+ <div class="info-row"><span>Tanggal Nota</span><b id="infoTanggal">Memuat...</b></div>
+ <div class="info-row"><span>Nama Teknisi</span><select id="teknisi" class="teknisi-select"><option value="">-- Pilih Teknisi --</option></select></div>
+</div>
+<div style="display:none">
+ <input id="akunTerdaftar"><input id="namaKonter"><input id="nomorNota">
+ <input id="tanggalNota">
+</div>
+</div>
+
+<div class="card"><div class="title">2. Data Pelanggan</div><div class="grid">
+<div><label>NAMA PELANGGAN</label><input id="namaPelanggan"></div>
+<div><label>NO WA PELANGGAN</label><input id="waPelanggan"></div>
+<div class="full"><label>ALAMAT PELANGGAN</label><textarea id="alamatPelanggan"></textarea></div>
+</div></div>
+
+<div class="card"><div class="title">3. Data Servisan</div><div class="grid">
+<div><label>BRAND DAN TIPE</label><input id="brandTipe"></div><div><label>IMEI</label><input id="imei"></div>
+<div class="full"><label>JENIS KERUSAKAN</label><textarea id="kerusakan"></textarea></div>
+<div class="full"><label>KELENGKAPAN</label><div class="checks">
+<label class="check"><input class="kelengkapan" type="checkbox" value="charger"> Charger</label>
+<label class="check"><input class="kelengkapan" type="checkbox" value="simcard"> SIM Card</label>
+<label class="check"><input class="kelengkapan" type="checkbox" value="memoricard"> Memory Card</label>
+<label class="check"><input class="kelengkapan" type="checkbox" value="case/silicon"> Case / Silicon</label>
+</div></div>
+<div class="full"><label>SANDI / POLA</label><input id="sandiPola"></div>
+<div class="full"><label>PRODUK YANG DIGUNAKAN</label>
+<div class="product-search-wrap"><input id="cariProduk" placeholder="Ketik nama / kode produk untuk mencari..." autocomplete="off"><div id="hasilProduk" class="product-results"></div></div>
+<div id="produkTerpilih" class="selected-product">Belum ada produk dipilih.</div></div>
+<div><label>QTY PRODUK</label><input id="qtyProduk" inputmode="numeric" value="1"></div>
+<div><label>PRODUK MANUAL JIKA TIDAK ADA DI STOCK</label><input id="produkManual"></div>
+</div></div>
+
+<div class="card"><div class="title">4. Estimasi Biaya</div><div class="grid">
+<div><label>BIAYA SERVICE</label><input id="biayaService" inputmode="numeric"></div>
+<div><label>DP</label><input id="dp" inputmode="numeric"></div>
+<div><label>DISKON</label><input id="diskon" inputmode="numeric"></div>
+</div></div>
+
+<div class="card"><div class="title">5. Pembayaran</div><div class="grid">
+<div><label>METODE PEMBAYARAN</label><select id="metodePembayaran"><option>Tunai</option><option>Transfer</option><option>QRIS</option><option>Debit</option><option>Lainnya</option></select></div>
+<div><label>UANG YANG DITERIMA</label><input id="uangDiterima" inputmode="numeric"></div>
+<div class="full"><label>CATATAN</label><textarea id="catatan"></textarea></div></div></div>
+
+<div class="card"><div class="title">6. Aksi</div><div class="actions">
+<button class="danger" onclick="batal()">Batal</button><button class="light" onclick="simpan(false)">Simpan</button>
+<button class="primary" onclick="simpanCetak('thermal')">Simpan & Cetak 5×8</button><button class="primary" onclick="simpanCetak('umum')">Simpan & Cetak Umum</button>
+</div><div id="saveStatus" class="status">Belum disimpan.</div></div>
+</main><div id="printArea" class="printArea"></div>
+
+<script type="module">
+import {initializeApp} from "https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js";
+import {getAuth,onAuthStateChanged} from "https://www.gstatic.com/firebasejs/11.10.0/firebase-auth.js";
+import {getFirestore,collection,query,where,getDocs,doc,getDoc,setDoc,runTransaction,serverTimestamp} from "https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js";
+
+const config={
+ apiKey:"AIzaSyCwMbJsuORhIq4QCmp4c1r6OsjAUlfxU5Y",
+ authDomain:"fixzy-f056f.firebaseapp.com",projectId:"fixzy-f056f",
+ storageBucket:"fixzy-f056f.firebasestorage.app",
+ messagingSenderId:"838081521031",appId:"1:838081521031:web:50fdee909b56460b055f22"
+};
+
+const app=initializeApp(config);
+const auth=getAuth(app);
+const db=getFirestore(app);
+
+let uid=null,products=[],selectedProduct=null;
+
+const $=id=>document.getElementById(id);
+const esc=v=>String(v??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]));
+const num=id=>Number(String($(id)?.value||"").replace(/[^\d]/g,""))||0;
+const rupiah=n=>"Rp "+(Number(n)||0).toLocaleString("id-ID");
+
+function nomorNota(){
+ const d=new Date(),p=n=>String(n).padStart(2,"0");
+ return "SRV-"+d.getFullYear()+p(d.getMonth()+1)+p(d.getDate())+"-"+p(d.getHours())+p(d.getMinutes())+p(d.getSeconds());
+}
+function namaProduk(p){return String(p.nama||p.namaProduk||p.produk||p.name||p.nome||p.kode||"-")}
+function kodeProduk(p){return String(p.kode||p.kodeProduk||p.sku||p.code||"").trim()}
+function stokProduk(p){return Number(p.sisa??p.stok??p.stock??0)||0}
+function hargaProduk(p){return Number(p.hargaJual??p.harga??p.price??0)||0}
+
+function setInfoNota(){
+ $("infoAkun").textContent=$("akunTerdaftar").value||"-";
+ $("infoKonter").textContent=$("namaKonter").value||"-";
+ $("infoNomor").textContent=$("nomorNota").value||"-";
+ $("infoTanggal").textContent=$("tanggalNota").value||"-";
+ 
+}
+
+function refreshHalaman(){location.reload()}
+function tutupHalaman(){if(history.length>1)history.back();else window.close()}
+window.refreshHalaman=refreshHalaman;
+window.tutupHalaman=tutupHalaman;
+
+async function loadProducts(){
+ const snap=await getDocs(query(collection(db,"stok"),where("uid","==",uid)));
+ products=snap.docs.map(d=>({id:d.id,...d.data()}));
+}
+
+function filterProduk(q){
+ const v=String(q||"").toLowerCase().trim(),box=$("hasilProduk");
+ const arr=products.filter(p=>
+   namaProduk(p).toLowerCase().includes(v)||
+   kodeProduk(p).toLowerCase().includes(v)
+ ).slice(0,50);
+
+ box.innerHTML=arr.length?arr.map(p=>{
+   const kosong=stokProduk(p)<=0;
+   return `<button type="button" class="product-result" data-id="${esc(p.id)}" ${kosong?"disabled":""} style="${kosong?"opacity:.4;cursor:not-allowed":""}">
+    <div class="pname">${esc(namaProduk(p))}</div>
+    <div class="pmeta">Stok: ${stokProduk(p)} • Harga: ${rupiah(hargaProduk(p))}${kosong?" • Stok kosong":""}</div>
+   </button>`;
+ }).join(""):"<div class='product-result'>Produk tidak ditemukan. Gunakan produk manual.</div>";
+
+ box.classList.add("show");
+}
+window.filterProduk=filterProduk;
+
+$("cariProduk").oninput=e=>filterProduk(e.target.value);
+$("cariProduk").onfocus=e=>filterProduk(e.target.value);
+
+$("hasilProduk").onclick=e=>{
+ const b=e.target.closest(".product-result[data-id]");
+ if(!b)return;
+ const p=products.find(x=>x.id===b.dataset.id);
+ if(!p||stokProduk(p)<=0)return;
+
+ selectedProduct=p;
+ $("cariProduk").value=namaProduk(p);
+ $("produkTerpilih").innerHTML=
+   `<b>${esc(namaProduk(p))}</b> • Stok: <b>${stokProduk(p)}</b> • Harga: ${rupiah(hargaProduk(p))}`;
+ $("produkTerpilih").classList.add("ok");
+ $("hasilProduk").classList.remove("show");
+ $("produkManual").value="";
+};
+
+document.addEventListener("click",e=>{
+ if(!$("cariProduk").contains(e.target)&&!$("hasilProduk").contains(e.target))
+   $("hasilProduk").classList.remove("show");
+});
+
+async function loadEmployees(){
+ const snap=await getDocs(query(collection(db,"karyawan"),where("uid","==",uid)));
+ $("teknisi").innerHTML='<option value="">-- Pilih Teknisi --</option>'+
+   snap.docs.map(d=>{
+     const x=d.data()||{};
+     return `<option value="${esc(d.id)}">${esc(x.nama||x.name||x.namaKaryawan||x.email||d.id)}</option>`;
+   }).join("");
+
+ $("teknisi").disabled=snap.empty;
+ $("teknisi").onchange=setInfoNota;
+
+const dpField=$("dp"), uangField=$("uangDiterima");
+if(dpField&&uangField){
+  const syncUangDenganDP=()=>{ uangField.value=dpField.value; };
+  dpField.addEventListener("input",syncUangDenganDP);
+  dpField.addEventListener("change",syncUangDenganDP);
+  syncUangDenganDP();
+}
+ $("teknisi").disabled=snap.empty;
+}
+
+function collectNota(){
+ if(!$("teknisi").value)throw new Error("Pilih teknisi.");
+
+ const manual=$("produkManual").value.trim();
+ const qty=num("qtyProduk")||1;
+
+ if(!selectedProduct&&!manual)
+   throw new Error("Pilih produk dari Firebase atau isi Produk Manual.");
+
+ if(selectedProduct&&stokProduk(selectedProduct)<qty)
+   throw new Error(`Stok ${namaProduk(selectedProduct)} tidak cukup. Tersedia ${stokProduk(selectedProduct)}.`);
+
+ // NOTA HANYA MENYIMPAN DATA.
+ // Tidak menghitung total, sisa, laba, atau pendapatan.
+ return {
+   uid,
+   akunTerdaftar:$("akunTerdaftar").value,
+   namaKonter:$("namaKonter").value,
+   nomorNota:$("nomorNota").value,
+   tanggalNota:$("tanggalNota").value,
+
+   teknisiId:$("teknisi").value,
+   namaTeknisi:$("teknisi").selectedOptions[0]?.textContent||"",
+
+   pelanggan:{
+     nama:$("namaPelanggan").value.trim(),
+     wa:$("waPelanggan").value.trim(),
+     alamat:$("alamatPelanggan").value.trim()
+   },
+
+   servisan:{
+     brandTipe:$("brandTipe").value.trim(),
+     imei:$("imei").value.trim(),
+     jenisKerusakan:$("kerusakan").value.trim(),
+     kelengkapan:[...document.querySelectorAll(".kelengkapan:checked")].map(x=>x.value),
+     sandiPola:$("sandiPola").value.trim()
+   },
+
+   penggunaanProduk:selectedProduct
+    ? {
+       produkId:selectedProduct.id,
+       nama:namaProduk(selectedProduct),
+       kode:kodeProduk(selectedProduct),
+       qty,
+       harga:hargaProduk(selectedProduct),
+       stokSebelum:stokProduk(selectedProduct),
+       sumber:"firebase"
+      }
+    : {
+       produkId:null,
+       nama:manual,
+       qty,
+       harga:0,
+       sumber:"manual"
+      },
+
+   estimasi:{
+     biayaService:num("biayaService"),
+     dp:num("dp"),
+     diskon:num("diskon")
+   },
+
+   pembayaran:{
+     metode:$("metodePembayaran").value,
+     uangDiterima:num("uangDiterima"),
+     catatan:$("catatan").value.trim()
+   },
+
+   status:"masuk",
+   pendapatan:0,
+   createdAt:serverTimestamp(),
+   updatedAt:serverTimestamp()
+ };
+}
+
+async function simpanCetak(mode){
+ let d;
+ try{
+   if(!uid)throw new Error("Belum login Firebase.");
+   d=collectNota();
+ }catch(e){
+   alert(e.message);
+   return;
+ }
+
+ const notaRef=doc(db,"servis",d.nomorNota);
+
+ try{
+   $("saveStatus").textContent="Menyimpan data ke Firebase...";
+
+   if(d.penggunaanProduk.sumber==="firebase"){
+     const stockRef=doc(db,"stok",d.penggunaanProduk.produkId);
+
+     // Pola Firebase stok mengikuti transaksi penjualan yang sudah berjalan:
+     // baca stok -> cek -> kurangi -> simpan nota.
+     await runTransaction(db,async(transaction)=>{
+       const stockSnap=await transaction.get(stockRef);
+
+       if(!stockSnap.exists())
+         throw new Error("Produk tidak ditemukan lagi di Data Stock.");
+
+       const stock=stockSnap.data()||{};
+       const stokLama=stokProduk(stock);
+       const qty=Number(d.penggunaanProduk.qty)||0;
+
+       if(stokLama<qty)
+         throw new Error(`Stok ${namaProduk(stock)} tidak cukup. Tersedia ${stokLama}.`);
+
+       const stokBaru=stokLama-qty;
+
+       transaction.update(stockRef,{
+         sisa:stokBaru,
+         stok:stokBaru,
+         status:stokBaru>0?"tersedia":"kosong",
+         updatedAt:serverTimestamp()
+       });
+
+       transaction.set(notaRef,{
+         ...d,
+         stokDikurangi:true,
+         stokProdukId:stockSnap.id,
+         stokSebelum:stokLama,
+         stokSesudah:stokBaru,
+         createdAt:serverTimestamp(),
+         updatedAt:serverTimestamp()
+       },{merge:true});
+     });
+   }else{
+     await setDoc(notaRef,{
+       ...d,
+       stokDikurangi:false,
+       createdAt:serverTimestamp(),
+       updatedAt:serverTimestamp()
+     },{merge:true});
+   }
+
+   $("saveStatus").textContent="Nota servis berhasil tersimpan.";
+
+   if(mode){
+     buatNotaCetak(d);
+     setTimeout(()=>window.print(),200);
+     setTimeout(()=>kosongkanForm(),700);
+   }else{
+     kosongkanForm();
+   }
+ }catch(e){
+   console.error(e);
+   $("saveStatus").textContent="Gagal menyimpan Firebase.";
+   alert("Gagal menyimpan Firebase:\n"+(e.code||"")+"\n"+(e.message||e));
+ }
+}
+
+
+function kosongkanForm(){
+  document.querySelectorAll("input, textarea").forEach(el=>{
+    if(el.id==="akunTerdaftar" || el.id==="namaKonter") return;
+    if(el.type==="checkbox" || el.type==="radio") el.checked=false;
+    else el.value="";
+  });
+
+  document.querySelectorAll("select").forEach(el=>{
+    el.selectedIndex=0;
+  });
+
+  selectedProduct=null;
+
+  if($("nomorNota")) $("nomorNota").value=nomorNota();
+  if($("tanggalNota")) $("tanggalNota").value=new Date().toISOString().slice(0,10);
+
+  if($("produkTerpilih")){
+    $("produkTerpilih").textContent="Belum ada produk dipilih.";
+    $("produkTerpilih").classList.remove("ok");
+  }
+  if($("hasilProduk")){
+    $("hasilProduk").innerHTML="";
+    $("hasilProduk").classList.remove("show");
+  }
+  if($("cariProduk")) $("cariProduk").value="";
+
+  if($("uangDiterima")) $("uangDiterima").value="";
+
+  setInfoNota();
+  if($("saveStatus")) $("saveStatus").textContent="Form siap untuk nota baru.";
+}
+
+function simpan(cetak){return simpanCetak(cetak?"thermal":false)}
+function batal(){if(confirm("Batalkan nota?"))location.reload()}
+window.simpan=simpan;
+window.simpanCetak=simpanCetak;
+window.batal=batal;
+
+function buatNotaCetak(d){
+ const p=d.penggunaanProduk;
+ $("printArea").innerHTML=`<div class="printNota">
+ <div class="printHeader">
+   <img class="printLogo" src="logo.png" alt="Logo FIXZY">
+   <h2>${esc(d.namaKonter)}</h2>
+   <div class="center">NOTA SERVIS HP</div>
+  </div><hr>
+ <table>
+ <tr><td>Akun</td><td>: ${esc(d.akunTerdaftar)}</td></tr>
+ <tr><td>Nota</td><td>: ${esc(d.nomorNota)}</td></tr>
+ <tr><td>Tanggal</td><td>: ${esc(d.tanggalNota)}</td></tr>
+ <tr><td>Teknisi</td><td>: ${esc(d.namaTeknisi)}</td></tr>
+ <tr><td>Pelanggan</td><td>: ${esc(d.pelanggan.nama)}</td></tr>
+ <tr><td>WA</td><td>: ${esc(d.pelanggan.wa)}</td></tr>
+ <tr><td>Alamat</td><td>: ${esc(d.pelanggan.alamat)}</td></tr>
+ <tr><td>HP</td><td>: ${esc(d.servisan.brandTipe)}</td></tr>
+ <tr><td>IMEI</td><td>: ${esc(d.servisan.imei)}</td></tr>
+ <tr><td>Kerusakan</td><td>: ${esc(d.servisan.jenisKerusakan)}</td></tr>
+ <tr><td>Kelengkapan</td><td>: ${esc(d.servisan.kelengkapan.join(", "))}</td></tr>
+ <tr><td>Sandi/Pola</td><td>: ${esc(d.servisan.sandiPola)}</td></tr>
+ <tr><td>Produk</td><td>: ${esc(p.nama)} × ${p.qty}</td></tr>
+ <tr><td>Biaya Service</td><td>: ${rupiah(d.estimasi.biayaService)}</td></tr>
+ <tr><td>DP</td><td>: ${rupiah(d.estimasi.dp)}</td></tr>
+ <tr><td>Diskon</td><td>: ${rupiah(d.estimasi.diskon)}</td></tr>
+ <tr><td>Metode</td><td>: ${esc(d.pembayaran.metode)}</td></tr>
+ <tr><td>Diterima</td><td>: ${rupiah(d.pembayaran.uangDiterima)}</td></tr>
+ <tr><td>Catatan</td><td>: ${esc(d.pembayaran.catatan)}</td></tr>
+ </table><hr><div class="center">${esc(d.nomorNota)}</div>
+ </div>`;
+}
+
+onAuthStateChanged(auth,async user=>{
+ if(!user){
+   $("akunTerdaftar").value="Belum login";
+   $("namaKonter").value="";
+   $("teknisi").innerHTML='<option value="">Login terlebih dahulu</option>';$("teknisi").disabled=true;
+   return;
+ }
+
+ uid=user.uid;
+ $("akunTerdaftar").value=user.email||user.uid;
+ $("nomorNota").value=nomorNota();
+ $("tanggalNota").value=new Date().toISOString().slice(0,10);
+
+ try{
+   const us=await getDoc(doc(db,"users",uid));
+   if(us.exists()){
+     const x=us.data()||{};
+     $("namaKonter").value=x.namaKonter||x.namaToko||x.namaUsaha||x.nama||"FIXZY";
+   }else $("namaKonter").value="FIXZY";
+ }catch(_){
+   $("namaKonter").value="FIXZY";
+ }
+
+ setInfoNota();
+
+ try{
+   await Promise.all([loadProducts(),loadEmployees()]);
+   setInfoNota();
+   $("saveStatus").textContent=`Siap • ${products.length} produk stock tersedia.`;
+ }catch(e){
+   console.error(e);
+   $("saveStatus").textContent="Gagal membaca Firebase.";
+ }
+});
+</script></body></html>
