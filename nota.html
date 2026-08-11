@@ -63,6 +63,10 @@ textarea{min-height:75px;resize:vertical}
 }
 </style>
 <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
+<style id="fixzy-save-only">
+button[onclick="simpan(false)"]{background:#000!important;background-color:#000!important;color:#fff!important;border:1px solid #000!important}
+button[onclick="simpan(false)"]:hover{background:#222!important;background-color:#222!important;color:#fff!important}
+</style>
 </head>
 <body>
 <header><h1>🧾 Nota FIXZY</h1><div class="grow"></div><button class="light" onclick="location.reload()">↻ Refresh</button></header>
@@ -78,7 +82,7 @@ textarea{min-height:75px;resize:vertical}
 
 <div class="card">
  <div class="title">Informasi Nota</div>
- <div class="status">Akun Firebase: <b id="akun">memeriksa...</b><br>UID: <span id="uidView">-</span></div>
+ <div class="status">Akun Firebase: <b id="akun">memeriksa...</b><br>Nama Konter: <span id="uidView">Memuat...</span></div>
  <div class="grid">
   <div><label>NOMOR NOTA</label><input id="nomor" readonly></div>
   <div><label>TANGGAL</label><input id="tanggal" type="date"></div>
@@ -158,7 +162,7 @@ textarea{min-height:75px;resize:vertical}
 <script type="module">
 import {initializeApp} from "https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js";
 import {getAuth,onAuthStateChanged} from "https://www.gstatic.com/firebasejs/11.10.0/firebase-auth.js";
-import {getFirestore,collection,query,where,getDocs,doc,setDoc,runTransaction,serverTimestamp} from "https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js";
+import {getFirestore,collection,query,where,getDocs,doc,getDoc,setDoc,runTransaction,serverTimestamp} from "https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js";
 
 const config={
  apiKey:"AIzaSyCwMbJsuORhIq4QCmp4c1r6OsjAUlfxU5Y",
@@ -168,6 +172,7 @@ const config={
 };
 const app=initializeApp(config),auth=getAuth(app),db=getFirestore(app);
 let uid=null,jenis="servis",employees=[],products=[],pattern=[];
+let namaKonter="";
 const $=id=>document.getElementById(id);
 function esc(v){return String(v??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]))}
 function toast(t){$("toast").textContent=t;$("toast").style.display="block";setTimeout(()=>$("toast").style.display="none",2600)}
@@ -180,6 +185,20 @@ function renderPattern(){
 }
 window.dot=n=>{if(!pattern.includes(n))pattern.push(n);renderPattern()};
 window.setJenis=setJenis;
+
+async function loadNamaKonter(){
+  if(!uid) return;
+  try{
+    const snap=await getDoc(doc(db,"users",uid));
+    const data=snap.exists()?(snap.data()||{}):{};
+    namaKonter=String(data.namaKonter||data.namaToko||data.namaUsaha||data.toko||data.nama||"").trim();
+    $("uidView").textContent=namaKonter||"-";
+  }catch(e){
+    console.warn("Gagal membaca nama konter:",e);
+    namaKonter="";
+    $("uidView").textContent="-";
+  }
+}
 
 async function loadEmployees(){
  const snap=await getDocs(query(collection(db,"karyawan"),where("uid","==",uid)));
@@ -464,7 +483,7 @@ function buatNotaCetak(d){
  }
  area.innerHTML=`
   <div class="printNota">
-   <h2>FIXZY</h2>
+   <h2>${esc(namaKonter||"FIXZY")}</h2>
    <div class="center">PEMBUKUAN SERVIS HP</div>
    <hr>
    <table>
@@ -533,7 +552,7 @@ onAuthStateChanged(auth,async user=>{
  if(!user){$("akun").textContent="BELUM LOGIN";$("teknisi").innerHTML='<option>Login terlebih dahulu</option>';return}
  uid=user.uid;$("akun").textContent=user.email||"Login";$("uidView").textContent=uid;
  $("nomor").value=nomor();today();
- try{await Promise.all([loadEmployees(),loadProducts()]);}
+ try{await Promise.all([loadNamaKonter(),loadEmployees(),loadProducts()]);}
  catch(e){console.error(e);alert("Gagal membaca Firebase:\n"+e.message)}
 });
 renderPattern();
