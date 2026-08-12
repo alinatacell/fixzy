@@ -82,8 +82,19 @@ body{background:#0d0d0d;background-image:radial-gradient(circle at top, rgba(255
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js";
-import { getAuth, signInWithEmailAndPassword, signOut, sendPasswordResetEmail } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-auth.js";
-import { getFirestore, doc, getDoc, updateDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js";
+import {
+  getAuth,
+  signInWithEmailAndPassword,
+  signOut,
+  sendPasswordResetEmail
+} from "https://www.gstatic.com/firebasejs/11.10.0/firebase-auth.js";
+import {
+  getFirestore,
+  doc,
+  getDoc,
+  updateDoc,
+  serverTimestamp
+} from "https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyCwMbJsuORhIq4QCmp4c1r6OsjAUlfxU5Y",
@@ -93,6 +104,7 @@ const firebaseConfig = {
   messagingSenderId: "838081521031",
   appId: "1:838081521031:web:50fdee909b56460b055f22"
 };
+
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
@@ -100,109 +112,175 @@ const db = getFirestore(app);
 const form = document.getElementById("loginForm");
 const btn = document.getElementById("btnLogin");
 const loading = document.getElementById("loading");
+
 document.getElementById("lihatPassword").addEventListener("click",()=>{
   const p=document.getElementById("password");
   p.type = p.type==="password" ? "text" : "password";
 });
 
+function selesaiLogin(data, user){
+  const payload = {
+    type:"FIXZY_LOGIN_SUCCESS",
+    uid:user.uid,
+    nama:data.namaKonter || data.namaToko || data.namaUsaha || data.toko || data.nama || user.email || "Akun",
+    exp:data.tanggalBerakhir || "-",
+    role:data.role || "owner"
+  };
+
+  // Jika login dibuka sebagai popup iframe di index, kirim hasil ke index.
+  if(window.parent && window.parent !== window){
+    window.parent.postMessage(payload,"*");
+    return;
+  }
+
+  // Jika login dibuka langsung, kembali ke index.
+  window.location.href="index.html";
+}
+
+async function cekAkunDanLogin(user, data){
+  if(!data){
+    tampilPopup("Fixzy","Data akun tidak ditemukan.");
+    await signOut(auth);
+    return false;
+  }
+
+  const role = data.role || "";
+
+  // Rules baru menggunakan role owner/employee/superadmin.
+  // Halaman login utama hanya menerima akun usaha (owner).
+  if(role !== "owner" && role !== "superadmin"){
+    tampilPopup("Fixzy","Akun ini tidak memiliki akses sebagai pemilik usaha FIXZY.");
+    await signOut(auth);
+    return false;
+  }
+
+  if(data.status === "blocked" || data.status === "rejected"){
+    tampilPopup("Fixzy","Akun diblokir / ditolak.
+Hubungi Admin Fixzy.");
+    await signOut(auth);
+    return false;
+  }
+
+  // Trial tetap 3 bulan. Tanggal kedaluwarsa dibaca langsung dari Firestore.
+  let isExpired=false;
+  if(data.tanggalBerakhir){
+    const tglAkhir = new Date(data.tanggalBerakhir);
+    if(!Number.isNaN(tglAkhir.getTime()) && new Date() > tglAkhir){
+      isExpired=true;
+    }
+  }
+
+  if(isExpired){
+    if(data.perpanjanganStatus === "pending"){
+      tampilPopup(
+        "Fixzy",
+        "Masa aktif habis.
+
+Perpanjangan kamu sedang menunggu persetujuan Admin Fixzy.
+Silakan hubungi Admin."
+      );
+    }else{
+      tampilPopup(
+        "Fixzy",
+        "Masa Trial 3 Bulan Habis.
+
+Silakan ajukan perpanjangan."
+      );
+    }
+    await signOut(auth);
+    return false;
+  }
+
+  try{
+    await updateDoc(doc(db,"users",user.uid),{
+      lastLogin:serverTimestamp()
+    });
+  }catch(e){
+    // lastLogin tidak boleh menghalangi login utama.
+    console.warn("FIXZY lastLogin:",e);
+  }
+
+  return true;
+}
+
 form.addEventListener("submit", async (e)=>{
   e.preventDefault();
-  btn.disabled=true; loading.style.display="block";
+  btn.disabled=true;
+  loading.style.display="block";
+
   const email=document.getElementById("email").value.trim();
   const password=document.getElementById("password").value;
+
   try{
     const cred = await signInWithEmailAndPassword(auth,email,password);
     const uid=cred.user.uid;
-    const ref=doc(db,"users",uid);
-    const snap=await getDoc(ref);
-    if(!snap.exists()){ tampilPopup("Fixzy","Data user tidak ditemukan."); await signOut(auth); return; }
-    let data=snap.data();
+    const snap=await getDoc(doc(db,"users",uid));
 
-    if(data.paket==="FREE TRIAL" && data.status==="pending_activation"){
-      await updateDoc(ref,{ status:"active", tanggalAktivasi: serverTimestamp(), perpanjanganStatus:"none" });
-      data.status="active";
-    }
-
-    localStorage.setItem("fixzy_uid",uid);
-    localStorage.setItem("fixzy_role",data.role||"user");
-
-    if(data.role==="admin"){
-      await updateDoc(ref,{lastLogin:serverTimestamp()});
-
-      sessionStorage.setItem("fixzy_logged_in","1");
-      localStorage.setItem("fixzy_uid",uid);
-      localStorage.setItem("fixzy_role","admin");
-      localStorage.setItem("fixzy_user_profile",JSON.stringify({
-        uid:uid,
-        email:cred.user.email || "",
-        nama:data.namaKonter || data.nama || "Admin",
-        exp:data.tanggalBerakhir || "-",
-        role:"admin"
-      }));
-
-      tampilPopup("Fixzy","Login Admin Berhasil!\nMembuka FIXZY...");
-      setTimeout(()=>location.href="index.html",700);
+    if(!snap.exists()){
+      tampilPopup("Fixzy","Data akun tidak ditemukan di Firebase.");
+      await signOut(auth);
       return;
     }
 
-    if(data.status==="blocked" || data.status==="rejected"){
-      tampilPopup("Fixzy","Akun diblokir / ditolak.\nHubungi Admin Fixzy.");
-      await signOut(auth); localStorage.clear(); return;
-    }
+    const data=snap.data() || {};
+    const valid=await cekAkunDanLogin(cred.user,data);
+    if(!valid) return;
 
-    let isExpired=false;
-    if(data.tanggalBerakhir){
-      const tglAkhir=new Date(data.tanggalBerakhir);
-      if(new Date() > tglAkhir) isExpired=true;
-    }
+    tampilPopup(
+      "Fixzy",
+      `Login Berhasil!
+Halo ${data.namaKonter || data.nama || ""}.
+Membuka FIXZY...`
+    );
 
-    if(isExpired){
-      if(data.perpanjanganStatus==="pending"){
-        tampilPopup("Fixzy","Masa aktif habis.\n\nPerpanjangan kamu sedang menunggu persetujuan Admin Fixzy.\nSilakan hubungi Admin.");
-        await signOut(auth); localStorage.clear(); return;
-      }else{
-        tampilPopup("Fixzy","Masa Trial 3 Bulan Habis.\n\nSilakan ajukan perpanjangan.");
-        setTimeout(()=>location.href=`perpanjangan.html?uid=${uid}`,1500);
-        return;
-      }
-    }
-
-    await updateDoc(ref,{lastLogin:serverTimestamp()});
-
-    sessionStorage.setItem("fixzy_logged_in","1");
-    localStorage.setItem("fixzy_uid",uid);
-    localStorage.setItem("fixzy_role",data.role || "user");
-    localStorage.setItem("fixzy_user_profile",JSON.stringify({
-      uid:uid,
-      email:cred.user.email || "",
-      nama:data.namaKonter || data.nama || "Akun",
-      exp:data.tanggalBerakhir || "-",
-      role:data.role || "user"
-    }));
-
-    tampilPopup("Fixzy",`Login Berhasil!\nHalo ${data.namaKonter||""}.\nMembuka FIXZY...`);
-    setTimeout(()=>location.href="index.html",700);
+    setTimeout(()=>{
+      selesaiLogin(data,cred.user);
+    },700);
 
   }catch(err){
-    let msg=err.message;
-    if(err.code==="auth/invalid-credential" || err.code==="auth/wrong-password") msg="Email atau password salah.";
-    if(err.code==="auth/user-not-found") msg="Email tidak terdaftar.";
-    if(err.code==="auth/too-many-requests") msg="Terlalu banyak percobaan, coba lagi nanti.";
+    let msg=err.message || "Terjadi kesalahan saat login.";
+
+    if(err.code==="auth/invalid-credential" || err.code==="auth/wrong-password"){
+      msg="Email atau password salah.";
+    }else if(err.code==="auth/user-not-found"){
+      msg="Email tidak terdaftar.";
+    }else if(err.code==="auth/too-many-requests"){
+      msg="Terlalu banyak percobaan, coba lagi nanti.";
+    }
+
     tampilPopup("Fixzy",msg);
   }finally{
-    btn.disabled=false; loading.style.display="none";
+    btn.disabled=false;
+    loading.style.display="none";
   }
 });
 
 document.getElementById("btnLupa").addEventListener("click", async()=>{
   const email=document.getElementById("email").value.trim();
-  if(!email) return tampilPopup("Fixzy","Isi email dulu untuk reset password.");
-  try{ await sendPasswordResetEmail(auth,email); tampilPopup("Fixzy","Link reset dikirim ke "+email); }
-  catch(err){ tampilPopup("Fixzy",err.message); }
+
+  if(!email){
+    return tampilPopup("Fixzy","Isi email dulu untuk reset password.");
+  }
+
+  try{
+    await sendPasswordResetEmail(auth,email);
+    tampilPopup("Fixzy","Link reset password sudah dikirim ke "+email);
+  }catch(err){
+    let msg=err.message || "Gagal mengirim link reset password.";
+    if(err.code==="auth/user-not-found") msg="Email tidak terdaftar.";
+    tampilPopup("Fixzy",msg);
+  }
 });
 
-window.tampilPopup=(j,p)=>{ document.getElementById("popupJudul").innerText=j; document.getElementById("popupPesan").innerText=p; document.getElementById("popup").style.display="flex"; }
-window.tutupPopup=()=> document.getElementById("popup").style.display="none";
+window.tampilPopup=(j,p)=>{
+  document.getElementById("popupJudul").innerText=j;
+  document.getElementById("popupPesan").innerText=p;
+  document.getElementById("popup").style.display="flex";
+};
+
+window.tutupPopup=()=>{
+  document.getElementById("popup").style.display="none";
+};
 </script>
 </body>
 </html>
