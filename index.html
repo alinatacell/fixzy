@@ -360,35 +360,10 @@ body{overflow:hidden}
     margin-top:5px;
   }
 }
-
-/* LOGIN POPUP - struktur index asli dipertahankan */
-.login-overlay{position:fixed;inset:0;z-index:100;background:rgba(15,23,42,.88);display:flex;align-items:center;justify-content:center;padding:14px}
-.login-overlay.show{display:flex}
-.login-box{width:min(440px,100%);height:min(720px,92vh);background:#fff;border-radius:18px;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,.28);position:relative}
-.login-box iframe{width:100%;height:100%;border:0;background:#fff}
-.login-close{position:absolute;right:10px;top:10px;z-index:2;width:34px;height:34px;border:0;border-radius:10px;background:#111827;color:#fff;font-size:20px;display:none}
-
-/* ================= AUTH GATE ================= */
-body:not(.auth-ok) .header,
-body:not(.auth-ok) .content,
-body:not(.auth-ok) .overlay,
-body:not(.auth-ok) .menu,
-body:not(.auth-ok) #fixzyPopup{
-  visibility:hidden !important;
-  pointer-events:none !important;
-}
-body.auth-ok .login-overlay{
-  display:none !important;
-}
 </style>
 </head>
 
 <body>
-<div class="login-overlay" id="loginOverlay">
-  <div class="login-box">
-    <iframe id="loginFrame" title="Login FIXZY"></iframe>
-  </div>
-</div>
 
 
 <!-- ================= HEADER ================= -->
@@ -444,15 +419,9 @@ body.auth-ok .login-overlay{
       data-page="nota.html"
       onclick="bukaHalaman(this)">
       <span class="ico">🧾</span>
-      Input nota servisan
+      Input form + Nota
     </button>
-    
-<button class="menu-link"
-      data-page="penjualan.html"
-      onclick="bukaHalaman(this)">
-      <span class="ico">🧾</span>
-      Input nota penjualan
-    </button>
+
 
     <button class="menu-link"
       data-page="data-servis.html"
@@ -472,7 +441,7 @@ body.auth-ok .login-overlay{
       data-page="stock.html"
       onclick="bukaHalaman(this)">
       <span class="ico">📦</span>
-      Stock Produk
+      Stock
     </button>
 
     <button class="menu-link"
@@ -532,411 +501,152 @@ body.auth-ok .login-overlay{
 </aside>
 
 <script type="module">
-/* =========================================================
-   FIXZY INDEX — FIREBASE AUTH ONLY
-   - Firebase Authentication menjadi satu-satunya sumber sesi login.
-   - Login ditampilkan sebagai popup iframe.
-   - Status login dibaca langsung dari Firebase Authentication.
-   - Profil dan masa aktif dibaca langsung dari Firestore.
-   - Setelah login, popup langsung ditutup agar index tidak menumpuk
-     di dalam iframe login.
-   ========================================================= */
-
-import { initializeApp } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js";
-import {
-  getAuth,
-  onAuthStateChanged,
-  signOut
-} from "https://www.gstatic.com/firebasejs/11.10.0/firebase-auth.js";
-import {
-  getFirestore,
-  doc,
-  getDoc
-} from "https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js";
+import { initializeApp, getApps, getApp } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js";
+import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-auth.js";
+import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js";
 
 const firebaseConfig = {
-  apiKey: "AIzaSyCwMbJsuORhIq4QCmp4c1r6OsjAUlfxU5Y",
-  authDomain: "fixzy-f056f.firebaseapp.com",
-  projectId: "fixzy-f056f",
-  storageBucket: "fixzy-f056f.firebasestorage.app",
-  messagingSenderId: "838081521031",
-  appId: "1:838081521031:web:50fdee909b56460b055f22"
+  apiKey:"AIzaSyCwMbJsuORhIq4QCmp4c1r6OsjAUlfxU5Y",
+  authDomain:"fixzy-f056f.firebaseapp.com",
+  projectId:"fixzy-f056f",
+  storageBucket:"fixzy-f056f.firebasestorage.app",
+  messagingSenderId:"838081521031",
+  appId:"1:838081521031:web:50fdee909b56460b055f22"
 };
 
-const app = initializeApp(firebaseConfig);
+const app = getApps().length ? getApp() : initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 
-const loginOverlay = document.getElementById("loginOverlay");
-const loginFrame = document.getElementById("loginFrame");
-const contentArea = document.getElementById("contentArea");
+let authReady=false;
 
-let currentUser = null;
-let currentProfile = null;
-let authReady = false;
-let authRequestId = 0;
-
-/* ================= POPUP APLIKASI ================= */
-function tampilPopup(judul, pesan, tipe = "info", tombol = "OK") {
-  let box = document.getElementById("fixzySystemPopup");
-  if (!box) {
-    box = document.createElement("div");
-    box.id = "fixzySystemPopup";
-    box.innerHTML = `
-      <div class="fixzy-popup-backdrop">
-        <div class="fixzy-popup-card" role="dialog" aria-modal="true">
-          <div class="fixzy-popup-icon" id="fixzyPopupIcon">!</div>
-          <div class="fixzy-popup-title" id="fixzyPopupTitle">FIXZY</div>
-          <div class="fixzy-popup-message" id="fixzyPopupMessage"></div>
-          <button class="fixzy-popup-btn" id="fixzyPopupBtn" type="button">OK</button>
-        </div>
-      </div>`;
-    document.body.appendChild(box);
-
-    const style = document.createElement("style");
-    style.textContent = `
-      #fixzySystemPopup{position:fixed;inset:0;z-index:10000;display:flex;align-items:center;justify-content:center;padding:18px}
-      .fixzy-popup-backdrop{position:absolute;inset:0;background:rgba(0,0,0,.62);display:flex;align-items:center;justify-content:center}
-      .fixzy-popup-card{position:relative;width:min(390px,94vw);background:#fff;border-radius:18px;padding:24px 20px 20px;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,.3);border:1px solid #f3c21b}
-      .fixzy-popup-icon{width:44px;height:44px;margin:0 auto 10px;border-radius:50%;background:#FFC107;color:#111;display:flex;align-items:center;justify-content:center;font-weight:1000;font-size:22px}
-      .fixzy-popup-title{font-size:18px;font-weight:900;color:#111827;margin-bottom:10px}
-      .fixzy-popup-message{font-size:14px;line-height:1.55;color:#4b5563;white-space:pre-line;margin-bottom:18px}
-      .fixzy-popup-btn{min-width:110px;padding:11px 22px;border:0;border-radius:11px;background:#FFC107;color:#111;font-weight:900;cursor:pointer}
-    `;
-    document.head.appendChild(style);
+function formatExpFIXZY(v){
+  if(v===undefined || v===null || String(v).trim()==="") return "-";
+  if(typeof v==="object" && typeof v.toDate==="function"){
+    try{return v.toDate().toLocaleDateString("id-ID",{day:"2-digit",month:"long",year:"numeric"});}catch(e){}
   }
-
-  const icon = document.getElementById("fixzyPopupIcon");
-  const title = document.getElementById("fixzyPopupTitle");
-  const message = document.getElementById("fixzyPopupMessage");
-  const btn = document.getElementById("fixzyPopupBtn");
-
-  icon.textContent = tipe === "error" ? "!" : tipe === "success" ? "✓" : "i";
-  title.textContent = judul || "FIXZY";
-  message.textContent = pesan || "";
-  btn.textContent = tombol || "OK";
-  box.style.display = "flex";
-  btn.onclick = () => { box.style.display = "none"; };
-}
-
-/* ================= TANGGAL ================= */
-function toDateFIXZY(value) {
-  if (value === undefined || value === null || value === "") return null;
-
-  if (value instanceof Date) return isNaN(value.getTime()) ? null : value;
-
-  if (typeof value === "object") {
-    if (typeof value.toDate === "function") {
-      try {
-        const d = value.toDate();
-        return d instanceof Date && !isNaN(d.getTime()) ? d : null;
-      } catch (_) {}
-    }
-    if (typeof value.seconds === "number") {
-      const d = new Date(value.seconds * 1000);
-      return isNaN(d.getTime()) ? null : d;
-    }
+  if(typeof v==="object" && v.seconds!==undefined){
+    try{
+      const d=new Date(Number(v.seconds)*1000);
+      if(!Number.isNaN(d.getTime())) return d.toLocaleDateString("id-ID",{day:"2-digit",month:"long",year:"numeric"});
+    }catch(e){}
   }
-
-  const s = String(value).trim();
-  const m = s.match(/^(\d{4})-(\d{2})-(\d{2})(?:[T\s].*)?$/);
-  if (m) {
-    const d = new Date(Number(m[1]), Number(m[2]) - 1, Number(m[3]));
-    return isNaN(d.getTime()) ? null : d;
+  const str=String(v).trim();
+  const m=str.match(/^(\d{4})-(\d{2})-(\d{2})(?:[T\s].*)?$/);
+  if(m){
+    const d=new Date(Number(m[1]),Number(m[2])-1,Number(m[3]));
+    if(!Number.isNaN(d.getTime())) return d.toLocaleDateString("id-ID",{day:"2-digit",month:"long",year:"numeric"});
   }
-
-  const d = new Date(s);
-  return isNaN(d.getTime()) ? null : d;
+  const d=new Date(str);
+  if(!Number.isNaN(d.getTime())) return d.toLocaleDateString("id-ID",{day:"2-digit",month:"long",year:"numeric"});
+  return str;
 }
 
-function formatExpFIXZY(value) {
-  const d = toDateFIXZY(value);
-  if (!d) return "-";
-  return d.toLocaleDateString("id-ID", {
-    day: "2-digit",
-    month: "long",
-    year: "numeric"
-  });
-}
-
-function getExpiry(profile) {
-  return profile?.tanggalBerakhir ??
-    profile?.tanggalExpired ??
-    profile?.tanggalExp ??
-    profile?.masaAktif ??
-    profile?.expired ??
-    profile?.expiry ??
-    profile?.exp ??
-    profile?.activationExpiry ??
-    profile?.activationExpires ??
-    profile?.activationEnd ??
-    profile?.expiresAt ??
-    profile?.expiredAt ??
-    profile?.activationExpiresAt ??
-    null;
-}
-
-function isExpired(profile) {
-  const expiry = toDateFIXZY(getExpiry(profile));
-  return !!expiry && Date.now() > expiry.getTime();
-}
-
-function updateAccount(profile, user) {
-  const name = profile?.namaKonter ||
-    profile?.namaToko ||
-    profile?.namaUsaha ||
-    profile?.toko ||
-    profile?.nama ||
-    user?.email ||
-    "Akun";
-
-  document.getElementById("accountName").textContent = name;
-  document.getElementById("accountExp").textContent = formatExpFIXZY(getExpiry(profile));
-}
-
-/* ================= LOGIN POPUP ================= */
-function tampilkanLogin() {
-  if (!loginFrame.getAttribute("src")) {
-    loginFrame.src = "login.html";
-  }
-  loginOverlay.classList.add("show");
-}
-
-function tutupLogin() {
-  loginOverlay.classList.remove("show");
-  /* Putus isi iframe setelah autentikasi agar index tidak pernah tampil di dalam login. */
-  try {
-    loginFrame.removeAttribute("src");
-  } catch (_) {}
-}
-
-/* ================= LOGOUT ================= */
-window.logoutFixzy = async function () {
-  const ok = await konfirmasiFIXZY("Keluar dari FIXZY?", "Sesi akun akan ditutup pada perangkat ini.");
-  if (!ok) return;
-
-  try {
-    await signOut(auth);
-  } catch (err) {
-    console.error("Logout Firebase:", err);
-    tampilPopup("FIXZY", "Logout gagal. Silakan coba lagi.", "error");
-  }
-};
-
-function konfirmasiFIXZY(judul, pesan) {
-  return new Promise(resolve => {
-    let box = document.getElementById("fixzyConfirmPopup");
-    if (!box) {
-      box = document.createElement("div");
-      box.id = "fixzyConfirmPopup";
-      box.innerHTML = `
-        <div class="fixzy-popup-backdrop">
-          <div class="fixzy-popup-card">
-            <div class="fixzy-popup-icon">?</div>
-            <div class="fixzy-popup-title" id="fixzyConfirmTitle"></div>
-            <div class="fixzy-popup-message" id="fixzyConfirmMessage"></div>
-            <div style="display:flex;gap:9px;justify-content:center">
-              <button type="button" id="fixzyConfirmNo" style="min-width:105px;padding:11px 18px;border:1px solid #d1d5db;border-radius:11px;background:#fff;color:#374151;font-weight:800">Batal</button>
-              <button type="button" id="fixzyConfirmYes" style="min-width:105px;padding:11px 18px;border:0;border-radius:11px;background:#FFC107;color:#111;font-weight:900">Ya</button>
-            </div>
-          </div>
-        </div>`;
-      document.body.appendChild(box);
-    }
-    box.style.display = "flex";
-    document.getElementById("fixzyConfirmTitle").textContent = judul;
-    document.getElementById("fixzyConfirmMessage").textContent = pesan;
-    document.getElementById("fixzyConfirmNo").onclick = () => { box.style.display = "none"; resolve(false); };
-    document.getElementById("fixzyConfirmYes").onclick = () => { box.style.display = "none"; resolve(true); };
-  });
+function tampilkanBeranda(){
+  const area=document.getElementById("contentArea");
+  if(!area) return;
+  area.innerHTML=`<iframe src="page.html" title="FIXZY" style="width:100%;height:calc(100vh - 86px);min-height:700px;border:0;display:block;background:#0b0b0c;"></iframe>`;
+  document.querySelectorAll(".menu-link").forEach(x=>x.classList.remove("active"));
 }
 
 function bukaMenu(){
   document.getElementById("menu").classList.add("show");
   document.getElementById("overlay").classList.add("show");
 }
-window.bukaMenu = bukaMenu;
+window.bukaMenu=bukaMenu;
 
 function tutupMenu(){
   document.getElementById("menu").classList.remove("show");
   document.getElementById("overlay").classList.remove("show");
 }
-window.tutupMenu = tutupMenu;
+window.tutupMenu=tutupMenu;
 
 function refreshIndex(){
-  const url = new URL(window.location.href);
-  url.searchParams.set("v", Date.now().toString());
+  const url=new URL(window.location.href);
+  url.searchParams.set("v",Date.now().toString());
   window.location.replace(url.toString());
 }
-window.refreshIndex = refreshIndex;
-
-/* ================= HALAMAN ================= */
-function tampilkanBeranda(){
-  if (!currentUser) return;
-  contentArea.innerHTML = `
-    <iframe
-      src="page.html"
-      title="FIXZY"
-      style="width:100%;height:100%;border:0;display:block;background:#0b0b0c;"
-    ></iframe>`;
-  document.querySelectorAll(".menu-link").forEach(x => x.classList.remove("active"));
-}
+window.refreshIndex=refreshIndex;
 
 function bukaHalaman(btn){
-  if (!currentUser) {
-    tampilkanLogin();
-    tutupMenu();
+  if(!authReady || !auth.currentUser){
+    window.location.replace("login.html");
     return;
   }
-
-  const page = btn.dataset.page;
-  if (!page) return;
-
-  const frame = document.createElement("iframe");
-  frame.title = "Halaman FIXZY";
-  frame.src = page;
-  frame.style.cssText = "width:100%;height:100%;border:0;display:block;background:#fff;";
-
-  contentArea.replaceChildren(frame);
-  document.querySelectorAll(".menu-link").forEach(x => x.classList.remove("active"));
+  const area=document.getElementById("contentArea");
+  area.innerHTML="";
+  const frame=document.createElement("iframe");
+  frame.title="Halaman FIXZY";
+  frame.src=btn.dataset.page;
+  frame.style.cssText="width:100%;height:100%;border:0;display:block;background:#fff;";
+  area.appendChild(frame);
+  document.querySelectorAll(".menu-link").forEach(x=>x.classList.remove("active"));
   btn.classList.add("active");
   tutupMenu();
 }
-window.bukaHalaman = bukaHalaman;
+window.bukaHalaman=bukaHalaman;
 
-/* ================= FIREBASE AUTH ================= */
-async function prosesUser(user) {
-  const requestId = ++authRequestId;
+window.logoutFixzy=async function(){
+  if(!confirm("Yakin ingin logout dari FIXZY?")) return;
+  try{ await signOut(auth); }catch(e){ console.warn("Logout Firebase:",e); }
+  window.location.replace("login.html");
+};
 
-  if (!user) {
-    currentUser = null;
-    currentProfile = null;
-    document.body.classList.remove("auth-ok");
-    authReady = true;
-    updateAccount({}, null);
-    contentArea.innerHTML = "";
-    tampilkanLogin();
+async function validasiDanTampilkan(user){
+  if(!user){
+    authReady=true;
+    window.location.replace("login.html");
     return;
   }
 
-  try {
-    const snap = await getDoc(doc(db, "users", user.uid));
-    if (requestId !== authRequestId) return;
-
-    if (!snap.exists()) {
-      currentUser = null;
-      currentProfile = null;
-      document.body.classList.remove("auth-ok");
-      await signOut(auth).catch(() => {});
-      authReady = true;
-      tampilkanLogin();
-      tampilPopup("FIXZY", "Data akun tidak ditemukan di Firebase.", "error");
+  try{
+    const snap=await getDoc(doc(db,"users",user.uid));
+    if(!snap.exists()){
+      await signOut(auth);
+      window.location.replace("login.html");
       return;
     }
 
-    const profile = snap.data() || {};
-    const status = String(profile.status || "").toLowerCase();
-    const role = String(profile.role || "").toLowerCase();
+    const data=snap.data()||{};
+    const role=data.role||"";
+    const status=data.status||"";
 
-    if (["blocked", "rejected", "nonaktif", "inactive"].includes(status)) {
-      await signOut(auth).catch(() => {});
-      currentUser = null;
-      currentProfile = null;
-      document.body.classList.remove("auth-ok");
-      authReady = true;
-      tampilkanLogin();
-      tampilPopup("FIXZY", "Akun sedang tidak aktif atau diblokir.\nHubungi Admin FIXZY.", "error");
+    if(!["owner","employee","reseller","superadmin"].includes(role)){
+      await signOut(auth);
+      window.location.replace("login.html");
       return;
     }
 
-    if (!["owner", "employee", "superadmin", "reseller"].includes(role)) {
-      await signOut(auth).catch(() => {});
-      currentUser = null;
-      currentProfile = null;
-      document.body.classList.remove("auth-ok");
-      authReady = true;
-      tampilkanLogin();
-      tampilPopup("FIXZY", "Role akun tidak valid.\nHubungi Admin FIXZY.", "error");
+    if(status!=="aktif" || status==="blocked" || status==="rejected"){
+      await signOut(auth);
+      window.location.replace("login.html");
       return;
     }
 
-    /* Trial/masa aktif: tanggalBerakhir menjadi sumber utama.
-       Bila belum ada tanggal berakhir tetapi ada tanggal mulai trial,
-       hitung 3 bulan dari tanggal mulai agar akun trial tetap berfungsi. */
-    let expiry = getExpiry(profile);
-    if (!expiry && (profile.trial === true || String(profile.paket || "").toLowerCase() === "trial")) {
-      const start = toDateFIXZY(profile.tanggalMulai || profile.tanggalAktivasi || profile.createdAt);
-      if (start) {
-        const d = new Date(start.getTime());
-        d.setMonth(d.getMonth() + 3);
-        expiry = d;
-      }
-    }
+    const exp=data.tanggalBerakhir;
+    let expDate=null;
+    if(exp && typeof exp.toDate==="function") expDate=exp.toDate();
+    else if(exp) expDate=new Date(exp);
 
-    if (expiry && Date.now() > toDateFIXZY(expiry).getTime()) {
-      currentUser = null;
-      currentProfile = null;
-      document.body.classList.remove("auth-ok");
-      authReady = true;
-      updateAccount({}, null);
-      await signOut(auth).catch(() => {});
-      tampilkanLogin();
-      tampilPopup("FIXZY", "Masa Trial 3 Bulan sudah habis.\nSilakan ajukan perpanjangan.", "info");
+    if(expDate && !Number.isNaN(expDate.getTime()) && new Date()>expDate){
+      await signOut(auth);
+      window.location.replace("login.html");
       return;
     }
 
-    currentUser = user;
-    currentProfile = { ...profile, tanggalBerakhir: expiry || profile.tanggalBerakhir };
-    authReady = true;
-    updateAccount(currentProfile, user);
-    document.body.classList.add("auth-ok");
+    document.getElementById("accountName").textContent=data.namaKonter||data.namaPemilik||user.email||"Akun";
+    document.getElementById("accountExp").textContent=formatExpFIXZY(exp);
 
-    /* Sangat penting: popup ditutup berdasarkan Firebase Auth,
-       bukan menunggu pesan dari iframe login. Ini mencegah index
-       masuk lagi ke dalam iframe dan membuat tampilan menumpuk. */
-    tutupLogin();
+    authReady=true;
     tampilkanBeranda();
-  } catch (err) {
-    console.error("FIXZY Auth/Firestore:", err);
-    currentUser = null;
-    currentProfile = null;
-    document.body.classList.remove("auth-ok");
-    authReady = true;
-    updateAccount({}, null);
-    tampilkanLogin();
-    tampilPopup("FIXZY", "Tidak dapat memeriksa akun ke Firebase.\nPeriksa koneksi internet lalu coba lagi.", "error");
+  }catch(err){
+    console.error("FIXZY auth/profile:",err);
+    await signOut(auth).catch(()=>{});
+    window.location.replace("login.html");
   }
 }
 
-onAuthStateChanged(auth, prosesUser);
-
-/* Jika login.html mengirim pesan sukses, jangan mengandalkannya untuk login.
-   Firebase Auth tetap menjadi sumber kebenaran. Pesan hanya dipakai untuk
-   menutup popup lebih cepat; validasi akun tetap dilakukan observer di atas. */
-window.addEventListener("message", event => {
-  const data = event.data || {};
-  if (data.type === "FIXZY_LOGIN_SUCCESS" && auth.currentUser) {
-    /* Jangan menutup gate sebelum Firestore/profile selesai divalidasi. */
-    prosesUser(auth.currentUser);
-  }
-  if (data.type === "FIXZY_REGISTER_SUCCESS") {
-    if (!auth.currentUser) tampilkanLogin();
-  }
-});
-
-/* Kalau login iframe berhasil mengarahkan dirinya ke index.html,
-   kosongkan iframe segera setelah parent sudah terautentikasi. */
-loginFrame.addEventListener("load", () => {
-  try {
-    const href = loginFrame.contentWindow?.location?.href || "";
-    if (/\/(?:index(?:\.html)?)$/i.test(new URL(href).pathname)) {
-      loginFrame.removeAttribute("src");
-      if (auth.currentUser) prosesUser(auth.currentUser);
-    }
-  } catch (_) {
-    /* Jika browser membatasi akses frame, Firebase Auth tetap menjadi sumber kebenaran. */
-  }
-});
+onAuthStateChanged(auth,(user)=>{ validasiDanTampilkan(user); });
 </script>
 
 </body>
