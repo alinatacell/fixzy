@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 <meta name="theme-color" content="#FFC107">
 <title>FIXZY</title>
-<meta name="fixzy-version" content="index-exp-firebase-20260810-01">
+<meta name="fixzy-version" content="index-firebase-auth-20260812-02">
 
 <style>
 *{box-sizing:border-box}
@@ -526,8 +526,32 @@ body{overflow:hidden}
    - Login sukses  : simpan profil dan tampilkan sambutan
    ========================================================= */
 
+let fixzyAuthUser = null;
+let fixzyUserProfile = null;
+let fixzyAuthReady = false;
+
 function sudahLogin(){
-  return sessionStorage.getItem("fixzy_logged_in") === "1";
+  // Firebase Authentication adalah sumber kebenaran utama.
+  return !!fixzyAuthUser;
+}
+
+function tungguAuth(){
+  return new Promise(resolve=>{
+    if(fixzyAuthReady){
+      resolve(fixzyAuthUser);
+      return;
+    }
+    const timer=setInterval(()=>{
+      if(fixzyAuthReady){
+        clearInterval(timer);
+        resolve(fixzyAuthUser);
+      }
+    },50);
+    setTimeout(()=>{
+      clearInterval(timer);
+      resolve(fixzyAuthUser);
+    },5000);
+  });
 }
 
 /* ================= LOGOUT ================= */
@@ -610,8 +634,10 @@ function tampilkanBeranda(){
 }
 
 /* ================= BUKA HALAMAN MENU ================= */
-function bukaHalaman(btn){
-  if(!sudahLogin()){
+async function bukaHalaman(btn){
+  const user=await tungguAuth();
+
+  if(!user){
     tampilkanLogin();
     tutupMenu();
     return;
@@ -651,15 +677,16 @@ window.addEventListener("message", function(e){
       JSON.stringify({
         nama: d.nama || "Akun",
         exp: d.exp || "-",
-        role: d.role || "user"
+        role: d.role || "owner"
       })
     );
 
     bacaProfil();
 
-    /* Setelah login berhasil: tutup popup lalu masuk halaman utama */
+    /* Firebase Auth tetap menjadi sumber kebenaran.
+       Setelah login, index akan membaca profil Firebase sendiri. */
     document.getElementById("loginOverlay").classList.remove("show");
-    tampilkanBeranda();
+    if(fixzyAuthReady && fixzyAuthUser) tampilkanBeranda();
   }
 
   if(d.type === "FIXZY_REGISTER_SUCCESS"){
@@ -861,17 +888,107 @@ async function sinkronExpFirebase(){
   }
 }
 
+/* ================= FIREBASE AUTH =================
+   Index selalu mengecek akun Firebase yang benar-benar sedang login.
+   Jadi perubahan login/register terbaru langsung dipakai dan tidak
+   bergantung pada cache sessionStorage lama.
+*/
+async function mulaiAuthFIXZY(){
+  try{
+    const {initializeApp,getApps,getApp} =
+      await import("https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js");
+    const {getAuth,onAuthStateChanged} =
+      await import("https://www.gstatic.com/firebasejs/11.10.0/firebase-auth.js");
+    const {getFirestore,doc,getDoc} =
+      await import("https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js");
+
+    const firebaseConfig={
+      apiKey:"AIzaSyCwMbJsuORhIq4QCmp4c1r6OsjAUlfxU5Y",
+      authDomain:"fixzy-f056f.firebaseapp.com",
+      projectId:"fixzy-f056f",
+      storageBucket:"fixzy-f056f.firebasestorage.app",
+      messagingSenderId:"838081521031",
+      appId:"1:838081521031:web:50fdee909b56460b055f22"
+    };
+
+    const app=getApps().length ? getApp() : initializeApp(firebaseConfig);
+    const auth=getAuth(app);
+    const db=getFirestore(app);
+
+    onAuthStateChanged(auth,async user=>{
+      fixzyAuthUser=user;
+
+      if(!user){
+        fixzyUserProfile=null;
+        fixzyAuthReady=true;
+        sessionStorage.removeItem("fixzy_logged_in");
+        return;
+      }
+
+      try{
+        const snap=await getDoc(doc(db,"users",user.uid));
+
+        if(!snap.exists()){
+          fixzyAuthUser=null;
+          fixzyUserProfile=null;
+          fixzyAuthReady=true;
+          sessionStorage.removeItem("fixzy_logged_in");
+          alert("Profil akun FIXZY belum ditemukan. Silakan login kembali.");
+          window.location.replace("login.html");
+          return;
+        }
+
+        const data=snap.data()||{};
+        const role=data.role;
+
+        if(!["owner","employee","reseller","superadmin"].includes(role)){
+          fixzyAuthUser=null;
+          fixzyUserProfile=null;
+          fixzyAuthReady=true;
+          alert("Role akun FIXZY tidak dikenali.");
+          window.location.replace("login.html");
+          return;
+        }
+
+        fixzyUserProfile={
+          uid:user.uid,
+          email:user.email||"",
+          nama:data.namaKonter||data.namaToko||data.namaUsaha||data.toko||data.nama||user.email||"Akun",
+          exp:data.tanggalBerakhir||data.tanggalExpired||data.tanggalExp||data.exp||"-",
+          role:role,
+          ownerUid:data.ownerUid||null
+        };
+
+        localStorage.setItem("fixzy_uid",user.uid);
+        localStorage.setItem("fixzy_role",role);
+        localStorage.setItem("fixzy_user_profile",JSON.stringify(fixzyUserProfile));
+        sessionStorage.setItem("fixzy_logged_in","1");
+
+        document.getElementById("accountName").textContent=fixzyUserProfile.nama;
+        document.getElementById("accountExp").textContent=formatExpFIXZY(fixzyUserProfile.exp);
+
+        fixzyAuthReady=true;
+
+        // Jika sudah login, langsung tampilkan halaman utama.
+        tampilkanBeranda();
+
+      }catch(err){
+        console.error("FIXZY Auth/Profil:",err);
+        fixzyAuthReady=true;
+        alert("Gagal membaca profil akun FIXZY. Periksa Rules Firestore.");
+      }
+    });
+
+  }catch(err){
+    console.error("Firebase tidak dapat dimuat:",err);
+    fixzyAuthReady=true;
+    alert("Firebase FIXZY tidak dapat dimuat.");
+  }
+}
+
 /* ================= START ================= */
 bacaProfil();
-sinkronExpFirebase();
-
-if(sudahLogin()){
-  tampilkanBeranda();
-}else{
-  /* Login berada di login.html.
-     Setelah login berhasil, login.html kembali ke index.html. */
-  window.location.replace("login.html");
-}
+mulaiAuthFIXZY();
 </script>
 
 </body>
