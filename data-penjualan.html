@@ -1,4 +1,25 @@
-<!doctype html><html lang="id"><head>
+<!doctype html><html lang="id"><head><style>
+@font-face {
+  font-family: "Optimistic";
+  font-style: normal;
+  font-weight: 400 600;
+  font-display: swap;
+  src: url("/fonts/OptimisticAI_VF_Optimized.woff2") format("woff2");
+}
+@font-face {
+  font-family: "Optimistic Mono";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("/fonts/OptimisticMono_W_TextRegular.woff2") format("woff2");
+}
+:where(html) {
+  font-family: "Optimistic", system-ui, sans-serif;
+}
+:where(code, pre, kbd, samp) {
+  font-family: "Optimistic Mono", ui-monospace, monospace;
+}
+</style>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>A YUDI THEA | Data Penjualan</title>
 <style>
@@ -164,15 +185,6 @@ input,select{padding:11px;border:1px solid #cbd5e1;border-radius:10px;background
   .fixzyActions{grid-template-columns:1fr 1fr}
   .mobileSaleGrid{grid-template-columns:1fr 1fr}
 }
-
-/* OWNER ONLY POPUP - BATAL & HAPUS */
-.ownerOnlyOverlay{display:none;position:fixed;inset:0;background:rgba(15,23,42,.65);z-index:9999;align-items:center;justify-content:center;padding:16px}
-.ownerOnlyOverlay.show{display:flex}
-.ownerOnlyBox{width:min(400px,100%);background:#fff;border-radius:18px;padding:20px;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,.3)}
-.ownerOnlyBox h3{margin:0 0 8px;font-size:18px;font-weight:900;color:#111827}
-.ownerOnlyBox p{font-size:13px;color:#64748b;line-height:1.6;margin:0}
-.ownerOnlyBox button{margin-top:16px;border:0;border-radius:10px;padding:11px 18px;background:#111827;color:#fff;font-weight:800;cursor:pointer;width:100%}
-
 </style></head><body>
 
 <header>
@@ -262,16 +274,6 @@ input,select{padding:11px;border:1px solid #cbd5e1;border-radius:10px;background
  </div>
 </div>
 
-
-<div id="ownerOnlyOverlay" class="ownerOnlyOverlay" onclick="this.classList.remove('show')">
-  <div class="ownerOnlyBox" onclick="event.stopPropagation()">
-    <div style="font-size:40px">🔒</div>
-    <h3 id="ownerOnlyTitle">Hanya Owner</h3>
-    <p id="ownerOnlyMsg">Aksi HAPUS & BATAL hanya bisa dilakukan oleh Owner.<br>Karyawan tidak diizinkan sesuai Rules baru.</p>
-    <button onclick="document.getElementById('ownerOnlyOverlay').classList.remove('show')">Mengerti</button>
-  </div>
-</div>
-
 <div id="editModal" class="modal">
   <div class="modalBox">
     <h2>✏️ Edit Penjualan</h2>
@@ -296,14 +298,7 @@ import {initializeApp} from "https://www.gstatic.com/firebasejs/11.10.0/firebase
 import {getAuth,onAuthStateChanged} from "https://www.gstatic.com/firebasejs/11.10.0/firebase-auth.js";
 import {getFirestore,collection,query,where,getDocs,getDoc,updateDoc,doc,deleteDoc,serverTimestamp,onSnapshot} from "https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js";
 
-const firebaseConfig={
- apiKey:"AIzaSyCwMbJsuORhIq4QCmp4c1r6OsjAUlfxU5Y",
- authDomain:"fixzy-f056f.firebaseapp.com",
- projectId:"fixzy-f056f",
- storageBucket:"fixzy-f056f.firebasestorage.app",
- messagingSenderId:"838081521031",
- appId:"1:838081521031:web:50fdee909b56460b055f22"
-};
+const cfg={apiKey:"AIzaSyC_PcarMTT5Un7qfSLzf92o5OGn5rginsI",authDomain:"fixzy-update.firebaseapp.com",projectId:"fixzy-update",storageBucket:"fixzy-update.firebasestorage.app",messagingSenderId:"995892519622",appId:"1:995892519622:web:fa41047944d8e5b35d6dc7"};
 
 const app=initializeApp(firebaseConfig),auth=getAuth(app),db=getFirestore(app);
 let uid="",rows=[],editId="";
@@ -312,16 +307,6 @@ let currentRole="";
 let permissions=[];
 
 const $=id=>document.getElementById(id);
-function showOwnerOnly(action="HAPUS/BATAL"){
-  const el=$("ownerOnlyOverlay");
-  $("ownerOnlyMsg").innerHTML = `Aksi <b>${action}</b> hanya bisa dilakukan oleh <b>Owner</b>.<br>Karyawan tidak diizinkan (Rules baru).`;
-  el.classList.add("show");
-  if(window.parent && window.parent!==window){
-    window.parent.postMessage({type:'FIXZY_PERMISSION_DENIED', action:action}, '*');
-  }
-}
-window.showOwnerOnly=showOwnerOnly;
-
 const esc=v=>String(v??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]));
 const money=v=>"Rp "+Number(v||0).toLocaleString("id-ID");
 
@@ -761,11 +746,6 @@ window.ubahPembayaran=async(id,mode)=>{
  }
 
  if(mode==="batal"){
-  // RULES BARU: hanya owner bisa batal
-  if(currentRole!=="owner" && currentRole!=="superadmin"){
-    showOwnerOnly("BATAL");
-    return;
-  }
   if(!(await fixzyConfirm(
    "Batalkan transaksi penjualan ini?\n\nPendapatan akan menjadi Rp 0.",
    "Konfirmasi Batal"
@@ -786,11 +766,7 @@ window.ubahPembayaran=async(id,mode)=>{
    openWA({...item,pembayaran:"Batal",status:"batal",pendapatan:0,jumlahTotal:0,dibayar:0,sisa:0},
            makeBatalWA({...item,status:"batal"}));
   }catch(e){
-   if(e.code==='permission-denied'){
-     showOwnerOnly("BATAL");
-   }else{
-     fixzyConfirm("Gagal membatalkan transaksi: "+e.message,"Gagal Membatalkan");
-   }
+   fixzyConfirm("Gagal membatalkan transaksi: "+e.message,"Gagal Membatalkan");
   }
  }
 };
@@ -858,22 +834,9 @@ window.saveEdit=async()=>{
 
 window.hapus=async id=>{
   if(!punyaIzinDataPenjualan()){fixzyConfirm("Anda tidak memiliki izin Data Penjualan.","Akses Ditolak");return;}
-  // RULES BARU: hanya owner bisa hapus
-  if(currentRole!=="owner" && currentRole!=="superadmin"){
-    showOwnerOnly("MENGHAPUS");
-    return;
-  }
   if(!(await fixzyConfirm("Hapus transaksi penjualan ini dari Firebase?","Konfirmasi Hapus")))return;
-  try{
-    await deleteDoc(doc(db,"penjualan",id));
-    await load();
-  }catch(e){
-    if(e.code==='permission-denied'){
-      showOwnerOnly("MENGHAPUS");
-    }else{
-      fixzyConfirm("Gagal hapus penjualan: "+e.message,"Gagal Hapus");
-    }
-  }
+  try{await deleteDoc(doc(db,"penjualan",id));await load();}
+  catch(e){fixzyConfirm("Gagal hapus penjualan: "+e.message,"Gagal Hapus")}
 };
 
 let stopSalesListener=null;
@@ -897,26 +860,11 @@ function load(){
 
   $("list").innerHTML='<div class="empty">Membaca Firebase...</div>';
 
-  // Kompatibilitas: coba uid dulu, fallback ownerId
-  let salesQuery;
-  try{
-    salesQuery=query(collection(db,"penjualan"),where("uid","==",ownerUid));
-  }catch(e){
-    salesQuery=query(collection(db,"penjualan"),where("ownerId","==",ownerUid));
-  }
+  const salesQuery=query(collection(db,"penjualan"),where("uid","==",ownerUid));
 
   stopSalesListener=onSnapshot(salesQuery,
-    async snap=>{
+    snap=>{
       rows=snap.docs.map(d=>({id:d.id,...d.data()}));
-      // Fallback: jika pakai uid kosong, coba ownerId
-      if(!rows.length){
-        try{
-          const snap2 = await getDocs(query(collection(db,"penjualan"),where("ownerId","==",ownerUid)));
-          if(snap2.docs.length){
-            rows = snap2.docs.map(d=>({id:d.id,...d.data()}));
-          }
-        }catch(e){ console.warn("fallback ownerId", e); }
-      }
 
       // Data terbaru selalu di atas berdasarkan waktu simpan Firebase.
       rows.sort((a,b)=>{
@@ -976,4 +924,4 @@ function tutupHalaman(){
 }
 window.tutupHalaman=tutupHalaman;
 </script>
-</body></html>
+<script>(function(){var loc=location.href.replace(/#.*$/,"");var ATTR_NAMES=["data-product-id","data-productid","data-product_id","product-id","productid","product_id","data-source-entity-id","source-entity-id","source_entity_id","data-product","data-metadata","data-meta"];var DATASET_KEYS=["productId","productid","product_id","sourceEntityId","sourceentityid","source_entity_id","product","metadata","meta"];function readProductId(value){if(typeof value!=="string"||value.length===0)return null;if(/^[0-9]{6,}$/.test(value))return value;var match=value.match(/(?:product(?:_|-)?id|source(?:_|-)?entity(?:_|-)?id)["'=:\s]+([0-9]{6,})/i);return match?match[1]:null}function extractProductId(start){for(var node=start;node&&node!==document.body;node=node.parentElement){for(var i=0;i<ATTR_NAMES.length;i++){var attrValue=node.getAttribute&&node.getAttribute(ATTR_NAMES[i]);var attrProductId=readProductId(attrValue);if(attrProductId)return attrProductId}var dataset=node.dataset||null;if(dataset){for(var j=0;j<DATASET_KEYS.length;j++){var dataValue=dataset[DATASET_KEYS[j]];var dataProductId=readProductId(dataValue);if(dataProductId)return dataProductId}}}return null}function isInlineMediaSlotElement(node){return !!(node&&node.getAttribute&&node.getAttribute("data-clippy-inline-media-slot")!==null)}function findInlineMediaSlot(start){for(var node=start;node&&node!==document.body;node=node.parentElement){if(isInlineMediaSlotElement(node))return node}return null}function readInlineMediaUrl(node){if(!node)return null;return node.getAttribute&&((node.getAttribute("data-clippy-inline-media-url")||node.getAttribute("data-url")||node.getAttribute("data_url")))||node.href||null}function stripHash(url){return String(url).replace(/#.*$/,"")}function urlsMatch(a,b){if(!a||!b)return false;try{return stripHash(new URL(a,loc).href)===stripHash(new URL(b,loc).href)}catch(_){return stripHash(a)===stripHash(b)}}function isFirstPartyReelUrl(value){try{var url=new URL(value,loc);if(url.protocol!=="https:")return false;var host=url.hostname.toLowerCase();var supported=host==="instagram.com"||host.endsWith(".instagram.com")||host==="facebook.com"||host.endsWith(".facebook.com");return supported&&/\/reels?\//i.test(url.pathname)}catch(_){return false}}function isInlineMediaUrlClick(node,href){var slot=findInlineMediaSlot(node);if(!slot)return false;var slotUrl=readInlineMediaUrl(slot);if(slotUrl)return urlsMatch(href,slotUrl);return isFirstPartyReelUrl(href)}function findDataHref(start){for(var node=start;node&&node!==document.body;node=node.parentElement){if(node.getAttribute){var href=node.getAttribute("data-href")||node.getAttribute("data-url");if(href)return{href:href,node:node}}}return null}var nativeOpen=window.open;window.open=function(url){if(parent!==window&&typeof url==="string"&&/^https?:\/\//.test(url)){parent.postMessage({type:"ecto:usercontent-link-click",href:url},"*");return null}return nativeOpen?nativeOpen.apply(window,arguments):null};document.addEventListener("click",function(e){var target=e.target instanceof Element?e.target:null;if(!target)return;if(parent===window)return;var a=target.closest?target.closest("a[href]"):null;if(a&&a.href&&/^https?:\/\//.test(a.href)&&a.href.replace(/#.*$/,"")!==loc){if(isInlineMediaUrlClick(a,a.href))return;var productId=extractProductId(target)||extractProductId(a);if(productId){e.preventDefault();parent.postMessage({type:"ecto-artifact-link-click",productId:productId},"*");return}e.preventDefault();parent.postMessage({type:"ecto:usercontent-link-click",href:a.href},"*");return}var dataHref=findDataHref(target);if(dataHref&&/^https?:\/\//.test(dataHref.href)&&dataHref.href.replace(/#.*$/,"")!==loc){if(isInlineMediaUrlClick(dataHref.node,dataHref.href))return;e.preventDefault();parent.postMessage({type:"ecto:usercontent-link-click",href:dataHref.href},"*")}},true)})();</script><script>(function(){var FOCUS_TYPE="ecto:artifact-focus-request";var CLOSE_TYPE="ecto:artifact-close-request";function focusArtifactDocument(){var body=document.body;if(!body)return;try{window.focus();}catch(e){}if(!body.hasAttribute("tabindex"))body.setAttribute("tabindex","-1");try{body.focus({preventScroll:true});}catch(e){try{body.focus();}catch(e2){}}}window.addEventListener("message",function(event){if(event.source!==window.parent)return;var data=event.data;if(!data||typeof data!=="object"||data.type!==FOCUS_TYPE)return;if(document.readyState==="loading"){document.addEventListener("DOMContentLoaded",focusArtifactDocument,{once:true});return;}focusArtifactDocument();});window.addEventListener("keydown",function(event){if(event.key!=="Escape")return;window.setTimeout(function(){if(event.defaultPrevented)return;window.parent.postMessage({type:CLOSE_TYPE},"*");},0);});})();</script></body></html>
