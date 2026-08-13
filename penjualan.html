@@ -42,6 +42,15 @@
 :where(code, pre, kbd, samp) {
   font-family: "Optimistic Mono", ui-monospace, monospace;
 }
+
+.product-search{position:relative}
+.results{display:none;position:absolute;z-index:30;left:0;right:0;top:100%;background:#fff;border:1px solid #ddd;border-radius:0 0 9px 9px;max-height:270px;overflow:auto;box-shadow:0 7px 18px #0002}
+.results.show{display:block}
+.result{display:block;width:100%;text-align:left;border:0;border-bottom:1px solid #eee;background:#fff;padding:10px;cursor:pointer}
+.result:hover{background:#f8fafc}
+.result:disabled{opacity:.5;cursor:not-allowed}
+.pname{font-weight:900}.pmeta{font-size:11px;color:#667085;margin-top:3px}
+
 </style><style>
 @font-face {
   font-family: "Optimistic";
@@ -148,10 +157,11 @@ Produk dapat dimasukkan manual. Harga jual bisa ditentukan sendiri dan stok prod
 </div>
 <div class="full">
 <label>CARI DARI STOK</label>
-<input id="cariProduk" placeholder="Cari nama / barcode / kode produk">
-<div id="productList" class="product-list">
-<div class="product">Memuat stok...</div>
+<div class="product-search">
+<input id="cariProduk" placeholder="Ketik nama atau kode produk..." autocomplete="off">
+<div id="hasilProduk" class="results"></div>
 </div>
+<div id="produkTerpilihInfo" style="margin-top:6px;font-size:11px;color:#16a34a;font-weight:800"></div>
 </div>
 </div>
 
@@ -316,6 +326,7 @@ async function loadTeknisi(){
   }
 }
 
+
 async function loadProducts(){
  try{
    let snaps=[];
@@ -328,26 +339,53 @@ async function loadProducts(){
    renderProducts();
  }catch(e){ console.error(e); $("productList").innerHTML='<div class="product">Gagal load stok: '+e.message+'</div>'; }
 }
-function renderProducts(){
- const q=$("cariProduk").value.trim().toLowerCase();
- const rows=products.filter(p=>!q||[p.nama,p.namaProduk,p.produk,p.barcode,p.kode,p.kodeProduk,p.merk,p.tipe,p.kodeProduk].join(" ").toLowerCase().includes(q));
- $("productList").innerHTML=rows.length?rows.map(p=>{
-   const sisa=Number(p.sisa??p.stok??p.qty??p.jumlahStok??0);
-   const kode=p.kode||p.kodeProduk||p.barcode||"";
-   return `
- <div class="product" onclick="pilihProduk('${esc(p.id)}')">
- <b>${esc(p.nama||p.namaProduk||p.produk||"-")} - ${esc(kode)}</b>
- <span>Stok: ${sisa} • ${esc(p.kategori||"")} ${p.hargaJual?`• Rp ${Number(p.hargaJual).toLocaleString()}`:""}</span>
- </div>`;
- }).join(""):'<div class="product">Produk tidak ditemukan.</div>';
+
+function namaProduk(p){return String(p.nama||p.namaProduk||p.produk||p.name||p.kode||"-")}
+function kodeProduk(p){return String(p.kode||p.kodeProduk||p.barcode||p.sku||"").trim()}
+function stokProduk(p){return Number(p.sisa??p.stok??p.stock??p.qty??p.jumlahStok??0)||0}
+
+function filterProduk(q=""){
+  const box=$("hasilProduk"),key=String(q).trim().toLowerCase();
+  if(!key){ box.classList.remove("show"); box.innerHTML=""; return; }
+  const list=products.filter(p=>namaProduk(p).toLowerCase().includes(key)||kodeProduk(p).toLowerCase().includes(key)).slice(0,50);
+  box.innerHTML=list.length?list.map(p=>{
+    const stok=stokProduk(p);
+    return `<button type="button" class="result" data-id="${esc(p.id)}" ${stok<=0?"disabled":""}>
+      <div class="pname">${esc(namaProduk(p))}</div>
+      <div class="pmeta">Kode: ${esc(kodeProduk(p))} • Stok: <b>${stok}</b>${stok<=0?" • Stok kosong":""}</div>
+    </button>`;
+  }).join(""):'<div class="result">Produk tidak ditemukan.</div>';
+  box.classList.add("show");
 }
-window.pilihProduk=id=>{
+
+function renderProducts(){
+  filterProduk($("cariProduk").value);
+}
+
+document.addEventListener("click",e=>{
+  const w=document.querySelector(".product-search");
+  if(w&&!w.contains(e.target)) $("hasilProduk").classList.remove("show");
+});
+
+$("cariProduk").addEventListener("input",e=>filterProduk(e.target.value));
+$("cariProduk").addEventListener("focus",e=>filterProduk(e.target.value));
+$("hasilProduk").addEventListener("click",e=>{
+  const b=e.target.closest(".result[data-id]");if(!b)return;
+  const p=products.find(x=>x.id===b.dataset.id);if(!p)return;
+  if(stokProduk(p)<=0) return;
+  pilihProduk(p.id);
+  $("hasilProduk").classList.remove("show");
+});
+
+window.pilihProdukwindow.pilihProduk=id=>{
  selectedProduct=products.find(p=>p.id===id)||null;
- const nama=selectedProduct?(selectedProduct.nama||selectedProduct.namaProduk||selectedProduct.produk||"-"):"";
+ const nama=selectedProduct?namaProduk(selectedProduct):"";
  const harga=selectedProduct?productPrice(selectedProduct):0;
  $("produkManual").value=nama;
  $("hargaManual").value=harga;
- $("barcodeProduk").value=selectedProduct?(selectedProduct.barcode||selectedProduct.kodeProduk||selectedProduct.kode||""):"";
+ $("barcodeProduk").value=selectedProduct?kodeProduk(selectedProduct):"";
+ $("cariProduk").value=nama;
+ $("produkTerpilihInfo").textContent=selectedProduct?`Dipilih: ${nama} • Stok: ${stokProduk(selectedProduct)}`:"";
  $("produkError").textContent="";
 }
 function productPrice(p){
@@ -365,7 +403,7 @@ window.tambahProduk=()=>{
  if(!nama){$("produkError").textContent="Nama produk wajib diisi.";return}
  if(harga<=0){$("produkError").textContent="Harga jual wajib diisi.";return}
 
- // If a stock item was selected, enforce available stock - FIX pakai sisa
+ // If a stock item was selected, enforce available stock.
  if(selectedProduct){
    const stok=Number(selectedProduct.sisa??selectedProduct.stok??selectedProduct.qty??selectedProduct.jumlahStok??0);
    const idx=cart.findIndex(x=>x.productId===selectedProduct.id);
@@ -495,9 +533,7 @@ window.lanjutSimpan=async()=>{
     if(!snap.exists())throw new Error(`Produk ${x.nama} sudah tidak ada di stok.`);
     const d=snap.data()||{},current=Number(d.sisa??d.stok??d.qty??d.jumlahStok??0);
     if(current<x.qty)throw new Error(`Stok ${x.nama} tidak mencukupi. Tersisa ${current}.`);
-    // prioritas field sisa, karena stock.html pakai sisa
-    let field="sisa";
-    if(d.sisa===undefined){ field=d.stok!==undefined?"stok":d.qty!==undefined?"qty":d.jumlahStok!==undefined?"jumlahStok":"sisa"; }
+    let field="sisa"; if(d.sisa===undefined){ field=d.stok!==undefined?"stok":d.qty!==undefined?"qty":d.jumlahStok!==undefined?"jumlahStok":"sisa"; }
     tx.update(refs[i],{[field]:current-x.qty,updatedAt:serverTimestamp()});
    }
    const saleRef=doc(collection(db,"penjualan"));
