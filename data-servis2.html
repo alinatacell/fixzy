@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="id" class="">
+<head><style>
+@font-face {
+  font-family: "Optimistic";
+  font-style: normal;
+  font-weight: 400 600;
+  font-display: swap;
+  src: url("/fonts/OptimisticAI_VF_Optimized.woff2") format("woff2");
+}
+@font-face {
+  font-family: "Optimistic Mono";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("/fonts/OptimisticMono_W_TextRegular.woff2") format("woff2");
+}
+:where(html) {
+  font-family: "Optimistic", system-ui, sans-serif;
+}
+:where(code, pre, kbd, samp) {
+  font-family: "Optimistic Mono", ui-monospace, monospace;
+}
+</style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Data Penjualan - A YUDI THEA - Real Firebase Data</title>
+<script>tailwind = {config:{darkMode:'class'}}</script>
+<script src="https://cdn.tailwindcss.com"></script>
+<script>tailwind.config={darkMode:'class'}</script>
+<style>*{transition:background-color .25s, color .2s, border-color .25s}</style>
+<!-- SheetJS untuk export Excel data real -->
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+import { getFirestore, collection, query, where, getDocs, doc, deleteDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyC_PcarMTT5Un7qfSLzf92o5OGn5rginsI",
+  authDomain: "fixzy-update.firebaseapp.com",
+  projectId: "fixzy-update",
+  storageBucket: "fixzy-update.appspot.com",
+  messagingSenderId: "431404655232",
+  appId: "1:431404655232:web:5f7d9c9a1b2c3d4e5f6a7"
+};
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+
+let currentUser=null, ownerUid=null, isOwner=false, userRole='karyawan';
+let realDataCache = [];
+
+onAuthStateChanged(auth, async (user)=>{
+  if(!user){ window.location.href="login.html"; return; }
+  currentUser=user;
+  await loadUserRole();
+  loadRealPenjualan();
+});
+
+async function loadUserRole(){
+  try{
+    const q = query(collection(db,"users"), where("__name__","==", currentUser.uid));
+    const snap = await getDocs(q);
+    let data=null;
+    if(!snap.empty) data=snap.docs[0].data();
+    if(data){
+      userRole=(data.role||'karyawan').toLowerCase();
+      ownerUid=data.ownerId||data.ownerUid||currentUser.uid;
+      if(userRole==='owner' || data.isOwner){ isOwner=true; ownerUid=currentUser.uid; }
+    }else{ ownerUid=currentUser.uid; isOwner=true; }
+  }catch(e){ ownerUid=currentUser.uid; isOwner=true; }
+  document.getElementById('roleBadge').innerText=isOwner?'OWNER':userRole.toUpperCase();
+  document.getElementById('userEmail').innerText=currentUser.email||'';
+  document.getElementById('ownerInfo').innerText='OwnerID: '+ownerUid.slice(0,8)+'...';
+  if(!isOwner) document.querySelectorAll('.ownerOnly').forEach(el=>el.style.display='none');
+}
+
+async function loadRealPenjualan(){
+  const tbody=document.getElementById('tbody');
+  const errBox=document.getElementById('errorBox');
+  tbody.innerHTML=`<tr><td colspan="7" class="p-8 text-center text-gray-400 dark:text-gray-500">🔄 Mengambil data asli kamu dari Firebase fixzy-update...</td></tr>`;
+  errBox.classList.add('hidden');
+  try{
+    const ownerIdToQuery = isOwner ? currentUser.uid : ownerUid;
+    // Query TANPA orderBy biar tidak butuh index - ini yang bikin error kemarin
+    let snap = await getDocs(query(collection(db,"penjualan"), where("ownerId","==", ownerIdToQuery)));
+    if(snap.empty){
+      let s2 = await getDocs(query(collection(db,"penjualan"), where("ownerUid","==", ownerIdToQuery)));
+      if(!s2.empty) snap=s2;
+    }
+    if(snap.empty){
+      let s3 = await getDocs(query(collection(db,"penjualan"), where("uid","==", ownerIdToQuery)));
+      if(!s3.empty) snap=s3;
+    }
+
+    if(snap.empty){
+      tbody.innerHTML=`<tr><td colspan="7" class="p-10 text-center"><div class="text-gray-500 dark:text-gray-400">Belum ada data penjualan untuk akun ini</div><div class="text-[11px] text-gray-400 mt-2">Pastikan data input penjualan kamu sudah ada di koleksi <b>penjualan</b> dengan field <code>ownerId</code> = ${ownerIdToQuery}</div></td></tr>`;
+      setRingkasan(0,0,0,0,0);
+      realDataCache=[];
+      return;
+    }
+
+    let docs = snap.docs.map(d=>({id:d.id, _raw:d.data(), ...d.data()}));
+    // Filter buang dummy kalau kamu mau data real saja - tandai yang ID diawali JUAL-17866 (dummy lama)
+    // Tapi sekarang tampilkan semua, nanti kamu bisa hapus dummy
+    docs.sort((a,b)=> new Date(b.tanggal||b.createdAt||0) - new Date(a.tanggal||a.createdAt||0));
+    realDataCache = docs;
+
+    let totalOmset=0, totalLaba=0, omsetHariIni=0, labaHariIni=0;
+    const todayStr = new Date().toISOString().slice(0,10);
+
+    tbody.innerHTML='';
+    docs.forEach(d=>{
+      const jual = Number(d.hargaJual||d.total||0);
+      const beli = Number(d.hargaBeli||0);
+      const laba = Number(d.laba ?? (jual-beli) ?? 0);
+      if((d.status||'').toLowerCase()!=='batal'){ totalOmset+=jual; totalLaba+=laba; }
+      const tglStr = (d.tanggal||'').toString().slice(0,10);
+      if(tglStr===todayStr && (d.status||'').toLowerCase()!=='batal'){ omsetHariIni+=jual; labaHariIni+=laba; }
+
+      const isDummy = (d.idTransaksi||'').startsWith('JUAL-17866') || ['Andi Wijaya','Siti Aminah','Budi Santoso'].includes(d.nama);
+      const tr=document.createElement('tr');
+      tr.className=`border-b dark:border-white/10 hover:bg-gray-50 dark:hover:bg-white/5 ${isDummy?'opacity-60':''}`;
+      tr.innerHTML=`
+        <td class="p-3 text-[11px] dark:text-gray-300 leading-tight">${(d.tanggal||'').toString().slice(0,16)}<br><span class="text-[10px] text-gray-400">${d.idTransaksi||d.id.slice(0,8)} ${isDummy?'<span class="px-1 bg-amber-100 text-amber-700 rounded text-[9px]">DUMMY</span>':''}</span></td>
+        <td class="p-3 text-sm dark:text-gray-200">${d.nama||d.namaPelanggan||'-'}<br><span class="text-[11px] text-gray-500 dark:text-gray-400">${d.produk||d.tipe||''}</span><br><span class="text-[10px] text-gray-400">${d.imei||''}</span></td>
+        <td class="p-3 text-sm text-right font-medium dark:text-white">Rp ${jual.toLocaleString('id-ID')}</td>
+        <td class="p-3 text-sm text-right text-green-600 dark:text-green-400 font-semibold">Rp ${laba.toLocaleString('id-ID')}</td>
+        <td class="p-3 text-[11px]"><span class="px-2.5 py-1 rounded-full text-[10px] font-bold ${ (d.status||'').toLowerCase()==='batal'?'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300':'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300'}">${(d.status||'selesai').toUpperCase()}</span></td>
+        <td class="p-3 text-[11px] dark:text-gray-300">${d.karyawanEmail||'-'}</td>
+        <td class="p-3"><div class="flex gap-1"><button onclick="batalJual('${d.id}')" class="ownerOnly px-2.5 py-1 bg-amber-500 text-white rounded-lg text-[11px]">Batal</button><button onclick="hapusJual('${d.id}')" class="ownerOnly px-2.5 py-1 bg-red-600 text-white rounded-lg text-[11px]">Hapus</button></div></td>
+      `;
+      tbody.appendChild(tr);
+    });
+
+    setRingkasan(totalOmset, totalLaba, docs.filter(d=>(d.status||'').toLowerCase()!=='batal').length, omsetHariIni, labaHariIni);
+    if(!isOwner) document.querySelectorAll('.ownerOnly').forEach(el=>el.style.display='none');
+    document.getElementById('countInfo').innerText = `${docs.length} data ditemukan (termasuk dummy kalau ada)`;
+
+  }catch(e){
+    console.error(e);
+    errBox.classList.remove('hidden');
+    errBox.innerHTML=`<b>Gagal load Firebase:</b> ${e.message}<br><span class="text-[11px]">Ini biasanya karena pakai orderBy + where butuh index. File ini sudah aku fix tanpa orderBy, coba refresh. Kalau masih error, klik link index yang muncul di error console.</span>`;
+    tbody.innerHTML=`<tr><td colspan="7" class="p-4 text-center text-red-500 text-xs">${e.message}</td></tr>`;
+  }
+}
+
+function setRingkasan(omset, laba, jml, omsetHariIni, labaHariIni){
+  document.getElementById('totalOmset').innerText='Rp '+omset.toLocaleString('id-ID');
+  document.getElementById('totalLaba').innerText='Rp '+laba.toLocaleString('id-ID');
+  document.getElementById('totalTransaksi').innerText=jml;
+  document.getElementById('omsetHariIni').innerText='Rp '+(omsetHariIni||0).toLocaleString('id-ID');
+  document.getElementById('labaHariIni').innerText='Rp '+(labaHariIni||0).toLocaleString('id-ID');
+  document.getElementById('avgTransaksi').innerText=jml>0?'Rp '+Math.round(omset/jml).toLocaleString('id-ID'):'Rp 0';
+}
+
+window.hapusJual=async(id)=>{ if(!isOwner){alert("Karyawan tidak bisa HAPUS");return;} if(!confirm("Hapus data ini dari Firebase?")) return; await deleteDoc(doc(db,"penjualan",id)); loadRealPenjualan(); }
+window.batalJual=async(id)=>{ if(!isOwner){alert("Karyawan tidak bisa BATAL");return;} if(!confirm("Batalkan?")) return; await updateDoc(doc(db,"penjualan",id), {status:"batal"}); loadRealPenjualan(); }
+
+window.exportExcel=()=>{
+  if(realDataCache.length===0){ alert("Tidak ada data untuk di-export"); return; }
+  const exportData = realDataCache.map(d=>({
+    Tanggal: d.tanggal||'',
+    ID_Transaksi: d.idTransaksi||d.id,
+    Nama: d.nama||d.namaPelanggan||'',
+    NoHP: d.noHp||'',
+    Produk: d.produk||'',
+    IMEI: d.imei||'',
+    Harga_Beli: d.hargaBeli||0,
+    Harga_Jual: d.hargaJual||0,
+    Laba: d.laba||0,
+    Status: d.status||'',
+    Karyawan: d.karyawanEmail||'',
+    OwnerID: d.ownerId||''
+  }));
+  const ws = XLSX.utils.json_to_sheet(exportData);
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, "Penjualan Real");
+  XLSX.writeFile(wb, `Data-Penjualan-Real-${new Date().toISOString().slice(0,10)}.xlsx`);
+}
+
+window.hapusDummy=async()=>{
+  if(!isOwner){ alert("Hanya owner bisa hapus dummy"); return; }
+  if(!confirm("Hapus SEMUA data dummy (Andi Wijaya, Siti Aminah, Budi Santoso / ID JUAL-17866)? Data asli tidak akan terhapus.")) return;
+  let count=0;
+  for(let d of realDataCache){
+    const isDummy = (d.idTransaksi||'').startsWith('JUAL-17866') || ['Andi Wijaya','Siti Aminah','Budi Santoso'].includes(d.nama);
+    if(isDummy){
+      try{ await deleteDoc(doc(db,"penjualan",d.id)); count++; }catch{}
+    }
+  }
+  alert(`Selesai hapus ${count} data dummy`);
+  loadRealPenjualan();
+}
+
+window.refreshData=()=>loadRealPenjualan();
+</script>
+</head>
+<body class="bg-[#f6f7fb] dark:bg-[#070e1f] min-h-screen">
+<header class="bg-[#0f1d33] dark:bg-black text-white px-4 sm:px-6 py-3.5 flex justify-between items-center sticky top-0 z-30 shadow-md border-b dark:border-white/10">
+  <div class="flex items-center gap-3">
+    <img src="logo.png" class="h-8 w-auto bg-white rounded-lg px-2.5 py-1 object-contain" onerror="this.style.display='none'; document.getElementById('logoFallback').style.display='flex'">
+    <div id="logoFallback" style="display:none" class="h-8 w-8 bg-white text-[#0f1d33] rounded-lg items-center justify-center font-black">F</div>
+    <div class="leading-tight"><p class="font-bold text-[15px] tracking-wide">limudahkan</p><p class="text-[11px] opacity-70 -mt-0.5">Fixzy System - Data Real</p></div>
+  </div>
+  <div class="flex items-center gap-3">
+    <button id="darkToggle" class="w-9 h-9 rounded-xl bg-white/10 hover:bg-white/20 flex items-center justify-center">🌙</button>
+    <div class="text-right leading-tight hidden sm:block">
+      <p class="text-sm font-bold">A Yudi Thea</p>
+      <p class="text-[11px] opacity-70">Exp: 13 Nov 2026</p>
+      <p class="text-[10px] opacity-50"><span id="userEmail"></span> <span id="roleBadge" class="ml-1 px-1.5 py-0.5 bg-blue-600 rounded text-[9px]"></span></p>
+      <p id="ownerInfo" class="text-[9px] opacity-40"></p>
+    </div>
+  </div>
+</header>
+
+<div class="max-w-7xl mx-auto p-4 sm:p-6">
+  <div class="mb-5">
+    <div class="flex flex-wrap justify-between items-center gap-2 mb-3">
+      <div>
+        <h1 class="text-[22px] sm:text-[26px] font-extrabold text-[#0f1d33] dark:text-white">Ringkasan Pendapatan - Data Asli Firebase</h1>
+        <p id="countInfo" class="text-[11px] text-gray-500 dark:text-gray-400">Memuat...</p>
+      </div>
+      <div class="flex gap-2">
+        <button onclick="exportExcel()" class="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-xl text-xs font-bold">⬇ Export Excel Real</button>
+        <button onclick="hapusDummy()" class="ownerOnly px-3 py-2 bg-amber-100 dark:bg-amber-900/20 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-800 rounded-xl text-xs">Hapus Dummy</button>
+        <button onclick="refreshData()" class="px-3 py-2 bg-white dark:bg-white/10 dark:text-white border dark:border-white/10 rounded-xl text-xs">🔄 Refresh</button>
+      </div>
+    </div>
+    <div class="grid grid-cols-2 lg:grid-cols-4 gap-3">
+      <div class="bg-white dark:bg-[#162544] p-4 rounded-2xl border dark:border-white/10"><p class="text-[11px] text-gray-500 dark:text-gray-400 uppercase font-semibold">Total Omset Real</p><p id="totalOmset" class="text-[20px] font-extrabold mt-1 dark:text-white">Rp 0</p><p class="text-[11px] text-gray-400">Tanpa yang batal</p></div>
+      <div class="bg-white dark:bg-[#162544] p-4 rounded-2xl border dark:border-white/10"><p class="text-[11px] text-gray-500 dark:text-gray-400 uppercase font-semibold">Total Laba Real</p><p id="totalLaba" class="text-[20px] font-extrabold text-green-600 dark:text-green-400 mt-1">Rp 0</p></div>
+      <div class="bg-white dark:bg-[#162544] p-4 rounded-2xl border dark:border-white/10"><p class="text-[11px] text-gray-500 dark:text-gray-400 uppercase font-semibold">Hari Ini</p><p id="omsetHariIni" class="text-[18px] font-bold dark:text-white">Rp 0</p><p id="labaHariIni" class="text-[12px] text-green-600 dark:text-green-400"></p></div>
+      <div class="bg-[#0f1d33] dark:bg-black p-4 rounded-2xl text-white border dark:border-white/10"><p class="text-[11px] opacity-60 uppercase font-semibold">Transaksi Real & Avg</p><p class="mt-1"><span id="totalTransaksi" class="text-[20px] font-extrabold">0</span> <span class="text-xs opacity-70">trx</span></p><p id="avgTransaksi" class="text-[12px] opacity-80 mt-1">Rp 0</p></div>
+    </div>
+  </div>
+
+  <div id="errorBox" class="hidden bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-300 p-3 rounded-xl text-sm mb-4"></div>
+
+  <div class="bg-white dark:bg-[#162544] rounded-2xl border dark:border-white/10 overflow-hidden">
+    <div class="p-4 border-b dark:border-white/10 flex justify-between items-center">
+      <div><h2 class="font-bold text-[15px] dark:text-white">Data Penjualan Asli - Firebase fixzy-update</h2><p class="text-[11px] text-gray-400">Koleksi: penjualan • Filter: ownerId = akun kamu • No menu • Dark mode • OwnerOnly hapus/batal</p></div>
+    </div>
+    <div class="overflow-x-auto"><table class="w-full text-left"><thead class="bg-[#f8f9fc] dark:bg-black/20 text-[11px] text-gray-500 dark:text-gray-400 uppercase"><tr><th class="p-3">Tanggal & ID</th><th class="p-3">Pelanggan / Produk</th><th class="p-3 text-right">Jual</th><th class="p-3 text-right">Laba</th><th class="p-3">Status</th><th class="p-3">Karyawan</th><th class="p-3">Aksi</th></tr></thead><tbody id="tbody"></tbody></table></div>
+  </div>
+
+  <p class="mt-4 text-[11px] text-gray-400 dark:text-gray-500 text-center">Halaman ini hanya menampilkan data REAL kamu dari Firebase fixzy-update. Data dummy otomatis ditandai & bisa dihapus pakai tombol Hapus Dummy. Rules: karyawan tidak bisa Hapus/Batal.</p>
+</div>
+
+<script>
+  const html=document.documentElement;
+  const btn=document.getElementById('darkToggle');
+  const saved=localStorage.getItem('fixzy-dark');
+  if(saved==='1' || (!saved && window.matchMedia('(prefers-color-scheme: dark)').matches)){ html.classList.add('dark'); btn.innerText='☀️'; }
+  btn.addEventListener('click', ()=>{
+    html.classList.toggle('dark');
+    const isDark=html.classList.contains('dark');
+    localStorage.setItem('fixzy-dark', isDark?'1':'0');
+    btn.innerText=isDark?'☀️':'🌙';
+  });
+</script>
+<script>(function(){var loc=location.href.replace(/#.*$/,"");var ATTR_NAMES=["data-product-id","data-productid","data-product_id","product-id","productid","product_id","data-source-entity-id","source-entity-id","source_entity_id","data-product","data-metadata","data-meta"];var DATASET_KEYS=["productId","productid","product_id","sourceEntityId","sourceentityid","source_entity_id","product","metadata","meta"];function readProductId(value){if(typeof value!=="string"||value.length===0)return null;if(/^[0-9]{6,}$/.test(value))return value;var match=value.match(/(?:product(?:_|-)?id|source(?:_|-)?entity(?:_|-)?id)["'=:\s]+([0-9]{6,})/i);return match?match[1]:null}function extractProductId(start){for(var node=start;node&&node!==document.body;node=node.parentElement){for(var i=0;i<ATTR_NAMES.length;i++){var attrValue=node.getAttribute&&node.getAttribute(ATTR_NAMES[i]);var attrProductId=readProductId(attrValue);if(attrProductId)return attrProductId}var dataset=node.dataset||null;if(dataset){for(var j=0;j<DATASET_KEYS.length;j++){var dataValue=dataset[DATASET_KEYS[j]];var dataProductId=readProductId(dataValue);if(dataProductId)return dataProductId}}}return null}function isInlineMediaSlotElement(node){return !!(node&&node.getAttribute&&node.getAttribute("data-clippy-inline-media-slot")!==null)}function findInlineMediaSlot(start){for(var node=start;node&&node!==document.body;node=node.parentElement){if(isInlineMediaSlotElement(node))return node}return null}function readInlineMediaUrl(node){if(!node)return null;return node.getAttribute&&((node.getAttribute("data-clippy-inline-media-url")||node.getAttribute("data-url")||node.getAttribute("data_url")))||node.href||null}function stripHash(url){return String(url).replace(/#.*$/,"")}function urlsMatch(a,b){if(!a||!b)return false;try{return stripHash(new URL(a,loc).href)===stripHash(new URL(b,loc).href)}catch(_){return stripHash(a)===stripHash(b)}}function isFirstPartyReelUrl(value){try{var url=new URL(value,loc);if(url.protocol!=="https:")return false;var host=url.hostname.toLowerCase();var supported=host==="instagram.com"||host.endsWith(".instagram.com")||host==="facebook.com"||host.endsWith(".facebook.com");return supported&&/\/reels?\//i.test(url.pathname)}catch(_){return false}}function isInlineMediaUrlClick(node,href){var slot=findInlineMediaSlot(node);if(!slot)return false;var slotUrl=readInlineMediaUrl(slot);if(slotUrl)return urlsMatch(href,slotUrl);return isFirstPartyReelUrl(href)}function findDataHref(start){for(var node=start;node&&node!==document.body;node=node.parentElement){if(node.getAttribute){var href=node.getAttribute("data-href")||node.getAttribute("data-url");if(href)return{href:href,node:node}}}return null}var nativeOpen=window.open;window.open=function(url){if(parent!==window&&typeof url==="string"&&/^https?:\/\//.test(url)){parent.postMessage({type:"ecto:usercontent-link-click",href:url},"*");return null}return nativeOpen?nativeOpen.apply(window,arguments):null};document.addEventListener("click",function(e){var target=e.target instanceof Element?e.target:null;if(!target)return;if(parent===window)return;var a=target.closest?target.closest("a[href]"):null;if(a&&a.href&&/^https?:\/\//.test(a.href)&&a.href.replace(/#.*$/,"")!==loc){if(isInlineMediaUrlClick(a,a.href))return;var productId=extractProductId(target)||extractProductId(a);if(productId){e.preventDefault();parent.postMessage({type:"ecto-artifact-link-click",productId:productId},"*");return}e.preventDefault();parent.postMessage({type:"ecto:usercontent-link-click",href:a.href},"*");return}var dataHref=findDataHref(target);if(dataHref&&/^https?:\/\//.test(dataHref.href)&&dataHref.href.replace(/#.*$/,"")!==loc){if(isInlineMediaUrlClick(dataHref.node,dataHref.href))return;e.preventDefault();parent.postMessage({type:"ecto:usercontent-link-click",href:dataHref.href},"*")}},true)})();</script><script>(function(){var FOCUS_TYPE="ecto:artifact-focus-request";var CLOSE_TYPE="ecto:artifact-close-request";function focusArtifactDocument(){var body=document.body;if(!body)return;try{window.focus();}catch(e){}if(!body.hasAttribute("tabindex"))body.setAttribute("tabindex","-1");try{body.focus({preventScroll:true});}catch(e){try{body.focus();}catch(e2){}}}window.addEventListener("message",function(event){if(event.source!==window.parent)return;var data=event.data;if(!data||typeof data!=="object"||data.type!==FOCUS_TYPE)return;if(document.readyState==="loading"){document.addEventListener("DOMContentLoaded",focusArtifactDocument,{once:true});return;}focusArtifactDocument();});window.addEventListener("keydown",function(event){if(event.key!=="Escape")return;window.setTimeout(function(){if(event.defaultPrevented)return;window.parent.postMessage({type:CLOSE_TYPE},"*");},0);});})();</script></body>
+</html>
