@@ -106,7 +106,7 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/11.10.0/fireba
 import { getAuth, createUserWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-auth.js";
 import { getFirestore, doc, setDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js";
 const cfg={apiKey:"AIzaSyC_PcarMTT5Un7qfSLzf92o5OGn5rginsI",authDomain:"fixzy-update.firebaseapp.com",projectId:"fixzy-update",storageBucket:"fixzy-update.firebasestorage.app",messagingSenderId:"995892519622",appId:"1:995892519622:web:fa41047944d8e5b35d6dc7"};
-const app = initializeApp(firebaseConfig);
+const app = initializeApp(cfg);
 const auth = getAuth(app);
 const db = getFirestore(app);
 const form = document.getElementById("registerForm");
@@ -191,7 +191,7 @@ switch(err.code){
 case "auth/email-already-in-use": pesan="Email sudah digunakan."; break;
 case "auth/invalid-email": pesan="Format email tidak valid."; break;
 case "auth/weak-password": pesan="Password terlalu lemah."; break;
-default: pesan=err.message;
+default: pesan=err.code+" | "+err.message; console.error("REGISTER ERR:",err);
 }
 tampilPopup("Fixzy", pesan);
 }finally{
