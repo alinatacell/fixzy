@@ -4,15 +4,18 @@
 <style>
 *{box-sizing:border-box}
 body{margin:0;background:#f4f5f7;color:#111827;font-family:Arial,sans-serif}
-header{background:#111827;color:#fff;padding:13px 15px;display:flex;align-items:center;gap:10px;position:sticky;top:0;z-index:20}
+header{background:#111827;color:#fff;padding:10px 14px;display:flex;align-items:center;gap:10px;position:sticky;top:0;z-index:100;box-shadow:0 2px 10px #0002}.headerBrand{display:flex;align-items:center;gap:10px;min-width:0}.headerLogo{width:42px;height:42px;object-fit:contain;background:#000;border-radius:8px;padding:2px;flex:0 0 42px}.headerBrandText{min-width:0}.headerBrandText h1{font-size:17px;margin:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.headerSub{font-size:11px;color:#d1d5db;margin-top:3px}
 h1{font-size:17px;margin:0}.grow{flex:1}
 button{border:0;border-radius:10px;padding:10px 13px;font-weight:800;cursor:pointer}
-.refresh{background:#ffc107;color:#111827}
-.close{background:#fff;color:#111827}
+.refresh{background:#111827;color:#fff;border:1px solid #ffffff44}
+.close{background:#111827;color:#fff;border:1px solid #ffffff44}
 main{max-width:1050px;margin:auto;padding:14px}
 .bar{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
 input,select{padding:11px;border:1px solid #cbd5e1;border-radius:10px;background:#fff;color:#111827}
 .search{flex:1;min-width:180px}
+.statusFilterBox{display:flex;align-items:center;gap:7px}
+.statusFilterBox label{font-size:12px;font-weight:900;color:#475569;white-space:nowrap}
+.statusFilterBox select{min-width:190px}
 .stats{background:#fff;border:1px solid #e5e7eb;border-radius:12px;padding:11px;margin-bottom:12px;font-size:12px;color:#475569}
 .list{display:grid;grid-template-columns:repeat(auto-fit,minmax(290px,1fr));gap:10px}
 .card{background:#fff;border:1px solid #dbe1e8;border-radius:15px;padding:14px;box-shadow:0 2px 8px rgba(15,23,42,.05)}
@@ -22,9 +25,10 @@ input,select{padding:11px;border:1px solid #cbd5e1;border-radius:10px;background
 .badge{padding:6px 9px;border-radius:999px;font-size:11px;font-weight:900;background:#e2e8f0;color:#0f172a;height:max-content}
 .info{font-size:13px;line-height:1.7;margin-top:11px;color:#334155}
 .actions{display:flex;gap:8px;margin-top:12px}
-.actionWrap{position:relative;flex:1}
-.actionMain{width:100%;background:#111827;color:#fff;display:flex;justify-content:space-between;align-items:center}
-.actionMenu{display:none;position:absolute;right:0;left:0;top:calc(100% + 6px);z-index:50;background:#fff;border:1px solid #dbe1e8;border-radius:12px;padding:6px;box-shadow:0 14px 30px rgba(15,23,42,.22)}
+.actionWrap{position:relative;flex:1;min-width:0;z-index:20}
+.actionMain{width:100%;background:#111827;color:#fff;display:flex;justify-content:space-between;align-items:center;white-space:nowrap}
+/* Dropdown dibuat fixed agar TIDAK terpotong oleh tabel/horizontal scroll. Desktop & HP memakai menu yang sama. */
+.actionMenu{display:none;position:fixed;left:0;top:0;width:230px;max-width:calc(100vw - 20px);max-height:min(420px,calc(100vh - 20px));overflow-y:auto;z-index:9999;background:#fff;border:1px solid #dbe1e8;border-radius:12px;padding:6px;box-shadow:0 14px 30px rgba(15,23,42,.22)}
 .actionWrap.open .actionMenu{display:block}
 .actionMenu button{display:block;width:100%;text-align:left;background:#fff;color:#111827;margin:2px 0}
 .actionMenu button:hover{background:#f1f5f9}
@@ -50,45 +54,129 @@ input,select{padding:11px;border:1px solid #cbd5e1;border-radius:10px;background
  .full{grid-column:auto}
 }
 
-/* DATA PENJUALAN - baris tabel mengikuti DATA SERVIS */
-.tableWrap{background:#fff;border:1px solid #e4e8ef;border-radius:16px;box-shadow:0 3px 12px rgba(15,23,42,.05);overflow:auto}
+/* ===== DATA PENJUALAN ===== */
+.tableWrap{background:#fff;border:1px solid #e4e8ef;border-radius:16px;box-shadow:0 3px 12px rgba(15,23,42,.05);overflow-x:auto;overflow-y:visible;position:relative}
 .salesTable{width:100%;border-collapse:collapse;min-width:1050px}
 .salesTable th{background:#f8fafc;color:#475569;font-size:12px;font-weight:900;text-align:left;padding:12px 10px;border-bottom:1px solid #e5e7eb;white-space:nowrap}
 .salesTable td{padding:12px 10px;border-bottom:1px solid #eef1f5;font-size:12px;color:#334155;vertical-align:middle}
 .salesTable tbody tr:hover{background:#fafafa}.salesTable tbody tr:last-child td{border-bottom:0}
 .salesTable .customer{font-weight:900;color:#111827}.salesTable .nota{font-weight:800;color:#334155;white-space:nowrap}.salesTable .money{font-weight:900;color:#111827;white-space:nowrap}
-.salesTable .actionCell{min-width:170px;text-align:right}.salesTable .badge{display:inline-flex}
+.salesTable .actionCell{min-width:170px;text-align:right}.salesTable .badge{display:inline-flex}.status-tunai{background:#dcfce7;color:#15803d}.status-tagihan{background:#fef3c7;color:#b45309}.status-batal{background:#fee2e2;color:#dc2626}.status-masuk{background:#e2e8f0;color:#0f172a}.mobileSaleTop .badge{flex:0 0 auto;white-space:nowrap}
+.mobileSales{display:none}
+.mobileSaleCard{background:#fff;border:1px solid #dbe1e8;border-radius:14px;padding:13px;box-shadow:0 2px 8px rgba(15,23,42,.05)}
+.mobileSaleTop{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;border-bottom:1px solid #edf0f4;padding-bottom:10px}
+.mobileSaleName{font-size:15px;font-weight:900;color:#111827}
+.mobileSalePhone{font-size:12px;color:#64748b;margin-top:3px}
+.mobileSaleNota{font-size:11px;font-weight:800;color:#334155;margin-top:4px;overflow-wrap:anywhere}
+.mobileSaleGrid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:11px}
+.mobileSaleField{background:#f8fafc;border-radius:9px;padding:8px;min-width:0}
+.mobileSaleField.full{grid-column:1/-1}
+.mobileSaleLabel{display:block;font-size:9px;color:#64748b;font-weight:900;text-transform:uppercase;margin-bottom:3px}
+.mobileSaleValue{font-size:12px;color:#111827;font-weight:800;overflow-wrap:anywhere}
+.mobileSaleValue.money{white-space:nowrap}
+.mobileSaleActions{margin-top:10px}
+.mobileSaleActions .actionWrap{width:100%}
 
-/* ===== FIXZY POPUP / PENDAPATAN PENJUALAN ===== */
+/* ===== FIXZY POPUP ===== */
 .fixzyOverlay{display:none;position:fixed;inset:0;background:rgba(15,23,42,.68);z-index:500;align-items:center;justify-content:center;padding:14px;backdrop-filter:blur(3px)}
 .fixzyOverlay.show{display:flex}
-.fixzyBox{width:min(470px,100%);max-height:92vh;overflow:auto;background:#fff;border-radius:20px;padding:18px;box-shadow:0 20px 60px rgba(0,0,0,.28)}
-.fixzyHead{display:flex;align-items:center;gap:9px;margin-bottom:13px}
-.fixzyHead h2{margin:0;font-size:18px;color:#111827}
-.fixzyClose{margin-left:auto;background:#eef2f7;color:#111827;width:36px;height:36px;padding:0}
-.fixzyInfo{background:#f8fafc;border:1px solid #e5e7eb;border-radius:13px;padding:11px 12px;font-size:12px;line-height:1.55;margin-bottom:11px}
+.fixzyBox{width:min(470px,100%);max-height:92vh;overflow:auto;background:#fff;color:#111827;border-radius:20px;padding:18px;box-shadow:0 20px 60px rgba(0,0,0,.28)}
+.fixzyHead{display:flex;align-items:center;gap:9px;margin-bottom:13px;color:#111827}
+.fixzyHead h2{margin:0;font-size:18px;color:#111827!important}
+.fixzyClose{margin-left:auto;background:#eef2f7;color:#111827!important;width:36px;height:36px;padding:0}
+.fixzyInfo{background:#f8fafc;border:1px solid #e5e7eb;border-radius:13px;padding:11px 12px;font-size:12px;line-height:1.55;margin-bottom:11px;color:#111827!important}
+.fixzyInfo b,.fixzyInfo strong{color:#111827!important}
 .fixzyGrid{display:grid;grid-template-columns:1fr 1fr;gap:9px}
-.fixzyField label{display:block;font-size:10px;font-weight:900;color:#64748b;margin-bottom:5px}
-.fixzyField input{width:100%;padding:11px;border:1px solid #d7dce5;border-radius:11px;font-weight:800}
-.fixzyField input[readonly]{background:#f8fafc}
+.fixzyField label{display:block;font-size:10px;font-weight:900;color:#475569!important;margin-bottom:5px}
+.fixzyField input{width:100%;padding:11px;border:1px solid #d7dce5;border-radius:11px;font-weight:800;color:#111827!important;background:#fff}
+.fixzyField input[readonly]{background:#f8fafc;color:#111827!important}
 .fixzyField.full{grid-column:1/-1}
 .fixzyResult{margin-top:11px;background:#111827;color:#fff;border-radius:14px;padding:13px}
-.fixzyLine{display:flex;justify-content:space-between;gap:10px;font-size:12px;margin:5px 0}
+.fixzyLine{display:flex;justify-content:space-between;gap:10px;font-size:12px;margin:5px 0;color:#fff}
+.fixzyLine b{color:#fff}
 .fixzyLine.total{border-top:1px solid rgba(255,255,255,.18);padding-top:9px;margin-top:9px;font-size:16px;font-weight:900}
 .fixzyActions{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-top:14px}
 .fixzyActions button{padding:12px}
-.fixzyCancel{background:#e5e7eb;color:#111827}
-.fixzySave{background:#ffc107;color:#111827}
+.fixzyCancel{background:#e5e7eb;color:#111827!important}
+.fixzySave{background:#111827;color:#fff!important}
 .salesTable .income{font-weight:900;color:#15803d;white-space:nowrap}
 .actionMenu .cancelStatus{color:#dc2626}
-@media(max-width:480px){
- .fixzyGrid{grid-template-columns:1fr}
- .fixzyField.full{grid-column:auto}
+#waPreview{color:#111827!important}
+#waPreview *{color:#111827!important}
+#incomeInfo{color:#111827!important}
+@media(max-width:980px){
+  main{padding:12px}
+  .salesTable{min-width:980px}
+  .salesTable th,.salesTable td{padding:10px 8px}
+  .salesTable .actionCell{min-width:150px}
 }
+
+@media(max-width:720px){
+  main{padding:10px}
+  .bar{
+    display:flex!important;
+    flex-direction:column!important;
+    width:100%;
+    gap:8px;
+    margin-bottom:12px;
+  }
+  .statusFilterBox{
+    display:flex!important;
+    flex-direction:column!important;
+    align-items:stretch!important;
+    width:100%!important;
+    gap:4px!important;
+  }
+  .statusFilterBox label{
+    display:block!important;
+    font-size:11px!important;
+  }
+  .bar .search,
+  .bar #filter{
+    display:block!important;
+    visibility:visible!important;
+    opacity:1!important;
+    width:100%!important;
+    min-width:0!important;
+    max-width:none!important;
+    height:44px!important;
+    flex:none!important;
+  }
+  .bar #filter{
+    appearance:auto!important;
+    -webkit-appearance:auto!important;
+    background:#fff!important;
+    color:#111827!important;
+    border:1px solid #cbd5e1!important;
+    padding:10px 12px!important;
+    font-size:14px!important;
+    font-weight:700!important;
+  }
+  .tableWrap{display:none!important}
+  .mobileSales{display:grid!important;gap:9px}
+  .stats{line-height:1.45}
+}
+@media(max-width:480px){
+  .fixzyBox{width:100%;max-height:90vh;padding:14px;border-radius:18px}
+  .fixzyHead h2{font-size:17px}
+  .fixzyGrid{grid-template-columns:1fr}
+  .fixzyField.full{grid-column:auto}
+  .fixzyActions{grid-template-columns:1fr 1fr}
+  .mobileSaleGrid{grid-template-columns:1fr 1fr}
+}
+
+/* OWNER ONLY POPUP - BATAL & HAPUS */
+.ownerOnlyOverlay{display:none;position:fixed;inset:0;background:rgba(15,23,42,.65);z-index:9999;align-items:center;justify-content:center;padding:16px}
+.ownerOnlyOverlay.show{display:flex}
+.ownerOnlyBox{width:min(400px,100%);background:#fff;border-radius:18px;padding:20px;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,.3)}
+.ownerOnlyBox h3{margin:0 0 8px;font-size:18px;font-weight:900;color:#111827}
+.ownerOnlyBox p{font-size:13px;color:#64748b;line-height:1.6;margin:0}
+.ownerOnlyBox button{margin-top:16px;border:0;border-radius:10px;padding:11px 18px;background:#111827;color:#fff;font-weight:800;cursor:pointer;width:100%}
+
 </style></head><body>
 
 <header>
-  <h1>🛒 Data Penjualan</h1>
+  <div class="headerBrand"><img class="headerLogo" src="logo.png" alt="Logo FIXZY"><div class="headerBrandText"><h1>Data Penjualan</h1><div class="headerSub">FIXZY • Pembukuan Penjualan</div></div></div>
   <div class="grow"></div>
   <button class="refresh" onclick="load()">↻ Refresh</button>
   <button class="close" onclick="tutupHalaman()">✕ Tutup</button>
@@ -97,18 +185,23 @@ input,select{padding:11px;border:1px solid #cbd5e1;border-radius:10px;background
 <main>
   <div class="bar">
     <input id="search" class="search" placeholder="Cari pelanggan, produk, nota...">
-    <select id="filter">
-      <option value="semua">Semua Status</option>
-      <option value="masuk">Masuk</option>
-      <option value="tagihan">Masuk Tagihan</option>
-      <option value="tunai">Tunai</option>
-      <option value="dibayar">Dibayar</option>
-      <option value="piutang">Piutang</option>
-      <option value="batal">Batal</option>
-    </select>
+    <div class="statusFilterBox">
+      <label for="filter">Filter Status</label>
+      <select id="filter">
+        <option value="semua">Semua Status</option>
+        <option value="masuk">Masuk</option>
+        <option value="tagihan">Masuk Tagihan</option>
+        <option value="tunai">Tunai</option>
+        <option value="batal">Batal</option>
+      </select>
+    </div>
   </div>
 
-  <div class="stats">☁️ Data <b>penjualan</b> • Total: <b id="total">0</b> • <span id="akun">memeriksa akun...</span></div>
+  <div class="stats">
+  ☁️ Data <b>penjualan</b> • Total: <b id="total">0</b>
+  • Penghasilan: <b id="totalPendapatan" style="color:#15803d">Rp 0</b>
+  • <span id="akun">memeriksa akun...</span>
+</div>
   <div id="list" class="list"><div class="empty">Memuat Firebase...</div></div>
 </main>
 
@@ -169,6 +262,16 @@ input,select{padding:11px;border:1px solid #cbd5e1;border-radius:10px;background
  </div>
 </div>
 
+
+<div id="ownerOnlyOverlay" class="ownerOnlyOverlay" onclick="this.classList.remove('show')">
+  <div class="ownerOnlyBox" onclick="event.stopPropagation()">
+    <div style="font-size:40px">🔒</div>
+    <h3 id="ownerOnlyTitle">Hanya Owner</h3>
+    <p id="ownerOnlyMsg">Aksi HAPUS & BATAL hanya bisa dilakukan oleh Owner.<br>Karyawan tidak diizinkan sesuai Rules baru.</p>
+    <button onclick="document.getElementById('ownerOnlyOverlay').classList.remove('show')">Mengerti</button>
+  </div>
+</div>
+
 <div id="editModal" class="modal">
   <div class="modalBox">
     <h2>✏️ Edit Penjualan</h2>
@@ -191,7 +294,7 @@ input,select{padding:11px;border:1px solid #cbd5e1;border-radius:10px;background
 <script type="module">
 import {initializeApp} from "https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js";
 import {getAuth,onAuthStateChanged} from "https://www.gstatic.com/firebasejs/11.10.0/firebase-auth.js";
-import {getFirestore,collection,query,where,getDocs,updateDoc,doc,deleteDoc,serverTimestamp} from "https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js";
+import {getFirestore,collection,query,where,getDocs,getDoc,updateDoc,doc,deleteDoc,serverTimestamp,onSnapshot} from "https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js";
 
 const firebaseConfig={
  apiKey:"AIzaSyCwMbJsuORhIq4QCmp4c1r6OsjAUlfxU5Y",
@@ -204,69 +307,201 @@ const firebaseConfig={
 
 const app=initializeApp(firebaseConfig),auth=getAuth(app),db=getFirestore(app);
 let uid="",rows=[],editId="";
+let ownerUid="";
+let currentRole="";
+let permissions=[];
 
 const $=id=>document.getElementById(id);
+function showOwnerOnly(action="HAPUS/BATAL"){
+  const el=$("ownerOnlyOverlay");
+  $("ownerOnlyMsg").innerHTML = `Aksi <b>${action}</b> hanya bisa dilakukan oleh <b>Owner</b>.<br>Karyawan tidak diizinkan (Rules baru).`;
+  el.classList.add("show");
+  if(window.parent && window.parent!==window){
+    window.parent.postMessage({type:'FIXZY_PERMISSION_DENIED', action:action}, '*');
+  }
+}
+window.showOwnerOnly=showOwnerOnly;
+
 const esc=v=>String(v??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]));
 const money=v=>"Rp "+Number(v||0).toLocaleString("id-ID");
 
+function statusKey(x){
+  const s=String(x.status||"").toLowerCase().trim();
+  const p=String(x.pembayaran||x.metode||"").toLowerCase().trim();
+
+  if(s==="batal" || p==="batal") return "batal";
+  if(s==="piutang" || s==="tempo" || p==="tagihan" || p==="masuk tagihan") return "tagihan";
+  if(s==="dibayar" || s==="selesai" || p==="tunai" || p==="transfer" || p==="qris") return "tunai";
+  return "masuk";
+}
+
 function statusLabel(x){
-  const s=String(x.status||"").toLowerCase();
-  const p=String(x.pembayaran||"").toLowerCase();
-  if(s==="batal")return "Batal";
-  if(p==="tagihan"||s==="piutang"||s==="tempo")return "Masuk Tagihan";
-  if(p==="tunai"||s==="dibayar"||s==="selesai")return "Tunai";
+  const k=statusKey(x);
+  if(k==="batal")return "Batal";
+  if(k==="tagihan")return "Masuk Tagihan";
+  if(k==="tunai")return "Tunai";
   return "Masuk";
+}
+
+function statusClass(x){
+  return "status-"+statusKey(x);
+}
+
+// Nilai penghasilan yang konsisten dengan status transaksi.
+// Untuk data lama yang belum punya field pendapatan, transaksi Tunai
+// dihitung dari total agar tetap tampil benar.
+function pendapatanValue(x){
+  const raw=Number(x.pendapatan);
+  if(Number.isFinite(raw) && raw>=0){
+    return statusKey(x)==="tunai" ? raw : 0;
+  }
+  return statusKey(x)==="tunai"
+    ? Number(x.total||x.jumlahTotal||0)
+    : 0;
+}
+
+function createdMillis(x){
+  const c=x.createdAt;
+  if(c && typeof c.toMillis==="function")return c.toMillis();
+  if(c && typeof c.seconds==="number")return c.seconds*1000;
+  return 0;
 }
 
 function render(){
   const q=$("search").value.toLowerCase().trim(),f=$("filter").value;
   const a=rows.filter(x=>{
-    const label=statusLabel(x).toLowerCase();
+    const key=statusKey(x);
     const hay=JSON.stringify(x).toLowerCase();
-    return (f==="semua" || label===f) && (!q||hay.includes(q));
+    return (f==="semua" || key===f) && (!q||hay.includes(q));
   });
   $("total").textContent=a.length;
-  $("list").innerHTML=a.length?`<div class="tableWrap"><table class="salesTable">
-    <thead><tr>
-      <th>Pelanggan</th><th>No. Nota</th><th>Tanggal</th><th>Produk</th>
-      <th>Qty</th><th>Status</th><th>Total</th><th>Dibayar</th><th>Sisa</th><th>Pendapatan</th><th>Aksi</th>
-    </tr></thead><tbody>${a.map(x=>{
-      const id=esc(x.id), status=statusLabel(x);
-      return `<tr>
-        <td><div class="customer">${esc(x.pelanggan?.nama||x.namaPelanggan||"Pelanggan umum")}</div><div class="small">${esc(x.noHp||x.pelanggan?.wa||"-")}</div></td>
-        <td class="nota">${esc(x.nomorNota||x.idPenjualan||"-")}</td>
-        <td>${esc(x.tanggal||"-")}</td>
-        <td><b>${esc(x.produk||x.items?.[0]?.nama||"Penjualan")}</b></td>
-        <td>${Number(x.qty||x.items?.[0]?.qty||1)}</td>
-        <td><span class="badge">${esc(status)}</span></td>
-        <td class="money">${money(x.total)}</td>
-        <td class="money">${money(x.dibayar)}</td>
-        <td class="money">${money(x.sisa)}</td>
-        <td class="money income">${money(x.pendapatan||0)}</td>
-        <td class="actionCell">
-          <div class="actionWrap" id="aw-${id}">
-            <button class="actionMain" onclick="toggleAction('${id}')"><span>⚙️ Aksi</span><span>⌄</span></button>
-            <div class="actionMenu">
-              <button class="edit" onclick="editPenjualan('${id}')">✏️ Edit</button>
-              <button class="delete" onclick="hapus('${id}')">🗑️ Hapus</button>
-              <button class="bill" onclick="ubahPembayaran('${id}','tagihan')">🧾 Masuk Tagihan</button>
-              <button class="cash" onclick="ubahPembayaran('${id}','tunai')">💵 Tunai</button>
-              <button class="cancelStatus" onclick="ubahPembayaran('${id}','batal')">✖️ Batal</button>
-            </div>
+
+  // Jumlahkan penghasilan dari transaksi yang sedang ditampilkan.
+  const totalPendapatan=a.reduce((sum,x)=>sum+pendapatanValue(x),0);
+  $("totalPendapatan").textContent=money(totalPendapatan);
+
+  if(!a.length){
+    $("list").innerHTML='<div class="empty">Tidak ada data penjualan.</div>';
+    return;
+  }
+
+  const rowsHtml=a.map(x=>{
+    const id=esc(x.id), status=statusLabel(x);
+    const nama=esc(x.pelanggan?.nama||x.namaPelanggan||"Pelanggan umum");
+    const hp=esc(x.noHp||x.pelanggan?.wa||"-");
+    const nota=esc(x.nomorNota||x.idPenjualan||"-");
+    const tanggal=esc(x.tanggal||"-");
+    const produk=esc(x.produk||x.items?.[0]?.nama||"Penjualan");
+    const qty=Number(x.qty||x.items?.[0]?.qty||1);
+    return `<tr>
+      <td><div class="customer">${nama}</div><div class="small">${hp}</div></td>
+      <td class="nota">${nota}</td><td>${tanggal}</td><td><b>${produk}</b></td>
+      <td>${qty}</td><td><span class="badge ${statusClass(x)}">${esc(status)}</span></td>
+      <td class="money">${money(x.total)}</td><td class="money">${money(x.dibayar)}</td>
+      <td class="money">${money(x.sisa)}</td><td class="money income">${money(pendapatanValue(x))}</td>
+      <td class="actionCell"><div class="actionWrap" id="aw-${id}">
+        <button class="actionMain" onclick="toggleAction('${id}')"><span>⚙️ Aksi</span><span>⌄</span></button>
+        <div class="actionMenu">
+          <button class="edit" onclick="editPenjualan('${id}')">✏️ Edit</button>
+          <button class="delete" onclick="hapus('${id}')">🗑️ Hapus</button>
+          <button class="bill" onclick="ubahPembayaran('${id}','tagihan')">🧾 Masuk Tagihan</button>
+          <button class="cash" onclick="ubahPembayaran('${id}','tunai')">💵 Tunai</button>
+          <button class="cancelStatus" onclick="ubahPembayaran('${id}','batal')">✖️ Batal</button>
+        </div>
+      </div></td>
+    </tr>`;
+  }).join("");
+
+  const cardsHtml=a.map(x=>{
+    const id=esc(x.id), status=statusLabel(x);
+    const nama=esc(x.pelanggan?.nama||x.namaPelanggan||"Pelanggan umum");
+    const hp=esc(x.noHp||x.pelanggan?.wa||"-");
+    const nota=esc(x.nomorNota||x.idPenjualan||"-");
+    const tanggal=esc(x.tanggal||"-");
+    const produk=esc(x.produk||x.items?.[0]?.nama||"Penjualan");
+    const qty=Number(x.qty||x.items?.[0]?.qty||1);
+    return `<article class="mobileSaleCard">
+      <div class="mobileSaleTop">
+        <div><div class="mobileSaleName">${nama}</div><div class="mobileSalePhone">${hp}</div><div class="mobileSaleNota">${nota}</div></div>
+        <span class="badge ${statusClass(x)}">${esc(status)}</span>
+      </div>
+      <div class="mobileSaleGrid">
+        <div class="mobileSaleField"><span class="mobileSaleLabel">Tanggal</span><span class="mobileSaleValue">${tanggal}</span></div>
+        <div class="mobileSaleField"><span class="mobileSaleLabel">Qty</span><span class="mobileSaleValue">${qty}</span></div>
+        <div class="mobileSaleField full"><span class="mobileSaleLabel">Produk</span><span class="mobileSaleValue">${produk}</span></div>
+        <div class="mobileSaleField"><span class="mobileSaleLabel">Total</span><span class="mobileSaleValue money">${money(x.total)}</span></div>
+        <div class="mobileSaleField"><span class="mobileSaleLabel">Dibayar</span><span class="mobileSaleValue money">${money(x.dibayar)}</span></div>
+        <div class="mobileSaleField"><span class="mobileSaleLabel">Sisa</span><span class="mobileSaleValue money">${money(x.sisa)}</span></div>
+        <div class="mobileSaleField"><span class="mobileSaleLabel">Pendapatan</span><span class="mobileSaleValue money" style="color:#15803d">${money(pendapatanValue(x))}</span></div>
+      </div>
+      <div class="mobileSaleActions">
+        <div class="actionWrap" id="m-aw-${id}">
+          <button class="actionMain" onclick="toggleAction('m-${id}',true)"><span>⚙️ Aksi</span><span>⌄</span></button>
+          <div class="actionMenu">
+            <button class="edit" onclick="editPenjualan('${id}')">✏️ Edit</button>
+            <button class="delete" onclick="hapus('${id}')">🗑️ Hapus</button>
+            <button class="bill" onclick="ubahPembayaran('${id}','tagihan')">🧾 Masuk Tagihan</button>
+            <button class="cash" onclick="ubahPembayaran('${id}','tunai')">💵 Tunai</button>
+            <button class="cancelStatus" onclick="ubahPembayaran('${id}','batal')">✖️ Batal</button>
           </div>
-        </td>
-      </tr>`;
-    }).join("")}</tbody></table></div>`:`<div class="empty">Tidak ada data penjualan.</div>`;
+        </div>
+      </div>
+    </article>`;
+  }).join("");
+
+  $("list").innerHTML=`
+    <div class="tableWrap desktopSales"><table class="salesTable">
+      <thead><tr><th>Pelanggan</th><th>No. Nota</th><th>Tanggal</th><th>Produk</th><th>Qty</th><th>Status</th><th>Total</th><th>Dibayar</th><th>Sisa</th><th>Pendapatan</th><th>Aksi</th></tr></thead>
+      <tbody>${rowsHtml}</tbody>
+    </table></div>
+    <div class="mobileSales">${cardsHtml}</div>`;
 }
 
-window.toggleAction=id=>{
-  document.querySelectorAll(".actionWrap.open").forEach(e=>{if(e.id!=="aw-"+id)e.classList.remove("open")});
-  const el=$("aw-"+id);if(el)el.classList.toggle("open");
+window.toggleAction=(id,mobile=false)=>{
+  document.querySelectorAll(".actionWrap.open").forEach(e=>e.classList.remove("open"));
+  const el=$(mobile ? "m-aw-"+id.replace(/^m-/ ,"") : "aw-"+id);
+  if(!el)return;
+
+  el.classList.add("open");
+  const btn=el.querySelector(".actionMain");
+  const menu=el.querySelector(".actionMenu");
+  if(!btn || !menu)return;
+
+  // Posisi dropdown mengikuti tombol pada semua ukuran layar.
+  requestAnimationFrame(()=>{
+    const r=btn.getBoundingClientRect();
+    const gap=6;
+    const vw=window.innerWidth;
+    const vh=window.innerHeight;
+    const mw=Math.min(230,vw-20);
+    menu.style.width=mw+"px";
+
+    let left=r.right-mw;
+    if(left<10)left=10;
+    if(left+mw>vw-10)left=vw-mw-10;
+
+    // Utamakan ke bawah, tetapi otomatis pindah ke atas bila ruang bawah sempit.
+    const mh=Math.min(menu.scrollHeight || 0, Math.min(420,vh-20));
+    let top=r.bottom+gap;
+    if(top+mh>vh-10 && r.top-mh-gap>=10)top=r.top-mh-gap;
+    if(top<10)top=10;
+
+    menu.style.left=left+"px";
+    menu.style.top=top+"px";
+  });
 };
 
 document.addEventListener("click",e=>{
   if(!e.target.closest(".actionWrap"))
     document.querySelectorAll(".actionWrap.open").forEach(x=>x.classList.remove("open"));
+});
+
+// Saat halaman digeser/diubah ukuran, tutup menu agar tidak tertinggal dari tombol.
+window.addEventListener("scroll",()=>{
+  document.querySelectorAll(".actionWrap.open").forEach(x=>x.classList.remove("open"));
+},{passive:true});
+window.addEventListener("resize",()=>{
+  document.querySelectorAll(".actionWrap.open").forEach(x=>x.classList.remove("open"));
 });
 
 
@@ -289,7 +524,34 @@ window.closeFixzyConfirm=function(){
  const m=$("fixzyConfirm");m.classList.remove("show");m.style.display="none";m.setAttribute("aria-hidden","true");
 };
 
-const NAMA_KONTER="A YUDI THEA";
+let NAMA_KONTER="";
+
+async function loadNamaKonter(){
+  if(!uid)return;
+  try{
+    const snap=await getDoc(doc(db,"users",uid));
+    const data=snap.exists()?(snap.data()||{}):{};
+    NAMA_KONTER=String(
+      data.namaKonter||data.namaToko||data.namaUsaha||data.toko||data.nama||""
+    ).trim() || "Konter kami";
+  }catch(e){
+    console.warn("Gagal membaca nama konter dari Firebase:",e);
+    NAMA_KONTER="Konter kami";
+  }
+}
+
+function namaPelanggan(item){
+  return String(
+    item?.pelanggan?.nama||
+    item?.namaPelanggan||
+    item?.nama||
+    "Pelanggan"
+  ).trim();
+}
+
+function nomorNota(item){
+  return String(item?.nomorNota||item?.idPenjualan||item?.id||"-");
+}
 
 function cleanMoney(v){
  return Number(String(v??"").replace(/[^\d-]/g,""))||0;
@@ -354,6 +616,17 @@ window.saveIncome=async function(){
   });
   closeIncome();
   await load();
+  const waItem={
+    ...item,
+    pembayaran:"Tunai",
+    status:"dibayar",
+    dibayar:v.dp,
+    sisa:v.sisa,
+    diskon:v.diskon,
+    discount:v.diskon,
+    pendapatan:v.pendapatan
+  };
+  openWA(waItem,makeTunaiWA(waItem));
  }catch(e){
   incomeSaving=false;
   fixzyConfirm("Gagal menyimpan pendapatan: "+e.message,"Gagal Menyimpan");
@@ -394,11 +667,11 @@ window.sendWA=function(){
 };
 
 function makeTagihanWA(item){
- const nama=item.pelanggan?.nama||item.namaPelanggan||"Pelanggan";
- const total=Number(item.total||0);
+ const nama=namaPelanggan(item);
+ const total=Number(item.total||item.jumlahTotal||0);
  const dp=Number(item.dibayar??item.dp??0);
  const sisa=Math.max(0,total-dp);
- const nota=item.nomorNota||item.idPenjualan||item.id||"-";
+ const nota=nomorNota(item);
 
  return `Halo ${nama},
 
@@ -416,9 +689,21 @@ Informasi penjualan Anda:
 Terima kasih 🙏`;
 }
 
+function makeTunaiWA(item){
+  const nama=namaPelanggan(item);
+
+  return `Halo ${nama},
+
+📍 *${NAMA_KONTER}*
+
+Pembayaran tunai telah diterima.
+
+Terima kasih atas kepercayaannya 🙏`;
+}
+
 function makeBatalWA(item){
- const nama=item.pelanggan?.nama||item.namaPelanggan||"Pelanggan";
- const nota=item.nomorNota||item.idPenjualan||item.id||"-";
+ const nama=namaPelanggan(item);
+ const nota=nomorNota(item);
  const total=Number(item.total||0);
 
  return `Halo ${nama},
@@ -476,6 +761,11 @@ window.ubahPembayaran=async(id,mode)=>{
  }
 
  if(mode==="batal"){
+  // RULES BARU: hanya owner bisa batal
+  if(currentRole!=="owner" && currentRole!=="superadmin"){
+    showOwnerOnly("BATAL");
+    return;
+  }
   if(!(await fixzyConfirm(
    "Batalkan transaksi penjualan ini?\n\nPendapatan akan menjadi Rp 0.",
    "Konfirmasi Batal"
@@ -496,7 +786,11 @@ window.ubahPembayaran=async(id,mode)=>{
    openWA({...item,pembayaran:"Batal",status:"batal",pendapatan:0,jumlahTotal:0,dibayar:0,sisa:0},
            makeBatalWA({...item,status:"batal"}));
   }catch(e){
-   fixzyConfirm("Gagal membatalkan transaksi: "+e.message,"Gagal Membatalkan");
+   if(e.code==='permission-denied'){
+     showOwnerOnly("BATAL");
+   }else{
+     fixzyConfirm("Gagal membatalkan transaksi: "+e.message,"Gagal Membatalkan");
+   }
   }
  }
 };
@@ -519,39 +813,125 @@ window.closeEdit=()=>{$("editModal").classList.remove("show");editId="";};
 
 window.saveEdit=async()=>{
   if(!editId)return;
-  const total=Number($("eTotal").value)||0;
+
+  const old=rows.find(r=>r.id===editId);
+  if(!old)return;
+
+  const qty=Math.max(1,Number($("eQty").value)||1);
+  const harga=Math.max(0,Number($("eHarga").value)||0);
+  const total=qty*harga;
+  const key=statusKey(old);
+
+  const dibayar=key==="tunai"
+    ? total
+    : Math.min(Number(old.dibayar??old.dp??0)||0,total);
+
+  const sisa=Math.max(0,total-dibayar);
+  const pendapatan=key==="tunai" ? total : 0;
+
   try{
     await updateDoc(doc(db,"penjualan",editId),{
       namaPelanggan:$("eNama").value.trim(),
       noHp:$("eHp").value.trim(),
+      pelanggan:{
+        ...(old.pelanggan||{}),
+        nama:$("eNama").value.trim(),
+        wa:$("eHp").value.trim()
+      },
       produk:$("eProduk").value.trim(),
-      qty:Number($("eQty").value)||1,
-      harga:Number($("eHarga").value)||0,
+      qty,
+      harga,
       total,
+      dibayar,
+      sisa,
+      pendapatan,
+      jumlahTotal:pendapatan,
       catatan:$("eCatatan").value.trim(),
       updatedAt:serverTimestamp()
     });
-    closeEdit();await load();
-  }catch(e){fixzyConfirm("Gagal menyimpan perubahan: "+e.message,"Gagal Menyimpan")}
+
+    closeEdit();
+  }catch(e){
+    fixzyConfirm("Gagal menyimpan perubahan: "+e.message,"Gagal Menyimpan");
+  }
 };
 
 window.hapus=async id=>{
+  if(!punyaIzinDataPenjualan()){fixzyConfirm("Anda tidak memiliki izin Data Penjualan.","Akses Ditolak");return;}
+  // RULES BARU: hanya owner bisa hapus
+  if(currentRole!=="owner" && currentRole!=="superadmin"){
+    showOwnerOnly("MENGHAPUS");
+    return;
+  }
   if(!(await fixzyConfirm("Hapus transaksi penjualan ini dari Firebase?","Konfirmasi Hapus")))return;
-  try{await deleteDoc(doc(db,"penjualan",id));await load();}
-  catch(e){fixzyConfirm("Gagal hapus penjualan: "+e.message,"Gagal Hapus")}
+  try{
+    await deleteDoc(doc(db,"penjualan",id));
+    await load();
+  }catch(e){
+    if(e.code==='permission-denied'){
+      showOwnerOnly("MENGHAPUS");
+    }else{
+      fixzyConfirm("Gagal hapus penjualan: "+e.message,"Gagal Hapus");
+    }
+  }
 };
 
-async function load(){
+let stopSalesListener=null;
+
+function punyaIzinDataPenjualan(){
+  if(currentRole==="owner" || currentRole==="superadmin") return true;
+  return permissions.includes("data-penjualan");
+}
+
+function load(){
   if(!uid)return;
-  $("list").innerHTML='<div class="empty">Membaca Firebase...</div>';
-  try{
-    const snap=await getDocs(query(collection(db,"penjualan"),where("uid","==",uid)));
-    rows=snap.docs.map(d=>({id:d.id,...d.data()}));
-    rows.sort((a,b)=>String(b.tanggal||"").localeCompare(String(a.tanggal||"")));
-    render();
-  }catch(e){
-    $("list").innerHTML=`<div class="empty err">Gagal membaca Firebase:\n${e.message}</div>`;
+  if(!punyaIzinDataPenjualan()){
+    $("list").innerHTML='<div class="empty">🔒 Akses Data Penjualan tidak diberikan oleh Owner.</div>';
+    return;
   }
+
+  if(stopSalesListener){
+    stopSalesListener();
+    stopSalesListener=null;
+  }
+
+  $("list").innerHTML='<div class="empty">Membaca Firebase...</div>';
+
+  // Kompatibilitas: coba uid dulu, fallback ownerId
+  let salesQuery;
+  try{
+    salesQuery=query(collection(db,"penjualan"),where("uid","==",ownerUid));
+  }catch(e){
+    salesQuery=query(collection(db,"penjualan"),where("ownerId","==",ownerUid));
+  }
+
+  stopSalesListener=onSnapshot(salesQuery,
+    async snap=>{
+      rows=snap.docs.map(d=>({id:d.id,...d.data()}));
+      // Fallback: jika pakai uid kosong, coba ownerId
+      if(!rows.length){
+        try{
+          const snap2 = await getDocs(query(collection(db,"penjualan"),where("ownerId","==",ownerUid)));
+          if(snap2.docs.length){
+            rows = snap2.docs.map(d=>({id:d.id,...d.data()}));
+          }
+        }catch(e){ console.warn("fallback ownerId", e); }
+      }
+
+      // Data terbaru selalu di atas berdasarkan waktu simpan Firebase.
+      rows.sort((a,b)=>{
+        const cb=createdMillis(b), ca=createdMillis(a);
+        if(cb!==ca)return cb-ca;
+        return String(b.tanggal||"").localeCompare(String(a.tanggal||""));
+      });
+
+      render();
+    },
+    e=>{
+      console.error("Gagal sinkronisasi Data Penjualan:",e);
+      $("list").innerHTML=`<div class="empty err">Gagal membaca Firebase:\n${e.message}</div>`;
+    }
+  );
 }
 window.load=load;
 
@@ -564,7 +944,26 @@ onAuthStateChanged(auth,async u=>{
   if(!u){location.href="login.html";return;}
   uid=u.uid;
   $("akun").textContent=u.email||"Akun login";
-  await load();
+  try{
+    const profileSnap=await getDoc(doc(db,"users",uid));
+    if(!profileSnap.exists())throw new Error("Profil akun tidak ditemukan.");
+    const profile=profileSnap.data()||{};
+    currentRole=profile.role||"";
+    permissions=Array.isArray(profile.izin)?profile.izin:(Array.isArray(profile.permissions)?profile.permissions:[]);
+    if(!["owner","employee","reseller","superadmin"].includes(currentRole)){
+      throw new Error("Akun tidak memiliki akses Data Penjualan.");
+    }
+    if(currentRole!=="owner" && currentRole!=="superadmin" && !permissions.includes("data-penjualan")){
+      throw new Error("Owner belum memberikan izin Data Penjualan untuk akun ini.");
+    }
+    ownerUid=currentRole==="owner"?uid:(profile.ownerUid||"");
+    if(!ownerUid)throw new Error("ownerUid akun tidak ditemukan.");
+    await loadNamaKonter();
+    await load();
+  }catch(e){
+    console.error(e);
+    $("list").innerHTML=`<div class="empty err">🔒 ${e.message}</div>`;
+  }
 });
 </script><script>
 function tutupHalaman(){
