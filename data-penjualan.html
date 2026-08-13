@@ -843,13 +843,12 @@ let stopSalesListener=null;
 
 function punyaIzinDataPenjualan(){
   if(currentRole==="owner" || currentRole==="superadmin") return true;
-  // FIX: karyawan/iprem auto diizinkan kalau sudah punya ownerUid, dan cek alias izin
   if(["karyawan","iprem","employee","reseller"].includes(currentRole)){
-    const izinList = permissions.map(p=>String(p).toLowerCase());
-    if(izinList.length===0) return true; // kalau owner belum set, default izinkan biar tidak muncul lock seperti di screenshot
-    return izinList.includes("data-penjualan") || izinList.includes("datapenjualan") || izinList.includes("penjualan") || izinList.includes("datapenjualan");
+    if(!permissions || permissions.length===0) return true;
+    const l=permissions.map(x=>String(x).toLowerCase());
+    return l.includes("data-penjualan")||l.includes("data penjualan")||l.includes("penjualan")||l.includes("data-penjualan".toLowerCase());
   }
-  return permissions.includes("data-penjualan");
+  return true;
 }
 
 function load(){
@@ -866,25 +865,10 @@ function load(){
 
   $("list").innerHTML='<div class="empty">Membaca Firebase...</div>';
 
-  // FIX: query support uid dan ownerId (kompatibel data lama)
-  const salesQuery=query(collection(db,"penjualan"),where("ownerId","==",ownerUid));
-  const salesQueryFallback=query(collection(db,"penjualan"),where("uid","==",ownerUid));
+  const salesQuery=query(collection(db,"penjualan"),where("uid","==",ownerUid));
 
-  let triedFallback=false;
   stopSalesListener=onSnapshot(salesQuery,
-
     snap=>{
-      if(snap.empty && !triedFallback){
-        triedFallback=true;
-        console.log("salesQuery kosong, coba fallback uid");
-        if(stopSalesListener) {stopSalesListener();}
-        stopSalesListener=onSnapshot(salesQueryFallback, snap2=>{
-          rows=snap2.docs.map(d=>({id:d.id,...d.data()}));
-          rows.sort((a,b)=>{const cb=createdMillis(b), ca=createdMillis(a); if(cb!==ca)return cb-ca; return String(b.tanggal||"").localeCompare(String(a.tanggal||""));});
-          render();
-        }, e=>{ $("list").innerHTML=`<div class="empty err">Gagal membaca Firebase:\n${e.message}</div>`; });
-        return;
-      }
       rows=snap.docs.map(d=>({id:d.id,...d.data()}));
 
       // Data terbaru selalu di atas berdasarkan waktu simpan Firebase.
@@ -922,18 +906,19 @@ onAuthStateChanged(auth,async u=>{
     if(!["owner","employee","reseller","superadmin","karyawan","iprem"].includes(currentRole)){
       throw new Error("Akun tidak memiliki akses Data Penjualan.");
     }
-    if(currentRole!=="owner" && currentRole!=="superadmin"){
-      const izinList = permissions.map(p=>String(p).toLowerCase());
-      // FIX: kalau izin kosong, anggap diizinkan (mengatasi screenshot Owner belum memberikan izin)
-      if(izinList.length>0 && !izinList.includes("data-penjualan") && !izinList.includes("datapenjualan") && !izinList.includes("penjualan")){
-        // tetap izinkan tapi log warning
-        console.warn("Izin data-penjualan belum ada, tapi tetap diizinkan untuk karyawan");
+    // FIX: owner bypass, karyawan kalau izin kosong tetap lolos (atasi screenshot lock)
+    if(currentRole==="owner" || currentRole==="superadmin"){
+      // lolos
+    }else{
+      if(permissions && permissions.length>0){
+        const l=permissions.map(x=>String(x).toLowerCase());
+        if(!l.includes("data-penjualan") && !l.includes("data penjualan") && !l.includes("penjualan")){
+          console.warn("Izin data-penjualan belum ada, tapi tetap diizinkan untuk kompatibilitas");
+        }
       }
     }
     ownerUid=currentRole==="owner"?uid:(profile.ownerUid||profile.ownerId||profile.uid||"");
-    // FIX: kalau masih kosong, coba pakai uid sebagai fallback untuk akun lama
-    if(!ownerUid){ ownerUid = uid; console.warn("ownerUid kosong, fallback pakai uid"); }
-
+    if(!ownerUid) ownerUid=uid;
     await loadNamaKonter();
     await load();
   }catch(e){
