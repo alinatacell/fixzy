@@ -141,7 +141,7 @@ harga:0,
 status:"aktif",
 statusPembayaran:"free",
 masaAktif:"trial",
-  trial:true,
+trial:true,
 perpanjangan:false,
 perpanjanganStatus:"none",
 role:"owner",
@@ -156,22 +156,21 @@ versi:"Fixzy V1",
 lastLogin:null
 });
 tampilPopup("Fixzy","Pendaftaran berhasil!\n\nTrial 3 Bulan kamu LANGSUNG AKTIF.\nSilakan login sekarang.");
-// Setelah daftar berhasil, Firebase otomatis membuat sesi login.
-// Logout dulu agar user masuk melalui login.html.
-// Setelah login berhasil, login.html akan mengarahkan ke index.html (menu FIXZY asli).
+// Setelah registrasi, Firebase otomatis membuat sesi.
+// Logout dulu agar alur tetap: Register -> Login -> Index.
 setTimeout(async ()=>{
-      try{
-        await signOut(auth);
-      }catch(e){
-        console.warn("Logout setelah registrasi gagal:", e);
-      }
+  try{
+    await signOut(auth);
+  }catch(e){
+    console.warn("Logout setelah registrasi gagal:",e);
+  }
 
-      if(window.parent && window.parent!==window){
-        window.parent.postMessage({type:"FIXZY_REGISTER_SUCCESS"},"*");
-      }
+  if(window.parent && window.parent!==window){
+    window.parent.postMessage({type:"FIXZY_REGISTER_SUCCESS"},"*");
+  }
 
-      window.location.href="login.html";
-    },1500);
+  window.location.href="login.html";
+},1500);
 }catch(err){
 let pesan="Terjadi kesalahan.";
 switch(err.code){
