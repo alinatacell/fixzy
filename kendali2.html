@@ -216,45 +216,53 @@ tr:last-child td{border-bottom:0}
 
 <body>
 <style>
-#ownerGate{position:fixed;inset:0;z-index:9999;background:#111827;display:flex;align-items:center;justify-content:center;padding:20px}
+#ownerGate{position:fixed;inset:0;z-index:99999;background:#111827;display:flex;align-items:center;justify-content:center;padding:20px}
 #ownerGate .boxGate{background:#fff;border-radius:20px;padding:24px;max-width:380px;width:100%;box-shadow:0 10px 30px #0005}
-#ownerGate h2{margin:0 0 8px;font-size:22px}
-#ownerGate p{margin:0 0 14px;color:#64748b;font-size:12px}
 </style>
 <div id="ownerGate">
   <div class="boxGate">
-    <h2>🔒 Login Khusus Owner</h2>
-    <p>Hanya pemilik aplikasi FIXZY. Masukkan PIN khusus.</p>
-    <input id="ownerPin" type="password" placeholder="PIN Owner" style="margin-bottom:10px">
-    <button class="btn btn-refresh" style="width:100%" onclick="cekOwnerPin()">Masuk</button>
-    <div id="pinError" style="color:#dc2626;font-size:11px;margin-top:8px;display:none">PIN salah!</div>
-    <div style="font-size:10px;color:#94a3b8;margin-top:10px">Default PIN: <b>Ktp487281</b> (bisa kamu ganti di kode)</div>
+    <h2 style="margin:0 0 8px;font-size:22px">🔒 Login Khusus Owner</h2>
+    <p style="margin:0 0 14px;color:#64748b;font-size:12px">Hanya pemilik aplikasi FIXZY.</p>
+    <input id="ownerPin" type="text" inputmode="text" placeholder="PIN Owner" style="margin-bottom:10px;padding:14px;border:1px solid #cbd5e1;border-radius:11px;width:100%">
+    <button class="btn btn-refresh" style="width:100%;padding:14px;border-radius:12px;background:#ffc107;font-weight:900" onclick="cekOwnerPin()">Masuk</button>
+    <div id="pinError" style="color:#dc2626;font-size:11px;margin-top:8px;display:none">PIN salah! Coba FIXZY123</div>
+    <div style="font-size:10px;color:#94a3b8;margin-top:10px">PIN default: <b>FIXZY123</b> - besar kecil huruf ngaruh, aku bikin auto uppercase</div>
   </div>
 </div>
 <script>
-const OWNER_PIN_DEFAULT="FIXZY123"; // GANTI PIN DISINI SESUKA KAMU
-window.cekOwnerPin=function(){
-  const v=document.getElementById('ownerPin').value;
-  const savedPin=localStorage.getItem('fixzy_owner_pin')||OWNER_PIN_DEFAULT;
-  if(v===savedPin){
+const OWNER_PIN_DEFAULT="FIXZY123";
+function cekOwnerPin(){
+  const el=document.getElementById('ownerPin');
+  const err=document.getElementById('pinError');
+  const v=(el.value||"").trim().toUpperCase();
+  const saved=(localStorage.getItem('fixzy_owner_pin')||OWNER_PIN_DEFAULT).toUpperCase();
+  console.log("cek pin", v, saved);
+  if(v===saved && v!==""){
     localStorage.setItem('fixzy_owner_login','1');
-    document.getElementById('ownerGate').style.display='none';
+    document.getElementById('ownerGate').remove();
   }else{
-    document.getElementById('pinError').style.display='block';
+    err.style.display='block';
+    err.textContent='PIN salah! Kamu ketik: '+v+' , harusnya: '+saved;
   }
 }
+window.cekOwnerPin=cekOwnerPin;
 (function(){
-  if(localStorage.getItem('fixzy_owner_login')==='1'){
-    const g=document.getElementById('ownerGate');
-    if(g) g.style.display='none';
-  }
+  try{
+    if(localStorage.getItem('fixzy_owner_login')==='1'){
+      setTimeout(()=>{ const g=document.getElementById('ownerGate'); if(g) g.remove(); },100);
+    }
+  }catch(e){}
 })();
-// Ganti PIN function
-window.gantiPinOwner=function(pinBaru){
-  localStorage.setItem('fixzy_owner_pin', pinBaru);
-  alert('PIN baru: '+pinBaru);
-}
+// Enter key
+document.addEventListener('keydown', function(e){
+  if(e.key==='Enter'){
+    const g=document.getElementById('ownerGate');
+    if(g && g.style.display!=='none') cekOwnerPin();
+  }
+});
 </script>
+
+
 
 
 <header class="top">
