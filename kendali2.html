@@ -1,6 +1,27 @@
 <!DOCTYPE html>
 <html lang="id">
-<head>
+<head><style>
+@font-face {
+  font-family: "Optimistic";
+  font-style: normal;
+  font-weight: 400 600;
+  font-display: swap;
+  src: url("/fonts/OptimisticAI_VF_Optimized.woff2") format("woff2");
+}
+@font-face {
+  font-family: "Optimistic Mono";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("/fonts/OptimisticMono_W_TextRegular.woff2") format("woff2");
+}
+:where(html) {
+  font-family: "Optimistic", system-ui, sans-serif;
+}
+:where(code, pre, kbd, samp) {
+  font-family: "Optimistic Mono", ui-monospace, monospace;
+}
+</style>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 <meta name="theme-color" content="#FFC107">
@@ -194,6 +215,47 @@ tr:last-child td{border-bottom:0}
 </head>
 
 <body>
+<style>
+#ownerGate{position:fixed;inset:0;z-index:9999;background:#111827;display:flex;align-items:center;justify-content:center;padding:20px}
+#ownerGate .boxGate{background:#fff;border-radius:20px;padding:24px;max-width:380px;width:100%;box-shadow:0 10px 30px #0005}
+#ownerGate h2{margin:0 0 8px;font-size:22px}
+#ownerGate p{margin:0 0 14px;color:#64748b;font-size:12px}
+</style>
+<div id="ownerGate">
+  <div class="boxGate">
+    <h2>🔒 Login Khusus Owner</h2>
+    <p>Hanya pemilik aplikasi FIXZY. Masukkan PIN khusus.</p>
+    <input id="ownerPin" type="password" placeholder="PIN Owner" style="margin-bottom:10px">
+    <button class="btn btn-refresh" style="width:100%" onclick="cekOwnerPin()">Masuk</button>
+    <div id="pinError" style="color:#dc2626;font-size:11px;margin-top:8px;display:none">PIN salah!</div>
+    <div style="font-size:10px;color:#94a3b8;margin-top:10px">Default PIN: <b>FIXZY123</b> (bisa kamu ganti di kode)</div>
+  </div>
+</div>
+<script>
+const OWNER_PIN_DEFAULT="FIXZY123"; // GANTI PIN DISINI SESUKA KAMU
+window.cekOwnerPin=function(){
+  const v=document.getElementById('ownerPin').value;
+  const savedPin=localStorage.getItem('fixzy_owner_pin')||OWNER_PIN_DEFAULT;
+  if(v===savedPin){
+    localStorage.setItem('fixzy_owner_login','1');
+    document.getElementById('ownerGate').style.display='none';
+  }else{
+    document.getElementById('pinError').style.display='block';
+  }
+}
+(function(){
+  if(localStorage.getItem('fixzy_owner_login')==='1'){
+    const g=document.getElementById('ownerGate');
+    if(g) g.style.display='none';
+  }
+})();
+// Ganti PIN function
+window.gantiPinOwner=function(pinBaru){
+  localStorage.setItem('fixzy_owner_pin', pinBaru);
+  alert('PIN baru: '+pinBaru);
+}
+</script>
+
 
 <header class="top">
   <div class="brand">
@@ -312,16 +374,9 @@ import {
   serverTimestamp,getDoc
 } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js";
 
-const firebaseConfig={
-  apiKey:"AIzaSyCwMbJsuORhIq4QCmp4c1r6OsjAUlfxU5Y",
-  authDomain:"fixzy-f056f.firebaseapp.com",
-  projectId:"fixzy-f056f",
-  storageBucket:"fixzy-f056f.firebasestorage.app",
-  messagingSenderId:"838081521031",
-  appId:"1:838081521031:web:50fdee909b56460b055f22"
-};
+const cfg={apiKey:"AIzaSyC_PcarMTT5Un7qfSLzf92o5OGn5rginsI",authDomain:"fixzy-update.firebaseapp.com",projectId:"fixzy-update",storageBucket:"fixzy-update.firebasestorage.app",messagingSenderId:"995892519622",appId:"1:995892519622:web:fa41047944d8e5b35d6dc7"};
 
-const app=initializeApp(firebaseConfig);
+const app=initializeApp(cfg);
 const auth=getAuth(app);
 const db=getFirestore(app);
 
@@ -1111,5 +1166,101 @@ onAuthStateChanged(auth,async user=>{
 });
 </script>
 
-</body>
+
+<script type="module">
+import { collection as col, addDoc, doc, updateDoc, deleteDoc, onSnapshot, query, where, orderBy, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js";
+
+function genToken(len=12){
+  const chars="ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+  let t=""; for(let i=0;i<len;i++) t+=chars[Math.floor(Math.random()*chars.length)];
+  return t.match(/.{1,4}/g).join("-");
+}
+
+window.buatTokenJual = async function(){
+  const paket=document.getElementById('tokenPaket').value;
+  const jumlah=parseInt(document.getElementById('tokenJumlah').value||"1");
+  const harga=parseInt(document.getElementById('tokenHarga').value||"0");
+  const statusEl=document.getElementById('tokenStatus');
+  statusEl.textContent="Membuat "+jumlah+" token...";
+  try{
+    const db=window.db;
+    if(!db){ alert("DB belum siap"); return; }
+    for(let i=0;i<jumlah;i++){
+      const token=genToken(12);
+      const days = paket==="permanen"?36500:parseInt(paket);
+      const exp=new Date(); exp.setDate(exp.getDate()+days);
+      await addDoc(col(db,"tokens"), {
+        token: token,
+        paket: paket,
+        harga: harga,
+        paketHari: days,
+        expiredAt: exp,
+        used: false,
+        usedBy: "",
+        usedByEmail: "",
+        createdAt: new Date(),
+        status: "tersedia"
+      });
+    }
+    statusEl.textContent=jumlah+" token berhasil dibuat untuk dijual!";
+  }catch(e){ statusEl.textContent="Gagal: "+e.message; }
+}
+
+// Listen token list
+try{
+  const db=window.db;
+  if(db){
+    const q=query(col(db,"tokens"), orderBy("createdAt","desc"));
+    onSnapshot(q, snap=>{
+      const tbody=document.getElementById('tokenTable');
+      if(!tbody) return;
+      if(snap.empty){ tbody.innerHTML='<tr><td colspan=7 style="text-align:center;padding:20px">Belum ada token</td></tr>'; return; }
+      let html="";
+      snap.forEach(d=>{
+        const t=d.data();
+        const exp=t.expiredAt?.toDate ? t.expiredAt.toDate() : new Date(t.expiredAt);
+        const status = t.used ? '<span class="badge red">Terpakai</span>' : '<span class="badge green">Tersedia</span>';
+        html+=`<tr>
+          <td><b>${t.token}</b><br><button class="action detail" onclick="navigator.clipboard.writeText('${t.token}');alert('Copied ${t.token}')">Copy</button></td>
+          <td>${t.paket} hari</td>
+          <td>Rp ${Number(t.harga||0).toLocaleString()}</td>
+          <td>${status}</td>
+          <td>${new Date(t.createdAt?.toDate? t.createdAt.toDate(): t.createdAt).toLocaleDateString()}</td>
+          <td><span class="email">${t.usedByEmail||'-'}</span></td>
+          <td><button class="action reject" onclick="hapusToken('${d.id}')">Hapus</button></td>
+        </tr>`;
+      });
+      tbody.innerHTML=html;
+    });
+  }
+}catch(e){ console.error(e); }
+
+window.hapusToken = async function(id){
+  if(!confirm("Hapus token ini?")) return;
+  try{ await deleteDoc(doc(window.db,"tokens",id)); }catch(e){ alert(e.message); }
+}
+
+// Token activation handler for user
+window.aktivasiPakaiToken = async function(uid, tokenInput){
+  const tokenStr=String(tokenInput).trim().toUpperCase();
+  if(!tokenStr) { alert("Masukkan token"); return false; }
+  const db=window.db;
+  const q=query(col(db,"tokens"), where("token","==",tokenStr), where("used","==",false));
+  // snapshot
+  const { getDocs } = await import("https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js");
+  const snap=await getDocs(q);
+  if(snap.empty){ alert("Token tidak valid / sudah terpakai"); return false; }
+  const docSnap=snap.docs[0];
+  const t=docSnap.data();
+  // update user
+  const userDoc=doc(db,"users",uid);
+  const exp=new Date(); exp.setDate(exp.getDate()+ (t.paketHari||30));
+  await updateDoc(userDoc, { exp: exp, expAt: exp, active: true, paketAktif: t.paket });
+  await updateDoc(doc(db,"tokens",docSnap.id), { used:true, usedBy: uid, usedByEmail: window.currentUserEmail||"", status:"terpakai", usedAt: new Date() });
+  alert("Aktivasi berhasil "+t.paket+" hari!");
+  return true;
+}
+</script>
+
+<script>(function(){var loc=location.href.replace(/#.*$/,"");var ATTR_NAMES=["data-product-id","data-productid","data-product_id","product-id","productid","product_id","data-source-entity-id","source-entity-id","source_entity_id","data-product","data-metadata","data-meta"];var DATASET_KEYS=["productId","productid","product_id","sourceEntityId","sourceentityid","source_entity_id","product","metadata","meta"];function readProductId(value){if(typeof value!=="string"||value.length===0)return null;if(/^[0-9]{6,}$/.test(value))return value;var match=value.match(/(?:product(?:_|-)?id|source(?:_|-)?entity(?:_|-)?id)["'=:\s]+([0-9]{6,})/i);return match?match[1]:null}function extractProductId(start){for(var node=start;node&&node!==document.body;node=node.parentElement){for(var i=0;i<ATTR_NAMES.length;i++){var attrValue=node.getAttribute&&node.getAttribute(ATTR_NAMES[i]);var attrProductId=readProductId(attrValue);if(attrProductId)return attrProductId}var dataset=node.dataset||null;if(dataset){for(var j=0;j<DATASET_KEYS.length;j++){var dataValue=dataset[DATASET_KEYS[j]];var dataProductId=readProductId(dataValue);if(dataProductId)return dataProductId}}}return null}function isInlineMediaSlotElement(node){return !!(node&&node.getAttribute&&node.getAttribute("data-clippy-inline-media-slot")!==null)}function findInlineMediaSlot(start){for(var node=start;node&&node!==document.body;node=node.parentElement){if(isInlineMediaSlotElement(node))return node}return null}function readInlineMediaUrl(node){if(!node)return null;return node.getAttribute&&((node.getAttribute("data-clippy-inline-media-url")||node.getAttribute("data-url")||node.getAttribute("data_url")))||node.href||null}function stripHash(url){return String(url).replace(/#.*$/,"")}function urlsMatch(a,b){if(!a||!b)return false;try{return stripHash(new URL(a,loc).href)===stripHash(new URL(b,loc).href)}catch(_){return stripHash(a)===stripHash(b)}}function isFirstPartyReelUrl(value){try{var url=new URL(value,loc);if(url.protocol!=="https:")return false;var host=url.hostname.toLowerCase();var supported=host==="instagram.com"||host.endsWith(".instagram.com")||host==="facebook.com"||host.endsWith(".facebook.com");return supported&&/\/reels?\//i.test(url.pathname)}catch(_){return false}}function isInlineMediaUrlClick(node,href){var slot=findInlineMediaSlot(node);if(!slot)return false;var slotUrl=readInlineMediaUrl(slot);if(slotUrl)return urlsMatch(href,slotUrl);return isFirstPartyReelUrl(href)}function findDataHref(start){for(var node=start;node&&node!==document.body;node=node.parentElement){if(node.getAttribute){var href=node.getAttribute("data-href")||node.getAttribute("data-url");if(href)return{href:href,node:node}}}return null}var nativeOpen=window.open;window.open=function(url){if(parent!==window&&typeof url==="string"&&/^https?:\/\//.test(url)){parent.postMessage({type:"ecto:usercontent-link-click",href:url},"*");return null}return nativeOpen?nativeOpen.apply(window,arguments):null};document.addEventListener("click",function(e){var target=e.target instanceof Element?e.target:null;if(!target)return;if(parent===window)return;var a=target.closest?target.closest("a[href]"):null;if(a&&a.href&&/^https?:\/\//.test(a.href)&&a.href.replace(/#.*$/,"")!==loc){if(isInlineMediaUrlClick(a,a.href))return;var productId=extractProductId(target)||extractProductId(a);if(productId){e.preventDefault();parent.postMessage({type:"ecto-artifact-link-click",productId:productId},"*");return}e.preventDefault();parent.postMessage({type:"ecto:usercontent-link-click",href:a.href},"*");return}var dataHref=findDataHref(target);if(dataHref&&/^https?:\/\//.test(dataHref.href)&&dataHref.href.replace(/#.*$/,"")!==loc){if(isInlineMediaUrlClick(dataHref.node,dataHref.href))return;e.preventDefault();parent.postMessage({type:"ecto:usercontent-link-click",href:dataHref.href},"*")}},true)})();</script><script>(function(){var FOCUS_TYPE="ecto:artifact-focus-request";var CLOSE_TYPE="ecto:artifact-close-request";function focusArtifactDocument(){var body=document.body;if(!body)return;try{window.focus();}catch(e){}if(!body.hasAttribute("tabindex"))body.setAttribute("tabindex","-1");try{body.focus({preventScroll:true});}catch(e){try{body.focus();}catch(e2){}}}window.addEventListener("message",function(event){if(event.source!==window.parent)return;var data=event.data;if(!data||typeof data!=="object"||data.type!==FOCUS_TYPE)return;if(document.readyState==="loading"){document.addEventListener("DOMContentLoaded",focusArtifactDocument,{once:true});return;}focusArtifactDocument();});window.addEventListener("keydown",function(event){if(event.key!=="Escape")return;window.setTimeout(function(){if(event.defaultPrevented)return;window.parent.postMessage({type:CLOSE_TYPE},"*");},0);});})();</script></body>
 </html>
