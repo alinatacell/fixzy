@@ -672,12 +672,14 @@ onAuthStateChanged(auth,async user=>{
     if(!userSnap.exists())throw new Error("Profil pengguna tidak ditemukan.");
     const data=userSnap.data()||{};
     const izin=Array.isArray(data.izin)?data.izin:(Array.isArray(data.permissions)?data.permissions:[]);
-    const punyaServis=izin.includes("servis");
-
-    // Akses halaman ditentukan oleh izin HTML/menu dari Owner.
-    // Role hanya identitas akun, bukan penentu hak akses.
-    if(data.role!=="superadmin" && !punyaServis)
-      throw new Error("Akun ini tidak memiliki izin untuk Input Servis.");
+    const izinLower=izin.map(x=>String(x).toLowerCase());
+    const punyaServis=izinLower.includes("servis") || izinLower.includes("input-servis") || izinLower.includes("nota");
+    // FIX: owner auto lolos semua izin, karyawan cek izin tapi kalau izin kosong tetap izinkan (untuk akun lama)
+    if(data.role!=="owner" && data.role!=="superadmin"){
+      if(izin.length>0 && !punyaServis){
+        throw new Error("Akun ini tidak memiliki izin untuk Input Servis. Minta Owner aktifkan di Kelola Karyawan.");
+      }
+    }
 
     uid=user.uid;
     businessUid=businessOwner(data,user);
