@@ -73,18 +73,32 @@ td{padding:8px;border-bottom:1px solid #f1f5f9;vertical-align:top}
 
 <div class="card">
 <h3>🎫 Buat Token - Dijual</h3>
-<div class="grid-input">
-<select id="paket"><option value="7">7 Hari</option><option value="30" selected>30 Hari</option><option value="90">90 Hari</option><option value="120">120 Hari</option><option value="180">180 Hari</option><option value="360">360 Hari</option><option value="365">365 Hari / 1 Tahun</option></select>
-<input id="jml" type="number" value="5" min="1"><input id="harga" type="number" value="50000"><input id="pref" placeholder="Prefix opsional"><button class="btn btn-yellow" onclick="buatToken()">Buat</button>
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+<div><label style="font-size:10px;font-weight:800">MASA AKTIF (HARI) - MANUAL</label><input id="paket" type="number" min="1" placeholder="Bebas: 90, 120, 360..." value="90" style="font-weight:800"></div>
+<div><label style="font-size:10px;font-weight:800">JUMLAH TOKEN</label><input id="jml" type="number" value="5" min="1"></div>
+<div><label style="font-size:10px;font-weight:800">HARGA / TOKEN (Rp)</label><input id="harga" type="number" value="50000"></div>
+<div><label style="font-size:10px;font-weight:800">PREFIX OPSIONAL</label><input id="pref" placeholder="FIXZY- atau kosong"></div>
 </div>
+<button class="btn btn-yellow" style="width:100%;margin-top:10px;height:46px;font-size:14px" onclick="buatToken()">🎫 Buat Token Sekarang</button>
+
 <div id="msg" style="font-size:11px;margin-top:6px;font-weight:800;color:#15803d"></div>
 
-<div style="margin-top:10px;display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px">
-<div style="display:flex;gap:6px;align-items:center"><label style="font-size:11px;font-weight:800"><input type="checkbox" id="checkAll" onchange="toggleAll(this)"> Ceklis Semua</label><span id="filterInfo" style="font-size:10px;color:#64748b"></span></div>
-<div style="display:flex;gap:6px"><select id="filterPaket" onchange="renderTokens()"><option value="">🔍 Semua Masa Aktif</option><option value="7">7 Hari</option><option value="30">30 Hari</option><option value="90">90 Hari</option><option value="120">120 Hari</option><option value="180">180 Hari</option><option value="360">360 Hari</option><option value="365">365 Hari</option></select><select id="filterStatus" onchange="renderTokens()"><option value="">Semua Status</option><option value="tersedia">Tersedia</option><option value="terpakai">Terpakai</option></select></div>
-<div style="display:flex;gap:6px"><button class="btn btn-dark" onclick="copySelected()">📋 Salin (<span id="countSel">0</span>)</button><button class="btn btn-red" onclick="hapusSelected()">🗑️ Hapus</button></div>
+<div style="margin-top:12px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:10px">
+<div style="font-size:11px;font-weight:900;margin-bottom:6px">🔍 PENCARIAN PAKET (bukan token)</div>
+<div style="display:grid;grid-template-columns:1fr 110px;gap:6px">
+<input id="cariPaket" type="number" placeholder="Ketik masa aktif: 90, 120, 360..." oninput="renderTokens()" style="font-weight:800">
+<select id="filterStatus" onchange="renderTokens()"><option value="">Semua Status</option><option value="tersedia">Tersedia</option><option value="terpakai">Terpakai</option></select>
 </div>
-<div style="margin-top:8px;display:flex;gap:6px"><input id="cariToken" placeholder="Cari token / email pemakai (opsional)..." style="flex:1" oninput="renderTokens()"><button class="btn btn-white" onclick="document.getElementById('filterPaket').value='';document.getElementById('filterStatus').value='';document.getElementById('cariToken').value='';renderTokens()">Reset</button></div>
+<div style="display:flex;gap:6px;margin-top:8px">
+<input id="cariToken" placeholder="Cari token / email pemakai (opsional)..." style="flex:1" oninput="renderTokens()">
+<button class="btn btn-white" onclick="resetSearch()">Reset</button>
+</div>
+<div style="display:flex;gap:6px;align-items:center;margin-top:10px;flex-wrap:wrap">
+<label style="font-size:11px;font-weight:800"><input type="checkbox" id="checkAll" onchange="toggleAll(this)"> Ceklis Semua</label>
+<span id="filterInfo" style="font-size:10px;color:#64748b;margin-left:6px"></span>
+<div style="margin-left:auto;display:flex;gap:6px"><button class="btn btn-dark" onclick="copySelected()">📋 Salin (<span id="countSel">0</span>)</button><button class="btn btn-red" onclick="hapusSelected()">🗑️ Hapus</button></div>
+</div>
+</div>
 
 
 <div class="table-wrap"><table>
@@ -120,6 +134,10 @@ window.logout=async function(){ await signOut(auth); location.reload(); }
 onAuthStateChanged(auth,(u)=>{ if(!u){ document.getElementById('loginBox').style.display='block'; document.getElementById('app').style.display='none'; return; } document.getElementById('loginBox').style.display='none'; document.getElementById('app').style.display='block'; document.getElementById('ownerEmail').textContent=u.email; loadAll(); });
 
 window.loadAll=async function(){
+  const btn=document.querySelector('.top .btn-white'); if(btn){ const old=btn.textContent; btn.textContent='⏳ Loading...'; btn.disabled=true; setTimeout(()=>{ btn.textContent='↻ Refresh'; btn.disabled=false; },3000); }
+  selected.clear(); allTokens=[];
+  document.getElementById('tokenBody').innerHTML='<tr><td colspan=7 style="text-align:center;padding:20px">Memuat ulang...</td></tr>';
+
   try{
     const snapU=await getDocs(collection(db,"users"));
     let users=[]; snapU.forEach(d=>users.push({id:d.id,...d.data()}));
@@ -188,8 +206,9 @@ window.hapusSelected=async function(){ if(selected.size===0){ alert('Pilih token
 
 function genToken(){ const chars="ABCDEFGHJKLMNPQRSTUVWXYZ23456789"; let t=""; for(let i=0;i<12;i++) t+=chars[Math.floor(Math.random()*chars.length)]; return t.match(/.{1,4}/g).join("-"); }
 window.buatToken=async function(){
-  const paket=document.getElementById('paket').value; const jml=parseInt(document.getElementById('jml').value||"1"); const harga=parseInt(document.getElementById('harga').value||"0"); const pref=(document.getElementById('pref').value||"").toUpperCase().trim(); const msg=document.getElementById('msg');
-  msg.textContent="Membuat...";
-  try{ for(let i=0;i<jml;i++){ let token=genToken(); if(pref) token=pref+"-"+token; await addDoc(collection(db,"tokens"),{token:token,paket:paket,paketHari:parseInt(paket)||30,harga:harga,used:false,usedBy:"",usedByEmail:"",usedAt:null,createdAt:new Date(),status:"tersedia"}); } msg.textContent=jml+" token berhasil dibuat!"; await loadAll(); }catch(e){ msg.textContent="Gagal: "+e.message; }
+  let paketHari=parseInt(document.getElementById('paket').value||"0"); if(!paketHari||paketHari<1){ alert('Isi masa aktif manual, contoh: 90, 120, 360'); return; }
+  const jml=parseInt(document.getElementById('jml').value||"1"); const harga=parseInt(document.getElementById('harga').value||"0"); const pref=(document.getElementById('pref').value||"").toUpperCase().trim(); const msg=document.getElementById('msg');
+  msg.textContent="Membuat "+jml+" token paket "+paketHari+" hari...";
+  try{ for(let i=0;i<jml;i++){ let token=genToken(); if(pref) token=pref+"-"+token; await addDoc(collection(db,"tokens"),{token:token,paket:paketHari+" Hari",paketHari:paketHari,harga:harga,used:false,usedBy:"",usedByEmail:"",usedAt:null,createdAt:new Date(),status:"tersedia"}); } msg.textContent=jml+" token paket "+paketHari+" hari berhasil dibuat!"; await loadAll(); }catch(e){ msg.textContent="Gagal: "+e.message; alert(e.message); }
 }
 </script><script>(function(){var loc=location.href.replace(/#.*$/,"");var ATTR_NAMES=["data-product-id","data-productid","data-product_id","product-id","productid","product_id","data-source-entity-id","source-entity-id","source_entity_id","data-product","data-metadata","data-meta"];var DATASET_KEYS=["productId","productid","product_id","sourceEntityId","sourceentityid","source_entity_id","product","metadata","meta"];function readProductId(value){if(typeof value!=="string"||value.length===0)return null;if(/^[0-9]{6,}$/.test(value))return value;var match=value.match(/(?:product(?:_|-)?id|source(?:_|-)?entity(?:_|-)?id)["'=:\s]+([0-9]{6,})/i);return match?match[1]:null}function extractProductId(start){for(var node=start;node&&node!==document.body;node=node.parentElement){for(var i=0;i<ATTR_NAMES.length;i++){var attrValue=node.getAttribute&&node.getAttribute(ATTR_NAMES[i]);var attrProductId=readProductId(attrValue);if(attrProductId)return attrProductId}var dataset=node.dataset||null;if(dataset){for(var j=0;j<DATASET_KEYS.length;j++){var dataValue=dataset[DATASET_KEYS[j]];var dataProductId=readProductId(dataValue);if(dataProductId)return dataProductId}}}return null}function isInlineMediaSlotElement(node){return !!(node&&node.getAttribute&&node.getAttribute("data-clippy-inline-media-slot")!==null)}function findInlineMediaSlot(start){for(var node=start;node&&node!==document.body;node=node.parentElement){if(isInlineMediaSlotElement(node))return node}return null}function readInlineMediaUrl(node){if(!node)return null;return node.getAttribute&&((node.getAttribute("data-clippy-inline-media-url")||node.getAttribute("data-url")||node.getAttribute("data_url")))||node.href||null}function stripHash(url){return String(url).replace(/#.*$/,"")}function urlsMatch(a,b){if(!a||!b)return false;try{return stripHash(new URL(a,loc).href)===stripHash(new URL(b,loc).href)}catch(_){return stripHash(a)===stripHash(b)}}function isFirstPartyReelUrl(value){try{var url=new URL(value,loc);if(url.protocol!=="https:")return false;var host=url.hostname.toLowerCase();var supported=host==="instagram.com"||host.endsWith(".instagram.com")||host==="facebook.com"||host.endsWith(".facebook.com");return supported&&/\/reels?\//i.test(url.pathname)}catch(_){return false}}function isInlineMediaUrlClick(node,href){var slot=findInlineMediaSlot(node);if(!slot)return false;var slotUrl=readInlineMediaUrl(slot);if(slotUrl)return urlsMatch(href,slotUrl);return isFirstPartyReelUrl(href)}function findDataHref(start){for(var node=start;node&&node!==document.body;node=node.parentElement){if(node.getAttribute){var href=node.getAttribute("data-href")||node.getAttribute("data-url");if(href)return{href:href,node:node}}}return null}var nativeOpen=window.open;window.open=function(url){if(parent!==window&&typeof url==="string"&&/^https?:\/\//.test(url)){parent.postMessage({type:"ecto:usercontent-link-click",href:url},"*");return null}return nativeOpen?nativeOpen.apply(window,arguments):null};document.addEventListener("click",function(e){var target=e.target instanceof Element?e.target:null;if(!target)return;if(parent===window)return;var a=target.closest?target.closest("a[href]"):null;if(a&&a.href&&/^https?:\/\//.test(a.href)&&a.href.replace(/#.*$/,"")!==loc){if(isInlineMediaUrlClick(a,a.href))return;var productId=extractProductId(target)||extractProductId(a);if(productId){e.preventDefault();parent.postMessage({type:"ecto-artifact-link-click",productId:productId},"*");return}e.preventDefault();parent.postMessage({type:"ecto:usercontent-link-click",href:a.href},"*");return}var dataHref=findDataHref(target);if(dataHref&&/^https?:\/\//.test(dataHref.href)&&dataHref.href.replace(/#.*$/,"")!==loc){if(isInlineMediaUrlClick(dataHref.node,dataHref.href))return;e.preventDefault();parent.postMessage({type:"ecto:usercontent-link-click",href:dataHref.href},"*")}},true)})();</script><script>(function(){var FOCUS_TYPE="ecto:artifact-focus-request";var CLOSE_TYPE="ecto:artifact-close-request";function focusArtifactDocument(){var body=document.body;if(!body)return;try{window.focus();}catch(e){}if(!body.hasAttribute("tabindex"))body.setAttribute("tabindex","-1");try{body.focus({preventScroll:true});}catch(e){try{body.focus();}catch(e2){}}}window.addEventListener("message",function(event){if(event.source!==window.parent)return;var data=event.data;if(!data||typeof data!=="object"||data.type!==FOCUS_TYPE)return;if(document.readyState==="loading"){document.addEventListener("DOMContentLoaded",focusArtifactDocument,{once:true});return;}focusArtifactDocument();});window.addEventListener("keydown",function(event){if(event.key!=="Escape")return;window.setTimeout(function(){if(event.defaultPrevented)return;window.parent.postMessage({type:CLOSE_TYPE},"*");},0);});})();</script></body></html>
