@@ -456,7 +456,7 @@ body{overflow:hidden}
 
     <button class="menu-link"
       data-page="dashboard-pendapatan.html"
-      data-roles="owner,superadmin"
+      data-roles="owner,superadmin,karyawan"
       onclick="bukaHalaman(this)">
       <span class="ico">📊</span>
       Dashboard Pendapatan
@@ -464,7 +464,7 @@ body{overflow:hidden}
 
     <button class="menu-link"
       data-page="data-servis.html"
-      data-roles="owner,employee,reseller,superadmin"
+      data-roles="owner,karyawan,reseller,employee,superadmin,iprem"
       data-permission="dataServis"
       onclick="bukaHalaman(this)">
       <span class="ico">🔧</span>
@@ -473,7 +473,7 @@ body{overflow:hidden}
 
     <button class="menu-link"
       data-page="data-penjualan.html"
-      data-roles="owner,employee,reseller,superadmin"
+      data-roles="owner,karyawan,reseller,employee,superadmin,iprem"
       data-permission="dataPenjualan"
       onclick="bukaHalaman(this)">
       <span class="ico">🛒</span>
@@ -482,7 +482,7 @@ body{overflow:hidden}
 
     <button class="menu-link"
       data-page="rekap-teknisi.html"
-      data-roles="owner,employee,superadmin"
+      data-roles="owner,karyawan,superadmin,employee"
       data-permission="rekap-teknisi"
       onclick="bukaHalaman(this)">
       <span class="ico">🧰</span>
@@ -491,7 +491,7 @@ body{overflow:hidden}
 
     <button class="menu-link"
       data-page="laporan-pendapatan-servis.html"
-      data-roles="owner,superadmin"
+      data-roles="owner"
       data-permission="laporan-pendapatan-servis"
       onclick="bukaHalaman(this)">
       <span class="ico">💻</span>
@@ -500,7 +500,7 @@ body{overflow:hidden}
 
     <button class="menu-link"
       data-page="monitoring-garansi.html"
-      data-roles="owner,employee,superadmin"
+      data-roles="owner,karyawan,superadmin,employee"
       data-permission="garansi"
       onclick="bukaHalaman(this)">
       <span class="ico">🛡️</span>
@@ -509,7 +509,7 @@ body{overflow:hidden}
 
     <button class="menu-link"
       data-page="stock.html"
-      data-roles="owner,employee,reseller,superadmin"
+      data-roles="owner,karyawan,reseller,employee,superadmin,iprem"
       data-permission="stock"
       onclick="bukaHalaman(this)">
       <span class="ico">📦</span>
@@ -518,7 +518,7 @@ body{overflow:hidden}
 
     <button class="menu-link"
       data-page="upah-kerja.html"
-      data-roles="owner,superadmin"
+      data-roles="owner"
       onclick="bukaHalaman(this)">
       <span class="ico">💰</span>
       Upah Karyawan
@@ -526,7 +526,7 @@ body{overflow:hidden}
 
     <button class="menu-link"
       data-page="pengeluaran.html"
-      data-roles="owner,superadmin"
+      data-roles="owner"
       onclick="bukaHalaman(this)">
       <span class="ico">💸</span>
       Pengeluaran
@@ -534,7 +534,7 @@ body{overflow:hidden}
 
     <button class="menu-link"
       data-page="dashboard-admin.html"
-      data-roles="owner,superadmin"
+      data-roles="owner"
       onclick="bukaHalaman(this)">
       <span class="ico">📊</span>
       Dashboard Admin
@@ -568,7 +568,7 @@ body{overflow:hidden}
 
     <button class="menu-link"
       data-page="cek-aktivasi.html"
-      data-roles="owner,employee,reseller,superadmin"
+      data-roles="owner,karyawan,reseller,employee,superadmin,iprem"
       onclick="bukaHalaman(this)">
       <span class="ico">🔐</span>
       Cek Aktivasi
@@ -584,7 +584,7 @@ body{overflow:hidden}
 
     <button class="menu-link"
       data-page="page.html"
-      data-roles="owner,employee,reseller,superadmin"
+      data-roles="owner,karyawan,reseller,employee,superadmin,iprem"
       onclick="bukaHalaman(this)">
       <span class="ico">ℹ️</span>
       About
@@ -608,8 +608,9 @@ import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/fi
 import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js";
 
 const cfg={apiKey:"AIzaSyC_PcarMTT5Un7qfSLzf92o5OGn5rginsI",authDomain:"fixzy-update.firebaseapp.com",projectId:"fixzy-update",storageBucket:"fixzy-update.firebasestorage.app",messagingSenderId:"995892519622",appId:"1:995892519622:web:fa41047944d8e5b35d6dc7"};
+const firebaseConfig=cfg;
 
-const app = getApps().length ? getApp() : initializeApp(firebaseConfig);
+const app = getApps().length ? getApp() : initializeApp(cfg);
 const auth = getAuth(app);
 const db = getFirestore(app);
 
