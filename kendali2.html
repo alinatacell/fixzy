@@ -21,54 +21,54 @@
 :where(code, pre, kbd, samp) {
   font-family: "Optimistic Mono", ui-monospace, monospace;
 }
-</style><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>FIXZY KENDALI ADMIN - TOKEN</title>
+</style><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>FIXZY KENDALI OWNER ONLY</title>
 <style>
 *{box-sizing:border-box}body{margin:0;font-family:Arial;background:#f3f4f6;color:#111827}
 .top{position:sticky;top:0;z-index:40;background:#111827;color:#fff;padding:12px 16px;display:flex;align-items:center;gap:12px}
 .top h1{margin:0;font-size:18px;font-weight:900}.top h1 span{color:#ffc107}
-.top p{margin:2px 0 0;font-size:10px;color:#cbd5e1}
 .btn{border:0;border-radius:12px;padding:10px 14px;font-weight:900;cursor:pointer}
 .btn-y{background:#ffc107;color:#111827}.btn-w{background:#fff;color:#111827}
 .wrap{max-width:1200px;margin:auto;padding:14px}
 .card{background:#fff;border-radius:18px;padding:14px;margin-bottom:12px;box-shadow:0 4px 15px #0001}
-.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:12px}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px}
 .stat{background:#fff;border:1px solid #e5e7eb;border-radius:14px;padding:12px}
 .stat b{font-size:20px;display:block;margin-top:4px}
 .badge{padding:4px 8px;border-radius:999px;font-size:10px;font-weight:900}
-.badge.green{background:#dcfce7;color:#166534}.badge.red{background:#fee2e2;color:#991b1b}.badge.yellow{background:#fef3c7;color:#92400e}
+.badge.green{background:#dcfce7;color:#166534}.badge.red{background:#fee2e2;color:#991b1b}
 .table-wrap{overflow:auto;border:1px solid #e5e7eb;border-radius:12px}
-table{width:100%;border-collapse:collapse;min-width:900px}th{background:#111827;color:#fff;padding:10px 8px;font-size:11px;text-align:left}td{padding:10px 8px;border-bottom:1px solid #eee;font-size:11px}
+table{width:100%;border-collapse:collapse;min-width:700px}th{background:#111827;color:#fff;padding:10px 8px;font-size:11px;text-align:left}td{padding:10px 8px;border-bottom:1px solid #eee;font-size:11px}
 input,select{width:100%;padding:10px;border:1px solid #cbd5e1;border-radius:10px}
 #ownerGate{position:fixed;inset:0;z-index:9999;background:#111827;display:flex;align-items:center;justify-content:center;padding:20px}
 #ownerGate .box{background:#fff;border-radius:18px;padding:20px;max-width:360px;width:100%}
+.rules{background:#fee2e2;border:1px solid #fecaca;border-radius:10px;padding:10px;font-size:11px;margin-top:8px}
 </style></head><body>
-<div id="ownerGate"><div class="box"><h2 style="margin:0 0 6px">🔒 Login Owner</h2><p style="margin:0 0 10px;font-size:11px;color:#64748b">PIN khusus pemilik. Default: FIXZY123</p><input id="pinInput" placeholder="PIN" style="margin-bottom:8px;text-transform:uppercase"><button class="btn btn-y" style="width:100%" onclick="cekPin()">Masuk</button><div id="pinErr" style="color:#dc2626;font-size:11px;margin-top:6px;display:none"></div></div></div>
-<div class="top"><div style="flex:1"><h1>FIXZY <span>KENDALI ADMIN</span></h1><p>Kontrol akun & buat token jual</p></div><button class="btn btn-y" onclick="loadAll()">↻ Refresh</button><button class="btn btn-w" onclick="location.href='index.html'">← Kembali</button></div>
+<div id="ownerGate"><div class="box"><h2 style="margin:0 0 6px">🔒 Login Owner</h2><p style="margin:0 0 10px;font-size:11px;color:#64748b">Cuma owner. PIN: FIXZY123</p><input id="pinInput" placeholder="PIN"><button class="btn btn-y" style="width:100%;margin-top:8px" onclick="cekPin()">Masuk</button><div id="pinErr" style="color:#dc2626;font-size:11px;margin-top:6px;display:none"></div></div></div>
+<div class="top"><div style="flex:1"><h1>FIXZY <span>KENDALI ADMIN</span></h1><p>Hanya akun owner (karyawan disembunyikan)</p></div><button class="btn btn-y" onclick="loadAll()">Refresh</button><button class="btn btn-w" onclick="location.href='index.html'">Kembali</button></div>
 <div class="wrap">
   <div class="stats">
-    <div class="stat"><small>Total Konter</small><b id="sTotal">0</b></div>
+    <div class="stat"><small>Total Owner</small><b id="sTotal">0</b></div>
     <div class="stat"><small>Masih Aktif</small><b id="sAktif" style="color:#16a34a">0</b></div>
     <div class="stat"><small>Kedaluwarsa</small><b id="sExp" style="color:#dc2626">0</b></div>
-    <div class="stat"><small>Token Terjual</small><b id="sToken">0</b></div>
   </div>
 
   <div class="card" style="border:2px solid #ffc107;background:#fffbeb">
-    <h3 style="margin:0 0 8px">🎫 Buat Token Untuk Dijual</h3>
-    <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr auto;gap:8px">
-      <select id="paket"><option value="7">7 Hari</option><option value="30" selected>30 Hari</option><option value="90">90 Hari</option><option value="365">1 Tahun</option><option value="permanen">Permanen (3650h)</option></select>
+    <h3 style="margin:0 0 8px">🎫 Buat Token Untuk Dijual (Owner Only)</h3>
+    <div style="display:grid;grid-template-columns:1fr 80px 110px 1fr auto;gap:8px">
+      <select id="paket"><option value="7">7 Hari</option><option value="30" selected>30 Hari</option><option value="90">90 Hari</option><option value="365">1 Tahun</option><option value="3650">Permanen</option></select>
       <input id="jml" type="number" value="1" min="1" max="50">
-      <input id="harga" type="number" value="25000" placeholder="Harga">
-      <input id="pref" placeholder="Prefix (opsional) ex: FIXZY" maxlength="5">
+      <input id="harga" type="number" value="25000">
+      <input id="pref" placeholder="Prefix FIXZY">
       <button class="btn btn-y" onclick="buatToken()">Buat</button>
     </div>
     <div id="tokenMsg" style="font-size:11px;margin-top:6px;font-weight:800"></div>
-    <div class="table-wrap" style="margin-top:10px"><table><thead><tr><th>Token</th><th>Paket</th><th>Harga</th><th>Status</th><th>Pemakai</th><th>Aksi</th></tr></thead><tbody id="tokenBody"><tr><td colspan=6 style="text-align:center;padding:20px">Memuat token...</td></tr></tbody></table></div>
+    <div id="rulesWarn" class="rules" style="display:none"></div>
+    <div class="table-wrap" style="margin-top:10px"><table><thead><tr><th>Token</th><th>Paket</th><th>Harga</th><th>Status</th><th>Pemakai</th><th>Aksi</th></tr></thead><tbody id="tokenBody"><tr><td colspan=6 style="text-align:center;padding:20px">Memuat...</td></tr></tbody></table></div>
   </div>
 
   <div class="card">
-    <h3 style="margin:0 0 4px">📱 Data Konter Terdaftar</h3><small style="color:#64748b">Dari koleksi users di fixzy-update</small>
-    <div style="display:grid;grid-template-columns:1fr auto;gap:8px;margin:10px 0"><input id="cari" placeholder="Cari nama, email..." oninput="render()"><select id="filter" onchange="render()"><option value="semua">Semua</option><option value="aktif">Aktif</option><option value="exp">Kadaluarsa</option></select></div>
-    <div class="table-wrap"><table><thead><tr><th>Konter</th><th>Email</th><th>Role</th><th>Aktif Sampai</th><th>Sisa</th><th>Aksi</th></tr></thead><tbody id="userBody"><tr><td colspan=6 style="text-align:center;padding:20px">Menunggu login owner...</td></tr></tbody></table></div>
+    <h3 style="margin:0 0 4px">👑 Data Owner Terdaftar</h3><small style="color:#64748b">Karyawan otomatis disembunyikan (role=employee tidak tampil)</small>
+    <div style="margin:10px 0"><input id="cari" placeholder="Cari nama owner, email..." oninput="render()"></div>
+    <div class="table-wrap"><table><thead><tr><th>Konter</th><th>Email</th><th>Aktif Sampai</th><th>Sisa</th><th>Aksi</th></tr></thead><tbody id="userBody"><tr><td colspan=5 style="text-align:center;padding:20px">Menunggu...</td></tr></tbody></table></div>
   </div>
 </div>
 <script type="module">
@@ -77,86 +77,129 @@ import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/1
 import { getFirestore, collection, getDocs, doc, deleteDoc, updateDoc, addDoc, query, orderBy } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js";
 const cfg={apiKey:"AIzaSyC_PcarMTT5Un7qfSLzf92o5OGn5rginsI",authDomain:"fixzy-update.firebaseapp.com",projectId:"fixzy-update",storageBucket:"fixzy-update.firebasestorage.app",messagingSenderId:"995892519622",appId:"1:995892519622:web:fa41047944d8e5b35d6dc7"};
 const app=initializeApp(cfg); const auth=getAuth(app); const db=getFirestore(app);
-window.db=db;
 const OWNER_PIN="FIXZY123";
 window.cekPin=function(){
   const v=(document.getElementById('pinInput').value||"").trim().toUpperCase();
   const saved=(localStorage.getItem('fixzy_owner_pin')||OWNER_PIN).toUpperCase();
   if(v===saved && v!==""){ localStorage.setItem('fixzy_owner_login','1'); document.getElementById('ownerGate').style.display='none'; init(); }
-  else{ document.getElementById('pinErr').style.display='block'; document.getElementById('pinErr').textContent='PIN salah! Kamu ketik '+v+' harusnya '+saved; }
+  else{ document.getElementById('pinErr').style.display='block'; document.getElementById('pinErr').textContent='PIN salah!'; }
 }
 if(localStorage.getItem('fixzy_owner_login')==='1'){ document.getElementById('ownerGate').style.display='none'; setTimeout(init,200); }
-async function init(){
-  try{ await signInAnonymously(auth); }catch(e){ console.error(e); }
-  loadAll();
-}
-window.init=init;
+async function init(){ try{ await signInAnonymously(auth); }catch(e){} loadAll(); }
 let users=[], tokens=[];
+function parseExp(obj){
+  // cek semua kemungkinan nama field
+  let candidates=[obj.exp, obj.expAt, obj.expiredAt, obj.aktifSampai, obj.activeUntil, obj.expireAt, obj.validUntil, obj.masaAktif, obj.exp_date];
+  // juga cek nested
+  for(let k of Object.keys(obj)){
+    if(k.toLowerCase().includes('exp') || k.toLowerCase().includes('aktif')){
+      candidates.push(obj[k]);
+    }
+  }
+  for(let c of candidates){
+    if(!c) continue;
+    try{
+      if(c.toDate) return c.toDate();
+      if(c.seconds) return new Date(c.seconds*1000);
+      let d=new Date(c);
+      if(!isNaN(d) && d.getFullYear()>2020) return d;
+    }catch(e){}
+  }
+  return null;
+}
 window.loadAll=async function(){
-  document.getElementById('userBody').innerHTML='<tr><td colspan=6 style="text-align:center">Memuat...</td></tr>';
   try{
     const snap=await getDocs(collection(db,"users"));
-    users=[]; snap.forEach(d=>{ users.push({id:d.id,...d.data()}); });
+    users=[]; snap.forEach(d=>users.push({id:d.id, ...d.data()}));
+    // filter hanya owner, sembunyikan karyawan
+    users=users.filter(u=>{
+      const role=(u.role||"").toLowerCase();
+      return role!=="employee" && role!=="karyawan" && role!=="staff";
+    });
     document.getElementById('sTotal').textContent=users.length;
-    let aktif=0, exp=0;
-    users.forEach(u=>{ let e=u.exp||u.expAt||u.expiredAt; if(e&&e.toDate) e=e.toDate(); else if(e) e=new Date(e); if(e&&e>new Date()) aktif++; else exp++; });
-    document.getElementById('sAktif').textContent=aktif; document.getElementById('sExp').textContent=exp;
+    let aktif=0, expc=0;
+    users.forEach(u=>{
+      const e=parseExp(u);
+      if(e && e>new Date()) aktif++; else expc++;
+    });
+    document.getElementById('sAktif').textContent=aktif; document.getElementById('sExp').textContent=expc;
     render();
   }catch(e){
-    document.getElementById('userBody').innerHTML='<tr><td colspan=6 style="color:red;padding:20px">Gagal load users: '+e.message+'<br><br>Rules Firestore fixzy-update harus allow read. Buka Firebase Console > Firestore > Rules ganti:<br><code>allow read, write: if true;</code> untuk testing atau allow anon.</td></tr>';
+    document.getElementById('userBody').innerHTML='<tr><td colspan=5 style="color:red">Gagal: '+e.message+'</td></tr>';
+    document.getElementById('rulesWarn').style.display='block';
+    document.getElementById('rulesWarn').innerHTML='❌ Permission error. Buka Firebase Console > Firestore > Rules, paste ini:<br><pre style="white-space:pre-wrap;background:#fff;padding:8px;border-radius:6px">rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /{document=**} {
+      allow read, write: if true;
+    }
+  }
+}</pre>';
   }
   try{
     const snap=await getDocs(query(collection(db,"tokens"), orderBy("createdAt","desc")));
     tokens=[]; snap.forEach(d=>tokens.push({id:d.id,...d.data()}));
-    document.getElementById('sToken').textContent=tokens.filter(t=>t.used).length+'/'+tokens.length;
     renderToken();
-  }catch(e){ document.getElementById('tokenBody').innerHTML='<tr><td colspan=6>Gagal: '+e.message+'</td></tr>'; }
+  }catch(e){
+    document.getElementById('tokenBody').innerHTML='<tr><td colspan=6 style="color:red">Gagal token: '+e.message+'<br>Update Rules dulu.</td></tr>';
+    document.getElementById('rulesWarn').style.display='block';
+  }
 }
 window.render=function(){
-  const cari=(document.getElementById('cari').value||"").toLowerCase(); const f=document.getElementById('filter').value;
+  const cari=(document.getElementById('cari').value||"").toLowerCase();
   let list=users.filter(u=>{
-    const txt=(u.namaKonter||u.nama||""+u.email||"").toLowerCase();
-    if(cari && !txt.includes(cari) && !(u.email||"").toLowerCase().includes(cari)) return false;
-    let e=u.exp||u.expAt; if(e&&e.toDate) e=e.toDate(); else if(e) e=new Date(e);
-    const isAktif=e&&e>new Date();
-    if(f==="aktif" && !isAktif) return false;
-    if(f==="exp" && isAktif) return false;
-    return true;
+    if(!cari) return true;
+    return (u.namaKonter||u.nama||"").toLowerCase().includes(cari) || (u.email||"").toLowerCase().includes(cari);
   });
   let html=""; list.forEach(u=>{
-    let e=u.exp||u.expAt||u.expiredAt; if(e&&e.toDate) e=e.toDate(); else if(e) e=new Date(e);
-    let sisa="-", badge=""; if(e&&!isNaN(e)){ const s=Math.ceil((e-new Date())/86400000); sisa=s+" hari"; badge=s>0?'<span class="badge green">Aktif</span>':'<span class="badge red">Expired</span>'; }
-    html+=`<tr><td><b>${u.namaKonter||u.nama||'-'}</b></td><td>${u.email||'-'}</td><td>${u.role||'-'}</td><td>${e?e.toLocaleDateString('id-ID'):'-'}</td><td>${sisa} ${badge}</td><td><button class="btn btn-y" style="padding:6px 8px;font-size:10px" onclick="tambahHari('${u.id}',30)">+30h</button> <button class="btn" style="background:#dc2626;color:#fff;padding:6px 8px;font-size:10px" onclick="hapusUser('${u.id}')">Hapus</button></td></tr>`;
+    const e=parseExp(u);
+    let sisaText="-", badge="", tgl="-";
+    if(e){
+      tgl=e.toLocaleDateString('id-ID',{day:'2-digit',month:'long',year:'numeric'});
+      const s=Math.ceil((e-new Date())/86400000);
+      sisaText=s+" hari";
+      badge=s>0?'<span class="badge green">Aktif</span>':'<span class="badge red">Expired</span>';
+    }
+    html+=`<tr><td><b>${u.namaKonter||u.nama||'-'}</b><br><small>${u.role||'owner'}</small></td><td>${u.email||'-'}</td><td>${tgl}</td><td>${sisaText} ${badge}</td><td><button class="btn btn-y" style="padding:6px 8px;font-size:10px" onclick="tambahHari('${u.id}',30)">+30h</button> <button style="background:#dc2626;color:#fff;border:0;border-radius:8px;padding:6px 8px;font-size:10px" onclick="hapusUser('${u.id}')">Hapus</button></td></tr>`;
   });
-  document.getElementById('userBody').innerHTML=html||'<tr><td colspan=6 style="text-align:center">Tidak ada data</td></tr>';
+  document.getElementById('userBody').innerHTML=html||'<tr><td colspan=5 style="text-align:center">Tidak ada owner</td></tr>';
 }
 window.renderToken=function(){
   let html=""; tokens.forEach(t=>{
     const st=t.used?'<span class="badge red">Terpakai</span>':'<span class="badge green">Tersedia</span>';
-    html+=`<tr><td><b>${t.token}</b><br><button onclick="navigator.clipboard.writeText('${t.token}')" style="font-size:10px">Copy</button></td><td>${t.paket}</td><td>Rp ${Number(t.harga||0).toLocaleString()}</td><td>${st}</td><td>${t.usedByEmail||t.usedBy||'-'}</td><td><button onclick="hapusToken('${t.id}')" style="background:#dc2626;color:#fff;border:0;border-radius:8px;padding:6px 8px;font-size:10px">Hapus</button></td></tr>`;
+    html+=`<tr><td><b>${t.token}</b><br><button onclick="navigator.clipboard.writeText('${t.token}')" style="font-size:10px">Copy</button></td><td>${t.paket}</td><td>Rp ${Number(t.harga||0).toLocaleString()}</td><td>${st}</td><td>${t.usedByEmail||'-'}</td><td><button onclick="hapusToken('${t.id}')" style="background:#dc2626;color:#fff;border:0;border-radius:8px;padding:6px">Hapus</button></td></tr>`;
   });
   document.getElementById('tokenBody').innerHTML=html||'<tr><td colspan=6 style="text-align:center">Belum ada token</td></tr>';
 }
-function genToken(len=12){ const chars="ABCDEFGHJKLMNPQRSTUVWXYZ23456789"; let t=""; for(let i=0;i<len;i++) t+=chars[Math.floor(Math.random()*chars.length)]; return t.match(/.{1,4}/g).join("-"); }
+function genToken(){ const chars="ABCDEFGHJKLMNPQRSTUVWXYZ23456789"; let t=""; for(let i=0;i<12;i++) t+=chars[Math.floor(Math.random()*chars.length)]; return t.match(/.{1,4}/g).join("-"); }
 window.buatToken=async function(){
   const paket=document.getElementById('paket').value; const jml=parseInt(document.getElementById('jml').value||"1"); const harga=parseInt(document.getElementById('harga').value||"0"); const pref=(document.getElementById('pref').value||"").toUpperCase();
-  const msg=document.getElementById('tokenMsg'); msg.textContent="Membuat "+jml+" token...";
+  const msg=document.getElementById('tokenMsg');
+  msg.textContent="Membuat...";
   try{
     for(let i=0;i<jml;i++){
-      let token=genToken(12); if(pref) token=pref+"-"+token;
-      let hari=paket==="permanen"?3650:parseInt(paket);
+      let token=genToken(); if(pref) token=pref+"-"+token;
+      let hari=parseInt(paket)||30;
+      if(paket==="3650") hari=3650;
       await addDoc(collection(db,"tokens"),{token:token,paket:paket,paketHari:hari,harga:harga,used:false,usedBy:"",createdAt:new Date(),status:"tersedia"});
     }
-    msg.textContent=jml+" token berhasil dibuat!"; loadAll();
-  }catch(e){ msg.textContent="Gagal: "+e.message; }
+    msg.textContent=jml+" token berhasil!"; loadAll();
+  }catch(e){
+    msg.textContent="Gagal: "+e.message;
+    document.getElementById('rulesWarn').style.display='block';
+    document.getElementById('rulesWarn').innerHTML='Gagal karena Rules. Ganti Rules di Firebase Console:<br><pre>allow read, write: if true;</pre>';
+  }
 }
-window.hapusToken=async function(id){ if(!confirm("Hapus token?")) return; await deleteDoc(doc(db,"tokens",id)); loadAll(); }
-window.hapusUser=async function(id){ if(!confirm("Hapus user?")) return; await deleteDoc(doc(db,"users",id)); loadAll(); }
+window.hapusToken=async function(id){ if(!confirm("Hapus?")) return; await deleteDoc(doc(db,"tokens",id)); loadAll(); }
+window.hapusUser=async function(id){ if(!confirm("Hapus owner?")) return; await deleteDoc(doc(db,"users",id)); loadAll(); }
 window.tambahHari=async function(id, hari){
   try{
-    const u=users.find(x=>x.id===id); let base=new Date(); let e=u.exp||u.expAt; if(e&&e.toDate) e=e.toDate(); else if(e) e=new Date(e); if(e&&e>new Date()) base=e;
+    const u=users.find(x=>x.id===id); let base=new Date();
+    const e=parseExp(u||{});
+    if(e && e>new Date()) base=e;
     const ne=new Date(base); ne.setDate(ne.getDate()+hari);
-    await updateDoc(doc(db,"users",id),{exp:ne,expAt:ne,active:true}); alert("Ditambah "+hari+" hari sampai "+ne.toLocaleDateString()); loadAll();
+    await updateDoc(doc(db,"users",id),{exp:ne,expAt:ne,active:true});
+    alert("Ditambah "+hari+" hari -> "+ne.toLocaleDateString()); loadAll();
   }catch(e){ alert(e.message); }
 }
 </script><script>(function(){var loc=location.href.replace(/#.*$/,"");var ATTR_NAMES=["data-product-id","data-productid","data-product_id","product-id","productid","product_id","data-source-entity-id","source-entity-id","source_entity_id","data-product","data-metadata","data-meta"];var DATASET_KEYS=["productId","productid","product_id","sourceEntityId","sourceentityid","source_entity_id","product","metadata","meta"];function readProductId(value){if(typeof value!=="string"||value.length===0)return null;if(/^[0-9]{6,}$/.test(value))return value;var match=value.match(/(?:product(?:_|-)?id|source(?:_|-)?entity(?:_|-)?id)["'=:\s]+([0-9]{6,})/i);return match?match[1]:null}function extractProductId(start){for(var node=start;node&&node!==document.body;node=node.parentElement){for(var i=0;i<ATTR_NAMES.length;i++){var attrValue=node.getAttribute&&node.getAttribute(ATTR_NAMES[i]);var attrProductId=readProductId(attrValue);if(attrProductId)return attrProductId}var dataset=node.dataset||null;if(dataset){for(var j=0;j<DATASET_KEYS.length;j++){var dataValue=dataset[DATASET_KEYS[j]];var dataProductId=readProductId(dataValue);if(dataProductId)return dataProductId}}}return null}function isInlineMediaSlotElement(node){return !!(node&&node.getAttribute&&node.getAttribute("data-clippy-inline-media-slot")!==null)}function findInlineMediaSlot(start){for(var node=start;node&&node!==document.body;node=node.parentElement){if(isInlineMediaSlotElement(node))return node}return null}function readInlineMediaUrl(node){if(!node)return null;return node.getAttribute&&((node.getAttribute("data-clippy-inline-media-url")||node.getAttribute("data-url")||node.getAttribute("data_url")))||node.href||null}function stripHash(url){return String(url).replace(/#.*$/,"")}function urlsMatch(a,b){if(!a||!b)return false;try{return stripHash(new URL(a,loc).href)===stripHash(new URL(b,loc).href)}catch(_){return stripHash(a)===stripHash(b)}}function isFirstPartyReelUrl(value){try{var url=new URL(value,loc);if(url.protocol!=="https:")return false;var host=url.hostname.toLowerCase();var supported=host==="instagram.com"||host.endsWith(".instagram.com")||host==="facebook.com"||host.endsWith(".facebook.com");return supported&&/\/reels?\//i.test(url.pathname)}catch(_){return false}}function isInlineMediaUrlClick(node,href){var slot=findInlineMediaSlot(node);if(!slot)return false;var slotUrl=readInlineMediaUrl(slot);if(slotUrl)return urlsMatch(href,slotUrl);return isFirstPartyReelUrl(href)}function findDataHref(start){for(var node=start;node&&node!==document.body;node=node.parentElement){if(node.getAttribute){var href=node.getAttribute("data-href")||node.getAttribute("data-url");if(href)return{href:href,node:node}}}return null}var nativeOpen=window.open;window.open=function(url){if(parent!==window&&typeof url==="string"&&/^https?:\/\//.test(url)){parent.postMessage({type:"ecto:usercontent-link-click",href:url},"*");return null}return nativeOpen?nativeOpen.apply(window,arguments):null};document.addEventListener("click",function(e){var target=e.target instanceof Element?e.target:null;if(!target)return;if(parent===window)return;var a=target.closest?target.closest("a[href]"):null;if(a&&a.href&&/^https?:\/\//.test(a.href)&&a.href.replace(/#.*$/,"")!==loc){if(isInlineMediaUrlClick(a,a.href))return;var productId=extractProductId(target)||extractProductId(a);if(productId){e.preventDefault();parent.postMessage({type:"ecto-artifact-link-click",productId:productId},"*");return}e.preventDefault();parent.postMessage({type:"ecto:usercontent-link-click",href:a.href},"*");return}var dataHref=findDataHref(target);if(dataHref&&/^https?:\/\//.test(dataHref.href)&&dataHref.href.replace(/#.*$/,"")!==loc){if(isInlineMediaUrlClick(dataHref.node,dataHref.href))return;e.preventDefault();parent.postMessage({type:"ecto:usercontent-link-click",href:dataHref.href},"*")}},true)})();</script><script>(function(){var FOCUS_TYPE="ecto:artifact-focus-request";var CLOSE_TYPE="ecto:artifact-close-request";function focusArtifactDocument(){var body=document.body;if(!body)return;try{window.focus();}catch(e){}if(!body.hasAttribute("tabindex"))body.setAttribute("tabindex","-1");try{body.focus({preventScroll:true});}catch(e){try{body.focus();}catch(e2){}}}window.addEventListener("message",function(event){if(event.source!==window.parent)return;var data=event.data;if(!data||typeof data!=="object"||data.type!==FOCUS_TYPE)return;if(document.readyState==="loading"){document.addEventListener("DOMContentLoaded",focusArtifactDocument,{once:true});return;}focusArtifactDocument();});window.addEventListener("keydown",function(event){if(event.key!=="Escape")return;window.setTimeout(function(){if(event.defaultPrevented)return;window.parent.postMessage({type:CLOSE_TYPE},"*");},0);});})();</script></body></html>
