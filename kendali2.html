@@ -74,17 +74,18 @@ td{padding:8px;border-bottom:1px solid #f1f5f9;vertical-align:top}
 <div class="card">
 <h3>🎫 Buat Token - Dijual</h3>
 <div class="grid-input">
-<select id="paket"><option value="7">7 Hari</option><option value="30" selected>30 Hari</option><option value="90">90 Hari</option><option value="365">1 Tahun</option></select>
+<select id="paket"><option value="7">7 Hari</option><option value="30" selected>30 Hari</option><option value="90">90 Hari</option><option value="120">120 Hari</option><option value="180">180 Hari</option><option value="360">360 Hari</option><option value="365">365 Hari / 1 Tahun</option></select>
 <input id="jml" type="number" value="5" min="1"><input id="harga" type="number" value="50000"><input id="pref" placeholder="Prefix opsional"><button class="btn btn-yellow" onclick="buatToken()">Buat</button>
 </div>
 <div id="msg" style="font-size:11px;margin-top:6px;font-weight:800;color:#15803d"></div>
 
-<div style="margin-top:10px;display:flex;gap:6px;align-items:center;flex-wrap:wrap">
-<label style="font-size:11px;font-weight:800"><input type="checkbox" id="checkAll" onchange="toggleAll(this)"> Ceklis Semua</label>
-<button class="btn btn-dark" onclick="copySelected()">📋 Salin Terpilih (<span id="countSel">0</span>)</button>
-<button class="btn btn-red" onclick="hapusSelected()">🗑️ Hapus Terpilih</button>
-<input id="cariToken" placeholder="Cari token / email pemakai..." style="margin-left:auto;min-width:180px" oninput="renderTokens()">
+<div style="margin-top:10px;display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px">
+<div style="display:flex;gap:6px;align-items:center"><label style="font-size:11px;font-weight:800"><input type="checkbox" id="checkAll" onchange="toggleAll(this)"> Ceklis Semua</label><span id="filterInfo" style="font-size:10px;color:#64748b"></span></div>
+<div style="display:flex;gap:6px"><select id="filterPaket" onchange="renderTokens()"><option value="">🔍 Semua Masa Aktif</option><option value="7">7 Hari</option><option value="30">30 Hari</option><option value="90">90 Hari</option><option value="120">120 Hari</option><option value="180">180 Hari</option><option value="360">360 Hari</option><option value="365">365 Hari</option></select><select id="filterStatus" onchange="renderTokens()"><option value="">Semua Status</option><option value="tersedia">Tersedia</option><option value="terpakai">Terpakai</option></select></div>
+<div style="display:flex;gap:6px"><button class="btn btn-dark" onclick="copySelected()">📋 Salin (<span id="countSel">0</span>)</button><button class="btn btn-red" onclick="hapusSelected()">🗑️ Hapus</button></div>
 </div>
+<div style="margin-top:8px;display:flex;gap:6px"><input id="cariToken" placeholder="Cari token / email pemakai (opsional)..." style="flex:1" oninput="renderTokens()"><button class="btn btn-white" onclick="document.getElementById('filterPaket').value='';document.getElementById('filterStatus').value='';document.getElementById('cariToken').value='';renderTokens()">Reset</button></div>
+
 
 <div class="table-wrap"><table>
 <thead><tr><th><input type="checkbox" id="checkAllHead" onchange="document.getElementById('checkAll').checked=this.checked;toggleAll(this)"></th><th>Token</th><th>Paket</th><th>Harga</th><th>Status</th><th>Pemakai / Terpakai</th><th>Aksi</th></tr></thead>
@@ -135,7 +136,24 @@ window.loadAll=async function(){
 
 window.renderTokens=function(){
   const q=(document.getElementById('cariToken').value||'').toLowerCase();
-  let filtered=allTokens.filter(t=>{ if(!q) return true; return (t.token||'').toLowerCase().includes(q) || (t.usedByEmail||'').toLowerCase().includes(q) || (t.usedBy||'').toLowerCase().includes(q); });
+  const fPaket=document.getElementById('filterPaket').value;
+  const fStatus=document.getElementById('filterStatus').value;
+
+  let filtered=allTokens.filter(t=>{
+    // filter masa aktif
+    const paketVal=String(t.paket||t.paketHari||'').replace(/[^0-9]/g,'');
+    if(fPaket && paketVal!==fPaket) return false;
+    // filter status
+    if(fStatus==='tersedia' && t.used) return false;
+    if(fStatus==='terpakai' && !t.used) return false;
+    // filter teks token/email
+    if(q){
+      const hay=(t.token||'')+' '+(t.usedByEmail||'')+' '+(t.usedBy||'');
+      if(!hay.toLowerCase().includes(q)) return false;
+    }
+    return true;
+  });
+  document.getElementById('filterInfo').textContent=fPaket?`Filter: ${fPaket} Hari (${filtered.length})`:'';
   let total=filtered.length, sedia=filtered.filter(t=>!t.used).length, pakai=filtered.filter(t=>t.used).length;
   let uang=filtered.filter(t=>t.used).reduce((a,b)=>a+(Number(b.harga)||0),0);
   document.getElementById('stTotal').textContent=total; document.getElementById('stSedia').textContent=sedia; document.getElementById('stPakai').textContent=pakai;
