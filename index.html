@@ -360,6 +360,15 @@ body{overflow:hidden}
     margin-top:5px;
   }
 }
+
+/* ===== POPUP OWNER ONLY ===== */
+.fixzy-popup-overlay{position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.6);display:none;align-items:center;justify-content:center;padding:18px}
+.fixzy-popup-overlay.show{display:flex}
+.fixzy-popup-box{width:min(400px,100%);background:#fff;border-radius:16px;padding:22px;box-shadow:0 20px 50px rgba(0,0,0,.3);text-align:center}
+.fixzy-popup-box h3{margin:0 0 8px;font-size:18px;font-weight:900;color:#111827}
+.fixzy-popup-box p{margin:0;color:#6b7280;font-size:13px;line-height:1.6}
+.fixzy-popup-box button{margin-top:16px;border:0;border-radius:10px;padding:11px 18px;background:#111827;color:#fff;font-weight:800;cursor:pointer}
+
 </style>
 </head>
 
@@ -415,16 +424,36 @@ body{overflow:hidden}
       Refresh Halaman
     </button>
 
-<button class="menu-link"
+    <button class="menu-link"
       data-page="nota.html"
+      data-roles="owner,employee"
+      data-permission="servis"
       onclick="bukaHalaman(this)">
       <span class="ico">🧾</span>
-      Input form + Nota
+      Input Servisan
     </button>
 
+    <button class="menu-link"
+      data-page="penjualan.html"
+      data-roles="owner,employee,reseller"
+      data-permission="penjualan"
+      onclick="bukaHalaman(this)">
+      <span class="ico">🛒</span>
+      Input Penjualan
+    </button>
+
+    <button class="menu-link"
+      data-page="dashboard-pendapatan.html"
+      data-roles="owner,superadmin"
+      onclick="bukaHalaman(this)">
+      <span class="ico">📊</span>
+      Dashboard Pendapatan
+    </button>
 
     <button class="menu-link"
       data-page="data-servis.html"
+      data-roles="owner,employee,reseller,superadmin"
+      data-permission="dataServis"
       onclick="bukaHalaman(this)">
       <span class="ico">🔧</span>
       Data Servis
@@ -432,27 +461,52 @@ body{overflow:hidden}
 
     <button class="menu-link"
       data-page="data-penjualan.html"
+      data-roles="owner,employee,reseller,superadmin"
+      data-permission="dataPenjualan"
       onclick="bukaHalaman(this)">
       <span class="ico">🛒</span>
       Data Penjualan
     </button>
 
     <button class="menu-link"
+      data-page="rekap-teknisi.html"
+      data-roles="owner,employee,superadmin"
+      data-permission="rekap-teknisi"
+      onclick="bukaHalaman(this)">
+      <span class="ico">🧰</span>
+      Rekap Teknisi
+    </button>
+
+    <button class="menu-link"
+      data-page="laporan-pendapatan-servis.html"
+      data-roles="owner,superadmin"
+      data-permission="laporan-pendapatan-servis"
+      onclick="bukaHalaman(this)">
+      <span class="ico">💻</span>
+      Laporan Pendapatan
+    </button>
+
+    <button class="menu-link"
+      data-page="monitoring-garansi.html"
+      data-roles="owner,employee,superadmin"
+      data-permission="garansi"
+      onclick="bukaHalaman(this)">
+      <span class="ico">🛡️</span>
+      Monitoring Garansi
+    </button>
+
+    <button class="menu-link"
       data-page="stock.html"
+      data-roles="owner,employee,reseller,superadmin"
+      data-permission="stock"
       onclick="bukaHalaman(this)">
       <span class="ico">📦</span>
       Stock
     </button>
 
     <button class="menu-link"
-      data-page="data-karyawan.html"
-      onclick="bukaHalaman(this)">
-      <span class="ico">👥</span>
-      Data Karyawan
-    </button>
-
-    <button class="menu-link"
       data-page="upah-kerja.html"
+      data-roles="owner,superadmin"
       onclick="bukaHalaman(this)">
       <span class="ico">💰</span>
       Upah Karyawan
@@ -460,6 +514,7 @@ body{overflow:hidden}
 
     <button class="menu-link"
       data-page="pengeluaran.html"
+      data-roles="owner,superadmin"
       onclick="bukaHalaman(this)">
       <span class="ico">💸</span>
       Pengeluaran
@@ -467,22 +522,57 @@ body{overflow:hidden}
 
     <button class="menu-link"
       data-page="dashboard-admin.html"
+      data-roles="owner,superadmin"
       onclick="bukaHalaman(this)">
       <span class="ico">📊</span>
       Dashboard Admin
     </button>
-    
+
     <div class="menu-divider"></div>
 
     <button class="menu-link"
+      data-page="kelola-karyawan-reseller.html"
+      data-roles="owner"
+      onclick="bukaHalaman(this)">
+      <span class="ico">👥</span>
+      Kelola Karyawan & Reseller
+    </button>
+
+    <button class="menu-link"
+      data-page="hak-akses.html"
+      data-roles="owner"
+      onclick="bukaHalaman(this)">
+      <span class="ico">🔐</span>
+      Hak Akses
+    </button>
+
+    <button class="menu-link"
+      data-page="data-karyawan.html"
+      data-roles="owner"
+      onclick="bukaHalaman(this)">
+      <span class="ico">👤</span>
+      Data Karyawan
+    </button>
+
+    <button class="menu-link"
       data-page="cek-aktivasi.html"
+      data-roles="owner,employee,reseller,superadmin"
       onclick="bukaHalaman(this)">
       <span class="ico">🔐</span>
       Cek Aktivasi
     </button>
 
     <button class="menu-link"
+      data-page="pengaturan.html"
+      data-roles="owner"
+      onclick="bukaHalaman(this)">
+      <span class="ico">⚙️</span>
+      Pengaturan
+    </button>
+
+    <button class="menu-link"
       data-page="page.html"
+      data-roles="owner,employee,reseller,superadmin"
       onclick="bukaHalaman(this)">
       <span class="ico">ℹ️</span>
       About
@@ -568,11 +658,74 @@ function refreshIndex(){
 }
 window.refreshIndex=refreshIndex;
 
+const FIXZY_PERMISSION_BY_PAGE={
+  // Samakan nama izin di akun Karyawan/Reseller dengan nama izin
+  // yang dipakai oleh menu index.
+  "nota.html":"servis",
+  "penjualan.html":"penjualan",
+  "data-servis.html":"dataServis",
+  "data-penjualan.html":"dataPenjualan",
+  "stock.html":"stock",
+  "monitoring-garansi.html":"garansi",
+  "rekap-teknisi.html":"servis",
+  "laporan-pendapatan-servis.html":"dataServis"
+};
+
+function permissionTersedia(izin, permission){
+  if(izin.includes(permission)) return true;
+
+  // Kompatibilitas dengan data izin lama yang memakai format kebab-case.
+  const alias={
+    "servis":["servis","nota"],
+    "dataServis":["dataServis","data-servis"],
+    "dataPenjualan":["dataPenjualan","data-penjualan"],
+    "garansi":["garansi","monitoring-garansi"],
+    "penjualan":["penjualan"],
+    "stock":["stock"]
+  };
+
+  return (alias[permission]||[permission]).some(x=>izin.includes(x));
+}
+
+function bolehAksesMenu(btn){
+  const session=window.fixzySession||{};
+  const role=session.role||"";
+  const roles=String(btn.dataset.roles||"owner").split(",").map(x=>x.trim()).filter(Boolean);
+
+  if(!roles.includes(role)) return false;
+
+  if(role==="owner" || role==="superadmin") return true;
+
+  const permission=btn.dataset.permission || FIXZY_PERMISSION_BY_PAGE[btn.dataset.page];
+  if(!permission) return true;
+
+  const izin=Array.isArray(session.permissions)?session.permissions:[];
+  return permissionTersedia(izin,permission);
+}
+
+function tampilkanAksesDitolak(){
+  const area=document.getElementById("contentArea");
+  area.innerHTML=`<div style="height:100%;display:flex;align-items:center;justify-content:center;padding:20px;background:#f3f4f6">
+    <div style="width:min(460px,100%);background:#fff;border:1px solid #e5e7eb;border-radius:16px;padding:24px;text-align:center;box-shadow:0 5px 20px #0001">
+      <div style="font-size:42px">🔒</div>
+      <h2 style="margin:10px 0 7px;font-size:20px">Akses Terbatas</h2>
+      <p style="margin:0;color:#667085;font-size:13px;line-height:1.6">Akun ini tidak memiliki izin untuk membuka halaman tersebut.</p>
+    </div>
+  </div>`;
+}
+
 function bukaHalaman(btn){
   if(!authReady || !auth.currentUser){
     window.location.replace("login.html");
     return;
   }
+
+  if(!bolehAksesMenu(btn)){
+    tampilkanAksesDitolak();
+    tutupMenu();
+    return;
+  }
+
   const area=document.getElementById("contentArea");
   area.innerHTML="";
   const frame=document.createElement("iframe");
@@ -586,11 +739,32 @@ function bukaHalaman(btn){
 }
 window.bukaHalaman=bukaHalaman;
 
-window.logoutFixzy=async function(){
-  if(!confirm("Yakin ingin logout dari FIXZY?")) return;
-  try{ await signOut(auth); }catch(e){ console.warn("Logout Firebase:",e); }
-  window.location.replace("login.html");
-};
+function popupLogout(){
+  const old=document.getElementById("fixzyLogoutPopup");
+  if(old) old.remove();
+
+  const wrap=document.createElement("div");
+  wrap.id="fixzyLogoutPopup";
+  wrap.style.cssText="position:fixed;inset:0;z-index:999;background:rgba(0,0,0,.55);display:flex;align-items:center;justify-content:center;padding:18px";
+  wrap.innerHTML=`<div style="width:min(420px,100%);background:#fff;border-radius:15px;padding:18px;box-shadow:0 15px 40px #0004">
+    <h3 style="margin:0 0 8px;color:#111827">🚪 Keluar dari FIXZY?</h3>
+    <div style="font-size:13px;line-height:1.6;color:#667085">Sesi akun akan ditutup dan Anda akan kembali ke halaman login.</div>
+    <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:15px">
+      <button id="fixzyLogoutCancel" style="border:0;border-radius:8px;padding:10px 13px;background:#e5e7eb;color:#111827;font-weight:900;cursor:pointer">Batal</button>
+      <button id="fixzyLogoutOk" style="border:0;border-radius:8px;padding:10px 13px;background:#dc2626;color:#fff;font-weight:900;cursor:pointer">Logout</button>
+    </div>
+  </div>`;
+  document.body.appendChild(wrap);
+  document.getElementById("fixzyLogoutCancel").onclick=()=>wrap.remove();
+  document.getElementById("fixzyLogoutOk").onclick=async()=>{
+    const ok=document.getElementById("fixzyLogoutOk");
+    ok.disabled=true;ok.textContent="Keluar...";
+    try{ await signOut(auth); }catch(e){ console.warn("Logout Firebase:",e); }
+    window.location.replace("login.html");
+  };
+}
+
+window.logoutFixzy=popupLogout;
 
 async function validasiDanTampilkan(user){
   if(!user){
@@ -610,6 +784,26 @@ async function validasiDanTampilkan(user){
     const data=snap.data()||{};
     const role=data.role||"";
     const status=data.status||"";
+
+    // Identitas pemilik data FIXZY dibuat konsisten untuk semua role.
+    // Owner: uid sendiri. Employee/Reseller: ownerUid dari profil.
+    const ownerUid = role==="owner" ? user.uid : (data.ownerUid || "");
+    if(!ownerUid && role!=="superadmin"){
+      console.error("FIXZY: ownerUid tidak ditemukan untuk akun",user.uid);
+      await signOut(auth);
+      window.location.replace("login.html");
+      return;
+    }
+
+    window.fixzySession={
+      uid:user.uid,
+      role,
+      ownerUid:ownerUid || user.uid,
+      profile:data,
+      permissions:Array.isArray(data.izin)
+        ? data.izin
+        : (Array.isArray(data.permissions) ? data.permissions : [])
+    };
 
     if(!["owner","employee","reseller","superadmin"].includes(role)){
       await signOut(auth);
@@ -634,8 +828,13 @@ async function validasiDanTampilkan(user){
       return;
     }
 
-    document.getElementById("accountName").textContent=data.namaKonter||data.namaPemilik||user.email||"Akun";
+    document.getElementById("accountName").textContent=data.namaKonter||data.namaPemilik||data.nama||user.email||"Akun";
     document.getElementById("accountExp").textContent=formatExpFIXZY(exp);
+
+    // Tampilkan hanya menu yang sesuai role akun.
+    document.querySelectorAll(".menu-link[data-roles]").forEach(btn=>{
+      btn.style.display=bolehAksesMenu(btn) ? "" : "none";
+    });
 
     authReady=true;
     tampilkanBeranda();
@@ -649,5 +848,36 @@ async function validasiDanTampilkan(user){
 onAuthStateChanged(auth,(user)=>{ validasiDanTampilkan(user); });
 </script>
 
+
+<!-- POPUP OWNER ONLY BATAL/HAPUS -->
+<div class="fixzy-popup-overlay" id="ownerOnlyPopup" onclick="tutupOwnerPopup()">
+  <div class="fixzy-popup-box" onclick="event.stopPropagation()">
+    <div style="font-size:40px">🔒</div>
+    <h3 id="ownerPopupTitle">Akses Ditolak</h3>
+    <p id="ownerPopupMsg">Hanya Owner yang bisa menghapus & membatalkan data.</p>
+    <button onclick="tutupOwnerPopup()">Mengerti</button>
+  </div>
+</div>
+
+<script>
+
+function showOwnerOnlyPopup(action="HAPUS/BATAL"){
+  document.getElementById('ownerPopupTitle').innerText = 'Hanya Owner';
+  document.getElementById('ownerPopupMsg').innerText = 'Karyawan tidak diizinkan untuk '+action+'.\nHanya Owner/Admin yang bisa '+action+'.';
+  document.getElementById('ownerOnlyPopup').classList.add('show');
+}
+function tutupOwnerPopup(){ document.getElementById('ownerOnlyPopup').classList.remove('show'); }
+window.showOwnerOnlyPopup = showOwnerOnlyPopup;
+window.tutupOwnerPopup = tutupOwnerPopup;
+
+// Dengerin pesan dari iframe anak (data-servis.html dll)
+window.addEventListener('message', (e)=>{
+  if(!e.data) return;
+  if(e.data.type === 'FIXZY_PERMISSION_DENIED'){
+    showOwnerOnlyPopup(e.data.action || 'HAPUS/BATAL');
+  }
+});
+
+</script>
 </body>
 </html>
