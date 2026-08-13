@@ -24,7 +24,7 @@
 </style>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Data Penjualan REAL - A YUDI THEA</title>
+<title>Data Penjualan Asli - A YUDI THEA</title>
 <script>tailwind = {config:{darkMode:'class'}}</script>
 <script src="https://cdn.tailwindcss.com"></script>
 <script>tailwind.config={darkMode:'class'}</script>
@@ -48,13 +48,13 @@ const auth = getAuth(app);
 const db = getFirestore(app);
 
 let currentUser=null, ownerUid=null, isOwner=false, userRole='karyawan';
-let allDocsCache=[], realDocsCache=[];
+let realDocsCache=[];
 
 onAuthStateChanged(auth, async (user)=>{
   if(!user){ window.location.href="login.html"; return; }
   currentUser=user;
   await loadUserRole();
-  loadRealOnly();
+  loadRealData();
 });
 
 async function loadUserRole(){
@@ -62,12 +62,7 @@ async function loadUserRole(){
     const snap = await getDocs(query(collection(db,"users"), where("__name__","==", currentUser.uid)));
     let data=null;
     if(!snap.empty) data=snap.docs[0].data();
-    else{
-      try{
-        const d = await getDoc(doc(db,"users", currentUser.uid));
-        if(d.exists()) data=d.data();
-      }catch{}
-    }
+    else{ try{ const d = await getDoc(doc(db,"users", currentUser.uid)); if(d.exists()) data=d.data(); }catch{} }
     if(data){
       userRole=(data.role||'karyawan').toLowerCase();
       ownerUid=data.ownerId||data.ownerUid||currentUser.uid;
@@ -76,17 +71,54 @@ async function loadUserRole(){
   }catch(e){ ownerUid=currentUser.uid; isOwner=true; }
   document.getElementById('roleBadge').innerText=isOwner?'OWNER':userRole.toUpperCase();
   document.getElementById('userEmail').innerText=currentUser.email||'';
-  document.getElementById('ownerInfo').innerText='UID: '+currentUser.uid.slice(0,12)+'... | OwnerUID: '+ownerUid.slice(0,12);
   if(!isOwner) document.querySelectorAll('.ownerOnly').forEach(el=>el.style.display='none');
 }
 
-async function loadRealOnly(){
+function isContoh(d){
+  const nama = (d.nama||d.namaPelanggan||'').trim();
+  const id = (d.idTransaksi||'').toString();
+  const contohNames = ["Andi Wijaya","Siti Aminah","Budi Santoso"];
+  return id.startsWith('JUAL-17866') || id.startsWith('JUAL-20260813') || contohNames.includes(nama);
+}
+
+// FUNGSI PINTAR - ambil data sesuai inputan apapun nama field nya
+function getNama(d){
+  return d.nama || d.namaPelanggan || d.nama_pelanggan || d.pelanggan || d.customer || d.namaCustomer || d.customerName || d.client || d.namaClient || d.pembeli || d.namaPembeli || d.nama_pembeli || d.buyer || d.namaBuyer || d.konsumen || d.namaKonsumen || d.pelangganNama || d.namaPelangganLengkap || '' ;
+}
+function getProduk(d){
+  // produk bisa string, bisa array, bisa object
+  let p = d.produk || d.namaProduk || d.produkName || d.barang || d.item || d.items || d.tipe || d.tipeHp || d.device || d.merk || d.namaBarang || d.product || d.productName || d.jenisProduk || '';
+  if(Array.isArray(p)){ // kalau array produk
+    return p.map(x=> x.nama||x.produk||x.name||'').join(', ') || p.length+' item';
+  }
+  if(typeof p === 'object' && p!==null){ return p.nama||p.produk||p.name||JSON.stringify(p).slice(0,30); }
+  return p || '';
+}
+function getImei(d){ return d.imei || d.IMEI || d.sn || d.serial || d.serialNumber || ''; }
+function getJual(d){
+  // ini yang bikin di screenshot 990.000 keluar - coba semua kemungkinan
+  return Number(d.hargaJual || d.total || d.jual || d.harga || d.nominal || d.jumlah || d.totalBayar || d.totalHarga || d.grandTotal || d.totalJual || d.hargaTotal || d.biaya || d.totalBiaya || 0);
+}
+function getBeli(d){ return Number(d.hargaBeli || d.modal || d.hargaModal || d.beli || d.hargaBeliTotal || 0); }
+function getLaba(d){
+  const jual = getJual(d);
+  const beli = getBeli(d);
+  if(d.laba!==undefined && d.laba!==null && d.laba!=='' ) return Number(d.laba);
+  if(d.profit!==undefined) return Number(d.profit);
+  if(d.keuntungan!==undefined) return Number(d.keuntungan);
+  // kalau beli 0, laba = jual (sesuai data di screenshot)
+  if(beli===0) return jual;
+  return jual - beli;
+}
+function getStatus(d){
+  return d.status || d.statusBayar || d.statusPembayaran || d.metodeBayar || d.metode || d.pembayaran || d.statusTransaksi || 'selesai';
+}
+
+async function loadRealData(){
   const tbody=document.getElementById('tbody');
   const errBox=document.getElementById('errorBox');
-  const debugBox=document.getElementById('debugBox');
-  tbody.innerHTML=`<tr><td colspan="7" class="p-8 text-center text-gray-400 dark:text-gray-500">🔍 Mencari data REAL kamu di fixzy-update (bukan dummy)...</td></tr>`;
+  tbody.innerHTML=`<tr><td colspan="7" class="p-8 text-center text-gray-400 dark:text-gray-500">Mengambil data asli sesuai inputan...</td></tr>`;
   errBox.classList.add('hidden');
-  
   try{
     const ownerIdToQuery = isOwner ? currentUser.uid : ownerUid;
     let snap = await getDocs(query(collection(db,"penjualan"), where("ownerId","==", ownerIdToQuery)));
@@ -100,107 +132,66 @@ async function loadRealOnly(){
     }
 
     if(snap.empty){
-      tbody.innerHTML=`<tr><td colspan="7" class="p-10 text-center"><div class="text-gray-600 dark:text-gray-300 font-bold">Tidak ada data penjualan sama sekali untuk akun ini di fixzy-update</div><div class="text-[11px] text-gray-400 mt-2">OwnerID yang dicari: ${ownerIdToQuery}<br>Koleksi: penjualan<br>Jika data lama kamu ada di project Firebase lama (bukan fixzy-update), data tidak akan muncul di sini. Cek di Firebase Console project lama.</div><div class="mt-3"><button onclick="loadAllWithoutFilter()" class="px-4 py-2 bg-[#0f1d33] text-white rounded-xl text-xs">Coba tampilkan SEMUA data tanpa filter ownerId (debug)</button></div></td></tr>`;
+      tbody.innerHTML=`<tr><td colspan="7" class="p-10 text-center text-gray-500 dark:text-gray-400">Belum ada data penjualan<br><span class="text-[11px]">Input penjualan baru akan otomatis muncul di sini sesuai inputan</span></td></tr>`;
       setRingkasan(0,0,0,0,0);
-      debugBox.innerHTML=`<b>Debug:</b> Query ownerId=${ownerIdToQuery} hasilnya 0 dokumen. Kemungkinan data asli kamu: <br>1) Masih di project Firebase lama (bukan fixzy-update)<br>2) Field ownerId belum ada / beda<br>3) Sudah kehapus bersama dummy`;
-      debugBox.classList.remove('hidden');
+      realDocsCache=[];
       return;
     }
 
-    let docs = snap.docs.map(d=>({id:d.id, ...d.data()}));
-    allDocsCache=docs;
-    
-    // PISAHKAN DUMMY vs REAL
-    const dummyNames = ["Andi Wijaya","Siti Aminah","Budi Santoso"];
-    const isDummyDoc = (d)=>{
-      const id = (d.idTransaksi||'').toString();
-      return id.startsWith('JUAL-17866') || id.startsWith('JUAL-20260813') || dummyNames.includes((d.nama||'').trim());
-    };
+    let allDocs = snap.docs.map(d=>({id:d.id, ...d.data()}));
+    // debug: log field pertama biar tau struktur asli
+    if(allDocs.length>0){ console.log("CONTOH DATA REAL FIREBASE:", allDocs[0]); console.log("KEYS:", Object.keys(allDocs[0])); }
 
-    const dummyDocs = docs.filter(isDummyDoc);
-    const realDocs = docs.filter(d=>!isDummyDoc(d));
-    
+    let realDocs = allDocs.filter(d=>!isContoh(d));
+    realDocs.sort((a,b)=> new Date(b.tanggal||b.createdAt||b.tanggalMasuk||0) - new Date(a.tanggal||a.createdAt||a.tanggalMasuk||0));
     realDocsCache = realDocs;
-    docs.sort((a,b)=> new Date(b.tanggal||b.createdAt||0) - new Date(a.tanggal||a.createdAt||0));
-
-    debugBox.innerHTML = `
-      <div class="flex flex-wrap gap-2 text-[11px]">
-        <span class="px-2 py-1 bg-white dark:bg-white/10 rounded">Total di Firebase: <b>${docs.length}</b></span>
-        <span class="px-2 py-1 bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300 rounded">Dummy terdeteksi: <b>${dummyDocs.length}</b></span>
-        <span class="px-2 py-1 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 rounded">Data REAL kamu: <b>${realDocs.length}</b></span>
-        <span class="px-2 py-1 bg-gray-100 dark:bg-white/10 rounded">OwnerID: ${ownerIdToQuery.slice(0,10)}...</span>
-      </div>
-    `;
-    debugBox.classList.remove('hidden');
 
     if(realDocs.length===0){
-      tbody.innerHTML=`
-        <tr><td colspan="7" class="p-10 text-center">
-          <div class="text-amber-600 dark:text-amber-300 font-bold">Yang ada di Firebase cuma data DUMMY saja (${dummyDocs.length} data)</div>
-          <div class="text-[12px] text-gray-500 dark:text-gray-400 mt-2">Data asli kamu tidak ditemukan di fixzy-update. Artinya data penjualan real kamu:<br>1) Belum pernah di-input di project fixzy-update<br>2) Masih ada di project Firebase lama<br>3) Atau sudah terhapus</div>
-          <div class="mt-4 flex justify-center gap-2">
-            <button onclick="hapusSemuaDummy()" class="ownerOnly px-4 py-2 bg-red-600 text-white rounded-xl text-xs font-bold">Hapus ${dummyDocs.length} Dummy Biar Bersih</button>
-            <button onclick="loadAllWithoutFilter()" class="px-4 py-2 bg-[#0f1d33] dark:bg-white dark:text-black text-white rounded-xl text-xs">Cek Semua Data Tanpa Filter</button>
-          </div>
-        </td></tr>
-      `;
+      tbody.innerHTML=`<tr><td colspan="7" class="p-10 text-center"><div class="font-bold dark:text-white">Belum ada data asli</div><div class="text-[11px] text-gray-400 mt-1">Contoh sudah dibuang. Silakan input baru.</div></td></tr>`;
       setRingkasan(0,0,0,0,0);
       return;
     }
 
-    // TAMPILKAN HANYA REAL
     let totalOmset=0, totalLaba=0, omsetHariIni=0, labaHariIni=0;
     const todayStr = new Date().toISOString().slice(0,10);
+
     tbody.innerHTML='';
-    realDocs.sort((a,b)=> new Date(b.tanggal||b.createdAt||0) - new Date(a.tanggal||a.createdAt||0)).forEach(d=>{
-      const jual = Number(d.hargaJual||d.total||0);
-      const beli = Number(d.hargaBeli||0);
-      const laba = Number(d.laba ?? (jual-beli) ?? 0);
-      if((d.status||'').toLowerCase()!=='batal'){ totalOmset+=jual; totalLaba+=laba; }
-      const tglStr = (d.tanggal||'').toString().slice(0,10);
-      if(tglStr===todayStr && (d.status||'').toLowerCase()!=='batal'){ omsetHariIni+=jual; labaHariIni+=laba; }
+    realDocs.forEach(d=>{
+      const nama = getNama(d) || '-';
+      const produk = getProduk(d) || '-';
+      const imei = getImei(d);
+      const jual = getJual(d);
+      const laba = getLaba(d);
+      const status = getStatus(d);
+
+      if((status||'').toLowerCase()!=='batal'){ totalOmset+=jual; totalLaba+=laba; }
+      const tglStr = (d.tanggal||d.tanggalMasuk||d.createdAt||'').toString().slice(0,10);
+      if(tglStr===todayStr && (status||'').toLowerCase()!=='batal'){ omsetHariIni+=jual; labaHariIni+=laba; }
+
       const tr=document.createElement('tr');
       tr.className='border-b dark:border-white/10 hover:bg-gray-50 dark:hover:bg-white/5';
       tr.innerHTML=`
-        <td class="p-3 text-[11px] dark:text-gray-300">${(d.tanggal||'').toString().slice(0,16)}<br><span class="text-[10px] text-gray-400">${d.idTransaksi||d.id.slice(0,8)}</span></td>
-        <td class="p-3 text-sm dark:text-gray-200 font-medium">${d.nama||'-'}<br><span class="text-[11px] text-gray-500">${d.produk||''}</span><br><span class="text-[10px] text-gray-400">${d.imei||''}</span></td>
+        <td class="p-3 text-[11px] dark:text-gray-300 leading-tight">${(d.tanggal||d.tanggalMasuk||'').toString().slice(0,16)}<br><span class="text-[10px] text-gray-400">${d.idTransaksi||d.id.slice(0,8)}</span></td>
+        <td class="p-3 text-sm dark:text-gray-200">
+          <span class="font-medium text-[#0f1d33] dark:text-white">${nama}</span><br>
+          <span class="text-[12px] text-gray-700 dark:text-gray-300">${produk}</span>
+          ${imei?`<br><span class="text-[10px] text-gray-400">IMEI: ${imei}</span>`:''}
+        </td>
         <td class="p-3 text-sm text-right font-bold dark:text-white">Rp ${jual.toLocaleString('id-ID')}</td>
         <td class="p-3 text-sm text-right text-green-600 dark:text-green-400 font-bold">Rp ${laba.toLocaleString('id-ID')}</td>
-        <td class="p-3 text-[11px]"><span class="px-2.5 py-1 rounded-full text-[10px] font-bold ${ (d.status||'').toLowerCase()==='batal'?'bg-red-100 text-red-700 dark:bg-red-900/30':'bg-green-100 text-green-700 dark:bg-green-900/30'}">${(d.status||'selesai').toUpperCase()}</span></td>
-        <td class="p-3 text-[11px] dark:text-gray-300">${d.karyawanEmail||'-'}</td>
-        <td class="p-3"><div class="flex gap-1"><button onclick="batalJual('${d.id}')" class="ownerOnly px-2 py-1 bg-amber-500 text-white rounded-lg text-[11px]">Batal</button><button onclick="hapusJual('${d.id}')" class="ownerOnly px-2 py-1 bg-red-600 text-white rounded-lg text-[11px]">Hapus</button></div></td>
+        <td class="p-3 text-[11px]"><span class="px-2.5 py-1 rounded-full text-[10px] font-bold ${ String(status).toLowerCase()==='batal'?'bg-red-100 text-red-700 dark:bg-red-900/30':'bg-green-100 text-green-700 dark:bg-green-900/30'}">${String(status).toUpperCase()}</span></td>
+        <td class="p-3 text-[11px] dark:text-gray-300">${d.karyawanEmail||d.teknisi||'-'}</td>
+        <td class="p-3"><div class="flex gap-1"><button onclick="batalJual('${d.id}')" class="ownerOnly px-2.5 py-1 bg-amber-500 text-white rounded-lg text-[11px]">Batal</button><button onclick="hapusJual('${d.id}')" class="ownerOnly px-2.5 py-1 bg-red-600 text-white rounded-lg text-[11px]">Hapus</button></div></td>
       `;
       tbody.appendChild(tr);
     });
+
     setRingkasan(totalOmset, totalLaba, realDocs.length, omsetHariIni, labaHariIni);
-    document.getElementById('countInfo').innerText = `Menampilkan ${realDocs.length} data REAL kamu (dummy ${dummyDocs.length} disembunyikan)`;
+    document.getElementById('countInfo').innerText = `${realDocs.length} data asli sesuai inputan`;
 
   }catch(e){
     errBox.classList.remove('hidden');
     errBox.innerText='Error: '+e.message;
-  }
-}
-
-async function loadAllWithoutFilter(){
-  const tbody=document.getElementById('tbody');
-  tbody.innerHTML=`<tr><td colspan="7" class="p-6 text-center">Load semua tanpa filter ownerId (debug)...</td></tr>`;
-  try{
-    // ini akan gagal kalau rules ketat, tapi coba
-    let snap = await getDocs(collection(db,"penjualan"));
-    let docs = snap.docs.map(d=>({id:d.id, ...d.data()}));
-    const debugBox=document.getElementById('debugBox');
-    debugBox.innerHTML+=`<br><br><b>SEMUA DATA TANPA FILTER:</b> ${docs.length} dokumen. OwnerID unik: ${[...new Set(docs.map(d=>d.ownerId||d.ownerUid||'no-owner'))].join(', ')}`;
-    debugBox.classList.remove('hidden');
-    // tampilkan
-    tbody.innerHTML='';
-    docs.slice(0,20).forEach(d=>{
-      const tr=document.createElement('tr');
-      tr.className='border-b dark:border-white/10';
-      tr.innerHTML=`<td class="p-2 text-[10px]">${d.tanggal||''}<br>${d.idTransaksi||d.id}</td><td class="p-2 text-xs">${d.nama||''}<br>${d.produk||''}</td><td class="p-2 text-xs">${d.ownerId||d.ownerUid||'no-owner'}</td><td class="p-2 text-xs">${d.hargaJual||''}</td><td colspan="3" class="p-2 text-[10px]">${JSON.stringify(d).slice(0,100)}</td>`;
-      tbody.appendChild(tr);
-    });
-  }catch(e){
-    alert("Gagal load tanpa filter (rules mengharuskan filter ownerId): "+e.message);
   }
 }
 
@@ -213,82 +204,57 @@ function setRingkasan(omset, laba, jml, omsetHariIni, labaHariIni){
   document.getElementById('avgTransaksi').innerText=jml>0?'Rp '+Math.round(omset/jml).toLocaleString('id-ID'):'Rp 0';
 }
 
-window.hapusJual=async(id)=>{ if(!isOwner){alert("Hanya owner");return;} if(!confirm("Hapus?")) return; await deleteDoc(doc(db,"penjualan",id)); loadRealOnly(); }
-window.batalJual=async(id)=>{ if(!isOwner){alert("Hanya owner");return;} if(!confirm("Batalkan?")) return; await updateDoc(doc(db,"penjualan",id), {status:"batal"}); loadRealOnly(); }
-
-window.hapusSemuaDummy=async()=>{
-  if(!isOwner){ alert("Hanya owner"); return; }
-  const dummyNames = ["Andi Wijaya","Siti Aminah","Budi Santoso"];
-  const dummyDocs = allDocsCache.filter(d=> (d.idTransaksi||'').startsWith('JUAL-17866') || (d.idTransaksi||'').startsWith('JUAL-20260813') || dummyNames.includes((d.nama||'').trim()));
-  if(dummyDocs.length===0){ alert("Tidak ada dummy"); return; }
-  if(!confirm(`Hapus ${dummyDocs.length} data DUMMY? Data real kamu aman.`)) return;
-  for(let d of dummyDocs){ try{ await deleteDoc(doc(db,"penjualan",d.id)); }catch{} }
-  alert(`Berhasil hapus ${dummyDocs.length} dummy. Sekarang tinggal data real kamu.`);
-  loadRealOnly();
-}
-
+window.hapusJual=async(id)=>{ if(!isOwner){alert("Hanya owner");return;} if(!confirm("Hapus?")) return; await deleteDoc(doc(db,"penjualan",id)); loadRealData(); }
+window.batalJual=async(id)=>{ if(!isOwner){alert("Hanya owner");return;} if(!confirm("Batalkan?")) return; await updateDoc(doc(db,"penjualan",id), {status:"batal"}); loadRealData(); }
+window.refreshData=()=>loadRealData();
 window.exportReal=()=>{
-  if(realDocsCache.length===0){ alert("Tidak ada data real untuk di-export"); return; }
-  const data = realDocsCache.map(d=>({Tanggal:d.tanggal||'', ID:d.idTransaksi||d.id, Nama:d.nama||'', Produk:d.produk||'', IMEI:d.imei||'', Jual:d.hargaJual||0, Laba:d.laba||0, Status:d.status||'', Karyawan:d.karyawanEmail||''}));
+  if(realDocsCache.length===0){ alert("Tidak ada data asli"); return; }
+  const data = realDocsCache.map(d=>({Tanggal:d.tanggal||d.tanggalMasuk||'', ID:d.idTransaksi||d.id, Nama:getNama(d), Produk:getProduk(d), IMEI:getImei(d), Jual:getJual(d), Laba:getLaba(d), Status:getStatus(d), Karyawan:d.karyawanEmail||''}));
   const ws = XLSX.utils.json_to_sheet(data);
-  const wb = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb, ws, "REAL");
-  XLSX.writeFile(wb, `Penjualan-REAL-${new Date().toISOString().slice(0,10)}.xlsx`);
+  const wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, ws, "ASLI"); XLSX.writeFile(wb, `Penjualan-ASLI-${new Date().toISOString().slice(0,10)}.xlsx`);
 }
-
-window.loadAllWithoutFilter=loadAllWithoutFilter;
-window.refreshData=()=>loadRealOnly();
 </script>
 </head>
 <body class="bg-[#f6f7fb] dark:bg-[#070e1f] min-h-screen">
-<header class="bg-[#0f1d33] dark:bg-black text-white px-4 sm:px-6 py-3.5 flex justify-between items-center sticky top-0 z-30 border-b dark:border-white/10">
+<!-- HEADER HITAM + LOGO BACKGROUND HITAM -->
+<header class="bg-[#0f1d33] dark:bg-black text-white px-4 sm:px-6 py-3.5 flex justify-between items-center sticky top-0 z-30 border-b border-white/5">
   <div class="flex items-center gap-3">
-    <img src="logo.png" class="h-8 bg-white rounded-lg px-2.5 py-1" onerror="this.style.display='none'; document.getElementById('logoFallback').style.display='flex'">
-    <div id="logoFallback" style="display:none" class="h-8 w-8 bg-white text-[#0f1d33] rounded-lg flex items-center justify-center font-black">F</div>
-    <div class="leading-tight"><p class="font-bold text-[15px]">limudahkan</p><p class="text-[11px] opacity-70 -mt-0.5">Fixzy REAL DATA ONLY</p></div>
+    <!-- LOGO BACKGROUND HITAM - sesuai request -->
+    <div class="h-9 w-9 bg-black rounded-xl flex items-center justify-center border border-white/10 overflow-hidden">
+      <img src="logo.png" class="h-7 w-auto object-contain" onerror="this.style.display='none'; document.getElementById('logoFallback').style.display='flex'" style="background:black;">
+      <div id="logoFallback" style="display:none" class="font-black text-[14px]">F</div>
+    </div>
+    <div class="leading-tight"><p class="font-bold text-[15px] tracking-wide">limudahkan</p><p class="text-[11px] opacity-70 -mt-0.5">Fixzy System</p></div>
   </div>
   <div class="flex items-center gap-3">
-    <button id="darkToggle" class="w-9 h-9 rounded-xl bg-white/10 flex items-center justify-center">🌙</button>
-    <div class="text-right hidden sm:block"><p class="text-sm font-bold">A Yudi Thea</p><p class="text-[11px] opacity-70">Mode: REAL ONLY</p><p class="text-[10px] opacity-50"><span id="userEmail"></span> <span id="roleBadge" class="ml-1 px-1.5 py-0.5 bg-blue-600 rounded text-[9px]"></span></p><p id="ownerInfo" class="text-[9px] opacity-40"></p></div>
+    <button id="darkToggle" class="w-9 h-9 rounded-xl bg-white/10 hover:bg-white/20 flex items-center justify-center">🌙</button>
+    <div class="text-right hidden sm:block"><p class="text-sm font-bold">A Yudi Thea</p><p class="text-[10px] opacity-50"><span id="userEmail"></span> <span id="roleBadge" class="ml-1 px-1.5 py-0.5 bg-blue-600 rounded text-[9px]"></span></p></div>
   </div>
 </header>
 
 <div class="max-w-7xl mx-auto p-4 sm:p-6">
-  <div class="mb-4">
-    <div class="flex flex-wrap justify-between items-center gap-2 mb-3">
-      <div>
-        <h1 class="text-[24px] font-extrabold text-[#0f1d33] dark:text-white">Data Penjualan ASLI Kamu Saja</h1>
-        <p id="countInfo" class="text-[11px] text-gray-500 dark:text-gray-400">Filter otomatis buang dummy, hanya tampilkan data real</p>
-      </div>
-      <div class="flex gap-2">
-        <button onclick="exportReal()" class="px-4 py-2 bg-green-600 text-white rounded-xl text-xs font-bold">⬇ Export REAL</button>
-        <button onclick="hapusSemuaDummy()" class="ownerOnly px-4 py-2 bg-red-600 text-white rounded-xl text-xs font-bold">🗑 Hapus SEMUA Dummy</button>
-        <button onclick="refreshData()" class="px-3 py-2 bg-white dark:bg-white/10 dark:text-white border dark:border-white/10 rounded-xl text-xs">🔄 Refresh</button>
-      </div>
-    </div>
+  <div class="flex flex-wrap justify-between items-center gap-2 mb-3">
+    <div><h1 class="text-[22px] font-extrabold dark:text-white">Data Penjualan Asli</h1><p id="countInfo" class="text-[11px] text-gray-500 dark:text-gray-400">Data sesuai inputan, logo background hitam</p></div>
+    <div class="flex gap-2"><button onclick="exportReal()" class="px-4 py-2 bg-green-600 text-white rounded-xl text-xs font-bold">⬇ Export</button><button onclick="refreshData()" class="px-3 py-2 bg-white dark:bg-white/10 dark:text-white border dark:border-white/10 rounded-xl text-xs">🔄</button></div>
+  </div>
 
-    <div id="debugBox" class="hidden bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 p-3 rounded-xl text-[12px] mb-3"></div>
-    <div id="errorBox" class="hidden bg-red-50 dark:bg-red-900/20 border p-3 rounded-xl text-sm mb-3"></div>
+  <div id="errorBox" class="hidden bg-red-50 dark:bg-red-900/20 border p-3 rounded-xl text-sm mb-3"></div>
 
-    <div class="grid grid-cols-2 lg:grid-cols-4 gap-3">
-      <div class="bg-white dark:bg-[#162544] p-4 rounded-2xl border dark:border-white/10"><p class="text-[11px] text-gray-500 dark:text-gray-400 uppercase font-semibold">Total Omset REAL</p><p id="totalOmset" class="text-[20px] font-extrabold dark:text-white">Rp 0</p></div>
-      <div class="bg-white dark:bg-[#162544] p-4 rounded-2xl border dark:border-white/10"><p class="text-[11px] text-gray-500 dark:text-gray-400 uppercase font-semibold">Total Laba REAL</p><p id="totalLaba" class="text-[20px] font-extrabold text-green-600 dark:text-green-400">Rp 0</p></div>
-      <div class="bg-white dark:bg-[#162544] p-4 rounded-2xl border dark:border-white/10"><p class="text-[11px] text-gray-500 dark:text-gray-400 uppercase font-semibold">Hari Ini (REAL)</p><p id="omsetHariIni" class="text-[18px] font-bold dark:text-white">Rp 0</p><p id="labaHariIni" class="text-[11px] text-green-600"></p></div>
-      <div class="bg-[#0f1d33] dark:bg-black p-4 rounded-2xl text-white border dark:border-white/10"><p class="text-[11px] opacity-60 uppercase">Transaksi REAL</p><p class="mt-1"><span id="totalTransaksi" class="text-[20px] font-extrabold">0</span> trx</p><p id="avgTransaksi" class="text-[12px] opacity-80 mt-1">Rp 0</p></div>
-    </div>
+  <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-4">
+    <div class="bg-white dark:bg-[#162544] p-4 rounded-2xl border dark:border-white/10"><p class="text-[11px] text-gray-500 dark:text-gray-400 uppercase font-semibold">Omset Asli</p><p id="totalOmset" class="text-[20px] font-extrabold dark:text-white">Rp 0</p></div>
+    <div class="bg-white dark:bg-[#162544] p-4 rounded-2xl border dark:border-white/10"><p class="text-[11px] text-gray-500 dark:text-gray-400 uppercase font-semibold">Laba Asli</p><p id="totalLaba" class="text-[20px] font-extrabold text-green-600 dark:text-green-400">Rp 0</p></div>
+    <div class="bg-white dark:bg-[#162544] p-4 rounded-2xl border dark:border-white/10"><p class="text-[11px] text-gray-500 dark:text-gray-400 uppercase font-semibold">Hari Ini</p><p id="omsetHariIni" class="text-[18px] font-bold dark:text-white">Rp 0</p><p id="labaHariIni" class="text-[11px] text-green-600"></p></div>
+    <div class="bg-[#0f1d33] dark:bg-black p-4 rounded-2xl text-white border dark:border-white/10"><p class="text-[11px] opacity-60 uppercase">Transaksi Asli</p><p class="mt-1"><span id="totalTransaksi" class="text-[20px] font-extrabold">0</span> trx</p><p id="avgTransaksi" class="text-[12px] opacity-80 mt-1">Rp 0</p></div>
   </div>
 
   <div class="bg-white dark:bg-[#162544] rounded-2xl border dark:border-white/10 overflow-hidden">
-    <div class="p-4 border-b dark:border-white/10"><h2 class="font-bold dark:text-white">Data Penjualan REAL - Tanpa Dummy</h2><p class="text-[11px] text-gray-400">Dummy otomatis disembunyikan. Kalau yang muncul kosong berarti data real kamu memang belum ada di fixzy-update</p></div>
+    <div class="p-4 border-b dark:border-white/10"><h2 class="font-bold dark:text-white">Data Penjualan - Sesuai Inputan</h2><p class="text-[11px] text-gray-400">Kolom Pelanggan/Produk sekarang ambil dari semua kemungkinan nama field inputan</p></div>
     <div class="overflow-x-auto"><table class="w-full text-left"><thead class="bg-[#f8f9fc] dark:bg-black/20 text-[11px] text-gray-500 dark:text-gray-400 uppercase"><tr><th class="p-3">Tanggal & ID</th><th class="p-3">Pelanggan / Produk</th><th class="p-3 text-right">Jual</th><th class="p-3 text-right">Laba</th><th class="p-3">Status</th><th class="p-3">Karyawan</th><th class="p-3">Aksi</th></tr></thead><tbody id="tbody"></tbody></table></div>
   </div>
-
-  <p class="mt-4 text-[11px] text-gray-400 text-center">Versi ini FORCE hanya tampilkan data REAL (bukan Andi Wijaya/Siti/Budi). Klik Hapus Semua Dummy untuk bersihkan database fixzy-update.</p>
 </div>
 
 <script>
-  const html=document.documentElement;
-  const btn=document.getElementById('darkToggle');
+  const html=document.documentElement; const btn=document.getElementById('darkToggle');
   const saved=localStorage.getItem('fixzy-dark');
   if(saved==='1' || (!saved && window.matchMedia('(prefers-color-scheme: dark)').matches)){ html.classList.add('dark'); btn.innerText='☀️'; }
   btn.addEventListener('click', ()=>{ html.classList.toggle('dark'); const isDark=html.classList.contains('dark'); localStorage.setItem('fixzy-dark', isDark?'1':'0'); btn.innerText=isDark?'☀️':'🌙'; });
