@@ -338,15 +338,22 @@ function renderProducts(){
   }
 }
 
+
 window.pilihProduk=id=>{
  selectedProduct=products.find(p=>p.id===id)||null;
- const nama=selectedProduct?(selectedProduct.nama||selectedProduct.namaProduk||selectedProduct.produk||"-"):"";
- const harga=selectedProduct?productPrice(selectedProduct):0;
- $("produkManual").value=nama;
- $("hargaManual").value=harga;
- $("barcodeProduk").value=selectedProduct?(selectedProduct.barcode||selectedProduct.kodeProduk||selectedProduct.kode||""):"";
- $("produkError").textContent="";
+ if(!selectedProduct) return;
+ const nama=namaProduk(selectedProduct);
+ const harga=typeof productPrice==="function"?productPrice(selectedProduct):Number(selectedProduct.hargaJual||selectedProduct.harga||0);
+ const kode=kodeProduk(selectedProduct);
+ const stok=stokProduk(selectedProduct);
+ const elProd=$("produkManual"); if(elProd) elProd.value=nama;
+ const elHarga=$("hargaManual"); if(elHarga) elHarga.value=harga;
+ const elBarcode=$("barcodeProduk"); if(elBarcode) elBarcode.value=kode;
+ const elCari=$("cariProduk"); if(elCari) elCari.value=nama;
+ const elInfo=$("produkTerpilihInfo"); if(elInfo) elInfo.textContent=`Dipilih: ${nama} • Stok: ${stok}`;
+ const elErr=$("produkError"); if(elErr) elErr.textContent="";
 }
+
 function productPrice(p){
  return Number(p.hargaJual??p.harga??p.price??p.hargaMember??0)||0;
 }
@@ -354,7 +361,20 @@ function productModal(p){
  return Number(p.modal??p.hargaModal??p.hargaBeli??p.modalSatuan??p.cost??0)||0;
 }
 window.tambahProduk=()=>{
- const nama=$("produkManual").value.trim();
+ // auto-pilih jika user ketik tapi belum klik hasil
+ let nama=$("produkManual").value.trim();
+ if(!nama){
+   const cari=$("cariProduk")?.value.trim()||"";
+   if(cari){
+     const key=cari.toLowerCase();
+     const list=products.filter(p=>namaProduk(p).toLowerCase().includes(key)||kodeProduk(p).toLowerCase().includes(key));
+     if(list.length===1){
+       pilihProduk(list[0].id);
+       nama=$("produkManual").value.trim();
+     }
+   }
+ }
+
  const harga=Math.max(0,Number($("hargaManual").value)||0);
  const qty=Math.max(1,Number($("qty").value)||1);
  const bc=$("barcodeProduk").value.trim();
