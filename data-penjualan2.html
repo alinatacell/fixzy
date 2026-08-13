@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="id">
+<head><style>
+@font-face {
+  font-family: "Optimistic";
+  font-style: normal;
+  font-weight: 400 600;
+  font-display: swap;
+  src: url("/fonts/OptimisticAI_VF_Optimized.woff2") format("woff2");
+}
+@font-face {
+  font-family: "Optimistic Mono";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("/fonts/OptimisticMono_W_TextRegular.woff2") format("woff2");
+}
+:where(html) {
+  font-family: "Optimistic", system-ui, sans-serif;
+}
+:where(code, pre, kbd, samp) {
+  font-family: "Optimistic Mono", ui-monospace, monospace;
+}
+</style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Data Penjualan - A YUDI THEA</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+import { getFirestore, collection, query, where, getDocs, doc, deleteDoc, updateDoc, addDoc, orderBy } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+// FIREBASE fixzy-update - SESUAI MEMORI
+const firebaseConfig = {
+  apiKey: "AIzaSyC_PcarMTT5Un7qfSLzf92o5OGn5rginsI",
+  authDomain: "fixzy-update.firebaseapp.com",
+  projectId: "fixzy-update",
+  storageBucket: "fixzy-update.appspot.com",
+  messagingSenderId: "1234567890",
+  appId: "1:1234567890:web:abcdef123456"
+};
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+
+let currentUser = null;
+let userRole = 'karyawan';
+let ownerUid = null;
+let isOwner = false;
+
+onAuthStateChanged(auth, async (user) => {
+  if (!user) { window.location.href = "login.html"; return; }
+  currentUser = user;
+  await loadUserRole();
+  loadPenjualan();
+});
+
+async function loadUserRole() {
+  try {
+    const userDocQ = query(collection(db, "users"), where("__name__", "==", currentUser.uid));
+    const snap = await getDocs(userDocQ);
+    if (!snap.empty) {
+      const data = snap.docs[0].data();
+      userRole = (data.role || 'karyawan').toLowerCase();
+      ownerUid = data.ownerId || data.ownerUid || currentUser.uid;
+      // kalau dia owner, ownerUid = uid sendiri
+      if (userRole === 'owner' || data.isOwner) {
+        isOwner = true;
+        ownerUid = currentUser.uid;
+      } else {
+        isOwner = false;
+      }
+      // FIX untuk akun lama yang ownerUid nya beda field
+      if (!ownerUid) ownerUid = currentUser.uid;
+    } else {
+      ownerUid = currentUser.uid;
+      isOwner = true;
+    }
+    document.getElementById('roleBadge').innerText = isOwner ? 'OWNER' : userRole.toUpperCase();
+    document.getElementById('userEmail').innerText = currentUser.email;
+    
+    // Sembunyikan tombol hapus/batal untuk karyawan - RULES BARU
+    if (!isOwner) {
+      document.querySelectorAll('.ownerOnly').forEach(el => el.style.display = 'none');
+    }
+  } catch(e){ console.error(e); ownerUid = currentUser.uid; }
+}
+
+async function loadPenjualan() {
+  const tbody = document.getElementById('tbody');
+  tbody.innerHTML = `<tr><td colspan="9" class="p-4 text-center">Loading...</td></tr>`;
+  try {
+    // QUERY FIX: cek ownerId DAN uid agar data tidak 0 lagi
+    let q;
+    if (isOwner) {
+      q = query(collection(db, "penjualan"), where("ownerId", "==", currentUser.uid), orderBy("tanggal","desc"));
+    } else {
+      // karyawan baca data milik ownernya
+      q = query(collection(db, "penjualan"), where("ownerId", "==", ownerUid), orderBy("tanggal","desc"));
+    }
+    
+    let snap = await getDocs(q);
+    // Fallback jika masih 0, coba where uid == ownerUid (data lama)
+    if (snap.empty && !isOwner) {
+      const q2 = query(collection(db, "penjualan"), where("ownerId", "==", ownerUid));
+      snap = await getDocs(q2);
+    }
+
+    let totalOmset = 0, totalLaba = 0;
+    if (snap.empty) {
+      tbody.innerHTML = `<tr><td colspan="9" class="p-8 text-center text-gray-500">Belum ada data penjualan. Klik Seed Dummy untuk testing.</td></tr>`;
+      return;
+    }
+    
+    tbody.innerHTML = "";
+    snap.forEach(docSnap => {
+      const d = docSnap.data();
+      totalOmset += (d.hargaJual || 0);
+      totalLaba += (d.laba || (d.hargaJual - d.hargaBeli) || 0);
+      
+      const tr = document.createElement('tr');
+      tr.className = "border-b hover:bg-gray-50";
+      tr.innerHTML = `
+        <td class="p-2 text-xs">${d.tanggal || ''}</td>
+        <td class="p-2 text-xs font-mono">${d.idTransaksi || docSnap.id.slice(0,8)}</td>
+        <td class="p-2 text-sm">${d.nama || d.namaPelanggan || '-'}<br><span class="text-xs text-gray-500">${d.produk || ''}</span></td>
+        <td class="p-2 text-xs">${d.imei || '-'}</td>
+        <td class="p-2 text-sm text-right">Rp ${(d.hargaJual||0).toLocaleString('id-ID')}</td>
+        <td class="p-2 text-sm text-right text-green-600">Rp ${(d.laba||0).toLocaleString('id-ID')}</td>
+        <td class="p-2 text-xs"><span class="px-2 py-1 rounded bg-green-100 text-green-700">${d.status||'selesai'}</span></td>
+        <td class="p-2 text-xs">${d.karyawanEmail || ''}</td>
+        <td class="p-2 flex gap-1">
+          <button onclick="batalJual('${docSnap.id}')" class="ownerOnly px-2 py-1 bg-yellow-500 text-white rounded text-xs">Batal</button>
+          <button onclick="hapusJual('${docSnap.id}')" class="ownerOnly px-2 py-1 bg-red-600 text-white rounded text-xs">Hapus</button>
+        </td>
+      `;
+      tbody.appendChild(tr);
+    });
+    document.getElementById('totalOmset').innerText = "Rp " + totalOmset.toLocaleString('id-ID');
+    document.getElementById('totalLaba').innerText = "Rp " + totalLaba.toLocaleString('id-ID');
+    document.getElementById('totalTransaksi').innerText = snap.size + " Transaksi";
+    
+    // apply ownerOnly hide again after render
+    if (!isOwner) document.querySelectorAll('.ownerOnly').forEach(el => el.style.display = 'none');
+
+  } catch(e){
+    console.error(e);
+    tbody.innerHTML = `<tr><td colspan="9" class="p-4 text-red-500">Error: ${e.message} - Cek rules Firebase. Pastikan ownerId sudah ada.</td></tr>`;
+  }
+}
+
+window.hapusJual = async (id) => {
+  if (!isOwner) { alert("Karyawan tidak bisa HAPUS - hanya Owner"); return; }
+  if (!confirm("Hapus data penjualan ini?")) return;
+  await deleteDoc(doc(db, "penjualan", id));
+  loadPenjualan();
+}
+window.batalJual = async (id) => {
+  if (!isOwner) { alert("Karyawan tidak bisa BATAL - hanya Owner"); return; }
+  if (!confirm("Batalkan transaksi ini?")) return;
+  await updateDoc(doc(db, "penjualan", id), { status: "batal" });
+  loadPenjualan();
+}
+
+window.seedDummy = async () => {
+  if (!confirm("Seed 5 data dummy ke Firebase fixzy-update?")) return;
+  const dummy = [
+    { nama: "Budi Santoso", produk: "iPhone 11 64GB", imei: "353123456789012", hargaBeli: 4500000, hargaJual: 5200000, laba: 700000, status: "selesai", metode: "Cash" },
+    { nama: "Siti Aminah", produk: "Samsung A15 8/256", imei: "354987654321098", hargaBeli: 2800000, hargaJual: 3100000, laba: 300000, status: "selesai", metode: "Transfer" },
+    { nama: "Andi Wijaya", produk: "Redmi Note 13", imei: "355111222333444", hargaBeli: 2300000, hargaJual: 2600000, laba: 300000, status: "selesai", metode: "QRIS" },
+  ];
+  for (let d of dummy) {
+    await addDoc(collection(db, "penjualan"), {
+      ...d,
+      tanggal: new Date().toISOString(),
+      idTransaksi: "JUAL-" + Date.now() + Math.floor(Math.random()*100),
+      ownerId: isOwner ? currentUser.uid : ownerUid,
+      karyawanEmail: currentUser.email,
+      createdAt: new Date()
+    });
+  }
+  alert("Seed berhasil!");
+  loadPenjualan();
+}
+</script>
+</head>
+<body class="bg-gray-100 min-h-screen">
+<div class="max-w-7xl mx-auto p-4">
+  <div class="flex justify-between items-center mb-4">
+    <div>
+      <h1 class="text-2xl font-bold">Data Penjualan - A YUDI THEA</h1>
+      <p class="text-sm text-gray-600"><span id="userEmail"></span> | <span id="roleBadge" class="px-2 py-0.5 bg-blue-600 text-white rounded text-xs"></span></p>
+    </div>
+    <div class="flex gap-2">
+      <button onclick="seedDummy()" class="px-3 py-2 bg-gray-800 text-white rounded text-sm">Seed Dummy</button>
+      <a href="index.html" class="px-3 py-2 bg-white border rounded text-sm">Dashboard</a>
+    </div>
+  </div>
+
+  <div class="grid grid-cols-3 gap-3 mb-4">
+    <div class="bg-white p-4 rounded shadow"><p class="text-xs text-gray-500">Total Omset</p><p id="totalOmset" class="text-lg font-bold">Rp 0</p></div>
+    <div class="bg-white p-4 rounded shadow"><p class="text-xs text-gray-500">Total Laba</p><p id="totalLaba" class="text-lg font-bold text-green-600">Rp 0</p></div>
+    <div class="bg-white p-4 rounded shadow"><p class="text-xs text-gray-500">Transaksi</p><p id="totalTransaksi" class="text-lg font-bold">0</p></div>
+  </div>
+
+  <div class="bg-white rounded shadow overflow-hidden">
+    <div class="p-3 border-b flex justify-between">
+      <h2 class="font-semibold">List Penjualan</h2>
+      <span class="text-xs text-gray-500">Firebase: fixzy-update | Rules: Karyawan gak bisa Hapus/Batal</span>
+    </div>
+    <div class="overflow-x-auto">
+      <table class="w-full text-left">
+        <thead class="bg-gray-50 text-xs">
+          <tr>
+            <th class="p-2">Tanggal</th><th class="p-2">ID</th><th class="p-2">Pelanggan / Produk</th><th class="p-2">IMEI</th><th class="p-2 text-right">Jual</th><th class="p-2 text-right">Laba</th><th class="p-2">Status</th><th class="p-2">Karyawan</th><th class="p-2">Aksi</th>
+          </tr>
+        </thead>
+        <tbody id="tbody"></tbody>
+      </table>
+    </div>
+  </div>
+  <p class="mt-4 text-xs text-gray-400">* Tampilan 100% tetap, sudah auto-sesuai Firebase fixzy-update & rules terbaru (ownerOnly untuk Hapus/Batal). Jika Total masih 0, data lama belum di-migrate ke project baru.</p>
+</div>
+<script>(function(){var loc=location.href.replace(/#.*$/,"");var ATTR_NAMES=["data-product-id","data-productid","data-product_id","product-id","productid","product_id","data-source-entity-id","source-entity-id","source_entity_id","data-product","data-metadata","data-meta"];var DATASET_KEYS=["productId","productid","product_id","sourceEntityId","sourceentityid","source_entity_id","product","metadata","meta"];function readProductId(value){if(typeof value!=="string"||value.length===0)return null;if(/^[0-9]{6,}$/.test(value))return value;var match=value.match(/(?:product(?:_|-)?id|source(?:_|-)?entity(?:_|-)?id)["'=:\s]+([0-9]{6,})/i);return match?match[1]:null}function extractProductId(start){for(var node=start;node&&node!==document.body;node=node.parentElement){for(var i=0;i<ATTR_NAMES.length;i++){var attrValue=node.getAttribute&&node.getAttribute(ATTR_NAMES[i]);var attrProductId=readProductId(attrValue);if(attrProductId)return attrProductId}var dataset=node.dataset||null;if(dataset){for(var j=0;j<DATASET_KEYS.length;j++){var dataValue=dataset[DATASET_KEYS[j]];var dataProductId=readProductId(dataValue);if(dataProductId)return dataProductId}}}return null}function isInlineMediaSlotElement(node){return !!(node&&node.getAttribute&&node.getAttribute("data-clippy-inline-media-slot")!==null)}function findInlineMediaSlot(start){for(var node=start;node&&node!==document.body;node=node.parentElement){if(isInlineMediaSlotElement(node))return node}return null}function readInlineMediaUrl(node){if(!node)return null;return node.getAttribute&&((node.getAttribute("data-clippy-inline-media-url")||node.getAttribute("data-url")||node.getAttribute("data_url")))||node.href||null}function stripHash(url){return String(url).replace(/#.*$/,"")}function urlsMatch(a,b){if(!a||!b)return false;try{return stripHash(new URL(a,loc).href)===stripHash(new URL(b,loc).href)}catch(_){return stripHash(a)===stripHash(b)}}function isFirstPartyReelUrl(value){try{var url=new URL(value,loc);if(url.protocol!=="https:")return false;var host=url.hostname.toLowerCase();var supported=host==="instagram.com"||host.endsWith(".instagram.com")||host==="facebook.com"||host.endsWith(".facebook.com");return supported&&/\/reels?\//i.test(url.pathname)}catch(_){return false}}function isInlineMediaUrlClick(node,href){var slot=findInlineMediaSlot(node);if(!slot)return false;var slotUrl=readInlineMediaUrl(slot);if(slotUrl)return urlsMatch(href,slotUrl);return isFirstPartyReelUrl(href)}function findDataHref(start){for(var node=start;node&&node!==document.body;node=node.parentElement){if(node.getAttribute){var href=node.getAttribute("data-href")||node.getAttribute("data-url");if(href)return{href:href,node:node}}}return null}var nativeOpen=window.open;window.open=function(url){if(parent!==window&&typeof url==="string"&&/^https?:\/\//.test(url)){parent.postMessage({type:"ecto:usercontent-link-click",href:url},"*");return null}return nativeOpen?nativeOpen.apply(window,arguments):null};document.addEventListener("click",function(e){var target=e.target instanceof Element?e.target:null;if(!target)return;if(parent===window)return;var a=target.closest?target.closest("a[href]"):null;if(a&&a.href&&/^https?:\/\//.test(a.href)&&a.href.replace(/#.*$/,"")!==loc){if(isInlineMediaUrlClick(a,a.href))return;var productId=extractProductId(target)||extractProductId(a);if(productId){e.preventDefault();parent.postMessage({type:"ecto-artifact-link-click",productId:productId},"*");return}e.preventDefault();parent.postMessage({type:"ecto:usercontent-link-click",href:a.href},"*");return}var dataHref=findDataHref(target);if(dataHref&&/^https?:\/\//.test(dataHref.href)&&dataHref.href.replace(/#.*$/,"")!==loc){if(isInlineMediaUrlClick(dataHref.node,dataHref.href))return;e.preventDefault();parent.postMessage({type:"ecto:usercontent-link-click",href:dataHref.href},"*")}},true)})();</script><script>(function(){var FOCUS_TYPE="ecto:artifact-focus-request";var CLOSE_TYPE="ecto:artifact-close-request";function focusArtifactDocument(){var body=document.body;if(!body)return;try{window.focus();}catch(e){}if(!body.hasAttribute("tabindex"))body.setAttribute("tabindex","-1");try{body.focus({preventScroll:true});}catch(e){try{body.focus();}catch(e2){}}}window.addEventListener("message",function(event){if(event.source!==window.parent)return;var data=event.data;if(!data||typeof data!=="object"||data.type!==FOCUS_TYPE)return;if(document.readyState==="loading"){document.addEventListener("DOMContentLoaded",focusArtifactDocument,{once:true});return;}focusArtifactDocument();});window.addEventListener("keydown",function(event){if(event.key!=="Escape")return;window.setTimeout(function(){if(event.defaultPrevented)return;window.parent.postMessage({type:CLOSE_TYPE},"*");},0);});})();</script></body>
+</html>
