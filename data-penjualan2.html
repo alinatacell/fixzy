@@ -301,6 +301,20 @@ function render(){
   const q=document.getElementById('q').value.toLowerCase();
   const f=document.getElementById('f').value;
   filteredRows=allRows.filter(d=>{ const st=getStatus(d); if(f!=='semua'&&st!==f) return false; if(!q) return true; const hay=`${getTanggal(d)} ${getTeknisi(d)} ${getNamaPel(d)} ${getWa(d)} ${getAlamat(d)} ${getNota(d)}`.toLowerCase(); return hay.includes(q); });
+
+  // Ringkasan otomatis mengikuti data yang sedang tampil.
+  // Batal tidak dihitung sebagai penghasilan.
+  const summaryRows=filteredRows.filter(d=>getStatus(d)!=='batal');
+  const summaryTotal=summaryRows.length;
+  const summaryIncome=summaryRows.reduce((sum,d)=>sum+getPendapatan(d),0);
+  const summaryEl=document.getElementById('salesSummary');
+  if(summaryEl){
+    summaryEl.innerHTML=`
+      <span class="sum-icon">☁️</span>
+      <span class="sum-title">Data <strong>penjualan</strong> • Total: <strong>${summaryTotal}</strong> • Penghasilan: <span class="sum-income">Rp ${summaryIncome.toLocaleString('id-ID')}</span></span>
+    `;
+  }
+
   document.getElementById('info').textContent=`${filteredRows.length} dari ${allRows.length} data - Excel tanggal teknisi nama WA alamat - Lihat untuk panel`;
   const tbody=document.getElementById('tbody'); tbody.innerHTML='';
   if(filteredRows.length===0){ tbody.innerHTML=`<tr><td colspan="8" style="padding:20px;text-align:center;color:#64748b">Belum ada data</td></tr>`; return; }
@@ -532,6 +546,32 @@ if(savedDark==='1'){ document.body.classList.add('dark'); }
 document.getElementById('q').addEventListener('input',render);
 document.getElementById('f').addEventListener('change',render);
 </script>
+
+<style id="sales-summary-auto">
+.sales-summary{
+  width:100%;
+  min-height:76px;
+  display:flex;
+  align-items:center;
+  gap:10px;
+  padding:16px 20px;
+  margin:0 0 14px;
+  background:#fff;
+  border:2px solid #111827;
+  border-radius:14px;
+  box-shadow:5px 5px 0 #111827;
+  color:#64748b;
+}
+.sales-summary .sum-icon{font-size:24px;flex:0 0 auto}
+.sales-summary .sum-title{font-size:18px;line-height:1.35}
+.sales-summary .sum-income{color:#047857;font-weight:900}
+@media(max-width:600px){
+  .sales-summary{min-height:72px;padding:14px 16px}
+  .sales-summary .sum-title{font-size:16px}
+  .sales-summary .sum-icon{font-size:21px}
+}
+</style>
+
 </head>
 <body>
 <header>
