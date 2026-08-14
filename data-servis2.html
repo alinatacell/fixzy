@@ -488,40 +488,38 @@ window.kirimWhatsAppDanSimpan=async()=>{
  }
 
  /*
-  * Android: gunakan whatsapp:// terlebih dahulu.
-  * Tidak memakai window.open sehingga tidak tergantung popup Chrome.
-  * Navigasi dilakukan langsung dari klik tombol pengguna.
+  * Jangan memakai window.location.href untuk whatsapp:// karena itu
+  * mengganti halaman FIXZY menjadi halaman navigasi browser kosong.
+  *
+  * Buat link sementara dengan target=_blank. Chrome akan menyerahkan
+  * whatsapp:// kepada aplikasi WhatsApp, sementara halaman FIXZY tetap
+  * berada di tab asal.
   */
  const waAppUrl="whatsapp://send?phone="+wa+"&text="+encodeURIComponent(pesan);
- const waWebUrl="https://wa.me/"+wa+"?text="+encodeURIComponent(pesan);
-
- let opened=false;
 
  try{
-   window.location.href=waAppUrl;
-   opened=true;
+   const a=document.createElement("a");
+   a.href=waAppUrl;
+   a.target="_blank";
+   a.rel="noopener noreferrer";
+   a.style.display="none";
+   document.body.appendChild(a);
+
+   /*
+    * Klik masih terjadi di dalam event tombol pengguna.
+    * Setelah handoff ke WhatsApp, tab asal FIXZY tidak dinavigasikan.
+    */
+   a.click();
+
+   setTimeout(()=>a.remove(),1500);
  }catch(e){
-   console.warn("WhatsApp app URL gagal:",e);
+   console.warn("Buka WhatsApp gagal:",e);
  }
 
  /*
-  * Simpan status setelah perintah pembukaan WhatsApp dijalankan.
+  * Status tetap disimpan ke Firebase.
   */
  await simpanStatusDariPopup();
-
- /*
-  * Jika Android tidak memiliki handler whatsapp://, fallback ke
-  * halaman web WhatsApp setelah jeda singkat. Tidak menggunakan window.open.
-  */
- setTimeout(()=>{
-   if(document.visibilityState==="visible"){
-     try{
-       window.location.href=waWebUrl;
-     }catch(e){
-       console.warn("Fallback WhatsApp web gagal:",e);
-     }
-   }
- },900);
 };
 
 function normalisasiWA(value){
