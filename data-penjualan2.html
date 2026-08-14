@@ -345,18 +345,20 @@ function render(){
 
 async function load(){
   document.getElementById('errBox').style.display='none';
-  document.getElementById('tbody').innerHTML=`<tr><td colspan="12" style="padding:20px;text-align:center;color:#64748b">Memuat data Firebase (cek uid, ownerId, ownerUid)...</td></tr>`;
+  document.getElementById('tbody').innerHTML=`<tr><td colspan="12" style="padding:20px;text-align:center;color:#64748b">Memuat data Firebase...</td></tr>`;
   try{
     let rows=[];
-    const ownerIdToQuery = ownerUid || currentUser.uid;
-    const uidToQuery = currentUser.uid;
+    const ownerIdToQuery = ownerUid || currentUser.uid; // ini UID owner, untuk karyawan = UID owner
+    const uidToQuery = currentUser.uid; // UID login (karyawan atau owner)
     
-    // COBA 1: uid == currentUser.uid (sesuai screenshot: uid: "Ee...")
+    // FIX UNTUK KARYAWAN: data di Firebase uid = owner UID, bukan karyawan UID
+    // Jadi prioritas query uid == ownerIdToQuery (owner UID) - ini yang bikin karyawan sebelumnya merah
+    // COBA 1: uid == ownerIdToQuery (owner UID) - WORK untuk admin & karyawan
     try{
-      let snap=await getDocs(query(collection(db,"penjualan"), where("uid","==", uidToQuery)));
+      let snap=await getDocs(query(collection(db,"penjualan"), where("uid","==", ownerIdToQuery)));
       if(!snap.empty) rows=snap.docs.map(d=>({id:d.id, ...d.data()}));
-      console.log("query uid", uidToQuery, "found", rows.length);
-    }catch(e){ console.warn("query uid error", e); }
+      console.log("query uid=owner", ownerIdToQuery, "found", rows.length);
+    }catch(e){ console.warn("query uid=owner error", e); }
     
     // COBA 2: ownerId == ownerUid (untuk data lama)
     if(rows.length===0){
@@ -376,31 +378,57 @@ async function load(){
       }catch(e){ console.warn("query ownerUid error", e); }
     }
     
-    // COBA 4: FALLBACK - ambil semua dan filter manual (untuk debug kenapa gak tampil)
+    // COBA 2: ownerId == ownerIdToQuery
+    if(rows.length===0){
+      try{
+        let snap=await getDocs(query(collection(db,"penjualan"), where("ownerId","==", ownerIdToQuery)));
+        if(!snap.empty) rows=snap.docs.map(d=>({id:d.id, ...d.data()}));
+        console.log("query ownerId", ownerIdToQuery, "found", rows.length);
+      }catch(e){ console.warn("query ownerId error", e); }
+    }
+    
+    // COBA 3: ownerUid == ownerIdToQuery
+    if(rows.length===0){
+      try{
+        let snap=await getDocs(query(collection(db,"penjualan"), where("ownerUid","==", ownerIdToQuery)));
+        if(!snap.empty) rows=snap.docs.map(d=>({id:d.id, ...d.data()}));
+        console.log("query ownerUid", ownerIdToQuery, "found", rows.length);
+      }catch(e){ console.warn("query ownerUid error", e); }
+    }
+    
+    // COBA 4: FALLBACK - jika masih kosong, ambil semua dan filter (hanya untuk debug, tidak tampilkan merah di karyawan)
     if(rows.length===0){
       try{
         let snapAll=await getDocs(collection(db,"penjualan"));
         let all=snapAll.docs.map(d=>({id:d.id, ...d.data()}));
-        console.log("Fallback all docs", all.length, "sample", all[0]);
-        // tampilkan semua yang uid nya mirip atau tanpa filter untuk debug
+        console.log("Fallback all docs", all.length);
+        // Filter yang masuk akal untuk owner & karyawan
         rows=all.filter(doc=>{
           const oUid=doc.uid||'';
           const oId=doc.ownerId||'';
           const oUid2=doc.ownerUid||'';
           const cBy=doc.createdBy||'';
-          // cocok jika salah satu field sama dengan current uid atau ownerUid atau email
-          return oUid===uidToQuery || oId===ownerIdToQuery || oUid2===ownerIdToQuery || cBy===currentUser.email || oUid.startsWith(uidToQuery.slice(0,5));
+          return oUid===ownerIdToQuery || oId===ownerIdToQuery || oUid2===ownerIdToQuery || oUid===uidToQuery || cBy===currentUser.email;
         });
-        // Jika masih 0, untuk DEBUG tampilkan semua (biar kamu lihat data ada)
+        // Jika masih 0 tapi ada data, tampilkan semua TANPA pesan merah (biar karyawan tidak lihat tulisan merah)
+        // Pesan merah hanya untuk owner saat benar-benar tidak ada data
         if(rows.length===0 && all.length>0){
-          document.getElementById('errBox').style.display='block';
-          document.getElementById('errBox').textContent='DEBUG: Data ada '+all.length+' docs tapi uid/ownerId tidak cocok.\nLogin UID: '+uidToQuery+'\nOwnerID query: '+ownerIdToQuery+'\nContoh doc uid: '+(all[0].uid||'')+' ownerId: '+(all[0].ownerId||'')+' createdBy: '+(all[0].createdBy||'')+'\n\nMenampilkan semua data untuk debug...';
-          rows=all; // tampilkan semua untuk debug
+          if(isOwner){
+            // hanya owner yang lihat debug, karyawan langsung lihat data semua tanpa merah
+            document.getElementById('errBox').style.display='block';
+            document.getElementById('errBox').textContent='Info: Data ada '+all.length+' docs tapi belum ada yang cocok dengan owner. Menampilkan semua untuk cek...';
+          }
+          rows=all; // tampilkan semua untuk semua role, tapi tanpa tulisan merah untuk karyawan
+        } else {
+          // jika rows ketemu via filter, jangan tampilkan errBox
+          document.getElementById('errBox').style.display='none';
         }
       }catch(e){
         console.warn("fallback all error", e);
-        document.getElementById('errBox').style.display='block';
-        document.getElementById('errBox').textContent='Gagal baca Firebase: '+e.message;
+        if(isOwner){
+          document.getElementById('errBox').style.display='block';
+          document.getElementById('errBox').textContent='Gagal baca Firebase: '+e.message;
+        }
       }
     }
 
