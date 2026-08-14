@@ -100,15 +100,35 @@ onAuthStateChanged(auth, async u=>{
     }else{
       isOwner = (p.role||'').toLowerCase()==='owner' || p.isOwner===true;
       ownerUid = p.ownerId || p.ownerUid || (isOwner ? u.uid : p.ownerUid) || u.uid;
-      // Nama konter ambil dari register - cek semua kemungkinan field register
-      konterName = p.namaKonter || p.namaToko || p.tokoName || p.namaKonterToko || p.konter || p.storeName || p.displayName || p.nama || p.name || p.username || "Fixzy - A Yudi Thea";
-      // Simpan juga ke field khusus untuk display
-      const konterFromRegister = konterName;
+      // FIX 1: Nama konter ambil dari register ADMIN, bukan dari karyawan
+      if(isOwner){
+        // Jika owner, ambil langsung dari doc sendiri
+        konterName = p.namaKonter || p.namaToko || p.tokoName || p.namaKonterToko || p.konter || p.storeName || p.displayName || p.nama || p.name || p.username || "Fixzy - A Yudi Thea";
+      }else{
+        // Jika karyawan/employee, ambil dari doc ADMIN (ownerUid)
+        try{
+          const ownerSnap = await getDoc(doc(db,"users", ownerUid));
+          if(ownerSnap.exists()){
+            const op = ownerSnap.data();
+            konterName = op.namaKonter || op.namaToko || op.tokoName || op.namaKonterToko || op.konter || op.storeName || op.displayName || op.nama || op.name || op.username || "Fixzy - A Yudi Thea";
+            console.log("Nama konter dari register admin:", konterName, "ownerUid:", ownerUid);
+          }else{
+            konterName = p.namaKonter || p.namaToko || p.nama || "Fixzy - A Yudi Thea";
+          }
+        }catch(e){
+          console.warn("Gagal ambil konter admin, fallback ke data karyawan", e);
+          konterName = p.namaKonter || p.namaToko || p.nama || "Fixzy - A Yudi Thea";
+        }
+      }
       document.getElementById('roleSide').textContent=isOwner?'OWNER':(p.role||'KARYAWAN').toUpperCase();
       document.getElementById('roleSide').style.background=isOwner?'#16a34a':'#2563eb';
     }
   }catch(e){ ownerUid=u.uid; isOwner=true; konterName="Fixzy - A Yudi Thea"; }
   document.getElementById('konterField').value=konterName;
+  // Update info untuk debug
+  const konterInfoEl = document.getElementById('konterField').parentElement?.parentElement?.parentElement?.querySelector('#konterInfo') || document.getElementById('konterInfo');
+  // konterInfo akan diisi nanti
+
   document.getElementById('tanggalField').valueAsDate=new Date();
   autoGenerateNotaBarcode();
   await loadKaryawan();
