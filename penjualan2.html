@@ -228,8 +228,8 @@ function render(){
     const nama=getNama(d), alamat=getAlamat(d), wa=getWa(d), produk=getProduk(d), bc=getBarcode(d), modal=getModal(d), total=getTotal(d), laba=getPendapatan(d), status=getStatus(d), teknisi=getTeknisi(d), tgl=getTgl(d);
     const badgeClass=status.includes('tunai')?'s-tunai':status.includes('lunas')||status.includes('bayar')?'s-lunas':status.includes('tagih')||status.includes('belum')?'s-tagihan':status.includes('batal')?'s-batal':'s-masuk';
     // 1 BARIS = SEMUA DATA PELANGGAN + KOLOM PENDAPATAN AKHIR BILA DIAMBIL
-    const pendapatanAkhir = (status.includes('ambil')||status.includes('diambil')||status.includes('selesai')||status.includes('lunas')||status.includes('tunai')) ? laba : 0;
-    const isDiambil = status.includes('ambil')||status.includes('diambil');
+    const pendapatanAkhir = laba; // hasil akhir
+    const isDiambil = status.includes('diambil')||status.includes('ambil'); // hanya Diambil = hasil akhir
     const tr=document.createElement('tr');
     tr.innerHTML=`
       <td><div style="font-weight:700;font-size:11px">${tgl}</div><div style="font-size:10px;color:#94a3b8">${d.nomorNota||d.id.slice(0,8)}</div></td>
@@ -238,7 +238,7 @@ function render(){
       <td style="text-align:right">Rp ${modal.toLocaleString('id-ID')}</td>
       <td style="text-align:right;font-weight:900">Rp ${total.toLocaleString('id-ID')}</td>
       <td style="text-align:right;color:#15803d;font-weight:800">Rp ${laba.toLocaleString('id-ID')}</td>
-      <td style="text-align:right;font-weight:900;background:${isDiambil?'#dcfce7':'transparent'};color:${isDiambil?'#15803d':'#64748b'}">${isDiambil?`Rp ${pendapatanAkhir.toLocaleString('id-ID')}`:`${status.includes('batal')?'-':'Belum diambil'}`}</td>
+      <td style="text-align:right;font-weight:900;background:${isDiambil?'#dcfce7':'transparent'};color:${isDiambil?'#15803d':'#64748b'}">${isDiambil?`Rp ${pendapatanAkhir.toLocaleString('id-ID')}`:`${status.includes('batal')?'-':'- (Belum Diambil)'}`}</td>
       <td><span class="badge ${badgeClass}">${status.toUpperCase()}</span></td>
       <td>${teknisi}</td>
       <td class="action-cell">
@@ -485,7 +485,7 @@ document.getElementById('editForm').addEventListener('submit', async e=>{
 <main>
   <div class="bar">
     <input id="q" class="search" placeholder="Cari nama / alamat / WA / produk... (1 baris ke samping)">
-    <select id="f"><option value="semua">Semua Status</option><option value="lunas">Lunas</option><option value="tunai">Tunai</option><option value="tagihan">Tagihan</option><option value="batal">Batal</option></select>
+    <select id="f"><option value="semua">Semua Status</option><option value="lunas">Lunas</option><option value="tunai">Tunai</option><option value="tagihan">Tagihan</option><option value="diambil">Diambil</option><option value="batal">Batal</option></select>
   </div>
 
   <div class="stats">
@@ -533,7 +533,7 @@ document.getElementById('editForm').addEventListener('submit', async e=>{
       <div style="grid-column:1/-1"><label style="font-size:11px;font-weight:800">Alamat</label><textarea id="ealamat" style="width:100%;margin-top:4px;min-height:60px"></textarea></div>
       <div><label style="font-size:11px;font-weight:800">Total</label><input id="etotal" type="number" style="width:100%;margin-top:4px"></div>
       <div><label style="font-size:11px;font-weight:800">Teknisi</label><input id="eteknisi" style="width:100%;margin-top:4px"></div>
-      <div style="grid-column:1/-1"><label style="font-size:11px;font-weight:800">Status</label><select id="estatus" style="width:100%;margin-top:4px"><option value="lunas">Lunas</option><option value="tunai">Tunai</option><option value="tagihan">Tagihan</option><option value="batal">Batal</option></select></div>
+      <div style="grid-column:1/-1"><label style="font-size:11px;font-weight:800">Status</label><select id="estatus" style="width:100%;margin-top:4px"><option value="lunas">Lunas</option><option value="tunai">Tunai</option><option value="tagihan">Tagihan</option><option value="diambil">Diambil</option><option value="batal">Batal</option></select></div>
       <div style="grid-column:1/-1;display:flex;gap:8px;margin-top:8px"><button type="submit" style="flex:1;background:#111827;color:#fff">Simpan</button><button type="button" onclick="closeEdit()" style="background:#e5e7eb;color:#111827">Batal</button></div>
     </form>
   </div>
