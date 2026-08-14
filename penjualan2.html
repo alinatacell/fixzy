@@ -91,7 +91,7 @@ textarea{min-height:72px;resize:vertical}
 </div>
 
 <div id="page" style="display:none">
-<div class="notice"><b>Logika FIXZY V2:</b> Tunai = pendapatan langsung, Tagihan = jadi piutang, Batal = stok balik & tidak jadi pendapatan. Draft otomatis kesimpan, jadi kalau macet / refresh gak hilang.</div>
+<div class="notice"><b>Logika FIXZY V2 - Pendapatan Rapi untuk Dashboard:</b><br>• <b>Tunai:</b> pendapatan = TOTAL, piutang = 0, laba = pendapatan - modal<br>• <b>Tagihan:</b> pendapatan = 0, piutang = SISA, laba = 0 (nanti jadi pendapatan saat pelunasan di data servis)<br>• <b>Batal:</b> pendapatan = 0, piutang = 0, stok balik<br>Kolom <b>LABA diganti PENDAPATAN</b> biar dashboard mudah baca penghasilan. Status diambil dari data penjualan, kalau servis ambil dari data servis.</div>
 
 <section class="card">
 <div class="title">1. Data Transaksi <span id="draftBadge" class="badge" style="display:none;background:#e0f2fe;color:#075985;margin-left:auto">Draft tersimpan</span></div>
@@ -136,9 +136,15 @@ textarea{min-height:72px;resize:vertical}
 
 <div class="totalbox">
 <div class="total"><small>HARGA KOTOR</small><strong id="hargaKotorText">Rp 0</strong></div>
-<div class="total"><small>MODAL</small><strong id="modalText">Rp 0</strong></div>
 <div class="total"><small>DISKON</small><strong id="diskonText">Rp 0</strong></div>
 <div class="total" style="background:#0f172a;color:#fff"><small style="color:#cbd5e1">TOTAL AKHIR</small><strong id="totalText">Rp 0</strong></div>
+<div class="total" style="background:#dcfce7;border-color:#bbf7d0"><small style="color:#166534">PENDAPATAN (DASHBOARD)</small><strong id="pendapatanText" style="color:#166534">Rp 0</strong><div style="font-size:10px;color:#15803d;margin-top:4px" id="pendapatanHint">Terisi jika Tunai</div></div>
+</div>
+<div class="totalbox" style="margin-top:8px">
+<div class="total"><small>MODAL</small><strong id="modalText">Rp 0</strong></div>
+<div class="total"><small>PIUTANG</small><strong id="piutangText">Rp 0</strong></div>
+<div class="total"><small>LABA BERSIH (Pendapatan-Modal)</small><strong id="labaText">Rp 0</strong></div>
+<div class="total"><small>SISA TAGIHAN</small><strong id="sisaDisplay">Rp 0</strong></div>
 </div>
 
 <div class="grid" style="margin-top:14px">
@@ -294,15 +300,49 @@ window.ubahQty=(i,delta)=>{const item=cart[i]; if(!item) return; let newQty=item
 window.hapusItem=i=>{cart.splice(i,1); renderCart(); saveDraft();}
 
 function updateTotals(){
-  const gross=cart.reduce((s,x)=>s+x.harga*x.qty,0), modal=cart.reduce((s,x)=>s+x.modal*x.qty,0), disk=Math.max(0,Number($("diskon").value)||0), dib=Math.max(0,Number($("dibayar").value)||0), total=Math.max(0,gross-disk);
-  $("hargaKotorText").textContent=rupiah(gross); $("modalText").textContent=rupiah(modal); $("diskonText").textContent=rupiah(disk); $("totalText").textContent=rupiah(total); $("sisa").value=rupiah(Math.max(0,total-dib)); updateStatusInfo();
+  const gross=cart.reduce((s,x)=>s+x.harga*x.qty,0);
+  const modal=cart.reduce((s,x)=>s+x.modal*x.qty,0);
+  const disk=Math.max(0,Number($("diskon").value)||0);
+  const dib=Math.max(0,Number($("dibayar").value)||0);
+  const total=Math.max(0,gross-disk);
+  const sisa=Math.max(0,total-dib);
+  const st=$("status").value;
+
+  // LOGIKA BARU RAPI - PENDAPATAN UNTUK DASHBOARD
+  let pendapatan=0, piutang=0, laba=0;
+  if(st==="tunai"){ pendapatan=total; piutang=0; laba=pendapatan-modal; }
+  else if(st==="tagihan"){ pendapatan=0; piutang=sisa; laba=0; }
+  else { pendapatan=0; piutang=0; laba=0; } // batal
+
+  $("hargaKotorText").textContent=rupiah(gross);
+  $("modalText").textContent=rupiah(modal);
+  $("diskonText").textContent=rupiah(disk);
+  $("totalText").textContent=rupiah(total);
+  $("pendapatanText").textContent=rupiah(pendapatan);
+  $("piutangText").textContent=rupiah(piutang);
+  $("labaText").textContent=rupiah(laba);
+  $("sisaDisplay").textContent=rupiah(sisa);
+  $("sisa").value=rupiah(sisa);
+  
+  // hint
+  if(st==="tunai") $("pendapatanHint").textContent="Terisi: Tunai = pendapatan";
+  else if(st==="tagihan") $("pendapatanHint").textContent="Kosong: Tagihan masuk piutang";
+  else $("pendapatanHint").textContent="Kosong: Batal";
+
+  updateStatusInfo(pendapatan, piutang, laba);
 }
-function updateStatusInfo(){
-  const st=$("status").value, total=cart.reduce((s,x)=>s+x.harga*x.qty,0)-Math.max(0,Number($("diskon").value)||0), dib=Number($("dibayar").value)||0;
-  if(st==="tunai") $("statusInfo").textContent="Tunai: harus lunas. Masuk pendapatan.";
-  else if(st==="tagihan") $("statusInfo").textContent="Tagihan: jadi piutang. Sisa = Total - Dibayar.";
-  else $("statusInfo").textContent="Batal: stok dikembalikan, tidak jadi pendapatan.";
-  if(st==="tunai" && dib<total) $("statusInfo").textContent+=" (Pembayaran kurang)";
+function updateStatusInfo(pendapatan=0, piutang=0, laba=0){
+  const st=$("status").value;
+  const total=cart.reduce((s,x)=>s+x.harga*x.qty,0)-Math.max(0,Number($("diskon").value)||0;
+  const dib=Number($("dibayar").value)||0;
+  if(st==="tunai"){
+    $("statusInfo").innerHTML=`Tunai: <b>Pendapatan ${rupiah(pendapatan)}</b> masuk dashboard. Laba ${rupiah(laba)}.`;
+  } else if(st==="tagihan"){
+    $("statusInfo").innerHTML=`Tagihan: <b>Piutang ${rupiah(piutang)}</b>. Pendapatan 0 dulu, nanti terisi saat pelunasan di Data Servis.`;
+  } else {
+    $("statusInfo").textContent="Batal: stok dikembalikan, tidak jadi pendapatan & piutang.";
+  }
+  if(st==="tunai" && dib<total) $("statusInfo").textContent+=" (Pembayaran kurang - harus lunas)";
 }
 $("diskon").addEventListener("input", ()=>{updateTotals(); saveDraft();});
 $("dibayar").addEventListener("input", ()=>{updateTotals(); saveDraft();});
@@ -337,7 +377,12 @@ window.lanjutSimpan=async()=>{
   try{
     const v=validate(), st=$("status").value, nota=$("nomorNota").textContent, bc=$("barcode").textContent;
     const gross=cart.reduce((s,x)=>s+x.harga*x.qty,0), modal=cart.reduce((s,x)=>s+x.modal*x.qty,0);
-    const pendapatan=st==="tunai"?v.total:0, piutang=st==="tagihan"?v.sisa:0;
+    // LOGIKA BARU: pendapatan hanya jika tunai, piutang jika tagihan, laba = pendapatan-modal
+    const pendapatan=st==="tunai"?v.total:0;
+    const piutang=st==="tagihan"?v.sisa:0;
+    const laba=pendapatan-modal;
+    const labaKotor=gross-modal; // untuk info tambahan
+
     await runTransaction(db, async tx=>{
       const stockItems=cart.filter(x=>x.productId); const refs=stockItems.map(x=>doc(db,"stok",x.productId)); const snaps=[];
       for(const ref of refs){const s=await tx.get(ref); snaps.push(s)}
@@ -348,9 +393,35 @@ window.lanjutSimpan=async()=>{
         if(st!=="batal") tx.update(refs[i], {[field]:cur - x.qty, updatedAt:serverTimestamp()});
       }
       const saleRef=doc(collection(db,"penjualan"));
-      tx.set(saleRef, {uid:ownerUid, createdBy:user.uid, nomorNota:nota, barcode:bc, tanggal:new Date().toISOString(), pelanggan:{nama:$("namaPelanggan").value.trim(), wa:$("wa").value.trim(), alamat:$("alamat").value.trim()}, teknisi:$("teknisi").value.trim(), items:cart.map(x=>({productId:x.productId,nama:x.nama,barcode:x.barcode,qty:x.qty,harga:x.harga,modal:x.modal,subtotal:x.harga*x.qty})), status:st, gross, diskon:Number($("diskon").value)||0, total:v.total, dibayar:v.dib, sisa:v.sisa, pendapatan, piutang, modal, catatan:$("catatan").value.trim(), createdAt:serverTimestamp(), updatedAt:serverTimestamp()});
+      tx.set(saleRef, {
+        uid:ownerUid, 
+        createdBy:user.uid, 
+        nomorNota:nota, 
+        barcode:bc, 
+        tanggal:new Date().toISOString(),
+        pelanggan:{nama:$("namaPelanggan").value.trim(), wa:$("wa").value.trim(), alamat:$("alamat").value.trim()}, 
+        teknisi:$("teknisi").value.trim(), 
+        items:cart.map(x=>({productId:x.productId,nama:x.nama,barcode:x.barcode,qty:x.qty,harga:x.harga,modal:x.modal,subtotal:x.harga*x.qty, labaPerItem: x.harga*x.qty - x.modal*x.qty})),
+        status:st, 
+        gross, 
+        diskon:Number($("diskon").value)||0, 
+        total:v.total, 
+        dibayar:v.dib, 
+        sisa:v.sisa,
+        // KOLOM BARU UNTUK DASHBOARD - PENDAPATAN JADI KUNCI
+        pendapatan, // terisi hanya jika status tunai - untuk dashboard penghasilan
+        piutang, // terisi hanya jika tagihan
+        modal,
+        laba, // laba bersih = pendapatan - modal (hanya jika tunai)
+        labaKotor, // gross - modal
+        // untuk data servis, status diambil dari collection servis, bukan penjualan
+        sumber:"penjualan",
+        catatan:$("catatan").value.trim(), 
+        createdAt:serverTimestamp(), 
+        updatedAt:serverTimestamp()
+      });
     });
-    $("saveInfo").innerHTML=`<span class="success">Penjualan ${esc(nota)} berhasil!</span>`; tampilNotice("✅ Berhasil", `Nota <b>${esc(nota)}</b> tersimpan.<br>Pendapatan: ${rupiah(pendapatan)}<br>Piutang: ${rupiah(piutang)}`); localStorage.removeItem(draftKey); resetForm();
+    $("saveInfo").innerHTML=`<span class="success">Penjualan ${esc(nota)} berhasil!</span>`; tampilNotice("✅ Berhasil", `Nota <b>${esc(nota)}</b> tersimpan.<br><b>Pendapatan: ${rupiah(pendapatan)}</b> (kolom laba diganti pendapatan)<br>Piutang: ${rupiah(piutang)}<br>Laba: ${rupiah(laba)}<br><br>Dashboard tinggal sum <b>pendapatan</b> where status=tunai`); localStorage.removeItem(draftKey); resetForm();
   }catch(e){console.error(e); $("saveInfo").textContent="Gagal: "+e.message; tampilNotice("❌ Gagal", esc(e.message));} finally{saving=false;}
 }
 
