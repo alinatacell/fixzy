@@ -342,7 +342,7 @@ window.setStatus=async(id,st)=>{
 function showWAPopup(data, status){
   pendingWA={data, status};
   const nama=getNamaPel(data);
-  const waRawOriginal=getWa(data);
+  const waRaw=(getWa(data)||'').toString().trim();
   const nota=getNota(data);
   const total=getTotal(data);
   const alamat=getAlamat(data);
@@ -350,23 +350,14 @@ function showWAPopup(data, status){
   const items=getItems(data);
   const barang=items.length>0?items.map(i=>i.nama).join(', '):'Y20';
   const konterReal=getKonterNameFromData(data);
-  
-  // AMBIL NOMOR WA PELANGGAN - BERSIHKAN
-  let waRaw=(waRawOriginal||'').toString().trim();
-  let waDigits=waRaw.replace(/[^0-9]/g,'');
+
+  let digits=waRaw.replace(/[^0-9]/g,'');
   let waNumber='';
-  if(waDigits){
-    if(waDigits.startsWith('0')){
-      waNumber='62'+waDigits.substring(1);
-    } else if(waDigits.startsWith('62')){
-      waNumber=waDigits;
-    } else if(waDigits.length>=10){
-      waNumber='62'+waDigits;
-    } else {
-      waNumber=waDigits;
-    }
-  }
-  
+  if(digits.startsWith('0')) waNumber='62'+digits.substring(1);
+  else if(digits.startsWith('62')) waNumber=digits;
+  else if(digits.length>=10) waNumber='62'+digits;
+  else waNumber=digits;
+
   let msg='';
   if(status==='tagihan'){
     msg=`Halo Kak ${nama} 🙏
@@ -384,7 +375,7 @@ Mohon segera diselesaikan ya Kak. Bisa transfer atau datang langsung ke konter.
 
 Terima kasih 🙏
 *${konterReal}*`;
-  } else {
+  }else{
     msg=`Halo Kak ${nama} 🙏
 
 Terima kasih sudah berbelanja di *${konterReal}* 🤝
@@ -394,57 +385,54 @@ Terima kasih sudah berbelanja di *${konterReal}* 🤝
 💰 Total: Rp ${total.toLocaleString('id-ID')} - *LUNAS / TUNAI* ✅
 📍 Alamat: ${alamat}
 
-Barang sudah LUNAS dan bisa diambil kapan saja ya Kak. Ditunggu kedatangannya!
+Transaksi sudah SELESAI. 
 
-Terima kasih 🙏
+Terima kasih telah berlanggan dintoko kami🙏
 *${konterReal}* - Melayani dengan Amanah`;
   }
-  
-  // Tampilkan di popup
+
   const msgEl=document.getElementById('waMessage');
   if(msgEl) msgEl.textContent=msg;
-  
+
   const infoEl=document.getElementById('waInfo');
   if(infoEl) infoEl.textContent=`Kirim ke WA pelanggan: ${nama} - ${konterReal}`;
-  
+
   const numInfoEl=document.getElementById('waNumberInfo');
+  const waLink=document.getElementById('waLink');
+
   if(numInfoEl){
-    if(waRaw){
-      numInfoEl.innerHTML=`📱 Nomor Pelanggan: <b>${waRaw}</b> → <b>${waNumber}</b><br>Format wa.me: <b>https://wa.me/${waNumber}</b>`;
+    if(waNumber && waNumber.length>=10){
+      numInfoEl.innerHTML=`📱 Nomor Pelanggan: <b>${waRaw}</b> → <b>${waNumber}</b>`;
       numInfoEl.style.background='#dcfce7';
-    } else {
-      numInfoEl.innerHTML=`❌ Nomor WA pelanggan kosong! Data: ${JSON.stringify(data.pelanggan||data)}`;
+    }else{
+      numInfoEl.innerHTML=`❌ Nomor WA pelanggan kosong atau tidak valid.`;
       numInfoEl.style.background='#fee2e2';
     }
   }
-  
-  // BIKIN LINK wa.me LANGSUNG KE NOMOR PELANGGAN - INI YANG PENTING
+
   if(waNumber && waNumber.length>=10){
     const waUrl='https://wa.me/'+waNumber+'?text='+encodeURIComponent(msg);
-    const waLink=document.getElementById('waLink');
-    if(waLink){
-      waLink.href=waUrl;
-      waLink.setAttribute('href', waUrl);
-      waLink.style.display='flex';
-      waLink.style.pointerEvents='auto';
-    }
-    console.log('WA LINK SIAP:', waUrl, 'Nomor asli:', waRaw, 'Jadi:', waNumber);
     pendingWA.waUrl=waUrl;
     pendingWA.waNumber=waNumber;
     pendingWA.msg=msg;
-  } else {
-    const waLink=document.getElementById('waLink');
     if(waLink){
-      waLink.removeAttribute('href');
-      waLink.style.display='none';
+      waLink.dataset.waUrl=waUrl;
+      waLink.style.display='flex';
+      waLink.disabled=false;
     }
-    if(infoEl) infoEl.textContent+=' - NOMOR WA TIDAK VALID: '+waRaw;
+  }else{
     pendingWA.waUrl='';
     pendingWA.waNumber='';
+    if(waLink){
+      waLink.dataset.waUrl='';
+      waLink.style.display='none';
+      waLink.disabled=true;
+    }
+    if(infoEl) infoEl.textContent+=' - NOMOR WA TIDAK VALID';
   }
-  
-  document.getElementById('waModal').classList.add('show');
+
   pendingWA.konterReal=konterReal;
+  document.getElementById('waModal').classList.add('show');
 }
 
 window.closeWAModal=()=>{ 
@@ -453,22 +441,23 @@ window.closeWAModal=()=>{
 }
 
 window.sendWA=()=>{
-  if(!pendingWA || !pendingWA.waUrl){
-    alert('Link WA belum siap - nomor WA pelanggan kosong atau tidak valid');
+  const url=pendingWA && pendingWA.waUrl ? pendingWA.waUrl : '';
+  if(!url){
+    const infoEl=document.getElementById('waInfo');
+    if(infoEl) infoEl.textContent='Nomor WA pelanggan kosong atau tidak valid.';
     return;
   }
-  console.log('Buka WA:', pendingWA.waUrl);
-  window.open(pendingWA.waUrl, '_blank');
+  window.location.href=url;
 }
 
 window.sendWAReal=()=>{
-  if(!pendingWA || !pendingWA.waUrl){
-    alert('Link WA belum siap');
+  const url=pendingWA && pendingWA.waUrl ? pendingWA.waUrl : '';
+  if(!url){
+    const infoEl=document.getElementById('waInfo');
+    if(infoEl) infoEl.textContent='Nomor WA pelanggan kosong atau tidak valid.';
     return;
   }
-  console.log('Cara 2 - Buka WA:', pendingWA.waUrl);
-  // Cara 2 - pakai location.href
-  window.location.href=pendingWA.waUrl;
+  window.location.href=url;
 }
 
 window.refreshData=()=>{
@@ -541,7 +530,7 @@ document.getElementById('f').addEventListener('change',render);
     <div id="waNumberInfo" style="background:#fef3c7;border:1px solid #111827;border-radius:8px;padding:8px;font-size:11px;margin-bottom:12px;font-weight:800"></div>
     <div class="wa-actions">
       <button class="btn-wa-no" onclick="closeWAModal()" type="button">Tidak</button>
-      <a id="waLink" class="btn-wa" target="_blank" rel="noopener noreferrer" href="#" style="text-decoration:none;display:flex;align-items:center;justify-content:center;gap:6px;font-weight:900" type="button"><i class="ri-whatsapp-fill"></i> Kirim WA</a>
+      <button id="waLink" class="btn-wa" onclick="sendWA()" type="button" style="display:flex;align-items:center;justify-content:center;gap:6px;font-weight:900;width:100%"><i class="ri-whatsapp-fill"></i> Kirim WA</button>
     </div>
     <button onclick="sendWAReal()" style="margin-top:10px;width:100%;background:#111827;color:#fff;border:2px solid #111827;padding:10px;border-radius:10px;font-weight:800;font-size:11px" type="button">Coba Cara 2 (Jika Tombol Atas Tidak Jalan)</button>
   </div>
