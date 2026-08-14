@@ -24,7 +24,7 @@
 </style>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Data Penjualan - Fix Tampil Firebase</title>
+<title>Data Penjualan - 1 Baris 1 Pelanggan + Aksi Fungsional</title>
 <script>tailwind = {config:{darkMode:'class'}}</script>
 <script src="https://cdn.tailwindcss.com"></script>
 <script>tailwind.config={darkMode:'class'}</script>
@@ -33,7 +33,7 @@
 body{margin:0;background:#f4f5f7;color:#111827;font-family:Inter,Arial,sans-serif}
 body.dark{background:#070e1f;color:#e5e7eb}
 header{background:#111827;color:#fff;padding:11px 14px;display:flex;align-items:center;gap:12px;position:sticky;top:0;z-index:100;box-shadow:0 2px 10px #0003;border-bottom:1px solid #ffffff10}
-.headerLogo{width:42px;height:42px;object-fit:contain;background:#000;border-radius:10px;padding:4px;flex:0 0 42px;border:1px solid #ffffff15;display:flex;align-items:center;justify-content:center}
+.headerLogo{width:42px;height:42px;background:#000;border-radius:10px;padding:4px;flex:0 0 42px;border:1px solid #ffffff15;display:flex;align-items:center;justify-content:center}
 .grow{flex:1}
 button{border:0;border-radius:10px;padding:10px 13px;font-weight:800;cursor:pointer}
 .refresh{background:#0f172a;color:#fff;border:1px solid #ffffff20}
@@ -55,32 +55,41 @@ input,select,textarea{padding:11px;border:1px solid #cbd5e1;border-radius:12px;b
 .statValue{font-size:16px;font-weight:900;margin-top:5px;white-space:nowrap}
 .tableWrap{background:#fff;border:1px solid #e4e8ef;border-radius:16px;box-shadow:0 3px 12px rgba(15,23,42,.05);overflow-x:auto;overflow-y:visible;position:relative}
 .dark .tableWrap{background:#162544;border-color:#ffffff10}
-.salesTable{width:100%;border-collapse:collapse;min-width:1450px}
-.salesTable th{background:#f8fafc;color:#475569;font-size:10px;font-weight:900;text-align:left;padding:11px 8px;border-bottom:1px solid #e5e7eb;white-space:nowrap;text-transform:uppercase}
-.dark .salesTable th{background:#00000030;color:#94a3b8;border-color:#ffffff10}
-.salesTable td{padding:10px 8px;border-bottom:1px solid #eef1f5;font-size:12px;color:#334155;vertical-align:top;max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.salesTable{width:100%;border-collapse:collapse;min-width:1200px}
+.salesTable th{background:#f8fafc;color:#475569;font-size:10px;font-weight:900;text-align:left;padding:11px 8px;border-bottom:1px solid #e5e7eb;white-space:nowrap;text-transform:uppercase;position:sticky;top:0;z-index:1}
+.dark .salesTable th{background:#0f172a;color:#94a3b8;border-color:#ffffff10}
+.salesTable td{padding:10px 8px;border-bottom:1px solid #eef1f5;font-size:12px;color:#334155;vertical-align:middle;max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .dark .salesTable td{border-color:#ffffff08;color:#cbd5e1}
 .salesTable td.wrap{white-space:normal;word-break:break-word;line-height:1.4}
+.salesTable tbody tr:hover{background:#f8fafc}
+.dark .salesTable tbody tr:hover{background:#ffffff05}
 .badge{padding:5px 9px;border-radius:999px;font-size:10px;font-weight:900;display:inline-flex;white-space:nowrap}
-.status-tunai{background:#dcfce7;color:#15803d}.status-dibayar{background:#dcfce7;color:#15803d}.status-lunas{background:#dcfce7;color:#15803d}.status-tagihan{background:#fef3c7;color:#b45309}.status-belum{background:#fef3c7;color:#b45309}.status-batal{background:#fee2e2;color:#dc2626}.status-masuk{background:#e2e8f0;color:#0f172a}.status-{background:#e2e8f0;color:#0f172a}
+.status-tunai{background:#dcfce7;color:#15803d}.status-dibayar{background:#dcfce7;color:#15803d}.status-lunas{background:#dcfce7;color:#15803d}.status-tagihan{background:#fef3c7;color:#b45309}.status-belum{background:#fef3c7;color:#b45309}.status-batal{background:#fee2e2;color:#dc2626}.status-masuk{background:#e2e8f0;color:#0f172a}
 .dark .status-tunai,.dark .status-dibayar,.dark .status-lunas{background:#052e16;color:#86efac}.dark .status-tagihan,.dark .status-belum{background:#451a03;color:#fcd34d}.dark .status-batal{background:#450a0a;color:#fca5a5}.dark .status-masuk{background:#1e293b;color:#cbd5e1}
+.actionCell{position:relative;min-width:110px;text-align:right}
 .actionWrap{position:relative;display:inline-block}
-.actionMain{background:#111827;color:#fff;padding:7px 11px;border-radius:8px;font-size:11px;font-weight:800;cursor:pointer;white-space:nowrap}
-.dark .actionMain{background:#fff;color:#000}
-.actionMenu{display:none;position:fixed;left:0;top:0;width:220px;max-height:380px;overflow-y:auto;z-index:9999;background:#fff;border:1px solid #dbe1e8;border-radius:12px;padding:6px;box-shadow:0 14px 30px rgba(15,23,42,.22)}
+.actionMain{background:#111827;color:#fff;padding:8px 12px;border-radius:8px;font-size:11px;font-weight:800;cursor:pointer;white-space:nowrap;border:1px solid #111827}
+.actionMain:hover{background:#1e293b}
+.dark .actionMain{background:#fff;color:#000;border-color:#fff}
+.actionMenu{display:none;position:fixed;left:0;top:0;width:230px;max-height:400px;overflow-y:auto;z-index:9999;background:#fff;border:1px solid #dbe1e8;border-radius:12px;padding:6px;box-shadow:0 14px 30px rgba(15,23,42,.22)}
 .dark .actionMenu{background:#0f1d33;border-color:#ffffff15}
 .actionWrap.open .actionMenu{display:block}
-.actionMenu button{display:block;width:100%;text-align:left;background:#fff;color:#111827;margin:2px 0;padding:9px 11px;border-radius:8px;font-size:12px}
+.actionMenu button{display:block;width:100%;text-align:left;background:#fff;color:#111827;margin:2px 0;padding:10px 12px;border-radius:8px;font-size:12px;font-weight:700}
 .dark .actionMenu button{background:#0f1d33;color:#e5e7eb}
+.actionMenu button:hover{background:#f1f5f9}
+.dark .actionMenu button:hover{background:#ffffff10}
+.actionMenu .danger{color:#dc2626}
+.actionMenu .danger:hover{background:#fef2f2}
+.dark .actionMenu .danger:hover{background:#450a0a}
 .mobileSales{display:none}
 @media(max-width:1100px){ .tableWrap{display:none} .mobileSales{display:grid;gap:10px} }
-.mobileCard{background:#fff;border:1px solid #dbe1e8;border-radius:14px;padding:13px}
+.mobileCard{background:#fff;border:1px solid #dbe1e8;border-radius:14px;padding:14px;box-shadow:0 2px 8px rgba(15,23,42,.05)}
 .dark .mobileCard{background:#162544;border-color:#ffffff10}
-.modal{display:none;position:fixed;inset:0;background:rgba(15,23,42,.6);z-index:200;align-items:center;justify-content:center;padding:16px}
+.modal{display:none;position:fixed;inset:0;background:rgba(15,23,42,.7);z-index:200;align-items:center;justify-content:center;padding:16px}
 .modal.show{display:flex}
 .modalBox{width:min(640px,100%);background:#fff;border-radius:18px;padding:18px;max-height:90vh;overflow-y:auto}
 .dark .modalBox{background:#0f1d33}
-.errBox{background:#fef2f2;border:1px solid #fecaca;color:#b91c1c;padding:10px 12px;border-radius:12px;font-size:12px;margin-bottom:12px;white-space:pre-wrap}
+.errBox{background:#fef2f2;border:1px solid #fecaca;color:#b91c1c;padding:10px 12px;border-radius:12px;font-size:12px;margin-bottom:12px;white-space:pre-wrap;display:none}
 .dark .errBox{background:#450a0a;border-color:#7f1d1d;color:#fca5a5}
 </style>
 <script type="module">
@@ -125,126 +134,73 @@ onAuthStateChanged(auth, async u=>{
     }
     await load();
   }catch(e){
-    document.getElementById('errBox').style.display='block';
-    document.getElementById('errBox').textContent='Error profil: '+e.message;
     ownerUid=u.uid; isOwner=true;
     await load();
   }
 });
 
-// === MAPPING SESUAI STRUKTUR FIREBASE ASLI DARI SCREENSHOT KAMU ===
-function getNested(obj, path, def=''){
-  try{
-    const parts=path.split('.');
-    let cur=obj;
-    for(let p of parts){
-      if(cur===null||cur===undefined) return def;
-      // handle array like items.0.nama
-      if(p.match(/^\d+$/)){
-        cur=cur[parseInt(p)];
-      }else{
-        cur=cur[p];
-      }
-    }
-    if(cur===undefined||cur===null||cur==='') return def;
-    return cur;
-  }catch{ return def; }
-}
-function getNama(d){
-  // dari screenshot: pelanggan.nama (bisa kosong ""), fallback ke pelanggan.map lain, atau nama atas
-  return d.pelanggan?.nama || d.pelanggan?.name || d.nama || d.namaPelanggan || d.pelangganNama || d.customer || '' || '-';
-}
-function getAlamat(d){
-  return d.pelanggan?.alamat || d.alamat || d.alamatPelanggan || '' ;
-}
-function getNoHp(d){
-  return d.pelanggan?.wa || d.pelanggan?.noHp || d.pelanggan?.hp || d.noHp || d.wa || d.phone || '' ;
-}
+function getNama(d){ return d.pelanggan?.nama || d.nama || '' || '-'; }
+function getAlamat(d){ return d.pelanggan?.alamat || d.alamat || '-' ; }
+function getNoHp(d){ return d.pelanggan?.wa || d.noHp || '-' ; }
 function getProduk(d){
-  // dari screenshot: items array -> items[0].nama
   if(Array.isArray(d.items) && d.items.length>0){
-    const names=d.items.map(it=>it.nama||it.name||it.produk||'').filter(Boolean);
+    const names=d.items.map(it=>it.nama||'').filter(Boolean);
     if(names.length>0) return names.join(', ');
   }
-  return d.produk || d.namaProduk || d.barang || '' ;
+  return d.produk || '-' ;
 }
 function getImei(d){
-  // screenshot: items[0].barcode atau imei
-  if(Array.isArray(d.items) && d.items.length>0){
-    return d.items[0].barcode || d.items[0].imei || '' ;
-  }
-  return d.imei || d.barcode || '' ;
+  if(Array.isArray(d.items) && d.items.length>0){ return d.items[0].barcode || d.items[0].imei || '-' ; }
+  return d.imei || '-' ;
 }
 function getBeli(d){
-  // screenshot: modal, modalTotal, items[0].modal
   if(Array.isArray(d.items) && d.items.length>0){
-    const modalTotal=d.items.reduce((s,it)=>s+Number(it.modal||it.modalTotal||0),0);
-    if(modalTotal>0) return modalTotal;
+    const m=d.items.reduce((s,it)=>s+Number(it.modal||0),0);
+    if(m>0) return m;
   }
-  return Number(d.modal || d.modalTotal || d.hargaBeli || 0);
+  return Number(d.modal||d.hargaBeli||0);
 }
-function getJual(d){
-  // screenshot: total, jumlahTotal, gross, items[0].harga * qty
-  if(d.total) return Number(d.total);
-  if(d.jumlahTotal) return Number(d.jumlahTotal);
-  if(d.gross) return Number(d.gross);
-  if(Array.isArray(d.items) && d.items.length>0){
-    const tot=d.items.reduce((s,it)=>s+Number(it.subtotal||it.harga||0),0);
-    if(tot>0) return tot;
-  }
-  return Number(d.hargaJual || d.harga || 0);
-}
+function getJual(d){ return Number(d.total||d.jumlahTotal||d.gross||d.hargaJual||0); }
 function getLaba(d){
-  // screenshot: pendapatan, atau total - modal
-  if(d.pendapatan!==undefined && d.pendapatan!==null && d.pendapatan!=='') return Number(d.pendapatan);
-  if(d.laba!==undefined && d.laba!=='') return Number(d.laba);
-  const j=getJual(d), b=getBeli(d);
-  return b===0?j:j-b;
+  if(d.pendapatan!==undefined && d.pendapatan!=='' ) return Number(d.pendapatan);
+  if(d.laba!==''&&d.laba!=null) return Number(d.laba);
+  const j=getJual(d), b=getBeli(d); return b===0?j:j-b;
 }
 function getStatus(d){
-  // screenshot: status: ".." (mungkin kosong), pembayaran, atau piutang/sisa
   let s=(d.status||'').toString().trim();
-  if(!s || s==='..' || s==='".."' || s.length<2){
-    // fallback dari pembayaran atau sisa/piutang
+  if(!s || s==='..'){ 
     if(d.pembayaran) s=d.pembayaran;
-    else if(d.sisa!==undefined && Number(d.sisa)>0) s='tagihan';
-    else if(d.piutang!==undefined && Number(d.piutang)>0) s='tagihan';
+    else if(d.sisa>0||d.piutang>0) s='tagihan';
     else s='lunas';
   }
   return s.toLowerCase();
 }
-function getTeknisi(d){
-  return d.teknisi || d.karyawan || d.namaTeknisi || d.createdBy || '' ;
-}
+function getTeknisi(d){ return d.teknisi || d.createdBy || '-' ; }
 function getTanggal(d){
-  // screenshot: tanggal: "" kosong, tapi ada createdAt timestamp dan updatedAt
-  if(d.tanggal && d.tanggal.length>3) return d.tanggal;
-  if(d.tanggalMasuk) return d.tanggalMasuk;
-  if(d.createdAt && d.createdAt.toDate) return d.createdAt.toDate().toISOString().slice(0,16).replace('T',' ');
-  if(d.createdAt && d.createdAt.seconds) return new Date(d.createdAt.seconds*1000).toISOString().slice(0,16).replace('T',' ');
-  if(d.createdAt) return String(d.createdAt).slice(0,16);
+  if(d.tanggal && d.tanggal.length>3) return d.tanggal.slice(0,16);
+  if(d.createdAt?.toDate) return d.createdAt.toDate().toISOString().slice(0,16).replace('T',' ');
+  if(d.createdAt?.seconds) return new Date(d.createdAt.seconds*1000).toISOString().slice(0,16).replace('T',' ');
   return '';
 }
 
 function renderStats(){
-  let total=0, labaTotal=0, masuk=0, tagihan=0, tunai=0, dibayar=0, batal=0;
-  let pMasuk=0, pTagihan=0, pTunai=0, pDibayar=0;
+  let total=0, labaTotal=0, masuk=0, tagihan=0, tunai=0, lunas=0, batal=0;
+  let pMasuk=0, pTagihan=0, pTunai=0, pLunas=0;
   filteredRows.forEach(d=>{
     const j=getJual(d); const l=getLaba(d); const s=getStatus(d);
-    if(s!=='batal'){ total+=j; labaTotal+=l; }
-    if(s.includes('masuk')){ masuk++; pMasuk+=j; }
-    else if(s.includes('tagih')||s.includes('belum')||s.includes('piutang')){ tagihan++; pTagihan+=j; }
+    if(!s.includes('batal')){ total+=j; labaTotal+=l; }
+    if(s.includes('tagih')||s.includes('belum')||s.includes('piutang')){ tagihan++; pTagihan+=j; }
     else if(s.includes('tunai')){ tunai++; pTunai+=j; }
-    else if(s.includes('lunas')||s.includes('dibayar')||s.includes('bayar')){ dibayar++; pDibayar+=j; }
+    else if(s.includes('lunas')||s.includes('bayar')){ lunas++; pLunas+=j; }
     else if(s.includes('batal')){ batal++; }
-    else { masuk++; pMasuk+=j; } // default masuk jika status tidak jelas
+    else { masuk++; pMasuk+=j; }
   });
-  document.getElementById('statMasuk').innerHTML=`<div style="font-size:10px;font-weight:900;color:#64748b">MASUK / LUNAS</div><div style="font-size:15px;font-weight:900;margin-top:4px">${masuk+dibayar} trx</div><div style="font-size:11px;color:#64748b;margin-top:2px">Rp ${(pMasuk+pDibayar).toLocaleString('id-ID')}</div>`;
+  document.getElementById('statMasuk').innerHTML=`<div style="font-size:10px;font-weight:900;color:#64748b">MASUK / LUNAS</div><div style="font-size:15px;font-weight:900;margin-top:4px">${masuk+lunas} trx</div><div style="font-size:11px;color:#64748b;margin-top:2px">Rp ${(pMasuk+pLunas).toLocaleString('id-ID')}</div>`;
   document.getElementById('statTagihan').innerHTML=`<div style="font-size:10px;font-weight:900;color:#64748b">TAGIHAN</div><div style="font-size:15px;font-weight:900;margin-top:4px">${tagihan} trx</div><div style="font-size:11px;color:#64748b;margin-top:2px">Rp ${pTagihan.toLocaleString('id-ID')}</div>`;
   document.getElementById('statTunai').innerHTML=`<div style="font-size:10px;font-weight:900;color:#64748b">TUNAI</div><div style="font-size:15px;font-weight:900;margin-top:4px">${tunai} trx</div><div style="font-size:11px;color:#64748b;margin-top:2px">Rp ${pTunai.toLocaleString('id-ID')}</div>`;
-  document.getElementById('statLaba').innerHTML=`<div style="font-size:10px;font-weight:900;color:#64748b">LABA / PENDAPATAN</div><div style="font-size:15px;font-weight:900;margin-top:4px;color:#15803d">Rp ${labaTotal.toLocaleString('id-ID')}</div><div style="font-size:11px;color:#64748b;margin-top:2px">Batal: ${batal}</div>`;
-  document.getElementById('statTotal').innerHTML=`<div style="font-size:10px;font-weight:900;color:#9ca3af">TOTAL JUAL</div><div style="font-size:17px;font-weight:900;margin-top:4px;color:#fff">Rp ${total.toLocaleString('id-ID')}</div><div style="font-size:11px;color:#9ca3af;margin-top:2px">${filteredRows.length} transaksi Firebase</div>`;
-  document.getElementById('countInfo').textContent=`${filteredRows.length} data dari Firebase (struktur asli: pelanggan map + items array)`;
+  document.getElementById('statLaba').innerHTML=`<div style="font-size:10px;font-weight:900;color:#64748b">LABA</div><div style="font-size:15px;font-weight:900;margin-top:4px;color:#15803d">Rp ${labaTotal.toLocaleString('id-ID')}</div><div style="font-size:11px;color:#64748b;margin-top:2px">Batal: ${batal}</div>`;
+  document.getElementById('statTotal').innerHTML=`<div style="font-size:10px;font-weight:900;color:#9ca3af">TOTAL JUAL</div><div style="font-size:17px;font-weight:900;margin-top:4px;color:#fff">Rp ${total.toLocaleString('id-ID')}</div><div style="font-size:11px;color:#9ca3af;margin-top:2px">${filteredRows.length} pelanggan</div>`;
+  document.getElementById('countInfo').textContent=`${filteredRows.length} baris = ${filteredRows.length} data pelanggan (1 baris 1 pelanggan)`;
 }
 
 function render(){
@@ -264,28 +220,30 @@ function render(){
   const mobile=document.getElementById('mobileSales');
   tbody.innerHTML=''; mobile.innerHTML='';
   if(filteredRows.length===0){
-    tbody.innerHTML=`<tr><td colspan="12" style="padding:30px;text-align:center;color:#64748b">Belum ada data penjualan di Firebase.<br><span style="font-size:11px">Cek: koleksi penjualan field uid harus = ${currentUser?.uid||''} atau ownerId = ${ownerUid||''}</span></td></tr>`;
-    mobile.innerHTML=`<div class="mobileCard" style="text-align:center;color:#64748b">Belum ada data Firebase</div>`;
+    tbody.innerHTML=`<tr><td colspan="12" style="padding:30px;text-align:center;color:#64748b">Belum ada data pelanggan</td></tr>`;
+    mobile.innerHTML=`<div class="mobileCard" style="text-align:center;color:#64748b">Belum ada data</div>`;
     return;
   }
-  filteredRows.forEach(d=>{
-    const nama=getNama(d)||'-';
-    const alamat=getAlamat(d)||'-';
-    const nohp=getNoHp(d)||'-';
-    const produk=getProduk(d)||'-';
-    const imei=getImei(d)||'-';
+  // 1 BARIS = 1 DATA PELANGGAN
+  filteredRows.forEach((d, idx)=>{
+    const nama=getNama(d);
+    const alamat=getAlamat(d);
+    const nohp=getNoHp(d);
+    const produk=getProduk(d);
+    const imei=getImei(d);
     const beli=getBeli(d);
     const jual=getJual(d);
     const laba=getLaba(d);
     const status=getStatus(d);
     const teknisi=getTeknisi(d);
     const tgl=getTanggal(d);
-    const badgeClass=status.includes('tunai')?'status-tunai':status.includes('lunas')||status.includes('bayar')?'status-dibayar':status.includes('tagih')||status.includes('belum')?'status-tagihan':status.includes('batal')?'status-batal':'status-masuk';
+    const badgeClass=status.includes('tunai')?'status-tunai':status.includes('lunas')||status.includes('bayar')?'status-lunas':status.includes('tagih')||status.includes('belum')?'status-tagihan':status.includes('batal')?'status-batal':'status-masuk';
     const badge=`<span class="badge ${badgeClass}">${status.toUpperCase()}</span>`;
 
+    // DESKTOP: 1 TR = 1 PELANGGAN
     const tr=document.createElement('tr');
     tr.innerHTML=`
-      <td><div style="font-size:11px;font-weight:600">${tgl.slice(0,16)}</div><div style="font-size:10px;color:#94a3b8">${d.nomorNota||d.id.slice(0,8)}</div></td>
+      <td><div style="font-weight:600;font-size:11px">${tgl}</div><div style="font-size:10px;color:#94a3b8">${d.nomorNota||d.id.slice(0,8)}</div></td>
       <td class="wrap" style="font-weight:800">${nama}</td>
       <td class="wrap">${alamat}</td>
       <td>${nohp}</td>
@@ -296,51 +254,59 @@ function render(){
       <td style="text-align:right;color:#15803d;font-weight:800">Rp ${laba.toLocaleString('id-ID')}</td>
       <td>${badge}</td>
       <td>${teknisi}</td>
-      <td>
+      <td class="actionCell">
         <div class="actionWrap" id="wrap-${d.id}">
-          <button class="actionMain" onclick="toggleAction('${d.id}')">Aksi ▾</button>
+          <button class="actionMain" onclick="toggleAction('${d.id}', this)">Aksi ▾</button>
           <div class="actionMenu" id="menu-${d.id}">
-            <button onclick="editData('${d.id}')">✏️ Edit</button>
-            <button style="color:#dc2626" onclick="hapusData('${d.id}')">🗑 Hapus</button>
+            <button onclick="editData('${d.id}')">✏️ Edit Data</button>
+            <button onclick="detailData('${d.id}')">👁️ Detail</button>
             <div style="height:1px;background:#e5e7eb;margin:6px 0"></div>
             <div style="font-size:10px;font-weight:900;color:#94a3b8;padding:4px 8px">UBAH STATUS</div>
-            <button onclick="updateStatus('${d.id}','lunas')">✅ Lunas</button>
+            <button onclick="updateStatus('${d.id}','lunas')">✅ Lunas / Dibayar</button>
             <button onclick="updateStatus('${d.id}','tunai')">💵 Tunai</button>
             <button onclick="updateStatus('${d.id}','tagihan')">🧾 Tagihan</button>
-            <button style="color:#b45309" onclick="updateStatus('${d.id}','batal')">❌ Batal</button>
+            <button class="danger ${isOwner?'':'ownerOnly'}" onclick="updateStatus('${d.id}','batal')">❌ Batal</button>
+            <div style="height:1px;background:#e5e7eb;margin:6px 0"></div>
+            <button class="danger ${isOwner?'':'ownerOnly'}" onclick="hapusData('${d.id}')">🗑️ Hapus Pelanggan</button>
           </div>
         </div>
       </td>
     `;
     tbody.appendChild(tr);
 
+    // MOBILE: 1 CARD = 1 PELANGGAN
     const card=document.createElement('div');
     card.className='mobileCard';
     card.innerHTML=`
       <div style="display:flex;justify-content:space-between;gap:8px;border-bottom:1px solid #e5e7eb;padding-bottom:8px;margin-bottom:8px">
-        <div><div style="font-weight:900;font-size:14px">${nama}</div><div style="font-size:11px;color:#64748b">${nohp}</div><div style="font-size:10px;color:#94a3b8;margin-top:2px">${alamat}</div></div>
-        <div>${badge}</div>
+        <div style="min-width:0;flex:1"><div style="font-weight:900;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${nama}</div><div style="font-size:11px;color:#64748b">${nohp} • ${tgl}</div><div style="font-size:11px;color:#94a3b8;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${alamat}</div></div>
+        <div style="flex-shrink:0">${badge}</div>
       </div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:12px">
-        <div><div style="font-size:9px;color:#94a3b8;font-weight:800">PRODUK</div><div style="font-weight:700">${produk}</div><div style="font-size:10px;color:#94a3b8">${imei}</div></div>
-        <div><div style="font-size:9px;color:#94a3b8;font-weight:800">JUAL / PENDAPATAN</div><div style="font-weight:900">Rp ${jual.toLocaleString('id-ID')}</div><div style="font-size:11px;color:#15803d">Laba Rp ${laba.toLocaleString('id-ID')}</div><div style="font-size:10px;color:#64748b">Teknisi: ${teknisi}</div></div>
+      <div style="font-size:12px;margin-bottom:8px"><div style="font-size:10px;color:#94a3b8;font-weight:800">PRODUK</div><div style="font-weight:700">${produk}</div><div style="font-size:10px;color:#94a3b8">${imei}</div></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:12px;margin-bottom:10px">
+        <div><div style="font-size:10px;color:#94a3b8">JUAL</div><div style="font-weight:900">Rp ${jual.toLocaleString('id-ID')}</div></div>
+        <div><div style="font-size:10px;color:#94a3b8">LABA</div><div style="font-weight:800;color:#15803d">Rp ${laba.toLocaleString('id-ID')}</div><div style="font-size:10px;color:#64748b">Teknisi: ${teknisi}</div></div>
       </div>
-      <div style="margin-top:10px">
-        <div class="actionWrap" style="width:100%" id="mwrap-${d.id}">
-          <button class="actionMain" style="width:100%" onclick="toggleAction('m${d.id}')">Aksi ▾</button>
-          <div class="actionMenu" id="menu-m${d.id}">
-            <button onclick="editData('${d.id}')">✏️ Edit</button>
-            <button style="color:#dc2626" onclick="hapusData('${d.id}')">🗑 Hapus</button>
-            <button onclick="updateStatus('${d.id}','lunas')">✅ Lunas</button>
-            <button onclick="updateStatus('${d.id}','tunai')">💵 Tunai</button>
-            <button onclick="updateStatus('${d.id}','tagihan')">🧾 Tagihan</button>
-            <button style="color:#b45309" onclick="updateStatus('${d.id}','batal')">❌ Batal</button>
-          </div>
+      <div class="actionWrap" style="width:100%" id="mwrap-${d.id}">
+        <button class="actionMain" style="width:100%" onclick="toggleAction('m${d.id}', this)">Aksi Pelanggan ▾</button>
+        <div class="actionMenu" id="menu-m${d.id}">
+          <button onclick="editData('${d.id}')">✏️ Edit</button>
+          <button onclick="detailData('${d.id}')">👁️ Detail</button>
+          <button onclick="updateStatus('${d.id}','lunas')">✅ Lunas</button>
+          <button onclick="updateStatus('${d.id}','tunai')">💵 Tunai</button>
+          <button onclick="updateStatus('${d.id}','tagihan')">🧾 Tagihan</button>
+          <button class="danger" onclick="updateStatus('${d.id}','batal')">❌ Batal</button>
+          <button class="danger" onclick="hapusData('${d.id}')">🗑️ Hapus</button>
         </div>
       </div>
     `;
     mobile.appendChild(card);
   });
+
+  // hide ownerOnly for karyawan
+  if(!isOwner){
+    document.querySelectorAll('.ownerOnly').forEach(el=>el.style.display='none');
+  }
 }
 
 async function load(){
@@ -348,119 +314,64 @@ async function load(){
   document.getElementById('tbody').innerHTML=`<tr><td colspan="12" style="padding:20px;text-align:center;color:#64748b">Memuat data Firebase...</td></tr>`;
   try{
     let rows=[];
-    const ownerIdToQuery = ownerUid || currentUser.uid; // ini UID owner, untuk karyawan = UID owner
-    const uidToQuery = currentUser.uid; // UID login (karyawan atau owner)
-    
-    // FIX UNTUK KARYAWAN: data di Firebase uid = owner UID, bukan karyawan UID
-    // Jadi prioritas query uid == ownerIdToQuery (owner UID) - ini yang bikin karyawan sebelumnya merah
-    // COBA 1: uid == ownerIdToQuery (owner UID) - WORK untuk admin & karyawan
+    const ownerIdToQuery = ownerUid || currentUser.uid;
+    // PRIORITAS: uid == owner (untuk admin & karyawan)
     try{
       let snap=await getDocs(query(collection(db,"penjualan"), where("uid","==", ownerIdToQuery)));
       if(!snap.empty) rows=snap.docs.map(d=>({id:d.id, ...d.data()}));
-      console.log("query uid=owner", ownerIdToQuery, "found", rows.length);
-    }catch(e){ console.warn("query uid=owner error", e); }
-    
-    // COBA 2: ownerId == ownerUid (untuk data lama)
+    }catch{}
     if(rows.length===0){
       try{
         let snap=await getDocs(query(collection(db,"penjualan"), where("ownerId","==", ownerIdToQuery)));
         if(!snap.empty) rows=snap.docs.map(d=>({id:d.id, ...d.data()}));
-        console.log("query ownerId", ownerIdToQuery, "found", rows.length);
-      }catch(e){ console.warn("query ownerId error", e); }
+      }catch{}
     }
-    
-    // COBA 3: ownerUid == ownerUid
     if(rows.length===0){
       try{
         let snap=await getDocs(query(collection(db,"penjualan"), where("ownerUid","==", ownerIdToQuery)));
         if(!snap.empty) rows=snap.docs.map(d=>({id:d.id, ...d.data()}));
-        console.log("query ownerUid", ownerIdToQuery, "found", rows.length);
-      }catch(e){ console.warn("query ownerUid error", e); }
+      }catch{}
     }
-    
-    // COBA 2: ownerId == ownerIdToQuery
-    if(rows.length===0){
-      try{
-        let snap=await getDocs(query(collection(db,"penjualan"), where("ownerId","==", ownerIdToQuery)));
-        if(!snap.empty) rows=snap.docs.map(d=>({id:d.id, ...d.data()}));
-        console.log("query ownerId", ownerIdToQuery, "found", rows.length);
-      }catch(e){ console.warn("query ownerId error", e); }
-    }
-    
-    // COBA 3: ownerUid == ownerIdToQuery
-    if(rows.length===0){
-      try{
-        let snap=await getDocs(query(collection(db,"penjualan"), where("ownerUid","==", ownerIdToQuery)));
-        if(!snap.empty) rows=snap.docs.map(d=>({id:d.id, ...d.data()}));
-        console.log("query ownerUid", ownerIdToQuery, "found", rows.length);
-      }catch(e){ console.warn("query ownerUid error", e); }
-    }
-    
-    // COBA 4: FALLBACK - jika masih kosong, ambil semua dan filter (hanya untuk debug, tidak tampilkan merah di karyawan)
     if(rows.length===0){
       try{
         let snapAll=await getDocs(collection(db,"penjualan"));
         let all=snapAll.docs.map(d=>({id:d.id, ...d.data()}));
-        console.log("Fallback all docs", all.length);
-        // Filter yang masuk akal untuk owner & karyawan
         rows=all.filter(doc=>{
-          const oUid=doc.uid||'';
-          const oId=doc.ownerId||'';
-          const oUid2=doc.ownerUid||'';
-          const cBy=doc.createdBy||'';
-          return oUid===ownerIdToQuery || oId===ownerIdToQuery || oUid2===ownerIdToQuery || oUid===uidToQuery || cBy===currentUser.email;
+          const oUid=doc.uid||''; const oId=doc.ownerId||''; const oUid2=doc.ownerUid||''; const cBy=doc.createdBy||'';
+          return oUid===ownerIdToQuery || oId===ownerIdToQuery || oUid2===ownerIdToQuery || oUid===currentUser.uid || cBy===currentUser.email;
         });
-        // Jika masih 0 tapi ada data, tampilkan semua TANPA pesan merah (biar karyawan tidak lihat tulisan merah)
-        // Pesan merah hanya untuk owner saat benar-benar tidak ada data
-        if(rows.length===0 && all.length>0){
-          if(isOwner){
-            // hanya owner yang lihat debug, karyawan langsung lihat data semua tanpa merah
-            document.getElementById('errBox').style.display='block';
-            document.getElementById('errBox').textContent='Info: Data ada '+all.length+' docs tapi belum ada yang cocok dengan owner. Menampilkan semua untuk cek...';
-          }
-          rows=all; // tampilkan semua untuk semua role, tapi tanpa tulisan merah untuk karyawan
-        } else {
-          // jika rows ketemu via filter, jangan tampilkan errBox
-          document.getElementById('errBox').style.display='none';
-        }
-      }catch(e){
-        console.warn("fallback all error", e);
-        if(isOwner){
-          document.getElementById('errBox').style.display='block';
-          document.getElementById('errBox').textContent='Gagal baca Firebase: '+e.message;
-        }
-      }
+        if(rows.length===0 && all.length>0) rows=all;
+      }catch{}
     }
-
     rows.sort((a,b)=>{
       const ta=a.createdAt?.seconds||0, tb=b.createdAt?.seconds||0;
-      if(tb!==ta) return tb-ta;
-      return new Date(b.tanggal||0)-new Date(a.tanggal||0);
+      return tb-ta;
     });
     allRows=rows;
     render();
   }catch(e){
     document.getElementById('errBox').style.display='block';
-    document.getElementById('errBox').textContent='Error Firebase: '+e.message;
-    document.getElementById('tbody').innerHTML=`<tr><td colspan="12" style="padding:20px;color:#b91c1c">Error: ${e.message}</td></tr>`;
+    document.getElementById('errBox').textContent='Error: '+e.message;
   }
 }
 window.load=load;
 
-window.toggleAction=(id)=>{
-  const wrap=document.getElementById('wrap-'+id)||document.getElementById('mwrap-'+id);
+// AKSI FUNGSIONAL - 1 BARIS 1 PELANGGAN
+window.toggleAction=(id, btn)=>{
+  const wrap=document.getElementById('wrap-'+id) || document.getElementById('mwrap-'+id);
   const menu=document.getElementById('menu-'+id);
+  if(!wrap || !menu) return;
   const isOpen=wrap.classList.contains('open');
   closeAll();
   if(!isOpen){
     wrap.classList.add('open');
-    const rect=wrap.getBoundingClientRect();
-    let left=rect.left+window.scrollX - (menu.offsetWidth - rect.width);
-    let top=rect.bottom+window.scrollY+6;
+    const rect=btn.getBoundingClientRect();
+    let left=rect.left - menu.offsetWidth + rect.width;
+    let top=rect.bottom + 8;
     if(left<10) left=10;
     if(left+menu.offsetWidth>window.innerWidth-10) left=window.innerWidth-menu.offsetWidth-10;
-    if(top+menu.offsetHeight>window.innerHeight+window.scrollY-10){
-      top=rect.top+window.scrollY - menu.offsetHeight -6;
+    if(top+menu.offsetHeight>window.innerHeight-10){
+      top=rect.top - menu.offsetHeight - 8;
     }
     menu.style.left=left+'px';
     menu.style.top=top+'px';
@@ -468,9 +379,11 @@ window.toggleAction=(id)=>{
 }
 window.closeAll=()=>{ document.querySelectorAll('.actionWrap.open').forEach(el=>el.classList.remove('open')); }
 document.addEventListener('click', e=>{ if(!e.target.closest('.actionWrap')) closeAll(); });
+window.addEventListener('scroll', closeAll, true);
 
 window.updateStatus=async(id,status)=>{
-  if(status==='batal'&&!isOwner){ alert("Hanya owner bisa batal"); return; }
+  if((status==='batal') && !isOwner){ alert("Hanya owner bisa batal"); return; }
+  if(!confirm(`Ubah status pelanggan ini jadi ${status.toUpperCase()}?`)) return;
   try{
     await updateDoc(doc(db,"penjualan",id), {status:status, updatedAt:new Date().toISOString()});
     closeAll(); await load();
@@ -478,11 +391,16 @@ window.updateStatus=async(id,status)=>{
 }
 window.hapusData=async(id)=>{
   if(!isOwner){ alert("Hanya owner bisa hapus"); return; }
-  if(!confirm("Hapus data Firebase ini?")) return;
+  if(!confirm("Hapus data 1 pelanggan ini dari Firebase? Tidak bisa dibatalkan.")) return;
   try{
     await deleteDoc(doc(db,"penjualan",id));
     closeAll(); await load();
   }catch(err){ alert("Gagal hapus: "+err.message); }
+}
+window.detailData=(id)=>{
+  const d=allRows.find(x=>x.id===id);
+  if(!d) return;
+  alert(`DETAIL PELANGGAN\n\nNama: ${getNama(d)}\nAlamat: ${getAlamat(d)}\nWA: ${getNoHp(d)}\nProduk: ${getProduk(d)}\nTotal: Rp ${getJual(d).toLocaleString('id-ID')}\nLaba: Rp ${getLaba(d).toLocaleString('id-ID')}\nStatus: ${getStatus(d)}\nTeknisi: ${getTeknisi(d)}\nNota: ${d.nomorNota||d.id}\nTanggal: ${getTanggal(d)}`);
 }
 window.editData=(id)=>{
   const d=allRows.find(x=>x.id===id);
@@ -494,6 +412,7 @@ window.editData=(id)=>{
   document.getElementById('editProduk').value=Array.isArray(d.items)?d.items.map(i=>i.nama).join(', '):(d.produk||'');
   document.getElementById('editJual').value=getJual(d);
   document.getElementById('editTeknisi').value=d.teknisi||'';
+  document.getElementById('editStatus').value=getStatus(d);
   document.getElementById('editModal').classList.add('show');
 }
 window.closeEdit=()=>{ document.getElementById('editModal').classList.remove('show'); }
@@ -509,6 +428,7 @@ document.getElementById('editForm').addEventListener('submit', async e=>{
       'pelanggan.wa':document.getElementById('editNoHp').value,
       total:Number(document.getElementById('editJual').value||0),
       teknisi:document.getElementById('editTeknisi').value,
+      status:document.getElementById('editStatus').value,
       updatedAt:new Date().toISOString()
     });
     closeEdit(); await load();
@@ -532,7 +452,6 @@ document.getElementById('editForm').addEventListener('submit', async e=>{
     </div>
   </div>
   <div class="grow"></div>
-  <!-- REFRESH 1 AJA DI HEADER - sesuai request -->
   <button class="refresh" onclick="load()">🔄 Refresh</button>
   <button class="refresh" id="darkToggle" style="margin-left:6px">🌙</button>
   <div style="text-align:right;margin-left:10px;line-height:1.2" class="hidden md:block">
@@ -542,11 +461,10 @@ document.getElementById('editForm').addEventListener('submit', async e=>{
 </header>
 
 <main>
-  <div id="errBox" class="errBox" style="display:none"></div>
+  <div id="errBox" class="errBox"></div>
   <div class="bar">
-    <input id="search" class="search" placeholder="Cari nama / alamat / teknisi / produk / nota...">
+    <input id="search" class="search" placeholder="Cari nama / alamat / teknisi / produk / nota... (1 baris 1 pelanggan)">
     <select id="filter"><option value="semua">Semua Status</option><option value="lunas">Lunas</option><option value="tunai">Tunai</option><option value="tagihan">Tagihan</option><option value="belum">Belum Bayar</option><option value="batal">Batal</option><option value="masuk">Masuk</option></select>
-    <!-- refresh di bar sudah dihapus, hanya 1 di header -->
   </div>
 
   <div class="stats">
@@ -560,25 +478,26 @@ document.getElementById('editForm').addEventListener('submit', async e=>{
 
   <div class="tableWrap">
     <table class="salesTable">
-      <thead><tr><th>Tanggal</th><th>Nama Pelanggan</th><th>Alamat Pelanggan</th><th>No HP / WA</th><th>Produk (items)</th><th>IMEI / Barcode</th><th>Beli (modal)</th><th>Jual / Total</th><th>Laba / Pendapatan</th><th>Status</th><th>Teknisi</th><th>Aksi</th></tr></thead>
+      <thead><tr><th>Tanggal</th><th>Nama Pelanggan</th><th>Alamat</th><th>WA / HP</th><th>Produk</th><th>Barcode / IMEI</th><th>Modal</th><th>Total Jual</th><th>Laba</th><th>Status</th><th>Teknisi</th><th>Aksi (1 Baris 1 Pelanggan)</th></tr></thead>
       <tbody id="tbody"></tbody>
     </table>
   </div>
   <div class="mobileSales" id="mobileSales"></div>
-  <div style="margin-top:14px;font-size:11px;color:#64748b;text-align:center">Fix: query uid + ownerId + ownerUid + fallback all • Mapping pelanggan map + items array • Hanya Firebase asli • Refresh 1 di header • Akun di samping logo</div>
+  <div style="margin-top:14px;font-size:11px;color:#64748b;text-align:center">✅ 1 Baris = 1 Data Pelanggan • Aksi Fungsional: Edit, Detail, Lunas, Tunai, Tagihan, Batal, Hapus • Firebase asli</div>
 </main>
 
 <div class="modal" id="editModal">
   <div class="modalBox">
-    <h2 style="font-weight:900;margin:0 0 12px">Edit Data Firebase (struktur asli)</h2>
+    <h2 style="font-weight:900;margin:0 0 12px">Edit 1 Data Pelanggan</h2>
     <form id="editForm" style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
       <input type="hidden" id="editId">
-      <div><label style="font-size:11px;font-weight:800">Nama Pelanggan (pelanggan.nama)</label><input id="editNama" required style="width:100%;margin-top:4px"></div>
-      <div><label style="font-size:11px;font-weight:800">No WA (pelanggan.wa)</label><input id="editNoHp" style="width:100%;margin-top:4px"></div>
-      <div style="grid-column:1/-1"><label style="font-size:11px;font-weight:800">Alamat Pelanggan (pelanggan.alamat)</label><textarea id="editAlamat" style="width:100%;margin-top:4px;min-height:60px"></textarea></div>
-      <div style="grid-column:1/-1"><label style="font-size:11px;font-weight:800">Produk (items[0].nama)</label><input id="editProduk" style="width:100%;margin-top:4px" readonly></div>
-      <div><label style="font-size:11px;font-weight:800">Total Jual (total)</label><input id="editJual" type="number" style="width:100%;margin-top:4px"></div>
+      <div><label style="font-size:11px;font-weight:800">Nama Pelanggan</label><input id="editNama" required style="width:100%;margin-top:4px"></div>
+      <div><label style="font-size:11px;font-weight:800">WA / HP</label><input id="editNoHp" style="width:100%;margin-top:4px"></div>
+      <div style="grid-column:1/-1"><label style="font-size:11px;font-weight:800">Alamat Pelanggan</label><textarea id="editAlamat" style="width:100%;margin-top:4px;min-height:60px"></textarea></div>
+      <div style="grid-column:1/-1"><label style="font-size:11px;font-weight:800">Produk</label><input id="editProduk" style="width:100%;margin-top:4px" readonly></div>
+      <div><label style="font-size:11px;font-weight:800">Total Jual</label><input id="editJual" type="number" style="width:100%;margin-top:4px"></div>
       <div><label style="font-size:11px;font-weight:800">Teknisi</label><input id="editTeknisi" style="width:100%;margin-top:4px"></div>
+      <div style="grid-column:1/-1"><label style="font-size:11px;font-weight:800">Status</label><select id="editStatus" style="width:100%;margin-top:4px"><option value="lunas">Lunas</option><option value="tunai">Tunai</option><option value="tagihan">Tagihan</option><option value="belum">Belum Bayar</option><option value="masuk">Masuk</option><option value="batal">Batal</option></select></div>
       <div style="grid-column:1/-1;display:flex;gap:8px;margin-top:10px"><button type="submit" style="flex:1;background:#111827;color:#fff">Simpan ke Firebase</button><button type="button" onclick="closeEdit()" style="background:#e5e7eb;color:#111827">Batal</button></div>
     </form>
   </div>
