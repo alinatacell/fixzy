@@ -24,62 +24,64 @@
 </style>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Fixzy - Data Penjualan - Sesuai Instruksi - Tidak Panjang Samping</title>
+<title>Fixzy - Data Penjualan - 8 Kolom Horizontal - Tidak Panjang</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <style>
 body{margin:0;background:#f4f5f7;color:#111827;font-family:Inter,Arial,sans-serif}
 body.dark{background:#0f172a;color:#e5e7eb}
 header{background:#111827;color:#fff;padding:10px 14px;display:flex;align-items:center;gap:12px;position:sticky;top:0;z-index:100}
-.logo{width:40px;height:40px;background:#000;border-radius:10px;display:flex;align-items:center;justify-content:center;border:1px solid #ffffff15;flex:0 0 40px}
-.logo img{width:28px;height:28px;object-fit:contain;background:#000}
-.btn-refresh{background:transparent;color:#fff;border:1px solid #ffffff30;padding:8px 14px;font-size:13px;border-radius:9px;font-weight:800;cursor:pointer}
+.logo{width:40px;height:40px;background:#000;border-radius:10px;display:flex;align-items:center;justify-content:center;border:1px solid #ffffff15}
+.logo img{width:28px;height:28px;object-fit:contain}
+.btn-refresh{background:transparent;color:#fff;border:1px solid #ffffff30;padding:8px 14px;border-radius:9px;font-weight:800;cursor:pointer}
 .btn-dark{background:#000;color:#fff;border:1px solid #ffffff20;padding:9px 12px;border-radius:9px;font-weight:800}
-main{max-width:700px;margin:auto;padding:12px}
+main{max-width:100%;margin:auto;padding:12px}
 .bar{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
 input,select{padding:10px;border:1px solid #cbd5e1;border-radius:10px;background:#fff;color:#111827;font-size:13px}
 body.dark input,body.dark select{background:#1e293b;border-color:#ffffff15;color:#e5e7eb}
 .search{flex:1;min-width:200px}
-.stats{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px}
-.stat{background:#fff;border:1px solid #e5e7eb;border-radius:14px;padding:14px}
+.stats{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-bottom:12px}
+@media(max-width:900px){ .stats{grid-template-columns:1fr 1fr} }
+.stat{background:#fff;border:1px solid #e5e7eb;border-radius:12px;padding:12px}
 body.dark .stat{background:#1e293b;border-color:#ffffff10}
-.stat b{font-size:10px;color:#64748b;text-transform:uppercase}
-.stat div{font-size:15px;font-weight:900;margin-top:6px}
+.stat b{font-size:9px;color:#64748b;text-transform:uppercase}
+.stat div{font-size:14px;font-weight:900;margin-top:4px}
 .stat.omset{border-left:4px solid #111827}
 .stat.diterima{border-left:4px solid #16a34a}
 .stat.tagihan{border-left:4px solid #f59e0b}
 .stat.modal{border-left:4px solid #64748b}
 .stat.laba{border-left:4px solid #2563eb;background:#111827;color:#fff}
 .stat.laba b{color:#9ca3af}
-.card{background:#fff;border:1px solid #e5e7eb;border-radius:16px;padding:14px;margin-bottom:12px}
-body.dark .card{background:#1e293b;border-color:#ffffff10}
-.badge{padding:4px 8px;border-radius:999px;font-size:10px;font-weight:900;display:inline-block}
+.wrap-table{background:#fff;border:1px solid #e5e7eb;border-radius:14px;overflow:auto;max-height:85vh}
+body.dark .wrap-table{background:#1e293b;border-color:#ffffff10}
+table{width:100%;border-collapse:collapse;min-width:1100px}
+th{background:#111827;color:#fff;font-size:9px;font-weight:900;text-align:left;padding:10px 8px;white-space:nowrap;text-transform:uppercase;position:sticky;top:0;z-index:10}
+td{padding:8px;border-bottom:1px solid #eef2f5;font-size:11px;vertical-align:top}
+body.dark td{border-color:#ffffff08;color:#e5e7eb}
+td .label{font-size:8px;color:#64748b;text-transform:uppercase;font-weight:800;display:block}
+td .value{font-size:11px;font-weight:700;margin-top:1px;word-break:break-word}
+td .value.b{font-size:12px;font-weight:900}
+.badge{padding:3px 6px;border-radius:999px;font-size:9px;font-weight:900;display:inline-block}
 .s-masuk{background:#e2e8f0;color:#0f172a}.s-tagihan{background:#fef3c7;color:#92400e}.s-tunai{background:#dcfce7;color:#15803d}.s-diambil{background:#dcfce7;color:#15803d}.s-batal{background:#fee2e2;color:#b91c1c}
-.label{font-size:9px;color:#64748b;text-transform:uppercase;font-weight:800;letter-spacing:.3px}
-.value{font-size:12px;font-weight:700;margin-top:2px;word-break:break-word}
-.value.b{font-size:13px;font-weight:900}
-.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:8px}
-.box{background:#f8fafc;border:1px solid #e5e7eb;border-radius:10px;padding:10px}
-body.dark .box{background:#0f172a;border-color:#ffffff10}
-.aksi-grid{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:6px;margin-top:12px}
-.btn-aksi{padding:11px 6px;border-radius:10px;font-size:11px;font-weight:900;border:0;cursor:pointer}
+.aksi-btn{display:block;width:100%;padding:6px 4px;border-radius:6px;font-size:10px;font-weight:900;margin-bottom:4px;border:0;cursor:pointer;text-align:center}
 .btn-edit{background:#111827;color:#fff}
 .btn-tagihan{background:#fef3c7;color:#92400e}
 .btn-tunai{background:#dcfce7;color:#15803d}
 .btn-batal{background:#fee2e2;color:#b91c1c}
 .btn-batal:disabled{opacity:0.3}
+.col-date{min-width:130px;max-width:150px}
+.col-pelanggan{min-width:150px;max-width:180px}
+.col-pembelian{min-width:160px;max-width:200px}
+.col-harga{min-width:140px;max-width:160px}
+.col-modal{min-width:90px}
+.col-pendapatan{min-width:110px}
+.col-laba{min-width:110px}
+.col-aksi{min-width:90px}
 </style>
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-import { getFirestore, collection, query, where, getDocs, doc, deleteDoc, updateDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
-const firebaseConfig = {
-  apiKey: "AIzaSyC_PcarMTT5Un7qfSLzf92o5OGn5rginsI",
-  authDomain: "fixzy-update.firebaseapp.com",
-  projectId: "fixzy-update",
-  storageBucket: "fixzy-update.appspot.com",
-  messagingSenderId: "431404655232",
-  appId: "1:431404655232:web:5f7d9c9a1b2c3d4e5f6a7"
-};
+import { getFirestore, collection, query, where, getDocs, doc, updateDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+const firebaseConfig = { apiKey: "AIzaSyC_PcarMTT5Un7qfSLzf92o5OGn5rginsI", authDomain: "fixzy-update.firebaseapp.com", projectId: "fixzy-update", storageBucket: "fixzy-update.appspot.com", messagingSenderId: "431404655232", appId: "1:431404655232:web:5f7d9c9a1b2c3d4e5f6a7" };
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
@@ -96,31 +98,18 @@ onAuthStateChanged(auth, async u=>{
     if(!snap.empty) p=snap.docs[0].data();
     else{ const d=await getDoc(doc(db,"users",u.uid)); if(d.exists()) p=d.data(); }
     if(!p){ ownerUid=u.uid; isOwner=true; }
-    else{
-      isOwner = (p.role||'').toLowerCase()==='owner' || p.isOwner===true;
-      ownerUid = p.ownerId || p.ownerUid || (isOwner ? u.uid : p.ownerUid) || u.uid;
-    }
+    else{ isOwner = (p.role||'').toLowerCase()==='owner' || p.isOwner===true; ownerUid = p.ownerId || p.ownerUid || (isOwner ? u.uid : p.ownerUid) || u.uid; }
     document.getElementById('roleSide').textContent=isOwner?'OWNER':'KARYAWAN';
     document.getElementById('roleSide').style.background=isOwner?'#16a34a':'#2563eb';
   }catch(e){ ownerUid=u.uid; isOwner=true; }
   await load();
 });
 async function load(){
-  try{
-    let snap=await getDocs(collection(db,"penjualan"));
-    let rows=snap.docs.map(d=>({id:d.id, ...d.data()}));
-    rows=rows.filter(r=>{
-      const oid=r.ownerId||r.ownerUid||r.uid||'';
-      return !oid || oid===ownerUid || r.createdBy===currentUser.email;
-    });
-    rows.sort((a,b)=>{
-      const ta=new Date(a.tanggal||a.createdAt?.seconds*1000||a.createdAt||0).getTime();
-      const tb=new Date(b.tanggal||b.createdAt?.seconds*1000||b.createdAt||0).getTime();
-      return tb-ta;
-    });
-    allRows=rows;
-    render();
-  }catch(e){ console.error(e); }
+  let snap=await getDocs(collection(db,"penjualan"));
+  let rows=snap.docs.map(d=>({id:d.id, ...d.data()}));
+  rows=rows.filter(r=>{ const oid=r.ownerId||r.ownerUid||r.uid||''; return !oid || oid===ownerUid || r.createdBy===currentUser.email; });
+  rows.sort((a,b)=>{ const ta=new Date(a.tanggal||a.createdAt?.seconds*1000||a.createdAt||0).getTime(); const tb=new Date(b.tanggal||b.createdAt?.seconds*1000||b.createdAt||0).getTime(); return tb-ta; });
+  allRows=rows; render();
 }
 function getTanggal(d){ return d.tanggal|| (d.createdAt?.seconds? new Date(d.createdAt.seconds*1000).toISOString().slice(0,10) : (d.createdAt||'').toString().slice(0,10)) || '-'; }
 function getNota(d){ return d.nomorNota||d.nota||'-'; }
@@ -133,21 +122,9 @@ function getTotal(d){ return Number(d.total||d.jumlahTotal||0); }
 function getDiskon(d){ return Number(d.diskon||0); }
 function getDp(d){ return Number(d.dp||0); }
 function getSisa(d){ return Number(d.sisa ?? (getTotal(d)-getDiskon(d)-getDp(d))); }
-function getModal(d){
-  const items=getItems(d);
-  if(items.length>0) return items.reduce((s,it)=>s+ Number(it.modal||it.hargaBeli||it.modalBeli||0)*Number(it.qty||1),0);
-  return Number(d.modal||0);
-}
-function getPendapatan(d){
-  const st=getStatus(d);
-  if(st==='tunai' || st==='diambil'){ return getTotal(d) - getDiskon(d); }
-  return 0;
-}
-function getLaba(d){
-  const st=getStatus(d);
-  if(st==='tunai' || st==='diambil'){ return getPendapatan(d) - getModal(d); }
-  return 0;
-}
+function getModal(d){ const items=getItems(d); if(items.length>0) return items.reduce((s,it)=>s+ Number(it.modal||it.hargaBeli||it.modalBeli||0)*Number(it.qty||1),0); return Number(d.modal||0); }
+function getPendapatan(d){ const st=getStatus(d); if(st==='tunai' || st==='diambil'){ return getTotal(d) - getDiskon(d); } return 0; }
+function getLaba(d){ const st=getStatus(d); if(st==='tunai' || st==='diambil'){ return getPendapatan(d) - getModal(d); } return 0; }
 function getStatus(d){ return (d.status||'masuk').toLowerCase(); }
 function render(){
   const q=document.getElementById('q').value.toLowerCase();
@@ -166,72 +143,71 @@ function render(){
     if(st==='tunai' || st==='diambil'){ modal+=mod; laba+=lb; pendapatan+=pend; diterima+= (dp>0? dp : pend); }
     else{ diterima+=dp; tagihan+=sis; }
   });
-  document.getElementById('s1').innerHTML=`<b>Omset (Total Harga)</b><div>Rp ${omset.toLocaleString('id-ID')}</div><span style="font-size:10px;color:#64748b">${filteredRows.length} transaksi</span>`;
-  document.getElementById('s2').innerHTML=`<b>Uang Diterima (DP + Tunai)</b><div style="color:#16a34a">Rp ${diterima.toLocaleString('id-ID')}</div><span style="font-size:9px;color:#64748b">Pendapatan Tunai: Rp ${pendapatan.toLocaleString('id-ID')}</span>`;
-  document.getElementById('s3').innerHTML=`<b>Tagihan (Piutang / Sisa)</b><div style="color:#d97706">Rp ${tagihan.toLocaleString('id-ID')}</div>`;
-  document.getElementById('s4').innerHTML=`<b>Modal Belanja (Total Modal)</b><div>Rp ${modal.toLocaleString('id-ID')}</div>`;
-  document.getElementById('s5').innerHTML=`<b>Laba Bersih (Total-Modal-Diskon)</b><div>Rp ${laba.toLocaleString('id-ID')}</div><span style="font-size:9px;color:#9ca3af">Pendapatan hasil akhir jika status TUNAI</span>`;
-  document.getElementById('info').textContent=`Menampilkan ${filteredRows.length} dari ${allRows.length} data - Baris vertikal, tidak panjang ke samping`;
+  document.getElementById('s1').innerHTML=`<b>Omset</b><div>Rp ${omset.toLocaleString('id-ID')}</div><span style="font-size:9px;color:#64748b">${filteredRows.length} trx</span>`;
+  document.getElementById('s2').innerHTML=`<b>Uang Diterima</b><div style="color:#16a34a">Rp ${diterima.toLocaleString('id-ID')}</div><span style="font-size:8px;color:#64748b">Tunai: Rp ${pendapatan.toLocaleString('id-ID')}</span>`;
+  document.getElementById('s3').innerHTML=`<b>Tagihan</b><div style="color:#d97706">Rp ${tagihan.toLocaleString('id-ID')}</div>`;
+  document.getElementById('s4').innerHTML=`<b>Modal Belanja</b><div>Rp ${modal.toLocaleString('id-ID')}</div>`;
+  document.getElementById('s5').innerHTML=`<b>Laba Bersih</b><div>Rp ${laba.toLocaleString('id-ID')}</div><span style="font-size:8px;color:#9ca3af">Tunai Only</span>`;
+  document.getElementById('info').textContent=`${filteredRows.length} dari ${allRows.length} data - 8 Kolom Horizontal Ke Samping (Date, Pelanggan, Pembelian, Harga, Modal, Pendapatan, Laba, Aksi)`;
   const tbody=document.getElementById('tbody');
-  if(filteredRows.length===0){
-    tbody.innerHTML=`<div style="padding:32px;text-align:center;color:#64748b;background:#fff;border-radius:16px">Belum ada data<br><a href="input-penjualan.html" style="color:#2563eb">+ Input Penjualan</a></div>`;
-    return;
-  }
+  if(filteredRows.length===0){ tbody.innerHTML=`<tr><td colspan="8" style="padding:32px;text-align:center;color:#64748b">Belum ada data</td></tr>`; return; }
   tbody.innerHTML='';
   filteredRows.forEach(d=>{
     const st=getStatus(d);
     const badgeCls=st==='tunai'?'s-tunai':st==='tagihan'?'s-tagihan':st==='batal'?'s-batal':st==='diambil'?'s-diambil':'s-masuk';
     const items=getItems(d);
-    const pembelianHtml = items.length>0 ? items.map(it=>`<div style="margin-bottom:4px">• <b>${it.nama||'-'}</b> x${it.qty||1} <span style="color:#64748b;font-size:10px">(${it.type||'auto'})</span></div>`).join('') : (d.namaProduk||'-');
-    const hargaHtml = items.length>0 ? items.map(it=>`Rp ${Number(it.harga||0).toLocaleString('id-ID')} x${it.qty||1}`).join('<br>') : `Rp ${getTotal(d).toLocaleString('id-ID')}`;
-    const div=document.createElement('div');
-    div.className='card';
-    div.innerHTML=`
-      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px;padding-bottom:10px;border-bottom:1px solid #f1f5f9">
-        <div>
-          <div class="label">Date: Tanggal (kalender)</div>
-          <div class="value b">${getTanggal(d)}</div>
-          <div class="label" style="margin-top:6px">Nomor Nota (inputan)</div>
-          <div class="value b">${getNota(d)}</div>
-          <div style="font-size:9px;color:#94a3b8">${d.barcode||''}</div>
-          <div class="label" style="margin-top:6px">Nama Teknisi (akun)</div>
-          <div class="value">${getTeknisi(d)}</div>
-        </div>
-        <div style="text-align:right"><span class="badge ${badgeCls}">${st.toUpperCase()}</span></div>
-      </div>
-      <div class="grid2">
-        <div><div class="label">Pelanggan: Nama pelanggan</div><div class="value b">${getNamaPel(d)}</div></div>
-        <div><div class="label">Nomor WA</div><div class="value">${getWa(d)}</div></div>
-      </div>
-      <div style="margin-bottom:10px"><div class="label">Alamat</div><div class="value">${getAlamat(d)}</div></div>
-      <div class="box" style="margin-bottom:10px">
-        <div class="label">Pembelian: Tipe produk QTY (contoh Y20 x1 (auto) / A53 x1 (auto) / A53 x1 (auto) kalau tambah 2x)</div>
-        <div class="value" style="margin-top:6px">${pembelianHtml}</div>
-      </div>
-      <div class="box">
-        <div class="label">Harga</div>
-        <div class="grid2" style="margin-top:6px">
-          <div><div class="label">Harga satuan (breakdown per item)</div><div class="value">${hargaHtml}</div></div>
-          <div><div class="label">Total Harga</div><div class="value b">Rp ${getTotal(d).toLocaleString('id-ID')}</div></div>
-          <div><div class="label">Diskon</div><div class="value">Rp ${getDiskon(d).toLocaleString('id-ID')}</div></div>
-          <div><div class="label">DP</div><div class="value">Rp ${getDp(d).toLocaleString('id-ID')}</div></div>
-          <div><div class="label">Sisa</div><div class="value b" style="color:${getSisa(d)>0?'#d97706':'#16a34a'}">Rp ${getSisa(d).toLocaleString('id-ID')}</div></div>
-        </div>
-        <div style="height:1px;background:#e5e7eb;margin:10px 0"></div>
-        <div class="grid2">
-          <div><div class="label">Modal Blanja: Total Modal</div><div class="value">Rp ${getModal(d).toLocaleString('id-ID')}</div></div>
-          <div><div class="label">Pendapatan: Total Harga (hasil akhir jika status TUNAI)</div><div class="value b" style="color:${getPendapatan(d)>0?'#16a34a':'#64748b'}">${getPendapatan(d)>0?`Rp ${getPendapatan(d).toLocaleString('id-ID')}`:'- Belum Tunai'}</div></div>
-          <div style="grid-column:1/-1"><div class="label">Laba: Total Harga - Modal (- Diskon)</div><div class="value b" style="color:${getLaba(d)>0?'#2563eb':'#64748b'}">${getPendapatan(d)>0?`Rp ${getLaba(d).toLocaleString('id-ID')}`:'- Belum Tunai'}</div></div>
-        </div>
-      </div>
-      <div class="aksi-grid">
-        <button class="btn-aksi btn-edit" onclick="editData('${d.id}')">✏️ Edit</button>
-        <button class="btn-aksi btn-tagihan" onclick="changeStatus('${d.id}','tagihan')">📋 Tagihan</button>
-        <button class="btn-aksi btn-tunai" onclick="changeStatus('${d.id}','tunai')">💵 Tunai</button>
-        <button class="btn-aksi btn-batal" onclick="changeStatus('${d.id}','batal')" ${!isOwner?'disabled':''}>❌ Batal<br><span style="font-size:8px">Owner</span></button>
-      </div>
+    const pembelianHtml = items.length>0 ? items.map(it=>`<div style="margin-bottom:2px"><b>${it.nama||'-'}</b> x${it.qty||1} <span style="color:#64748b;font-size:9px">(${it.type||'auto'})</span></div>`).join('') : (d.namaProduk||'-');
+    const hargaHtml = items.length>0 ? items.map(it=>`Rp ${Number(it.harga||0).toLocaleString('id-ID')} x${it.qty||1}`).join('<br>') : '-';
+    const tr=document.createElement('tr');
+    tr.innerHTML=`
+      <td class="col-date">
+        <span class="label">Date - Tanggal</span><span class="value b">${getTanggal(d)}</span>
+        <span class="label" style="margin-top:4px">Nomor Nota</span><span class="value b">${getNota(d)}</span>
+        <div style="font-size:8px;color:#94a3b8">${d.barcode||''}</div>
+        <span class="label" style="margin-top:4px">Nama Teknisi</span><span class="value">${getTeknisi(d)}</span>
+        <div style="margin-top:4px"><span class="badge ${badgeCls}">${st.toUpperCase()}</span></div>
+      </td>
+      <td class="col-pelanggan">
+        <span class="label">Pelanggan - Nama</span><span class="value b">${getNamaPel(d)}</span>
+        <span class="label" style="margin-top:4px">No WA</span><span class="value">${getWa(d)}</span>
+        <span class="label" style="margin-top:4px">Alamat</span><span class="value">${getAlamat(d)}</span>
+      </td>
+      <td class="col-pembelian">
+        <span class="label">Pembelian - Tipe Qty</span>
+        <div class="value" style="margin-top:2px">${pembelianHtml}</div>
+        <div style="font-size:8px;color:#64748b;margin-top:4px">Contoh Y20 x1 auto / A53 x1 auto double</div>
+      </td>
+      <td class="col-harga">
+        <span class="label">Harga satuan breakdown</span><span class="value">${hargaHtml}</span>
+        <span class="label" style="margin-top:4px">Total Harga</span><span class="value b">Rp ${getTotal(d).toLocaleString('id-ID')}</span>
+        <span class="label">Diskon</span><span class="value">Rp ${getDiskon(d).toLocaleString('id-ID')}</span>
+        <span class="label">DP</span><span class="value">Rp ${getDp(d).toLocaleString('id-ID')}</span>
+        <span class="label">Sisa</span><span class="value b" style="color:${getSisa(d)>0?'#d97706':'#16a34a'}">Rp ${getSisa(d).toLocaleString('id-ID')}</span>
+      </td>
+      <td class="col-modal">
+        <span class="label">Modal Blanja - Total Modal</span>
+        <span class="value b">Rp ${getModal(d).toLocaleString('id-ID')}</span>
+      </td>
+      <td class="col-pendapatan">
+        <span class="label">Pendapatan - Total Harga</span>
+        <span class="value b" style="color:${getPendapatan(d)>0?'#16a34a':'#64748b'}">${getPendapatan(d)>0?`Rp ${getPendapatan(d).toLocaleString('id-ID')}`:'- Belum Tunai'}</span>
+        <div style="font-size:8px;color:#64748b">Hasil akhir jika TUNAI</div>
+      </td>
+      <td class="col-laba">
+        <span class="label">Laba - Total-Modal</span>
+        <span class="value b" style="color:${getLaba(d)>0?'#2563eb':'#64748b'}">${getPendapatan(d)>0?`Rp ${getLaba(d).toLocaleString('id-ID')}`:'- Belum Tunai'}</span>
+        <div style="font-size:8px;color:#64748b">Total-Diskon-Modal</div>
+      </td>
+      <td class="col-aksi">
+        <span class="label">Aksi</span>
+        <button class="aksi-btn btn-edit" onclick="editData('${d.id}')">✏️ Edit</button>
+        <button class="aksi-btn btn-tagihan" onclick="changeStatus('${d.id}','tagihan')">Tagihan</button>
+        <button class="aksi-btn btn-tunai" onclick="changeStatus('${d.id}','tunai')">Tunai</button>
+        <button class="aksi-btn btn-batal" onclick="changeStatus('${d.id}','batal')" ${!isOwner?'disabled':''}>Batal Owner</button>
+        <div style="font-size:7px;color:#64748b;margin-top:2px">Edit → input-penjualan.html?edit=id</div>
+      </td>
     `;
-    tbody.appendChild(div);
+    tbody.appendChild(tr);
   });
 }
 window.editData=(id)=>{ localStorage.setItem('fixzy_edit_id', id); location.href=`input-penjualan.html?edit=${id}`; }
@@ -268,17 +244,31 @@ document.getElementById('f').addEventListener('change', render);
     <select id="f"><option value="semua">Semua Status</option><option value="masuk">Masuk</option><option value="tagihan">Tagihan</option><option value="tunai">Tunai</option><option value="diambil">Diambil</option><option value="batal">Batal (Owner)</option></select>
   </div>
   <div class="stats">
-    <div class="stat omset" id="s1"><b>Omset (Total Harga)</b><div>Rp 0</div></div>
-    <div class="stat diterima" id="s2"><b>Uang Diterima (DP + Tunai)</b><div>Rp 0</div></div>
-    <div class="stat tagihan" id="s3"><b>Tagihan (Piutang / Sisa)</b><div>Rp 0</div></div>
-    <div class="stat modal" id="s4"><b>Modal Belanja (Total Modal)</b><div>Rp 0</div></div>
-    <div class="stat laba" id="s5"><b>Laba Bersih (Total-Modal-Diskon)</b><div>Rp 0</div></div>
+    <div class="stat omset" id="s1"><b>Omset</b><div>Rp 0</div></div>
+    <div class="stat diterima" id="s2"><b>Uang Diterima</b><div>Rp 0</div></div>
+    <div class="stat tagihan" id="s3"><b>Tagihan</b><div>Rp 0</div></div>
+    <div class="stat modal" id="s4"><b>Modal</b><div>Rp 0</div></div>
+    <div class="stat laba" id="s5"><b>Laba Bersih</b><div>Rp 0</div></div>
   </div>
   <div style="font-size:11px;color:#64748b;margin-bottom:8px" id="info"></div>
-  <div id="tbody"></div>
-  <div style="text-align:center;font-size:10px;color:#64748b;margin-top:12px;line-height:1.5">
-    ✅ Sesuai Instruksi: Date Tanggal Nota Teknisi • Pelanggan Nama WA Alamat • Pembelian Tipe QTY (Y20 x1 auto / A53 x1 auto double) • Harga satuan breakdown Total Diskon DP Sisa • Modal Blanja • Pendapatan Tunai Only • Laba Total-Modal-Diskon • Aksi Edit Tagihan Tunai Batal Owner • Baris vertikal tidak panjang ke samping
+  <div class="wrap-table">
+    <table>
+      <thead>
+        <tr>
+          <th class="col-date">1. Date - Tanggal / Nota / Teknisi (akun)</th>
+          <th class="col-pelanggan">2. Pelanggan - Nama / WA / Alamat</th>
+          <th class="col-pembelian">3. Pembelian - Tipe Qty (Y20 x1 auto / A53 x1 auto double)</th>
+          <th class="col-harga">4. Harga - Satuan / Total / Diskon / DP / Sisa</th>
+          <th class="col-modal">5. Modal Blanja - Total Modal</th>
+          <th class="col-pendapatan">6. Pendapatan - Total Harga (Tunai Only)</th>
+          <th class="col-laba">7. Laba - Total-Modal (-Diskon)</th>
+          <th class="col-aksi">8. Aksi - Edit Tagihan Tunai Batal Owner</th>
+        </tr>
+      </thead>
+      <tbody id="tbody"></tbody>
+    </table>
   </div>
+  <div style="text-align:center;font-size:10px;color:#64748b;margin-top:12px;line-height:1.5">✅ 8 Kolom Horizontal Ke Samping: Date, Pelanggan, Pembelian, Harga, Modal Belanja, Pendapatan (Tunai Only), Laba, Aksi - Rapat tidak panjang 1100px, deretan ke samping jangan ke bawah</div>
 </main>
 <script>
 const h=document.documentElement, b=document.getElementById('btnDark');
