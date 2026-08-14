@@ -100,7 +100,10 @@ onAuthStateChanged(auth, async u=>{
     }else{
       isOwner = (p.role||'').toLowerCase()==='owner' || p.isOwner===true;
       ownerUid = p.ownerId || p.ownerUid || (isOwner ? u.uid : p.ownerUid) || u.uid;
-      konterName = p.namaKonter || p.namaToko || p.tokoName || p.displayName || p.nama || "Fixzy Konter";
+      // Nama konter ambil dari register - cek semua kemungkinan field register
+      konterName = p.namaKonter || p.namaToko || p.tokoName || p.namaKonterToko || p.konter || p.storeName || p.displayName || p.nama || p.name || p.username || "Fixzy - A Yudi Thea";
+      // Simpan juga ke field khusus untuk display
+      const konterFromRegister = konterName;
       document.getElementById('roleSide').textContent=isOwner?'OWNER':(p.role||'KARYAWAN').toUpperCase();
       document.getElementById('roleSide').style.background=isOwner?'#16a34a':'#2563eb';
     }
@@ -131,7 +134,11 @@ async function loadKaryawan(){
     }
     karyawanList=list;
     const sel=document.getElementById('teknisiSelect');
-    sel.innerHTML=list.map(k=>`<option value="${k.email}" data-nama="${k.nama}">${k.nama} (${k.email})</option>`).join('');
+    // Fix: tampil hanya nama karyawan, jangan pakai email (sesuai request user)
+    sel.innerHTML=list.map(k=>{
+      const namaBersih=(k.nama||'').toString().trim() || k.email.split('@')[0] || 'Karyawan';
+      return `<option value="${namaBersih}" data-email="${k.email}" data-nama="${namaBersih}">${namaBersih}</option>`;
+    }).join('');
   }catch(e){
     document.getElementById('teknisiSelect').innerHTML=`<option value="${currentUser.email}">${currentUser.email}</option>`;
   }
@@ -336,8 +343,10 @@ async function simpanData(cetakMode=null){
   const dp=Number(document.getElementById('dpField').value||0);
   const sisa=Number(document.getElementById('sisaField').value||0);
   const status=document.getElementById('statusField').value;
-  const teknisiEmail=document.getElementById('teknisiSelect').value;
-  const teknisiNama=document.getElementById('teknisiSelect').selectedOptions[0]?.getAttribute('data-nama')||teknisiEmail;
+  // Teknisi ambil nama saja, jangan email - sesuai request
+  const teknisiNama=document.getElementById('teknisiSelect').selectedOptions[0]?.getAttribute('data-nama') || document.getElementById('teknisiSelect').value || '';
+  const teknisiEmail=document.getElementById('teknisiSelect').selectedOptions[0]?.getAttribute('data-email') || currentUser.email;
+  const teknisiValue=teknisiNama; // simpan nama saja
   try{
     const docRef=await addDoc(collection(db,"penjualan"), {
       // Header 1
@@ -345,7 +354,8 @@ async function simpanData(cetakMode=null){
       akunLogin:document.getElementById('akunLoginField').value,
       namaKonter:konterName,
       konter:document.getElementById('konterField').value,
-      teknisi:teknisiEmail,
+      teknisi:teknisiValue,
+      teknisiEmail:teknisiEmail,
       teknisiNama:teknisiNama,
       namaKaryawan:teknisiNama,
       tanggal:document.getElementById('tanggalField').value,
