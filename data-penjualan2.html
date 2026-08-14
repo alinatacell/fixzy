@@ -55,7 +55,7 @@ th{background:#f8fafc;color:#475569;font-size:10px;font-weight:900;text-align:le
 body.dark th{background:#0f172a;color:#94a3b8;border-color:#ffffff10}
 td{padding:9px 8px;border-bottom:1px solid #eef2f5;font-size:12px;vertical-align:middle;max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 body.dark td{border-color:#ffffff08}
-td.wrap{white-space:normal;word-break:break-word;line-height:1.35}
+td.wrap{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:200px} /* 1 baris ke samping, jangan ke bawah */
 tr:hover{background:#f8fafc}
 body.dark tr:hover{background:#ffffff05}
 .badge{padding:4px 8px;border-radius:999px;font-size:10px;font-weight:900;display:inline-block}
@@ -74,8 +74,17 @@ body.dark .action-dropdown button{background:#0f172a;color:#e5e7eb}
 .action-dropdown button:hover{background:#f1f5f9}
 body.dark .action-dropdown button:hover{background:#1e293b}
 .action-dropdown .danger{color:#dc2626}
-.mobile{display:none}
-@media(max-width:1000px){ .wrap-table{display:none} .mobile{display:grid;gap:10px} }
+/* FIX: 1 baris ke samping jangan ke bawah - table selalu horizontal scroll, jangan jadi card ke bawah */
+.mobile{display:none} /* mobile card dimatikan, semua pakai tabel ke samping */
+.wrap-table{display:block;overflow-x:auto;overflow-y:visible;-webkit-overflow-scrolling:touch}
+.wrap-table table{min-width:1400px} /* paksa lebar biar scroll ke samping */
+@media(max-width:1000px){
+  .wrap-table{display:block;overflow-x:auto}
+  .mobile{display:none} /* tetap tabel di HP, scroll ke samping */
+  main{padding:8px}
+  .bar{flex-direction:column}
+  .search{width:100%}
+}
 .mcard{background:#fff;border:1px solid #e5e7eb;border-radius:12px;padding:12px}
 body.dark .mcard{background:#1e293b;border-color:#ffffff10}
 .modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:200;align-items:center;justify-content:center;padding:14px}
@@ -111,10 +120,32 @@ onAuthStateChanged(auth, async u=>{
     let p=null;
     if(!snap.empty) p=snap.docs[0].data();
     else{ const d=await getDoc(doc(db,"users",u.uid)); if(d.exists()) p=d.data(); }
-    if(!p){ ownerUid=u.uid; isOwner=true; }
-    else{ ownerUid=p.role==='owner'?u.uid:(p.ownerUid||p.ownerId||u.uid); isOwner=p.role==='owner'; }
-    document.getElementById('roleSide').textContent=isOwner?'OWNER':(p?.role||'KARYAWAN').toUpperCase();
-  }catch{ ownerUid=u.uid; isOwner=true; }
+    if(!p){
+      ownerUid=u.uid; isOwner=true;
+      document.getElementById('roleSide').textContent='OWNER';
+      document.getElementById('roleSide').style.background='#16a34a';
+    }else{
+      // LOGIKA OWNER vs KARYAWAN - INGAT ADA 2 AKUN
+      // Owner: role==='owner', ownerUid = uid sendiri
+      // Karyawan: role==='karyawan' / employee, ownerUid = p.ownerUid / p.ownerId (UID owner)
+      isOwner = (p.role||'').toLowerCase()==='owner';
+      if(isOwner){
+        ownerUid=u.uid;
+        document.getElementById('roleSide').textContent='OWNER';
+        document.getElementById('roleSide').style.background='#16a34a';
+      }else{
+        ownerUid=p.ownerUid||p.ownerId||u.uid;
+        document.getElementById('roleSide').textContent='KARYAWAN';
+        document.getElementById('roleSide').style.background='#2563eb';
+        // Untuk karyawan, tampilkan juga info owner di console untuk debug
+        console.log('Karyawan login:', u.uid, 'Owner UID:', ownerUid);
+      }
+    }
+  }catch(e){
+    console.warn('Error load role:', e);
+    ownerUid=u.uid; isOwner=true;
+    document.getElementById('roleSide').textContent='OWNER';
+  }
   await load();
 });
 
@@ -373,7 +404,7 @@ document.getElementById('editForm').addEventListener('submit', async e=>{
 
 <main>
   <div class="bar">
-    <input id="q" class="search" placeholder="Cari nama / alamat / WA / produk... (1 baris semua data pelanggan)">
+    <input id="q" class="search" placeholder="Cari nama / alamat / WA / produk... (1 baris ke samping)">
     <select id="f"><option value="semua">Semua Status</option><option value="lunas">Lunas</option><option value="tunai">Tunai</option><option value="tagihan">Tagihan</option><option value="batal">Batal</option></select>
   </div>
 
@@ -393,7 +424,7 @@ document.getElementById('editForm').addEventListener('submit', async e=>{
     </table>
   </div>
   <div class="mobile" id="mob"></div>
-  <div style="text-align:center;font-size:11px;color:#64748b;margin-top:12px">1 Baris = Semua Data Pelanggan • Aksi Fungsional • Refresh 1 di Header • Akun di samping logo • Header hitam logo bg hitam</div>
+  <div style="text-align:center;font-size:11px;color:#64748b;margin-top:12px">1 Baris ke Samping Jangan ke Bawah • 1 Baris = Semua Data Pelanggan • Scroll Horizontal • Owner & Karyawan • Refresh 1 di Header</div>
 </main>
 
 <div class="modal" id="editModal">
