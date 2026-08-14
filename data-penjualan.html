@@ -342,7 +342,7 @@ window.setStatus=async(id,st)=>{
 function showWAPopup(data, status){
   pendingWA={data, status};
   const nama=getNamaPel(data);
-  const waRawOriginal=getWa(data);
+  const wa=getWa(data);
   const nota=getNota(data);
   const total=getTotal(data);
   const alamat=getAlamat(data);
@@ -351,174 +351,120 @@ function showWAPopup(data, status){
   const barang=items.length>0?items.map(i=>i.nama).join(', '):'Y20';
   const konterReal=getKonterNameFromData(data);
   
-  // AMBIL NOMOR WA PELANGGAN - BERSIHKAN
-  let waRaw=(waRawOriginal||'').toString().trim();
+  // AMBIL NOMOR WA PELANGGAN LANGSUNG
+  let waRaw=(wa||'').toString().trim();
   let waDigits=waRaw.replace(/[^0-9]/g,'');
-  let waNumber='';
-  if(waDigits){
-    if(waDigits.startsWith('0')){
-      waNumber='62'+waDigits.substring(1);
-    } else if(waDigits.startsWith('62')){
-      waNumber=waDigits;
-    } else if(waDigits.length>=10){
-      waNumber='62'+waDigits;
-    } else {
-      waNumber=waDigits;
-    }
+  let waNumber=waDigits;
+  if(waNumber.startsWith('0')){
+    waNumber='62'+waNumber.substring(1);
+  } else if(waNumber && !waNumber.startsWith('62')){
+    waNumber='62'+waNumber;
   }
   
-  // PESAN TANPA EMOJI BIAR PASTI IKUT - plain text
   let msg='';
   if(status==='tagihan'){
-    msg=`Halo Kak ${nama},
+    msg=`Halo Kak ${nama} 🙏
 
-Saya dari ${konterReal},
+Saya dari *${konterReal}*,
 Mau infokan tagihan:
 
-Nota: ${nota}
-Barang: ${barang}
-Total: Rp ${total.toLocaleString('id-ID')}
-Sisa Tagihan: Rp ${sisa.toLocaleString('id-ID')}
-Alamat: ${alamat}
+📄 Nota: ${nota}
+📦 Barang: ${barang}
+💰 Total: Rp ${total.toLocaleString('id-ID')}
+💳 Sisa Tagihan: Rp ${sisa.toLocaleString('id-ID')}
+📍 Alamat: ${alamat}
 
 Mohon segera diselesaikan ya Kak. Bisa transfer atau datang langsung ke konter.
 
-Terima kasih
-${konterReal}`;
+Terima kasih 🙏
+*${konterReal}*`;
   } else {
-    msg=`Halo Kak ${nama},
+    msg=`Halo Kak ${nama} 🙏
 
-Terima kasih sudah berbelanja di ${konterReal}
+Terima kasih sudah berbelanja di *${konterReal}* 🤝
 
-Nota: ${nota}
-Barang: ${barang}
-Total: Rp ${total.toLocaleString('id-ID')} - LUNAS / TUNAI
-Alamat: ${alamat}
+📄 Nota: ${nota}
+📦 Barang: ${barang}
+💰 Total: Rp ${total.toLocaleString('id-ID')} - *LUNAS / TUNAI* ✅
+📍 Alamat: ${alamat}
 
 Barang sudah LUNAS dan bisa diambil kapan saja ya Kak. Ditunggu kedatangannya!
 
-Terima kasih
-${konterReal} - Melayani dengan Amanah`;
+Terima kasih 🙏
+*${konterReal}* - Melayani dengan Amanah`;
   }
+  document.getElementById('waMessage').textContent=msg;
+  document.getElementById('waInfo').textContent=`Akan dikirim ke WA pelanggan: ${nama} (${waRaw})`;
   
-  // Tampilkan di popup
-  const msgEl=document.getElementById('waMessage');
-  if(msgEl) msgEl.textContent=msg;
-  
-  const infoEl=document.getElementById('waInfo');
-  if(infoEl) infoEl.textContent=`Kirim ke WA pelanggan: ${nama} - ${konterReal}`;
-  
-  const numInfoEl=document.getElementById('waNumberInfo');
-  if(numInfoEl){
-    if(waRaw){
-      numInfoEl.innerHTML=`📱 Nomor Pelanggan: <b>${waRaw}</b> → <b>${waNumber}</b><br>Format wa.me: <b>https://wa.me/${waNumber}</b>`;
-      numInfoEl.style.background='#dcfce7';
-    } else {
-      numInfoEl.innerHTML=`❌ Nomor WA pelanggan kosong! Data: ${JSON.stringify(data.pelanggan||data)}`;
-      numInfoEl.style.background='#fee2e2';
-    }
-  }
-  
-  // BIKIN LINK BUTTON - FIX BLANK PAGE
+  // LANGSUNG BIKIN LINK wa.me KE NOMOR PELANGGAN
   if(waNumber && waNumber.length>=10){
-    // Encode pesan dengan cara yang aman - tanpa karakter aneh
-    const encodedMsg=encodeURIComponent(msg).replace(/%20/g, '+');
-    const waUrl='https://api.whatsapp.com/send?phone='+waNumber+'&text='+encodedMsg;
-    const waUrl2='https://wa.me/'+waNumber+'?text='+encodedMsg;
-    
+    const waUrl='https://wa.me/'+waNumber+'?text='+encodeURIComponent(msg);
     const waLink=document.getElementById('waLink');
-     if(waLink){
-       waLink.href=waUrl;
-       waLink.target='_blank';
-       waLink.rel='noopener noreferrer';
-       waLink.style.display='flex';
-     }
-    const waLink2=document.getElementById('waLink2');
-    if(waLink2){
-      waLink2.style.display='block';
-      waLink2.disabled=false;
+    if(waLink){
+      waLink.href=waUrl;
+      waLink.style.display='flex';
     }
-    console.log('WA BUTTON SIAP:', waUrl, 'Nomor:', waRaw, '->', waNumber);
-    console.log('Pesan:', msg);
-    pendingWA.waUrl=waUrl;
-    pendingWA.waUrlAlt=waUrl2;
-    pendingWA.waNumber=waNumber;
-    pendingWA.msg=msg;
-    pendingWA.waRaw=waRaw;
+    const preview=document.getElementById('waUrlPreview');
+    if(preview) preview.textContent=waUrl;
+    console.log('WA pelanggan:', waRaw, '->', waNumber, waUrl);
   } else {
     const waLink=document.getElementById('waLink');
-     const waLink2=document.getElementById('waLink2');
-     if(waLink){
-       waLink.removeAttribute('href');
-       waLink.style.display='none';
-     }
-    if(waLink2) waLink2.style.display='none';
-    if(infoEl) infoEl.textContent+=' - NOMOR WA TIDAK VALID: '+waRaw;
-    pendingWA.waUrl='';
-    pendingWA.waNumber='';
+    if(waLink){
+      waLink.removeAttribute('href');
+      waLink.style.display='none';
+    }
+    document.getElementById('waInfo').textContent+= ' - NOMOR WA TIDAK VALID!';
   }
   
   document.getElementById('waModal').classList.add('show');
   pendingWA.konterReal=konterReal;
+  pendingWA.waNumber=waNumber;
+  pendingWA.waUrl=waNumber ? 'https://wa.me/'+waNumber+'?text='+encodeURIComponent(msg) : '';
 }
 
-window.closeWAModal=()=>{ 
+window.showAppMessage=(message,type='info')=>{
+  // Gunakan popup WA sebagai UI pesan internal, tanpa alert/confirm browser.
   const modal=document.getElementById('waModal');
-  if(modal) modal.classList.remove('show'); 
+  const box=modal?.querySelector('.wa-box');
+  const info=document.getElementById('waInfo');
+  const messageBox=document.getElementById('waMessage');
+  const actions=modal?.querySelector('.wa-actions');
+  if(!modal || !box || !info || !messageBox) return;
+
+  info.textContent=type==='error'?'Terjadi masalah':'Informasi';
+  messageBox.textContent=message;
+  if(actions) actions.innerHTML='<button class="btn-wa-no" onclick="closeWAModal()">Tutup</button>';
+  modal.classList.add('show');
 }
+
+window.closeWAModal=()=>{ document.getElementById('waModal').classList.remove('show'); pendingWA=null; }
 
 window.sendWA=()=>{
-  const a=document.getElementById('waLink');
-  if(!a || !a.href || a.getAttribute('href')==='#'){
-    const info=document.getElementById('waInfo');
-    if(info) info.textContent='Nomor WA pelanggan kosong atau tidak valid.';
-    return;
-  }
-  a.click();
-};
+  try{
+    if(!pendingWA || !pendingWA.data){
+      showAppMessage('Data WA tidak ada','error');
+      return;
+    }
 
-window.sendWA2=()=>{
-  if(!pendingWA || !pendingWA.waUrlAlt)return;
-  const a=document.createElement('a');
-  a.href=pendingWA.waUrlAlt;
-  a.target='_blank';
-  a.rel='noopener noreferrer';
-  a.style.display='none';
-  document.body.appendChild(a);
-  a.click();
-  setTimeout(()=>a.remove(),1000);
-};
+    const waUrl=pendingWA.waUrl;
+    if(!waUrl){
+      showAppMessage('Link WA tidak valid - cek nomor WA pelanggan','error');
+      return;
+    }
 
-window.openWADirect=()=>{
-  if(!pendingWA || !pendingWA.waNumber)return;
-  const a=document.createElement('a');
-  a.href='https://wa.me/'+pendingWA.waNumber;
-  a.target='_blank';
-  a.rel='noopener noreferrer';
-  a.style.display='none';
-  document.body.appendChild(a);
-  a.click();
-  setTimeout(()=>a.remove(),1000);
-};
+    // PENTING:
+    // Jangan gunakan window.open() / target="_blank".
+    // Di Android/WebView hal ini bisa membuat tab berkedip lalu langsung tertutup.
+    // Navigasi langsung ke WhatsApp agar aplikasi WhatsApp dapat mengambil alih.
+    console.log('Buka WA pelanggan:', waUrl);
 
-window.copyWAMessage=()=>{
-  if(!pendingWA || !pendingWA.msg){
-    alert('Pesan belum siap');
-    return;
-  }
-  const text=pendingWA.msg;
-  if(navigator.clipboard && navigator.clipboard.writeText){
-    navigator.clipboard.writeText(text).then(()=>{
-      alert('Pesan WA pelanggan sudah di-copy!\nNomor: '+pendingWA.waRaw+' -> '+pendingWA.waNumber+'\n\n'+text.substring(0,150));
-    });
-  } else {
-    const ta=document.createElement('textarea');
-    ta.value=text;
-    document.body.appendChild(ta);
-    ta.select();
-    document.execCommand('copy');
-    document.body.removeChild(ta);
-    alert('Pesan di-copy: '+pendingWA.waRaw);
+    document.getElementById('waModal').classList.remove('show');
+    pendingWA=null;
+
+    window.location.assign(waUrl);
+  }catch(err){
+    console.error('Gagal buka WA:', err);
+    showAppMessage('Gagal membuka WhatsApp: '+err.message,'error');
   }
 }
 
@@ -587,22 +533,14 @@ document.getElementById('f').addEventListener('change',render);
   <div class="wa-box">
     <div style="width:56px;height:56px;background:#25D366;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 12px;color:#fff;font-size:28px"><i class="ri-whatsapp-fill"></i></div>
     <h3>Kirim Pesan WA?</h3>
-    <p id="waInfo" style="font-weight:800;color:#111827">Kirim ke pelanggan</p>
-    <div style="background:#f8fafc;border:2px solid #111827;border-radius:12px;padding:12px;text-align:left;font-size:12px;margin-bottom:16px;white-space:pre-wrap;max-height:200px;overflow:auto" id="waMessage"></div>
-    <div id="waNumberInfo" style="background:#fef3c7;border:1px solid #111827;border-radius:8px;padding:8px;font-size:11px;margin-bottom:12px;font-weight:800"></div>
+    <p id="waInfo">Kirim ke pelanggan</p>
+    <div style="background:#f8fafc;border:2px solid #111827;border-radius:12px;padding:12px;text-align:left;font-size:12px;margin-bottom:16px;white-space:pre-wrap" id="waMessage"></div>
     <div class="wa-actions">
-      <button class="btn-wa-no" onclick="closeWAModal()" type="button">Tidak</button>
-      <a id="waLink" class="btn-wa" target="_blank" rel="noopener noreferrer" href="#" style="display:flex;align-items:center;justify-content:center;gap:6px;font-weight:900;text-decoration:none"><i class="ri-whatsapp-fill"></i> Kirim WA</a>
+      <button class="btn-wa-no" onclick="closeWAModal()">Tidak</button>
+      <a id="waLink" class="btn-wa" href="javascript:void(0)" style="text-decoration:none;display:flex;align-items:center;justify-content:center;gap:6px" onclick="sendWA()"><i class="ri-whatsapp-fill"></i> Kirim WA</a>
     </div>
-    <button id="waLink2" onclick="sendWA2()" style="margin-top:10px;width:100%;background:#111827;color:#fff;border:2px solid #111827;padding:10px;border-radius:10px;font-weight:800;font-size:11px;display:block" type="button">Cara 2: wa.me (Tanpa Encode)</button>
-    <button onclick="openWADirect()" style="margin-top:8px;width:100%;background:#facc15;color:#000;border:2px solid #111827;padding:10px;border-radius:10px;font-weight:900;font-size:11px;display:block" type="button">Cara 3: Buka WA Saja (Tanpa Pesan)</button>
-    <button onclick="copyWAMessage()" style="margin-top:8px;width:100%;background:#fff;color:#111827;border:2px solid #111827;padding:8px;border-radius:8px;font-size:11px;font-weight:800" type="button">📋 Copy Nomor & Pesan</button>
-    <div style="margin-top:8px;font-size:10px;color:#64748b;text-align:left;background:#f1f5f9;padding:8px;border-radius:6px">
-      Jika klik WA jadi blank seperti foto, pakai Cara 3 dulu buka WA pelanggan, lalu Copy Pesan & paste manual
-    </div>
+    <div style="margin-top:10px;font-size:10px;color:#64748b">Tujuan: <span id="waUrlPreview" style="word-break:break-all"></span></div>
   </div>
 </div>
-<script>(function(){var loc=location.href.replace(/#.*$/,"");var ATTR_NAMES=["data-product-id","data-productid","data-product_id","product-id","productid","product_id","data-source-entity-id","source-entity-id","source_entity_id","data-product","data-metadata","data-meta"];var DATASET_KEYS=["productId","productid","product_id","sourceEntityId","sourceentityid","source_entity_id","product","metadata","meta"];function readProductId(value){if(typeof value!=="string"||value.length===0)return null;if(/^[0-9]{6,}$/.test(value))return value;var match=value.match(/(?:product(?:_|-)?id|source(?:_|-)?entity(?:_|-)?id)["'=:\s]+([0-9]{6,})/i);return match?match[1]:null}function extractProductId(start){for(var node=start;node&&node!==document.body;node=node.parentElement){for(var i=0;i<ATTR_NAMES.length;i++){var attrValue=node.getAttribute&&node.getAttribute(ATTR_NAMES[i]);var attrProductId=readProductId(attrValue);if(attrProductId)return attrProductId}var dataset=node.dataset||null;if(dataset){for(var j=0;j<DATASET_KEYS.length;j++){var dataValue=dataset[DATASET_KEYS[j]];var dataProductId=readProductId(dataValue);if(dataProductId)return dataProductId}}}return null}function isInlineMediaSlotElement(node){return !!(node&&node.getAttribute&&node.getAttribute("data-clippy-inline-media-slot")!==null)}function findInlineMediaSlot(start){for(var node=start;node&&node!==document.body;node=node.parentElement){if(isInlineMediaSlotElement(node))return node}return null}function readInlineMediaUrl(node){if(!node)return null;return node.getAttribute&&((node.getAttribute("data-clippy-inline-media-url")||node.getAttribute("data-url")||node.getAttribute("data_url")))||node.href||null}function stripHash(url){return String(url).replace(/#.*$/,"")}function urlsMatch(a,b){if(!a||!b)return false;try{return stripHash(new URL(a,loc).href)===stripHash(new URL(b,loc).href)}catch(_){return stripHash(a)===stripHash(b)}}function isFirstPartyReelUrl(value){try{var url=new URL(value,loc);if(url.protocol!=="https:")return false;var host=url.hostname.toLowerCase();var supported=host==="instagram.com"||host.endsWith(".instagram.com")||host==="facebook.com"||host.endsWith(".facebook.com");return supported&&/\/reels?\//i.test(url.pathname)}catch(_){return false}}function isInlineMediaUrlClick(node,href){var slot=findInlineMediaSlot(node);if(!slot)return false;var slotUrl=readInlineMediaUrl(slot);if(slotUrl)return urlsMatch(href,slotUrl);return isFirstPartyReelUrl(href)}function findDataHref(start){for(var node=start;node&&node!==document.body;node=node.parentElement){if(node.getAttribute){var href=node.getAttribute("data-href")||node.getAttribute("data-url");if(href)return{href:href,node:node}}}return null}var nativeOpen=window.open;window.open=function(url){if(parent!==window&&typeof url==="string"&&/^https?:\/\//.test(url)){parent.postMessage({type:"ecto:usercontent-link-click",href:url},"*");return null}return nativeOpen?nativeOpen.apply(window,arguments):null};document.addEventListener("click",function(e){var target=e.target instanceof Element?e.target:null;if(!target)return;if(parent===window)return;var a=target.closest?target.closest("a[href]"):null;if(a&&a.href&&/^https?:\/\//.test(a.href)&&a.href.replace(/#.*$/,"")!==loc){
-var waHost=false;try{var au=new URL(a.href,loc);waHost=au.hostname==="wa.me"||au.hostname==="api.whatsapp.com"||au.hostname==="whatsapp.com"||au.hostname.endsWith(".whatsapp.com")||au.hostname.endsWith(".whatsapp.net")}catch(_){}
-if(waHost)return;if(isInlineMediaUrlClick(a,a.href))return;var productId=extractProductId(target)||extractProductId(a);if(productId){e.preventDefault();parent.postMessage({type:"ecto-artifact-link-click",productId:productId},"*");return}e.preventDefault();parent.postMessage({type:"ecto:usercontent-link-click",href:a.href},"*");return}var dataHref=findDataHref(target);if(dataHref&&/^https?:\/\//.test(dataHref.href)&&dataHref.href.replace(/#.*$/,"")!==loc){if(isInlineMediaUrlClick(dataHref.node,dataHref.href))return;e.preventDefault();parent.postMessage({type:"ecto:usercontent-link-click",href:dataHref.href},"*")}},true)})();</script><script>(function(){var FOCUS_TYPE="ecto:artifact-focus-request";var CLOSE_TYPE="ecto:artifact-close-request";function focusArtifactDocument(){var body=document.body;if(!body)return;try{window.focus();}catch(e){}if(!body.hasAttribute("tabindex"))body.setAttribute("tabindex","-1");try{body.focus({preventScroll:true});}catch(e){try{body.focus();}catch(e2){}}}window.addEventListener("message",function(event){if(event.source!==window.parent)return;var data=event.data;if(!data||typeof data!=="object"||data.type!==FOCUS_TYPE)return;if(document.readyState==="loading"){document.addEventListener("DOMContentLoaded",focusArtifactDocument,{once:true});return;}focusArtifactDocument();});window.addEventListener("keydown",function(event){if(event.key!=="Escape")return;window.setTimeout(function(){if(event.defaultPrevented)return;window.parent.postMessage({type:CLOSE_TYPE},"*");},0);});})();</script></body>
+<script>(function(){var loc=location.href.replace(/#.*$/,"");var ATTR_NAMES=["data-product-id","data-productid","data-product_id","product-id","productid","product_id","data-source-entity-id","source-entity-id","source_entity_id","data-product","data-metadata","data-meta"];var DATASET_KEYS=["productId","productid","product_id","sourceEntityId","sourceentityid","source_entity_id","product","metadata","meta"];function readProductId(value){if(typeof value!=="string"||value.length===0)return null;if(/^[0-9]{6,}$/.test(value))return value;var match=value.match(/(?:product(?:_|-)?id|source(?:_|-)?entity(?:_|-)?id)["'=:\s]+([0-9]{6,})/i);return match?match[1]:null}function extractProductId(start){for(var node=start;node&&node!==document.body;node=node.parentElement){for(var i=0;i<ATTR_NAMES.length;i++){var attrValue=node.getAttribute&&node.getAttribute(ATTR_NAMES[i]);var attrProductId=readProductId(attrValue);if(attrProductId)return attrProductId}var dataset=node.dataset||null;if(dataset){for(var j=0;j<DATASET_KEYS.length;j++){var dataValue=dataset[DATASET_KEYS[j]];var dataProductId=readProductId(dataValue);if(dataProductId)return dataProductId}}}return null}function isInlineMediaSlotElement(node){return !!(node&&node.getAttribute&&node.getAttribute("data-clippy-inline-media-slot")!==null)}function findInlineMediaSlot(start){for(var node=start;node&&node!==document.body;node=node.parentElement){if(isInlineMediaSlotElement(node))return node}return null}function readInlineMediaUrl(node){if(!node)return null;return node.getAttribute&&((node.getAttribute("data-clippy-inline-media-url")||node.getAttribute("data-url")||node.getAttribute("data_url")))||node.href||null}function stripHash(url){return String(url).replace(/#.*$/,"")}function urlsMatch(a,b){if(!a||!b)return false;try{return stripHash(new URL(a,loc).href)===stripHash(new URL(b,loc).href)}catch(_){return stripHash(a)===stripHash(b)}}function isFirstPartyReelUrl(value){try{var url=new URL(value,loc);if(url.protocol!=="https:")return false;var host=url.hostname.toLowerCase();var supported=host==="instagram.com"||host.endsWith(".instagram.com")||host==="facebook.com"||host.endsWith(".facebook.com");return supported&&/\/reels?\//i.test(url.pathname)}catch(_){return false}}function isInlineMediaUrlClick(node,href){var slot=findInlineMediaSlot(node);if(!slot)return false;var slotUrl=readInlineMediaUrl(slot);if(slotUrl)return urlsMatch(href,slotUrl);return isFirstPartyReelUrl(href)}function findDataHref(start){for(var node=start;node&&node!==document.body;node=node.parentElement){if(node.getAttribute){var href=node.getAttribute("data-href")||node.getAttribute("data-url");if(href)return{href:href,node:node}}}return null}var nativeOpen=window.open;window.open=function(url){if(parent!==window&&typeof url==="string"&&/^https?:\/\//.test(url)){parent.postMessage({type:"ecto:usercontent-link-click",href:url},"*");return null}return nativeOpen?nativeOpen.apply(window,arguments):null};document.addEventListener("click",function(e){var target=e.target instanceof Element?e.target:null;if(!target)return;if(parent===window)return;var a=target.closest?target.closest("a[href]"):null;if(a&&a.href&&/^https?:\/\//.test(a.href)&&a.href.replace(/#.*$/,"")!==loc){if(isInlineMediaUrlClick(a,a.href))return;var productId=extractProductId(target)||extractProductId(a);if(productId){e.preventDefault();parent.postMessage({type:"ecto-artifact-link-click",productId:productId},"*");return}e.preventDefault();parent.postMessage({type:"ecto:usercontent-link-click",href:a.href},"*");return}var dataHref=findDataHref(target);if(dataHref&&/^https?:\/\//.test(dataHref.href)&&dataHref.href.replace(/#.*$/,"")!==loc){if(isInlineMediaUrlClick(dataHref.node,dataHref.href))return;e.preventDefault();parent.postMessage({type:"ecto:usercontent-link-click",href:dataHref.href},"*")}},true)})();</script><script>(function(){var FOCUS_TYPE="ecto:artifact-focus-request";var CLOSE_TYPE="ecto:artifact-close-request";function focusArtifactDocument(){var body=document.body;if(!body)return;try{window.focus();}catch(e){}if(!body.hasAttribute("tabindex"))body.setAttribute("tabindex","-1");try{body.focus({preventScroll:true});}catch(e){try{body.focus();}catch(e2){}}}window.addEventListener("message",function(event){if(event.source!==window.parent)return;var data=event.data;if(!data||typeof data!=="object"||data.type!==FOCUS_TYPE)return;if(document.readyState==="loading"){document.addEventListener("DOMContentLoaded",focusArtifactDocument,{once:true});return;}focusArtifactDocument();});window.addEventListener("keydown",function(event){if(event.key!=="Escape")return;window.setTimeout(function(){if(event.defaultPrevented)return;window.parent.postMessage({type:CLOSE_TYPE},"*");},0);});})();</script></body>
 </html>
