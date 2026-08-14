@@ -49,11 +49,183 @@
 <style>
 *{box-sizing:border-box}
 body{margin:0;background:#eef2f6;color:#111827;font-family:Arial,Helvetica,sans-serif}
-header{background:#111827;color:#fff;padding:11px 14px;position:sticky;top:0;z-index:50}
-.head{max-width:920px;margin:auto;display:flex;align-items:center;gap:10px}
-.head h1{font-size:18px;margin:0;flex:1}
-.head button{border:0;border-radius:8px;padding:8px 11px;font-weight:800;cursor:pointer}
-.back{background:#374151;color:#fff}.refresh{background:#fff;color:#111827}
+header{
+  background:#111827;
+  color:#fff;
+  padding:10px 14px;
+  position:sticky;
+  top:0;
+  z-index:50;
+  border-bottom:1px solid #1e293b;
+}
+.head{
+  width:100%;
+  max-width:920px;
+  margin:auto;
+  display:flex;
+  align-items:center;
+  gap:12px;
+  min-height:52px;
+}
+.head-logo{
+  width:52px;
+  height:52px;
+  border-radius:14px;
+  object-fit:contain;
+  background:#000;
+  padding:4px;
+  border:1px solid #ffffff20;
+  flex:0 0 52px;
+}
+.head-info{
+  min-width:0;
+  flex:1;
+  line-height:1.2;
+}
+.head-title-row{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  min-width:0;
+}
+.head h1{
+  font-size:18px;
+  margin:0;
+  font-weight:900;
+  white-space:nowrap;
+}
+.head-email{
+  display:block;
+  margin-top:2px;
+  font-size:11px;
+  color:#9ca3af;
+  font-weight:700;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  max-width:480px;
+}
+.role-badge{
+  display:inline-flex;
+  align-items:center;
+  padding:5px 9px;
+  border-radius:999px;
+  background:#16c75b;
+  color:#fff;
+  font-size:11px;
+  font-weight:900;
+  white-space:nowrap;
+}
+.head-actions{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  flex:none;
+}
+.head button{
+  border-radius:12px;
+  font-weight:800;
+  cursor:pointer;
+}
+.refresh{
+  background:#1e293b;
+  color:#fff;
+  border:2px solid #334155;
+  height:44px;
+  padding:9px 14px;
+  font-size:12px;
+}
+.refresh:hover{
+  background:#facc15;
+  color:#000;
+}
+.theme-btn{
+  width:44px;
+  height:44px;
+  padding:0;
+  border:2px solid #334155;
+  background:#1e293b;
+  color:#fff;
+  font-size:18px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}
+.theme-btn:hover{
+  background:#facc15;
+  color:#000;
+}
+body.dark{
+  background:#0b0f14;
+  color:#f3f4f6;
+}
+body.dark header{
+  background:#0b0f14;
+  color:#f3f4f6;
+  border-bottom-color:#263241;
+}
+body.dark .card{
+  background:#151b23;
+  color:#f3f4f6;
+}
+body.dark .title{
+  border-bottom-color:#2b3440;
+}
+body.dark label,
+body.dark .check,
+body.dark .status-msg,
+body.dark .money,
+body.dark .pmeta{
+  color:#aeb7c4;
+}
+body.dark input,
+body.dark select,
+body.dark textarea{
+  background:#0f141b;
+  color:#f3f4f6;
+  border-color:#2b3440;
+}
+body.dark .readonly{
+  background:#10161e;
+  color:#cbd5e1;
+}
+body.dark .info{
+  border-color:#2b3440;
+}
+body.dark .info-row{
+  border-bottom-color:#2b3440;
+}
+body.dark .info-row span{
+  color:#aeb7c4;
+}
+body.dark .results{
+  background:#151b23;
+  border-color:#2b3440;
+}
+body.dark .result{
+  background:#151b23;
+  color:#f3f4f6;
+  border-bottom-color:#2b3440;
+}
+body.dark .result:hover{
+  background:#1d2631;
+}
+body.dark .selected.empty{
+  background:#10161e;
+  color:#aeb7c4;
+  border-color:#3b4654;
+}
+body.dark .secondary{
+  background:#2b3440;
+  color:#f3f4f6;
+}
+body.dark .popup-box{
+  background:#151b23;
+  color:#f3f4f6;
+}
+body.dark .popup-box p{
+  color:#aeb7c4;
+}
 main{max-width:920px;margin:auto;padding:12px}
 .card{background:#fff;border-radius:12px;padding:15px;margin-bottom:12px;box-shadow:0 2px 10px #0001}
 .title{font-size:16px;font-weight:900;border-bottom:1px solid #e5e7eb;padding-bottom:9px;margin-bottom:12px}
@@ -90,7 +262,20 @@ button.action{border:0;border-radius:9px;padding:12px;font-weight:900;cursor:poi
 .popup-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:13px}.popup-actions button{border:0;border-radius:8px;padding:10px 14px;font-weight:800}
 #garansiWrap{display:none}
 #printArea{display:none}
-@media(max-width:650px){.grid{grid-template-columns:1fr}.full{grid-column:auto}.actions{grid-template-columns:1fr 1fr}.head h1{font-size:16px}}
+@media(max-width:650px){
+  .grid{grid-template-columns:1fr}
+  .full{grid-column:auto}
+  .actions{grid-template-columns:1fr 1fr}
+  header{padding:10px 14px}
+  .head{gap:8px;min-height:52px}
+  .head-logo{width:52px;height:52px;flex-basis:52px}
+  .head h1{font-size:16px}
+  .head-email{font-size:10px;max-width:240px}
+  .role-badge{font-size:10px;padding:4px 7px}
+  .head-actions{gap:6px}
+  .refresh{height:44px;padding:9px 12px;font-size:12px}
+  .theme-btn{width:44px;height:44px;font-size:18px}
+}
 @media print{
  body{background:#fff}
  header,main,.popup{display:none!important}
@@ -118,9 +303,20 @@ button.action{border:0;border-radius:9px;padding:12px;font-weight:900;cursor:poi
 
 <header>
   <div class="head">
-    <img src="logo.png" alt="FIXZY" style="width:42px;height:42px;border-radius:8px;object-fit:contain;background:#000;padding:2px">
-    <h1>🔧 Input Servis HP</h1>
-    <button class="refresh" onclick="location.reload()">↻ Refresh</button>
+    <img class="head-logo" src="logo.png" alt="FIXZY">
+
+    <div class="head-info">
+      <div class="head-title-row">
+        <h1>Input Servis</h1>
+        <span id="headerRole" class="role-badge">USER</span>
+      </div>
+      <span id="headerEmail" class="head-email">-</span>
+    </div>
+
+    <div class="head-actions">
+      <button class="refresh" type="button" onclick="location.reload()">Refresh</button>
+      <button class="theme-btn" id="themeBtn" type="button" onclick="toggleDarkMode()" aria-label="Mode gelap">🌙</button>
+    </div>
   </div>
 </header>
 
@@ -730,6 +926,19 @@ function batalForm(){
 }
 window.batalForm=batalForm;
 
+function applyDarkMode(on){
+  document.body.classList.toggle("dark",!!on);
+  const btn=document.getElementById("themeBtn");
+  if(btn){
+    btn.textContent=on?"☀️":"🌙";
+    btn.setAttribute("aria-label",on?"Mode terang":"Mode gelap");
+  }
+}
+function toggleDarkMode(){
+  applyDarkMode(!document.body.classList.contains("dark"));
+}
+window.toggleDarkMode=toggleDarkMode;
+
 onAuthStateChanged(auth,async user=>{
   authUser=user;
   if(!user){
@@ -754,6 +963,9 @@ onAuthStateChanged(auth,async user=>{
     uid=user.uid;
     businessUid=businessOwner(data,user);
     profile={...data};
+
+    $("headerRole").textContent=(data.role||"USER").toUpperCase();
+    $("headerEmail").textContent=user.email||data.email||"-";
 
     $("nomorNota").value=notaBaru();
     $("barcode").value=makeBarcode($("nomorNota").value);
