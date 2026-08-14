@@ -220,107 +220,22 @@ async function loadKaryawan(){
   }catch(e){ console.error('loadKaryawan error', e); }
 }
 
-
-window.fixStokSinkron=async()=>{
-  if(!confirm('Fix sinkron stok? Akan set 0 untuk produk yang sudah habis terjual di Input Penjualan tapi masih ada sisa di Produk & Stok (Y20, Y22). Lanjut?')) return;
-  showKonterPopup('Mulai fix sinkron...', 'info');
-  let fixed=0;
-  for(let prod of allProduk){
-    const stokNow = Number(prod._stok ?? prod.stok ?? prod.qty ?? prod.sisa ?? 0);
-    if(stokNow<=0){
-      // Sudah habis di input penjualan, pastikan di semua koleksi jadi 0
-      const allCols = ["stok","produk","products","product","stock"];
-      for(let colName of allCols){
-        try{
-          if(prod._col===colName){
-            await updateDoc(doc(db,colName,prod.id), { stok:0, qty:0, jumlah:0, stock:0, sisa:0, sisaStok:0, stokAkhir:0, stokTersedia:0, pcs:0, ready:0, statusStok:'HABIS', updatedAt:new Date().toISOString() });
-            fixed++;
-          }
-          if(prod.barcode){
-            const q=query(collection(db,colName), where("barcode","==", prod.barcode));
-            const snap=await getDocs(q);
-            for(let d of snap.docs){
-              await updateDoc(doc(db,colName,d.id), { stok:0, qty:0, jumlah:0, stock:0, sisa:0, sisaStok:0, stokAkhir:0, stokTersedia:0, pcs:0, ready:0, statusStok:'HABIS', updatedAt:new Date().toISOString() });
-              fixed++;
-            }
-          }
-        }catch(e){}
-      }
-    }
-  }
-  // Juga force set untuk Y20, Y22 yang di screenshot masih sisa 1 dan 6
-  const targetNames = ["Y20","Y22","A20s"];
-  for(let name of targetNames){
-    for(let colName of ["stok","produk","products","product","stock"]){
-      try{
-        const q=query(collection(db,colName), where("nama","==", name));
-        const snap=await getDocs(q);
-        for(let d of snap.docs){
-          const data=d.data();
-          const sisaNow = Number(data.sisa ?? data.stok ?? data.qty ?? 0);
-          if(sisaNow>0){
-            // Jika di penjualan sudah terjual semua, set jadi 0
-            await updateDoc(doc(db,colName,d.id), { stok:0, qty:0, jumlah:0, stock:0, sisa:0, sisaStok:0, stokAkhir:0, stokTersedia:0, pcs:0, ready:0, statusStok:'HABIS', updatedAt:new Date().toISOString() });
-            fixed++;
-          }
-        }
-      }catch{}
-    }
-  }
-  showKonterPopup(`Fix selesai! ${fixed} dokumen di-update jadi 0. Refresh halaman Produk & Stok. | Konter: ${konterName}`, 'success');
-  await loadProduk();
-};
-
-
 async function loadProduk(){
   try{
     let docs=[];
-    // LOGIKA FIX: baca SEMUA koleksi stok, jangan break di koleksi pertama
-    // karena Fixzy Produk & Stok kadang pakai 'stok', kadang 'produk' - harus digabung
-    for(let col of ["stok","produk","products","product","stock"]){
+    for(let col of ["stok","produk","products","product"]){
       try{
-        // Filter by ownerUid kalau ada, biar tidak campur toko lain
-        let snap;
-        try{
-          const qOwner = query(collection(db,col), where("ownerId","==", ownerUid));
-          snap = await getDocs(qOwner);
-          if(snap.empty){
-            const qOwner2 = query(collection(db,col), where("uid","==", ownerUid));
-            snap = await getDocs(qOwner2);
-          }
-          if(snap.empty){
-            snap = await getDocs(collection(db,col));
-          }
-        }catch{
-          snap = await getDocs(collection(db,col));
-        }
-        if(!snap.empty){
-          const colDocs = snap.docs.map(d=>{
+        const s=await getDocs(collection(db,col));
+        if(!s.empty){
+          docs=[...docs, ...s.docs.map(d=>{
             const data=d.data();
-            const stokVal = Number(data.stok ?? data.qty ?? data.jumlah ?? data.stock ?? data.sisa ?? data.sisaStok ?? data.stokAkhir ?? data.stokTersedia ?? data.pcs ?? data.ready ?? 0);
-            return {id:d.id, _col:col, _stok:stokVal, _rawSisa:data.sisa, _rawStok:data.stok, ...data};
-          });
-          docs=[...docs, ...colDocs];
+            const stokVal = Number(data.stok ?? data.qty ?? data.jumlah ?? data.stock ?? data.stokTersedia ?? 0);
+            return {id:d.id, _col:col, _stok:stokVal, ...data};
+          })];
+          if(docs.length>0) break;
         }
-      }catch(e){ console.warn('load col',col,e); }
+      }catch{}
     }
-    // Deduplicate by barcode / nama - ambil stok terkecil (yang sudah habis)
-    const mapByBarcode = new Map();
-    for(let p of docs){
-      const key = (p.barcode||'').toString().trim() || (p.nama||p.namaProduk||'').toString().toLowerCase().trim();
-      if(!key) continue;
-      const existing = mapByBarcode.get(key);
-      if(!existing){
-        mapByBarcode.set(key, p);
-      }else{
-        // Jika ada duplikat di 2 koleksi, ambil yang stok paling kecil (sudah terjual)
-        if(Number(p._stok) < Number(existing._stok)){
-          mapByBarcode.set(key, p);
-        }
-      }
-    }
-    docs = Array.from(mapByBarcode.values());
-
     allProduk=docs;
     const info=document.getElementById('produkInfo');
     if(docs.length===0){
@@ -573,77 +488,29 @@ async function simpanData(cetakMode){
     });
     let stockUpdateLogs=[];
     for(let it of rincianItems){
-      if(it.type==='auto'){
+      if(it.type==='auto' && it.productId){
         try{
-          // Cari di semua koleksi stok yang mungkin: stok, produk, products, product
-          const allCols = ["stok","produk","products","product","stock"];
-          let updated = false;
-          for(let colName of allCols){
-            try{
-              // Coba by productId dulu kalau ada di koleksi ini
-              if(it.productId && it._col===colName){
-                const prodRef = doc(db, colName, it.productId);
-                const prodSnap = await getDoc(prodRef);
-                if(prodSnap.exists()){
-                  const oldData = prodSnap.data();
-                  const oldStok = Number(oldData.stok ?? oldData.qty ?? oldData.jumlah ?? oldData.stock ?? oldData.sisa ?? oldData.sisaStok ?? oldData.stokAkhir ?? oldData.stokTersedia ?? 0);
-                  const newStok = Math.max(0, oldStok - Number(it.qty||0));
-                  await updateDoc(prodRef, {
-                    stok: newStok, qty: newStok, jumlah: newStok, stock: newStok, sisa: newStok, sisaStok: newStok, stokAkhir: newStok, stokTersedia: newStok, stokSisa: newStok, pcs: newStok,
-                    updatedAt: new Date().toISOString(), lastSoldAt: new Date().toISOString(), lastSoldQty: Number(it.qty||0),
-                    statusStok: newStok<=0 ? 'HABIS' : 'READY', ready: newStok
-                  });
-                  stockUpdateLogs.push(`${it.nama} [${colName}]: ${oldStok} -> ${newStok}`);
-                  updated = true;
-                }
-              }
-              // Cari juga by barcode / nama di koleksi lain biar sinkron Produk & Stok
-              if(it.barcode){
-                const qBarcode = query(collection(db,colName), where("barcode","==", it.barcode));
-                const snapB = await getDocs(qBarcode);
-                for(let d of snapB.docs){
-                  const oldData = d.data();
-                  const oldStok = Number(oldData.stok ?? oldData.qty ?? oldData.jumlah ?? oldData.stock ?? oldData.sisa ?? oldData.sisaStok ?? oldData.stokAkhir ?? 0);
-                  if(d.id===it.productId && it._col===colName) continue; // sudah update di atas
-                  const newStok = Math.max(0, oldStok - Number(it.qty||0));
-                  await updateDoc(doc(db,colName,d.id), {
-                    stok: newStok, qty: newStok, jumlah: newStok, stock: newStok, sisa: newStok, sisaStok: newStok, stokAkhir: newStok, stokTersedia: newStok, stokSisa: newStok, pcs: newStok,
-                    updatedAt: new Date().toISOString(), lastSoldAt: new Date().toISOString(), lastSoldQty: Number(it.qty||0),
-                    statusStok: newStok<=0 ? 'HABIS' : 'READY', ready: newStok
-                  });
-                  stockUpdateLogs.push(`${it.nama} [${colName} barcode]: ${oldStok} -> ${newStok}`);
-                  updated = true;
-                }
-              }
-              // Cari by nama juga (fallback kalau barcode beda)
-              if(it.nama){
-                try{
-                  const qNama = query(collection(db,colName), where("nama","==", it.nama));
-                  const snapN = await getDocs(qNama);
-                  for(let d of snapN.docs){
-                    if(d.id===it.productId && it._col===colName) continue;
-                    const oldData = d.data();
-                    const oldStok = Number(oldData.stok ?? oldData.qty ?? oldData.jumlah ?? oldData.stock ?? oldData.sisa ?? oldData.sisaStok ?? oldData.stokAkhir ?? 0);
-                    // Hindari double update kalau sudah update via barcode
-                    if(stockUpdateLogs.some(log=>log.includes(d.id))) continue;
-                    const newStok = Math.max(0, oldStok - Number(it.qty||0));
-                    await updateDoc(doc(db,colName,d.id), {
-                      stok: newStok, qty: newStok, jumlah: newStok, stock: newStok, sisa: newStok, sisaStok: newStok, stokAkhir: newStok, stokTersedia: newStok, stokSisa: newStok, pcs: newStok,
-                      updatedAt: new Date().toISOString(), lastSoldAt: new Date().toISOString(), lastSoldQty: Number(it.qty||0),
-                      statusStok: newStok<=0 ? 'HABIS' : 'READY', ready: newStok
-                    });
-                    stockUpdateLogs.push(`${it.nama} [${colName} nama]: ${oldStok} -> ${newStok}`);
-                    updated = true;
-                  }
-                }catch{}
-              }
-            }catch{}
-          }
-          if(!updated){
-            stockUpdateLogs.push(`${it.nama}: tidak ketemu di stok/produk - cek koleksi`);
+          const colName = it._col || 'stok';
+          const prodRef = doc(db, colName, it.productId);
+          const prodSnap = await getDoc(prodRef);
+          if(prodSnap.exists()){
+            const oldData = prodSnap.data();
+            const oldStok = Number(oldData.stok ?? oldData.qty ?? oldData.jumlah ?? oldData.stock ?? 0);
+            const newStok = oldStok - Number(it.qty||0);
+            await updateDoc(prodRef, {
+              stok: newStok,
+              qty: newStok,
+              jumlah: newStok,
+              stock: newStok,
+              stokTersedia: newStok,
+              updatedAt: new Date().toISOString(),
+              lastSoldAt: new Date().toISOString(),
+              lastSoldQty: Number(it.qty||0)
+            });
+            stockUpdateLogs.push(`${it.nama}: ${oldStok} -> ${newStok}`);
           }
         }catch(errStok){
-          stockUpdateLogs.push(`${it.nama}: gagal update stok - ${errStok.message}`);
+          stockUpdateLogs.push(`${it.nama}: gagal update stok`);
         }
       }
     }
@@ -762,7 +629,7 @@ document.addEventListener('DOMContentLoaded', ()=>{
 </div>
 
 <div class="card">
-  <div class="card-header"><span>HEADER 3 - Data Produk (Stok) + Manual</span><div style="display:flex;gap:6px;align-items:center"><span id="produkInfo" style="font-size:10px;color:#64748b">Memuat...</span><button type="button" onclick="fixStokSinkron()" style="background:#f59e0b;color:#111827;padding:4px 8px;border-radius:6px;font-size:10px;font-weight:900">🔧 Fix Sinkron Stok</button></div></div>
+  <div class="card-header"><span>HEADER 3 - Data Produk (Stok) + Manual</span><span id="produkInfo" style="font-size:10px;color:#64748b">Memuat...</span></div>
   <div id="autoProdukWrap">
     <label style="font-size:11px;font-weight:800">Cari Produk Auto (Dropdown dari stock produk)</label>
     <div style="position:relative"><input id="produkSearch" placeholder="Ketik nama / barcode... jika kosong hide/samarkan"><input type="hidden" id="produkNamaAuto"></div>
