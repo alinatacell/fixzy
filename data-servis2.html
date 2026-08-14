@@ -488,32 +488,40 @@ window.kirimWhatsAppDanSimpan=async()=>{
  }
 
  /*
-  * WAJIB DIBUKA SEBELUM await Firebase.
-  * Kalau window.open dijalankan setelah await, Chrome Android
-  * dapat menganggapnya popup otomatis dan memblokirnya.
+  * Android: gunakan whatsapp:// terlebih dahulu.
+  * Tidak memakai window.open sehingga tidak tergantung popup Chrome.
+  * Navigasi dilakukan langsung dari klik tombol pengguna.
   */
- const url="https://wa.me/"+wa+"?text="+encodeURIComponent(pesan);
- let waOpened=false;
+ const waAppUrl="whatsapp://send?phone="+wa+"&text="+encodeURIComponent(pesan);
+ const waWebUrl="https://wa.me/"+wa+"?text="+encodeURIComponent(pesan);
+
+ let opened=false;
 
  try{
-   const win=window.open(url,"_blank");
-   waOpened=!!win;
+   window.location.href=waAppUrl;
+   opened=true;
  }catch(e){
-   console.warn("Buka WhatsApp gagal:",e);
+   console.warn("WhatsApp app URL gagal:",e);
  }
 
  /*
-  * Setelah perintah buka WhatsApp dipanggil, baru simpan status.
-  * Jadi status tetap tersimpan walaupun browser menolak popup.
+  * Simpan status setelah perintah pembukaan WhatsApp dijalankan.
   */
  await simpanStatusDariPopup();
 
- if(!waOpened){
-   tampilNotice(
-     "⚠️ WhatsApp",
-     "Status sudah berhasil disimpan. Jika WhatsApp belum terbuka, izinkan popup untuk FIXZY lalu tekan Kirim WhatsApp lagi."
-   );
- }
+ /*
+  * Jika Android tidak memiliki handler whatsapp://, fallback ke
+  * halaman web WhatsApp setelah jeda singkat. Tidak menggunakan window.open.
+  */
+ setTimeout(()=>{
+   if(document.visibilityState==="visible"){
+     try{
+       window.location.href=waWebUrl;
+     }catch(e){
+       console.warn("Fallback WhatsApp web gagal:",e);
+     }
+   }
+ },900);
 };
 
 function normalisasiWA(value){
