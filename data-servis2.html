@@ -632,6 +632,12 @@ function normalisasiWA(value){
 window.simpanEdit=async()=>{
  const x=data.find(y=>y.id===editId);if(!x)return;
  const st=$("editStatus").value;
+
+ // Proteksi karyawan: status BATAL hanya Owner/Superadmin.
+ if(["employee","karyawan"].includes(String(currentRole).toLowerCase()) && statusKey(st)==="batal"){
+   tampilNotice("🔒 Akses Ditolak","Karyawan tidak diizinkan mengubah status servis menjadi BATAL.");
+   return;
+ }
  const catatan=$("editCatatan").value.trim();
  const durasi=Number($("editGaransi").value)||0;
 
@@ -651,6 +657,12 @@ async function updateStatus(id,status,catatan,durasi,pesanPelanggan){
  try{
   const x=data.find(y=>y.id===id);if(!x)return;
   const statusCanonical=statusKey(status);
+
+  // Proteksi tingkat fungsi: tidak bisa dilewati walau dipanggil dari console/UI lain.
+  if(["employee","karyawan"].includes(String(currentRole).toLowerCase()) && statusCanonical==="batal"){
+    tampilNotice("🔒 Akses Ditolak","Karyawan tidak diizinkan mengubah status servis menjadi BATAL.");
+    return;
+  }
   let garansi={aktif:false,durasi:0,satuan:"hari",mulai:null,berakhir:null};
   if(statusCanonical==="diambil"&&durasi>0){const mulai=new Date(),akhir=new Date(mulai.getTime()+durasi*86400000);garansi={aktif:true,durasi,satuan:"hari",mulai:mulai.toISOString(),berakhir:akhir.toISOString()}}
   const patch={
@@ -718,6 +730,17 @@ window.tutupScanner=async()=>{
  $("scanBox").classList.remove("show");
 };
 
+
+
+window.hapusServis=async(id)=>{
+ if(["employee","karyawan"].includes(String(currentRole).toLowerCase())){
+   tampilNotice("🔒 Akses Ditolak","Karyawan tidak diizinkan menghapus data servis.");
+   return false;
+ }
+ tampilNotice("⚠️ Hapus Data","Fitur hapus hanya tersedia untuk Owner/Admin.");
+ return false;
+};
+
 onAuthStateChanged(auth,async u=>{
  user=u;if(!u){location.replace("login.html");return}
  try{
@@ -726,6 +749,13 @@ onAuthStateChanged(auth,async u=>{
   if(!["owner","employee","reseller","superadmin","karyawan","iprem"].includes(p.role))throw new Error("Akun tidak memiliki akses Data Servis.");
   currentRole=p.role;
   permissions=Array.isArray(p.izin)?p.izin:(Array.isArray(p.permissions)?p.permissions:[]);
+
+  // Karyawan tidak boleh membatalkan atau menghapus data servis.
+  // BATAL disembunyikan dari pilihan status; validasi di fungsi simpan tetap menjadi pengaman kedua.
+  if(["employee","karyawan"].includes(String(currentRole).toLowerCase())){
+    const batalOption=$("editStatus")?.querySelector('option[value="batal"]');
+    if(batalOption) batalOption.remove();
+  }
   // FIX: owner auto lolos, karyawan kalau izin kosong tetap diizinkan (atasi screenshot Total 0 + lock)
   if(currentRole==="owner" || currentRole==="superadmin"){
     // lolos
