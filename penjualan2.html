@@ -572,82 +572,84 @@ async function simpanData(cetakMode){
       updatedAt:new Date().toISOString()
     });
     let stockUpdateLogs=[];
-    const updatedDocIds = new Set(); // hindari double potong dokumen yang sama
+    // FIX: Gabung qty produk yang sama dulu (A53 1 + A53 1 = 2) baru potong 1x
+    // Biar kalau tambah 1 + tambah 1 lagi produk sama, kepotong 2 bukan 1
+    const grouped = new Map();
     for(let it of rincianItems){
-      if(it.type==='auto'){
-        try{
-          // FIX: hanya update di koleksi 'stok' sesuai Firebase (screenshot), prioritas field sisa
-          const colName = "stok";
-          let targetDocId = it.productId || null;
-          let targetRef = null;
-          let oldData = null;
-          let oldStok = 0;
+      if(it.type!=='auto') continue;
+      const key = (it.productId||'') + '|' + (it.barcode||'') + '|' + (it.nama||'').toLowerCase().trim();
+      if(!grouped.has(key)){
+        grouped.set(key, { ...it, qty: Number(it.qty||0), keys: [key] });
+      }else{
+        const g = grouped.get(key);
+        g.qty += Number(it.qty||0);
+      }
+    }
 
-          // 1. Coba ambil by productId dulu
-          if(targetDocId){
-            try{
-              const prodRef = doc(db, colName, targetDocId);
-              const prodSnap = await getDoc(prodRef);
-              if(prodSnap.exists()){
-                oldData = prodSnap.data();
-                // Prioritas sisa dulu (sesuai data kamu Sisa 3,1,6)
-                oldStok = Number(oldData.sisa ?? oldData.sisaStok ?? oldData.stokTersedia ?? oldData.stokAkhir ?? oldData.pcs ?? oldData.ready ?? oldData.stok ?? oldData.qty ?? oldData.jumlah ?? oldData.stock ?? 0);
-                targetRef = prodRef;
-              }
-            }catch(e){}
-          }
-          // 2. Kalau tidak ketemu by ID, cari by barcode di koleksi stok
-          if(!targetRef && it.barcode){
-            try{
-              const qBarcode = query(collection(db,colName), where("barcode","==", it.barcode));
-              const snapB = await getDocs(qBarcode);
-              if(!snapB.empty){
-                const d = snapB.docs[0];
-                if(!updatedDocIds.has(d.id)){
-                  oldData = d.data();
-                  oldStok = Number(oldData.sisa ?? oldData.sisaStok ?? oldData.stokTersedia ?? oldData.stokAkhir ?? oldData.pcs ?? oldData.ready ?? oldData.stok ?? oldData.qty ?? oldData.jumlah ?? oldData.stock ?? 0);
-                  targetRef = doc(db,colName,d.id);
-                  targetDocId = d.id;
-                }
-              }
-            }catch(e){}
-          }
-          // 3. Fallback cari by nama
-          if(!targetRef && it.nama){
-            try{
-              const qNama = query(collection(db,colName), where("nama","==", it.nama));
-              const snapN = await getDocs(qNama);
-              if(!snapN.empty){
-                const d = snapN.docs[0];
-                if(!updatedDocIds.has(d.id)){
-                  oldData = d.data();
-                  oldStok = Number(oldData.sisa ?? oldData.sisaStok ?? oldData.stokTersedia ?? oldData.stokAkhir ?? oldData.pcs ?? oldData.ready ?? oldData.stok ?? oldData.qty ?? oldData.jumlah ?? oldData.stock ?? 0);
-                  targetRef = doc(db,colName,d.id);
-                  targetDocId = d.id;
-                }
-              }
-            }catch(e){}
-          }
+    for(let [groupKey, g] of grouped.entries()){
+      try{
+        const colName = "stok";
+        let targetDocId = g.productId || null;
+        let targetRef = null;
+        let oldData = null;
+        let oldStok = 0;
 
-          if(targetRef && !updatedDocIds.has(targetDocId)){
-            const qtyJual = Number(it.qty||0);
-            const newStok = Math.max(0, oldStok - qtyJual);
-            await updateDoc(targetRef, {
-              sisa: newStok, sisaStok: newStok, stokTersedia: newStok, stokAkhir: newStok, stokSisa: newStok, pcs: newStok, ready: newStok,
-              stok: newStok, qty: newStok, jumlah: newStok, stock: newStok,
-              updatedAt: new Date().toISOString(), lastSoldAt: new Date().toISOString(), lastSoldQty: qtyJual,
-              statusStok: newStok<=0 ? 'KOSONG' : 'READY', status: newStok<=0 ? 'KOSONG' : 'READY'
-            });
-            updatedDocIds.add(targetDocId);
-            stockUpdateLogs.push(`${it.nama}: ${oldStok} - ${qtyJual} = ${newStok}`);
-          }else if(updatedDocIds.has(targetDocId)){
-            // sudah dipotong sebelumnya untuk item yang sama, skip biar tidak double potong
-          }else{
-            stockUpdateLogs.push(`${it.nama}: tidak ketemu di stok - cek Firebase`);
-          }
-        }catch(errStok){
-          stockUpdateLogs.push(`${it.nama}: gagal update stok - ${errStok.message}`);
+        // 1. By productId
+        if(targetDocId){
+          try{
+            const prodRef = doc(db, colName, targetDocId);
+            const prodSnap = await getDoc(prodRef);
+            if(prodSnap.exists()){
+              oldData = prodSnap.data();
+              oldStok = Number(oldData.sisa ?? oldData.sisaStok ?? oldData.stokTersedia ?? oldData.stokAkhir ?? oldData.pcs ?? oldData.ready ?? oldData.stok ?? oldData.qty ?? oldData.jumlah ?? oldData.stock ?? 0);
+              targetRef = prodRef;
+            }
+          }catch(e){}
         }
+        // 2. By barcode
+        if(!targetRef && g.barcode){
+          try{
+            const qBarcode = query(collection(db,colName), where("barcode","==", g.barcode));
+            const snapB = await getDocs(qBarcode);
+            if(!snapB.empty){
+              const d = snapB.docs[0];
+              oldData = d.data();
+              oldStok = Number(oldData.sisa ?? oldData.sisaStok ?? oldData.stokTersedia ?? oldData.stokAkhir ?? oldData.pcs ?? oldData.ready ?? oldData.stok ?? oldData.qty ?? oldData.jumlah ?? oldData.stock ?? 0);
+              targetRef = doc(db,colName,d.id);
+              targetDocId = d.id;
+            }
+          }catch(e){}
+        }
+        // 3. By nama
+        if(!targetRef && g.nama){
+          try{
+            const qNama = query(collection(db,colName), where("nama","==", g.nama));
+            const snapN = await getDocs(qNama);
+            if(!snapN.empty){
+              const d = snapN.docs[0];
+              oldData = d.data();
+              oldStok = Number(oldData.sisa ?? oldData.sisaStok ?? oldData.stokTersedia ?? oldData.stokAkhir ?? oldData.pcs ?? oldData.ready ?? oldData.stok ?? oldData.qty ?? oldData.jumlah ?? oldData.stock ?? 0);
+              targetRef = doc(db,colName,d.id);
+              targetDocId = d.id;
+            }
+          }catch(e){}
+        }
+
+        if(targetRef){
+          const qtyJual = Number(g.qty||0);
+          const newStok = Math.max(0, oldStok - qtyJual);
+          await updateDoc(targetRef, {
+            sisa: newStok, sisaStok: newStok, stokTersedia: newStok, stokAkhir: newStok, stokSisa: newStok, pcs: newStok, ready: newStok,
+            stok: newStok, qty: newStok, jumlah: newStok, stock: newStok,
+            updatedAt: new Date().toISOString(), lastSoldAt: new Date().toISOString(), lastSoldQty: qtyJual,
+            statusStok: newStok<=0 ? 'KOSONG' : 'READY', status: newStok<=0 ? 'KOSONG' : 'READY'
+          });
+          stockUpdateLogs.push(`${g.nama}: ${oldStok} - ${qtyJual} = ${newStok} ${qtyJual>1?'(gabung '+qtyJual+' pcs)':''}`);
+        }else{
+          stockUpdateLogs.push(`${g.nama}: tidak ketemu di stok - cek Firebase`);
+        }
+      }catch(errStok){
+        stockUpdateLogs.push(`${g.nama}: gagal update stok - ${errStok.message}`);
       }
     }
     const stockMsg = stockUpdateLogs.length>0 ? '\n\nStock dikurangi:\n'+stockUpdateLogs.join('\n') : '';
