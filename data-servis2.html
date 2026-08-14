@@ -408,23 +408,127 @@ window.tutupNotice=()=>$("noticePopup").classList.remove("show");
 function pesanStatusPelanggan(status,x){
  const nama=x?.pelanggan?.nama||"Kak";
  const hp=x?.servisan?.brandTipe||"HP Anda";
- const keluhan=x?.servisan?.jenisKerusakan||x?.servisan?.keluhan||"servis";
+ const keluhan=x?.servisan?.jenisKerusakan||x?.servisan?.keluhan||"-";
  const nomor=x?.nomorNota||"-";
- const toko=x?.namaKonter||x?.namaToko||namaKonter||"FIXZY";
- const total=money(x);
- const dpBayar=dp(x);
- const sisaBayar=sisa(x);
 
- const pembuka=`Halo Kak ${nama}, kami dari ${toko} ingin menginformasikan bahwa servis ${hp} (keluhan: ${keluhan}) dengan nomor nota ${nomor}`;
+ // Nama konter utama berasal dari profil Owner / data register admin.
+ // Data transaksi hanya menjadi fallback untuk transaksi lama.
+ const toko=(namaKonter&&namaKonter!=="FIXZY")
+   ? namaKonter
+   : (x?.namaKonter||x?.namaToko||"FIXZY");
+
+ const alamat=x?.pelanggan?.alamat||"-";
+ const total=Number(money(x)||0);
+ const dpBayar=Number(dp(x)||0);
+ const sisaBayar=Number(sisa(x)||Math.max(0,total-dpBayar));
+
+ const detail=`📄 Nota: ${nomor}
+📱 HP: ${hp}
+🔧 Kerusakan: ${keluhan}
+💰 Total: ${rupiah(total)}
+💳 DP: ${rupiah(dpBayar)}
+💵 Sisa: ${rupiah(sisaBayar)}
+📍 Alamat: ${alamat}`;
+
  const pesan={
-   masuk:`${pembuka} sudah kami terima dan saat ini sedang masuk antrian. Kami akan segera memproses servisnya sesuai urutan. Terima kasih telah mempercayakan perangkat Kakak kepada kami.`,
-   "nunggu sparepart":`${pembuka} sedang menunggu sparepart. Setelah sparepart tersedia, servis akan kami lanjutkan. Kami akan menginformasikan kembali apabila ada perkembangan. Terima kasih atas kesabarannya.`,
-   proses:`${pembuka} sedang dalam proses pengerjaan oleh teknisi kami. Kami akan menginformasikan kembali setelah servis selesai. Terima kasih telah mempercayakan perangkat Kakak kepada kami.`,
-   selesai:`${pembuka} sudah selesai dikerjakan dan siap diambil. Biaya servis sebesar ${rupiah(total)}${dpBayar>0?` (DP ${rupiah(dpBayar)}, sisa ${rupiah(sisaBayar)})`:""}. Silakan datang ke ${toko} untuk mengambil perangkat Kakak. Terima kasih telah mempercayakan servis kepada kami.`,
-   diambil:`${pembuka} sudah diambil dan transaksi servis telah kami selesaikan. Terima kasih banyak telah mempercayakan servis kepada ${toko}. Semoga perangkat Kakak kembali normal dan dapat digunakan dengan nyaman.`,
-   batal:`${pembuka} telah dibatalkan sesuai status pada sistem. Jika ada yang ingin dikonfirmasi, silakan hubungi ${toko}. Terima kasih.`
+   masuk:`Halo Kak ${nama} 🙏
+
+Terima kasih sudah mempercayakan servis HP di *${toko}* 🤝
+
+${detail}
+
+📌 Status: *MASUK ANTRIAN* 📝
+
+Servis HP Kakak sudah kami terima dan sudah masuk antrian. Nanti kami informasikan kembali apabila ada perkembangan.
+
+Terima kasih 🙏
+*${toko}* - Melayani dengan Amanah`,
+
+   nunggu:`Halo Kak ${nama} 🙏
+
+Terima kasih sudah mempercayakan servis HP di *${toko}* 🤝
+
+${detail}
+
+📌 Status: *NUNGGU SPAREPART* ⏳
+
+Saat ini servis HP Kakak masih menunggu sparepart yang diperlukan. Setelah sparepart tersedia, servis akan kami lanjutkan dan kami informasikan kembali.
+
+Mohon ditunggu ya Kak 🙏
+
+*${toko}* - Melayani dengan Amanah`,
+
+   proses:`Halo Kak ${nama} 🙏
+
+Terima kasih sudah mempercayakan servis HP di *${toko}* 🤝
+
+${detail}
+
+📌 Status: *SEDANG DIPROSES* 🔧
+
+HP Kakak saat ini sedang dalam proses pengerjaan oleh teknisi. Kami akan menginformasikan kembali apabila servis sudah selesai.
+
+Terima kasih 🙏
+*${toko}* - Melayani dengan Amanah`,
+
+   selesai:`Halo Kak ${nama} 🙏
+
+Terima kasih sudah mempercayakan servis HP di *${toko}* 🤝
+
+${detail}
+
+📌 Status: *SELESAI* ✅
+
+Servis HP Kakak sudah selesai dikerjakan dan siap diambil.
+
+${sisaBayar>0
+  ? `Masih ada sisa pembayaran sebesar *${rupiah(sisaBayar)}*.`
+  : `Pembayaran sudah *LUNAS* ✅.`}
+
+Silakan datang ke konter untuk mengambil HP Kakak ya.
+
+Terima kasih 🙏
+*${toko}* - Melayani dengan Amanah`,
+
+   diambil:`Halo Kak ${nama} 🙏
+
+Terima kasih sudah mempercayakan servis HP di *${toko}* 🤝
+
+${detail}
+
+📌 Status: *DIAMBIL* ✅
+
+HP Kakak sudah tercatat telah diambil.
+
+${sisaBayar>0
+  ? `Catatan: masih terdapat sisa pembayaran sebesar *${rupiah(sisaBayar)}*.`
+  : `Pembayaran sudah *LUNAS* ✅.`}
+
+Terima kasih 🙏
+*${toko}* - Melayani dengan Amanah`,
+
+   batal:`Halo Kak ${nama} 🙏
+
+Kami dari *${toko}* menginformasikan perubahan status servis:
+
+${detail}
+
+📌 Status: *BATAL* ❌
+
+Transaksi servis dengan nomor nota tersebut sudah kami ubah menjadi status BATAL.
+
+Jika ada yang ingin dikonfirmasi mengenai pembatalan servis, silakan hubungi kami ya Kak.
+
+Terima kasih 🙏
+*${toko}* - Melayani dengan Amanah`
  };
- return pesan[status]||`${pembuka} saat ini berstatus ${statusLabel(status)}. Terima kasih.`;
+
+ return pesan[status]||`${detail}
+
+📌 Status: *${statusLabel(status)}*
+
+Terima kasih 🙏
+*${toko}* - Melayani dengan Amanah`;
 }
 
 function bukaKonfirmasiStatus(id,status,catatan,durasi){
