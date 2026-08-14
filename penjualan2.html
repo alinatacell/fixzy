@@ -215,9 +215,13 @@ onAuthStateChanged(auth, async u=>{
       document.getElementById('roleSide').style.background=isOwner?'#16a34a':'#2563eb';
     }
   }catch(e){ ownerUid=u.uid; isOwner=true; konterName="Fixzy - A Yudi Thea"; }
+  if(!konterName || /^Fixzy\s*-\s*A Yudi Thea$/i.test(konterName)){
+    konterName = konterName || 'A Yudi Thea';
+  }
   document.getElementById('konterField').value=konterName;
   document.getElementById('tanggalField').valueAsDate=new Date();
   autoGenerateNotaBarcode();
+  syncInfoTransaksiHeader();
   await loadKaryawan();
   await loadProduk();
 });
@@ -576,6 +580,37 @@ function hitungSisa(){
   const sisa=total-diskon-dp;
   document.getElementById('sisaField').value=sisa;
   document.getElementById('sisaDisplay').textContent='Rp ' + sisa.toLocaleString('id-ID');
+}
+
+
+function syncInfoTransaksiHeader(){
+  const akun=document.getElementById('akunLoginField');
+  const usaha=document.getElementById('konterField');
+  const nota=document.getElementById('notaField');
+  const tanggal=document.getElementById('tanggalField');
+  const barcode=document.getElementById('barcodeField');
+
+  if(akun && currentUser) akun.value=currentUser.email || '';
+  if(usaha && konterName) usaha.value=konterName;
+
+  if(tanggal && !tanggal.value){
+    tanggal.valueAsDate=new Date();
+  }
+
+  if(nota && !nota.value) autoGenerateNotaBarcode();
+  if(barcode && !barcode.value) autoGenerateNotaBarcode();
+
+  // Header atas selalu mengikuti pola Input Servis:
+  // judul halaman + OWNER/KARYAWAN + email.
+  const title=document.getElementById('namaToko');
+  const role=document.getElementById('roleSide');
+  const email=document.getElementById('akunSide');
+  if(title) title.textContent='Input Penjualan';
+  if(email && currentUser) email.textContent=currentUser.email || 'Memuat akun...';
+  if(role){
+    role.textContent=isOwner ? 'OWNER' : 'KARYAWAN';
+    role.style.background=isOwner ? '#16a34a' : '#2563eb';
+  }
 }
 
 function autoGenerateNotaBarcode(){
@@ -1103,6 +1138,247 @@ body.dark .pelanggan-group-card,body.dark .pelanggan-group-body{
 }
 </style>
 
+
+<style id="header-input-servis-final">
+.info-transaksi-card{padding:18px!important;background:#fff!important;border:2px solid #111827!important;border-radius:14px!important;box-shadow:4px 4px 0 #111827!important}
+.info-transaksi-title{font-size:24px!important;font-weight:900!important;color:#111827!important;margin:0 0 14px!important;padding:0 0 12px!important;border-bottom:2px solid #111827!important;line-height:1.2!important}
+.info-transaksi-box{border:2px solid #111827!important;border-radius:14px!important;overflow:hidden!important;box-shadow:3px 3px 0 #111827!important;background:#fff!important}
+.info-transaksi-row{min-height:54px!important;display:grid!important;grid-template-columns:180px minmax(0,1fr)!important;align-items:center!important;gap:12px!important;padding:0 16px!important;border-bottom:1px solid #e5e7eb!important;box-sizing:border-box!important}
+.info-transaksi-row:last-child{border-bottom:0!important}
+.info-transaksi-label{color:#64748b!important;font-size:17px!important;font-weight:800!important}
+.info-transaksi-value{min-width:0!important;text-align:right!important;font-size:17px!important;font-weight:900!important;color:#111827!important}
+.info-transaksi-value input{width:100%!important;padding:0!important;margin:0!important;border:0!important;box-shadow:none!important;border-radius:0!important;background:transparent!important;color:#111827!important;font-size:17px!important;font-weight:900!important;text-align:right!important}
+.info-transaksi-hidden-tech{display:none!important}
+@media(max-width:700px){.info-transaksi-card{padding:16px!important}.info-transaksi-title{font-size:22px!important}.info-transaksi-row{min-height:54px!important;grid-template-columns:105px minmax(0,1fr)!important;gap:8px!important;padding:0 14px!important}.info-transaksi-label{font-size:16px!important}.info-transaksi-value,.info-transaksi-value input{font-size:16px!important}}
+@media(max-width:380px){.info-transaksi-row{grid-template-columns:92px minmax(0,1fr)!important;padding:0 11px!important}.info-transaksi-label{font-size:14px!important}.info-transaksi-value,.info-transaksi-value input{font-size:14px!important}}
+</style>
+
+
+<style id="FINAL-SAMA-INPUT-SERVIS">
+/* ===== HEADER ATAS — SAMA DENGAN INPUT SERVIS ===== */
+body > header{
+  background:#0f1b2f !important;
+  color:#fff !important;
+  min-height:96px !important;
+  padding:14px 22px !important;
+  margin:0 !important;
+  border-bottom:0 !important;
+  box-shadow:0 4px 0 #000 !important;
+  box-sizing:border-box !important;
+  display:flex !important;
+  align-items:center !important;
+  gap:16px !important;
+}
+body > header > div:first-child{
+  display:flex !important;
+  align-items:center !important;
+  gap:16px !important;
+  min-width:0 !important;
+}
+body > header .logo{
+  width:74px !important;
+  height:74px !important;
+  min-width:74px !important;
+  flex:0 0 74px !important;
+  border:2px solid #facc15 !important;
+  border-radius:18px !important;
+  background:#000 !important;
+  box-shadow:3px 3px 0 #000 !important;
+  overflow:hidden !important;
+}
+body > header .logo img{
+  width:100% !important;
+  height:100% !important;
+  object-fit:contain !important;
+  background:#000 !important;
+}
+body > header #namaToko{
+  font-size:28px !important;
+  line-height:1.05 !important;
+  font-weight:900 !important;
+  color:#fff !important;
+}
+body > header #roleSide{
+  background:#16a34a !important;
+  color:#fff !important;
+  padding:7px 12px !important;
+  border-radius:18px !important;
+  font-size:12px !important;
+  font-weight:900 !important;
+  line-height:1 !important;
+}
+body > header #akunSide{
+  font-size:18px !important;
+  line-height:1.1 !important;
+  font-weight:700 !important;
+  max-width:420px !important;
+  margin-top:6px !important;
+  opacity:.92 !important;
+}
+body > header > div:nth-child(2){flex:1 !important}
+body > header button[onclick="refreshHalaman()"]{
+  background:#16263b !important;
+  color:#fff !important;
+  border:2px solid #30445b !important;
+  border-radius:18px !important;
+  box-shadow:none !important;
+  min-width:150px !important;
+  height:60px !important;
+  padding:12px 24px !important;
+  font-size:23px !important;
+  font-weight:900 !important;
+}
+body > header #btnDark{
+  width:66px !important;
+  min-width:66px !important;
+  height:60px !important;
+  margin-left:0 !important;
+  padding:0 !important;
+  background:#16263b !important;
+  color:#fff !important;
+  border:2px solid #30445b !important;
+  border-radius:18px !important;
+  box-shadow:none !important;
+  font-size:30px !important;
+}
+
+/* ===== HEADER 1 / INFORMASI TRANSAKSI — SAMA DENGAN INPUT SERVIS ===== */
+.info-transaksi-card{
+  padding:24px !important;
+  border:2px solid #111827 !important;
+  border-radius:18px !important;
+  box-shadow:6px 6px 0 #111827 !important;
+  background:#fff !important;
+}
+.info-transaksi-title{
+  font-size:30px !important;
+  font-weight:900 !important;
+  color:#111827 !important;
+  margin:0 0 18px !important;
+  padding:0 0 16px !important;
+  border-bottom:2px solid #111827 !important;
+  line-height:1.15 !important;
+}
+.info-transaksi-box{
+  border:2px solid #111827 !important;
+  border-radius:18px !important;
+  overflow:hidden !important;
+  box-shadow:5px 5px 0 #111827 !important;
+  background:#fff !important;
+}
+.info-transaksi-row{
+  min-height:68px !important;
+  display:grid !important;
+  grid-template-columns:240px minmax(0,1fr) !important;
+  align-items:center !important;
+  gap:14px !important;
+  padding:0 22px !important;
+  border-bottom:1px solid #e5e7eb !important;
+  box-sizing:border-box !important;
+}
+.info-transaksi-row:last-child{border-bottom:0 !important}
+.info-transaksi-label{
+  color:#64748b !important;
+  font-size:21px !important;
+  font-weight:800 !important;
+}
+.info-transaksi-value{
+  min-width:0 !important;
+  text-align:right !important;
+  font-size:21px !important;
+  font-weight:900 !important;
+  color:#111827 !important;
+}
+.info-transaksi-value input{
+  width:100% !important;
+  padding:0 !important;
+  margin:0 !important;
+  border:0 !important;
+  box-shadow:none !important;
+  border-radius:0 !important;
+  background:transparent !important;
+  color:#111827 !important;
+  font-size:21px !important;
+  font-weight:900 !important;
+  text-align:right !important;
+  outline:none !important;
+}
+.info-transaksi-hidden-tech{display:none !important}
+
+@media(max-width:700px){
+  body > header{
+    min-height:82px !important;
+    padding:9px 12px !important;
+    gap:10px !important;
+  }
+  body > header > div:first-child{gap:10px !important}
+  body > header .logo{
+    width:64px !important;height:64px !important;
+    min-width:64px !important;flex-basis:64px !important;
+    border-radius:16px !important;
+  }
+  body > header #namaToko{font-size:21px !important}
+  body > header #roleSide{font-size:10px !important;padding:5px 9px !important}
+  body > header #akunSide{
+    font-size:13px !important;
+    max-width:210px !important;
+    margin-top:4px !important;
+  }
+  body > header button[onclick="refreshHalaman()"]{
+    width:112px !important;min-width:112px !important;
+    height:54px !important;padding:9px 12px !important;
+    font-size:18px !important;border-radius:15px !important;
+  }
+  body > header #btnDark{
+    width:56px !important;min-width:56px !important;
+    height:54px !important;border-radius:15px !important;
+    font-size:25px !important;
+  }
+  .info-transaksi-card{padding:16px !important}
+  .info-transaksi-title{
+    font-size:25px !important;
+    margin-bottom:15px !important;
+    padding-bottom:12px !important;
+  }
+  .info-transaksi-box{
+    border-radius:15px !important;
+    box-shadow:4px 4px 0 #111827 !important;
+  }
+  .info-transaksi-row{
+    min-height:58px !important;
+    grid-template-columns:115px minmax(0,1fr) !important;
+    gap:8px !important;
+    padding:0 14px !important;
+  }
+  .info-transaksi-label{font-size:17px !important}
+  .info-transaksi-value,
+  .info-transaksi-value input{font-size:17px !important}
+}
+@media(max-width:430px){
+  body > header .logo{
+    width:58px !important;height:58px !important;
+    min-width:58px !important;flex-basis:58px !important;
+  }
+  body > header #namaToko{font-size:18px !important}
+  body > header #akunSide{font-size:11px !important;max-width:155px !important}
+  body > header button[onclick="refreshHalaman()"]{
+    width:88px !important;min-width:88px !important;font-size:15px !important;
+  }
+  body > header #btnDark{
+    width:48px !important;min-width:48px !important;
+    height:48px !important;font-size:21px !important;
+  }
+  .info-transaksi-title{font-size:22px !important}
+  .info-transaksi-row{
+    grid-template-columns:92px minmax(0,1fr) !important;
+    padding:0 11px !important;
+  }
+  .info-transaksi-label{font-size:15px !important}
+  .info-transaksi-value,
+  .info-transaksi-value input{font-size:15px !important}
+}
+</style>
+
 </head>
 <body>
 <header>
@@ -1128,53 +1404,32 @@ body.dark .pelanggan-group-card,body.dark .pelanggan-group-body{
 
 <div class="card info-transaksi-card">
   <div class="info-transaksi-title">1. Informasi Transaksi</div>
-
   <div class="info-transaksi-box">
     <div class="info-transaksi-row">
       <div class="info-transaksi-label">Akun</div>
-      <div class="info-transaksi-value">
-        <input id="akunLoginField" readonly value="">
-      </div>
+      <div class="info-transaksi-value"><input id="akunLoginField" readonly value=""></div>
     </div>
-
     <div class="info-transaksi-row">
       <div class="info-transaksi-label">Usaha</div>
-      <div class="info-transaksi-value">
-        <input id="konterField" readonly value="">
-      </div>
+      <div class="info-transaksi-value"><input id="konterField" readonly value=""></div>
     </div>
-
     <div class="info-transaksi-row">
       <div class="info-transaksi-label">Nomor Nota</div>
-      <div class="info-transaksi-value">
-        <input id="notaField" readonly value="">
-      </div>
+      <div class="info-transaksi-value"><input id="notaField" readonly value=""></div>
     </div>
-
     <div class="info-transaksi-row">
       <div class="info-transaksi-label">Tanggal</div>
-      <div class="info-transaksi-value">
-        <input id="tanggalField" type="date">
-      </div>
+      <div class="info-transaksi-value"><input id="tanggalField" type="date"></div>
     </div>
-
     <div class="info-transaksi-row">
       <div class="info-transaksi-label">Barcode</div>
-      <div class="info-transaksi-value">
-        <input id="barcodeField" readonly value="">
-      </div>
+      <div class="info-transaksi-value"><input id="barcodeField" readonly value=""></div>
     </div>
   </div>
-
-  <!-- Tetap dipertahankan untuk kebutuhan penyimpanan transaksi.
-       Tidak ditampilkan di header agar tampilan sama seperti Input Servis. -->
   <div class="info-transaksi-hidden-tech">
-    <select id="teknisiSelect">
-      <option>Memuat karyawan...</option>
-    </select>
+    <select id="teknisiSelect"><option>Memuat karyawan...</option></select>
   </div>
 </div>
-
 
 <div class="card pelanggan-group-card">
   <div class="card-header pelanggan-group-title">
