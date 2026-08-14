@@ -24,11 +24,15 @@
 </style>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Data Penjualan Asli - A YUDI THEA</title>
+<title>Data Penjualan RAPI - A YUDI THEA</title>
 <script>tailwind = {config:{darkMode:'class'}}</script>
 <script src="https://cdn.tailwindcss.com"></script>
 <script>tailwind.config={darkMode:'class'}</script>
-<style>*{transition:background-color .25s, color .2s, border-color .25s}</style>
+<style>
+*{transition:background-color .2s, color .15s, border-color .2s}
+.scrollbar-hide::-webkit-scrollbar{display:none}
+.scrollbar-hide{-ms-overflow-style:none; scrollbar-width:none}
+</style>
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
@@ -73,51 +77,38 @@ async function loadUserRole(){
   document.getElementById('userEmail').innerText=currentUser.email||'';
   if(!isOwner) document.querySelectorAll('.ownerOnly').forEach(el=>el.style.display='none');
 }
-
 function isContoh(d){
   const nama = (d.nama||d.namaPelanggan||'').trim();
   const id = (d.idTransaksi||'').toString();
-  const contohNames = ["Andi Wijaya","Siti Aminah","Budi Santoso"];
-  return id.startsWith('JUAL-17866') || id.startsWith('JUAL-20260813') || contohNames.includes(nama);
+  return id.startsWith('JUAL-17866') || id.startsWith('JUAL-20260813') || ["Andi Wijaya","Siti Aminah","Budi Santoso"].includes(nama);
 }
-
-// FUNGSI PINTAR - ambil data sesuai inputan apapun nama field nya
 function getNama(d){
-  return d.nama || d.namaPelanggan || d.nama_pelanggan || d.pelanggan || d.customer || d.namaCustomer || d.customerName || d.client || d.namaClient || d.pembeli || d.namaPembeli || d.nama_pembeli || d.buyer || d.namaBuyer || d.konsumen || d.namaKonsumen || d.pelangganNama || d.namaPelangganLengkap || '' ;
+  return d.nama || d.namaPelanggan || d.pelanggan || d.customer || d.namaCustomer || d.customerName || d.pembeli || d.konsumen || d.buyer || '' ;
 }
+function getNoHp(d){ return d.noHp || d.nohp || d.phone || d.telp || d.hp || ''; }
 function getProduk(d){
-  // produk bisa string, bisa array, bisa object
-  let p = d.produk || d.namaProduk || d.produkName || d.barang || d.item || d.items || d.tipe || d.tipeHp || d.device || d.merk || d.namaBarang || d.product || d.productName || d.jenisProduk || '';
-  if(Array.isArray(p)){ // kalau array produk
-    return p.map(x=> x.nama||x.produk||x.name||'').join(', ') || p.length+' item';
-  }
-  if(typeof p === 'object' && p!==null){ return p.nama||p.produk||p.name||JSON.stringify(p).slice(0,30); }
-  return p || '';
+  let p = d.produk || d.namaProduk || d.barang || d.item || d.items || d.product || d.productName || d.jenisProduk || '';
+  if(Array.isArray(p)) return p.map(x=>x.nama||x.produk||x.name||'').join(', ');
+  if(typeof p==='object' && p!==null) return p.nama||p.produk||'';
+  return p||'';
 }
-function getImei(d){ return d.imei || d.IMEI || d.sn || d.serial || d.serialNumber || ''; }
-function getJual(d){
-  // ini yang bikin di screenshot 990.000 keluar - coba semua kemungkinan
-  return Number(d.hargaJual || d.total || d.jual || d.harga || d.nominal || d.jumlah || d.totalBayar || d.totalHarga || d.grandTotal || d.totalJual || d.hargaTotal || d.biaya || d.totalBiaya || 0);
-}
-function getBeli(d){ return Number(d.hargaBeli || d.modal || d.hargaModal || d.beli || d.hargaBeliTotal || 0); }
+function getImei(d){ return d.imei || d.IMEI || d.sn || ''; }
+function getJual(d){ return Number(d.hargaJual || d.total || d.jual || d.harga || d.nominal || d.grandTotal || d.biaya || 0); }
+function getBeli(d){ return Number(d.hargaBeli || d.modal || d.beli || 0); }
 function getLaba(d){
-  const jual = getJual(d);
-  const beli = getBeli(d);
-  if(d.laba!==undefined && d.laba!==null && d.laba!=='' ) return Number(d.laba);
-  if(d.profit!==undefined) return Number(d.profit);
-  if(d.keuntungan!==undefined) return Number(d.keuntungan);
-  // kalau beli 0, laba = jual (sesuai data di screenshot)
+  const jual=getJual(d); const beli=getBeli(d);
+  if(d.laba!=='' && d.laba!=null) return Number(d.laba);
   if(beli===0) return jual;
-  return jual - beli;
+  return jual-beli;
 }
-function getStatus(d){
-  return d.status || d.statusBayar || d.statusPembayaran || d.metodeBayar || d.metode || d.pembayaran || d.statusTransaksi || 'selesai';
-}
+function getStatus(d){ return (d.status || d.statusBayar || d.metodeBayar || 'selesai').toString().toLowerCase(); }
 
 async function loadRealData(){
   const tbody=document.getElementById('tbody');
+  const cardList=document.getElementById('cardList');
   const errBox=document.getElementById('errorBox');
-  tbody.innerHTML=`<tr><td colspan="7" class="p-8 text-center text-gray-400 dark:text-gray-500">Mengambil data asli sesuai inputan...</td></tr>`;
+  tbody.innerHTML=`<tr><td colspan="8" class="p-8 text-center text-gray-400 dark:text-gray-500">Memuat data asli...</td></tr>`;
+  cardList.innerHTML=`<div class="p-8 text-center text-gray-400 dark:text-gray-500">Memuat data asli...</div>`;
   errBox.classList.add('hidden');
   try{
     const ownerIdToQuery = isOwner ? currentUser.uid : ownerUid;
@@ -130,64 +121,115 @@ async function loadRealData(){
       let s3 = await getDocs(query(collection(db,"penjualan"), where("uid","==", ownerIdToQuery)));
       if(!s3.empty) snap=s3;
     }
-
     if(snap.empty){
-      tbody.innerHTML=`<tr><td colspan="7" class="p-10 text-center text-gray-500 dark:text-gray-400">Belum ada data penjualan<br><span class="text-[11px]">Input penjualan baru akan otomatis muncul di sini sesuai inputan</span></td></tr>`;
+      tbody.innerHTML=`<tr><td colspan="8" class="p-10 text-center text-gray-500 dark:text-gray-400">Belum ada data</td></tr>`;
+      cardList.innerHTML=`<div class="p-10 text-center text-gray-500 dark:text-gray-400">Belum ada data penjualan asli</div>`;
       setRingkasan(0,0,0,0,0);
       realDocsCache=[];
       return;
     }
-
     let allDocs = snap.docs.map(d=>({id:d.id, ...d.data()}));
-    // debug: log field pertama biar tau struktur asli
-    if(allDocs.length>0){ console.log("CONTOH DATA REAL FIREBASE:", allDocs[0]); console.log("KEYS:", Object.keys(allDocs[0])); }
-
     let realDocs = allDocs.filter(d=>!isContoh(d));
-    realDocs.sort((a,b)=> new Date(b.tanggal||b.createdAt||b.tanggalMasuk||0) - new Date(a.tanggal||a.createdAt||a.tanggalMasuk||0));
-    realDocsCache = realDocs;
+    realDocs.sort((a,b)=> new Date(b.tanggal||b.createdAt||0) - new Date(a.tanggal||a.createdAt||0));
+    realDocsCache=realDocs;
 
     if(realDocs.length===0){
-      tbody.innerHTML=`<tr><td colspan="7" class="p-10 text-center"><div class="font-bold dark:text-white">Belum ada data asli</div><div class="text-[11px] text-gray-400 mt-1">Contoh sudah dibuang. Silakan input baru.</div></td></tr>`;
+      tbody.innerHTML=`<tr><td colspan="8" class="p-10 text-center text-gray-500">Belum ada data asli</td></tr>`;
+      cardList.innerHTML=`<div class="p-10 text-center text-gray-500">Belum ada data asli</div>`;
       setRingkasan(0,0,0,0,0);
       return;
     }
 
-    let totalOmset=0, totalLaba=0, omsetHariIni=0, labaHariIni=0;
-    const todayStr = new Date().toISOString().slice(0,10);
-
+    let totalOmset=0,totalLaba=0,omsetHariIni=0,labaHariIni=0;
+    const todayStr=new Date().toISOString().slice(0,10);
     tbody.innerHTML='';
+    cardList.innerHTML='';
+
     realDocs.forEach(d=>{
-      const nama = getNama(d) || '-';
-      const produk = getProduk(d) || '-';
-      const imei = getImei(d);
-      const jual = getJual(d);
-      const laba = getLaba(d);
-      const status = getStatus(d);
+      const nama=getNama(d)||'-';
+      const nohp=getNoHp(d);
+      const produk=getProduk(d)||'-';
+      const imei=getImei(d);
+      const jual=getJual(d);
+      const laba=getLaba(d);
+      const status=getStatus(d);
+      const karyawan=d.karyawanEmail||d.teknisi||'-';
+      if(status!=='batal'){ totalOmset+=jual; totalLaba+=laba; }
+      const tglStr=(d.tanggal||'').toString().slice(0,10);
+      if(tglStr===todayStr && status!=='batal'){ omsetHariIni+=jual; labaHariIni+=laba; }
 
-      if((status||'').toLowerCase()!=='batal'){ totalOmset+=jual; totalLaba+=laba; }
-      const tglStr = (d.tanggal||d.tanggalMasuk||d.createdAt||'').toString().slice(0,10);
-      if(tglStr===todayStr && (status||'').toLowerCase()!=='batal'){ omsetHariIni+=jual; labaHariIni+=laba; }
+      const badgeClass = status==='batal'?'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300': status==='tagihan'?'bg-amber-100 text-amber-700 dark:bg-amber-900/30': status==='tunai'||status==='dibayar'?'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300':'bg-blue-100 text-blue-700 dark:bg-blue-900/30';
+      const statusBadge = `<span class="px-2.5 py-1 rounded-full text-[10px] font-bold ${badgeClass}">${status.toUpperCase()}</span>`;
 
+      // DESKTOP TABLE ROW - RAPIH
       const tr=document.createElement('tr');
-      tr.className='border-b dark:border-white/10 hover:bg-gray-50 dark:hover:bg-white/5';
+      tr.className='border-b dark:border-white/5 hover:bg-gray-50/80 dark:hover:bg-white/[0.03]';
       tr.innerHTML=`
-        <td class="p-3 text-[11px] dark:text-gray-300 leading-tight">${(d.tanggal||d.tanggalMasuk||'').toString().slice(0,16)}<br><span class="text-[10px] text-gray-400">${d.idTransaksi||d.id.slice(0,8)}</span></td>
-        <td class="p-3 text-sm dark:text-gray-200">
-          <span class="font-medium text-[#0f1d33] dark:text-white">${nama}</span><br>
-          <span class="text-[12px] text-gray-700 dark:text-gray-300">${produk}</span>
-          ${imei?`<br><span class="text-[10px] text-gray-400">IMEI: ${imei}</span>`:''}
+        <td class="p-3 whitespace-nowrap"><div class="text-[11px] font-medium dark:text-gray-200">${(d.tanggal||'').toString().slice(0,16)}</div><div class="text-[10px] text-gray-400">${d.idTransaksi||d.id.slice(0,8)}</div></td>
+        <td class="p-3"><div class="font-semibold text-[13px] dark:text-white leading-tight">${nama}</div><div class="text-[11px] text-gray-500 dark:text-gray-400">${nohp}</div></td>
+        <td class="p-3"><div class="text-[13px] dark:text-gray-200 leading-tight">${produk}</div>${imei?`<div class="text-[10px] text-gray-400">${imei}</div>`:''}</td>
+        <td class="p-3 text-right whitespace-nowrap"><div class="font-bold text-[13px] dark:text-white">Rp ${jual.toLocaleString('id-ID')}</div></td>
+        <td class="p-3 text-right whitespace-nowrap"><div class="font-bold text-[13px] text-green-600 dark:text-green-400">Rp ${laba.toLocaleString('id-ID')}</div></td>
+        <td class="p-3">${statusBadge}</td>
+        <td class="p-3 text-[11px] dark:text-gray-300">${karyawan}</td>
+        <td class="p-3">
+          <div class="relative">
+            <button onclick="toggleDropdown('dd-${d.id}')" class="h-8 w-8 flex items-center justify-center bg-[#0f1d33] dark:bg-white dark:text-black text-white rounded-lg text-xs">⋮</button>
+            <div id="dd-${d.id}" class="hidden absolute right-0 mt-2 w-44 bg-white dark:bg-[#0f1d33] border border-gray-200 dark:border-white/10 rounded-xl shadow-xl z-30 overflow-hidden">
+              <button onclick="editJual('${d.id}'); closeAllDropdowns()" class="w-full text-left px-4 py-2.5 text-[12px] hover:bg-gray-50 dark:hover:bg-white/5 dark:text-white">✏️ Edit</button>
+              <button onclick="hapusJual('${d.id}'); closeAllDropdowns()" class="ownerOnly w-full text-left px-4 py-2.5 text-[12px] hover:bg-red-50 dark:hover:bg-red-900/20 text-red-600">🗑 Hapus</button>
+              <div class="h-px bg-gray-100 dark:bg-white/10 my-1"></div>
+              <div class="px-3 py-1 text-[10px] font-bold text-gray-400 uppercase">Status</div>
+              <button onclick="updateStatusJual('${d.id}','masuk'); closeAllDropdowns()" class="w-full text-left px-4 py-2 text-[12px] hover:bg-gray-50 dark:hover:bg-white/5 dark:text-white">📥 Masuk</button>
+              <button onclick="updateStatusJual('${d.id}','tagihan'); closeAllDropdowns()" class="w-full text-left px-4 py-2 text-[12px] hover:bg-gray-50 dark:hover:bg-white/5 dark:text-white">🧾 Tagihan</button>
+              <button onclick="updateStatusJual('${d.id}','tunai'); closeAllDropdowns()" class="w-full text-left px-4 py-2 text-[12px] hover:bg-gray-50 dark:hover:bg-white/5 dark:text-white">💵 Tunai</button>
+              <button onclick="updateStatusJual('${d.id}','dibayar'); closeAllDropdowns()" class="w-full text-left px-4 py-2 text-[12px] hover:bg-gray-50 dark:hover:bg-white/5 dark:text-white">✅ Dibayar</button>
+              <button onclick="batalJual('${d.id}'); closeAllDropdowns()" class="ownerOnly w-full text-left px-4 py-2 text-[12px] hover:bg-amber-50 dark:hover:bg-white/5 text-amber-600">❌ Batal</button>
+            </div>
+          </div>
         </td>
-        <td class="p-3 text-sm text-right font-bold dark:text-white">Rp ${jual.toLocaleString('id-ID')}</td>
-        <td class="p-3 text-sm text-right text-green-600 dark:text-green-400 font-bold">Rp ${laba.toLocaleString('id-ID')}</td>
-        <td class="p-3 text-[11px]"><span class="px-2.5 py-1 rounded-full text-[10px] font-bold ${ String(status).toLowerCase()==='batal'?'bg-red-100 text-red-700 dark:bg-red-900/30':'bg-green-100 text-green-700 dark:bg-green-900/30'}">${String(status).toUpperCase()}</span></td>
-        <td class="p-3 text-[11px] dark:text-gray-300">${d.karyawanEmail||d.teknisi||'-'}</td>
-        <td class="p-3"><div class="flex gap-1"><button onclick="batalJual('${d.id}')" class="ownerOnly px-2.5 py-1 bg-amber-500 text-white rounded-lg text-[11px]">Batal</button><button onclick="hapusJual('${d.id}')" class="ownerOnly px-2.5 py-1 bg-red-600 text-white rounded-lg text-[11px]">Hapus</button></div></td>
       `;
       tbody.appendChild(tr);
+
+      // MOBILE CARD - RAPIH
+      const card=document.createElement('div');
+      card.className='bg-white dark:bg-[#162544] rounded-2xl border border-gray-100 dark:border-white/10 p-4 shadow-sm';
+      card.innerHTML=`
+        <div class="flex justify-between items-start mb-2">
+          <div><div class="text-[11px] text-gray-400">${(d.tanggal||'').toString().slice(0,16)} • ${d.idTransaksi||d.id.slice(0,8)}</div><div class="font-bold text-[14px] dark:text-white mt-0.5">${nama}</div><div class="text-[11px] text-gray-500">${nohp}</div></div>
+          <div>${statusBadge}</div>
+        </div>
+        <div class="bg-[#f8f9fc] dark:bg-black/20 rounded-xl p-3 mb-3">
+          <div class="text-[11px] text-gray-400 uppercase font-bold">Produk</div>
+          <div class="text-[13px] font-medium dark:text-white">${produk}</div>
+          ${imei?`<div class="text-[10px] text-gray-400 mt-1">IMEI: ${imei}</div>`:''}
+          <div class="grid grid-cols-2 gap-3 mt-3">
+            <div><div class="text-[10px] text-gray-400">JUAL</div><div class="font-bold text-[14px] dark:text-white">Rp ${jual.toLocaleString('id-ID')}</div></div>
+            <div><div class="text-[10px] text-gray-400">LABA</div><div class="font-bold text-[14px] text-green-600">Rp ${laba.toLocaleString('id-ID')}</div></div>
+          </div>
+        </div>
+        <div class="flex justify-between items-center">
+          <div class="text-[11px] text-gray-400">Karyawan: <span class="text-gray-700 dark:text-gray-300 font-medium">${karyawan}</span></div>
+          <div class="relative">
+            <button onclick="toggleDropdown('m-${d.id}')" class="px-3 py-1.5 bg-[#0f1d33] dark:bg-white dark:text-black text-white rounded-lg text-[11px] font-bold">Aksi ▾</button>
+            <div id="m-${d.id}" class="hidden absolute right-0 bottom-full mb-2 w-44 bg-white dark:bg-[#0f1d33] border border-gray-200 dark:border-white/10 rounded-xl shadow-xl z-30 overflow-hidden">
+              <button onclick="editJual('${d.id}'); closeAllDropdowns()" class="w-full text-left px-4 py-2.5 text-[12px] hover:bg-gray-50 dark:hover:bg-white/5 dark:text-white">✏️ Edit</button>
+              <button onclick="hapusJual('${d.id}'); closeAllDropdowns()" class="ownerOnly w-full text-left px-4 py-2.5 text-[12px] hover:bg-red-50 text-red-600">🗑 Hapus</button>
+              <div class="h-px bg-gray-100 dark:bg-white/10 my-1"></div>
+              <button onclick="updateStatusJual('${d.id}','masuk'); closeAllDropdowns()" class="w-full text-left px-4 py-2 text-[12px] hover:bg-gray-50 dark:hover:bg-white/5 dark:text-white">📥 Masuk</button>
+              <button onclick="updateStatusJual('${d.id}','tagihan'); closeAllDropdowns()" class="w-full text-left px-4 py-2 text-[12px] hover:bg-gray-50 dark:hover:bg-white/5 dark:text-white">🧾 Tagihan</button>
+              <button onclick="updateStatusJual('${d.id}','tunai'); closeAllDropdowns()" class="w-full text-left px-4 py-2 text-[12px] hover:bg-gray-50 dark:hover:bg-white/5 dark:text-white">💵 Tunai</button>
+              <button onclick="updateStatusJual('${d.id}','dibayar'); closeAllDropdowns()" class="w-full text-left px-4 py-2 text-[12px] hover:bg-gray-50 dark:hover:bg-white/5 dark:text-white">✅ Dibayar</button>
+              <button onclick="batalJual('${d.id}'); closeAllDropdowns()" class="ownerOnly w-full text-left px-4 py-2 text-[12px] text-amber-600">❌ Batal</button>
+            </div>
+          </div>
+        </div>
+      `;
+      cardList.appendChild(card);
     });
 
     setRingkasan(totalOmset, totalLaba, realDocs.length, omsetHariIni, labaHariIni);
-    document.getElementById('countInfo').innerText = `${realDocs.length} data asli sesuai inputan`;
+    document.getElementById('countInfo').innerText = `${realDocs.length} transaksi asli - rapi`;
 
   }catch(e){
     errBox.classList.remove('hidden');
@@ -204,27 +246,70 @@ function setRingkasan(omset, laba, jml, omsetHariIni, labaHariIni){
   document.getElementById('avgTransaksi').innerText=jml>0?'Rp '+Math.round(omset/jml).toLocaleString('id-ID'):'Rp 0';
 }
 
-window.hapusJual=async(id)=>{ if(!isOwner){alert("Hanya owner");return;} if(!confirm("Hapus?")) return; await deleteDoc(doc(db,"penjualan",id)); loadRealData(); }
-window.batalJual=async(id)=>{ if(!isOwner){alert("Hanya owner");return;} if(!confirm("Batalkan?")) return; await updateDoc(doc(db,"penjualan",id), {status:"batal"}); loadRealData(); }
-window.refreshData=()=>loadRealData();
-window.exportReal=()=>{
-  if(realDocsCache.length===0){ alert("Tidak ada data asli"); return; }
-  const data = realDocsCache.map(d=>({Tanggal:d.tanggal||d.tanggalMasuk||'', ID:d.idTransaksi||d.id, Nama:getNama(d), Produk:getProduk(d), IMEI:getImei(d), Jual:getJual(d), Laba:getLaba(d), Status:getStatus(d), Karyawan:d.karyawanEmail||''}));
-  const ws = XLSX.utils.json_to_sheet(data);
-  const wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, ws, "ASLI"); XLSX.writeFile(wb, `Penjualan-ASLI-${new Date().toISOString().slice(0,10)}.xlsx`);
+window.toggleDropdown=(id)=>{
+  const el=document.getElementById(id);
+  const isHidden=el.classList.contains('hidden');
+  closeAllDropdowns();
+  if(isHidden) el.classList.remove('hidden');
 }
+window.closeAllDropdowns=()=>{ document.querySelectorAll('[id^="dd-"],[id^="m-"]').forEach(e=>e.classList.add('hidden')); }
+document.addEventListener('click', (e)=>{
+  if(!e.target.closest('[id^="dd-"]') && !e.target.closest('[id^="m-"]') && !e.target.closest('button[onclick^="toggleDropdown"]')){
+    closeAllDropdowns();
+  }
+});
+
+window.hapusJual=async(id)=>{ if(!isOwner){alert("Hanya owner");return;} if(!confirm("Hapus data ini?")) return; await deleteDoc(doc(db,"penjualan",id)); loadRealData(); }
+window.batalJual=async(id)=>{ if(!isOwner){alert("Hanya owner");return;} if(!confirm("Batalkan?")) return; await updateDoc(doc(db,"penjualan",id), {status:"batal"}); loadRealData(); }
+window.updateStatusJual=async(id, newStatus)=>{
+  if(newStatus==='batal' && !isOwner){ alert("Hanya owner bisa batal"); return; }
+  try{ await updateDoc(doc(db,"penjualan",id), {status:newStatus}); loadRealData(); }catch(e){ alert(e.message); }
+}
+window.editJual=(id)=>{
+  const d=realDocsCache.find(x=>x.id===id);
+  if(!d) return;
+  document.getElementById('editId').value=d.id;
+  document.getElementById('editNama').value=getNama(d);
+  document.getElementById('editNoHp').value=getNoHp(d);
+  document.getElementById('editProduk').value=getProduk(d);
+  document.getElementById('editImei').value=getImei(d);
+  document.getElementById('editJual').value=getJual(d);
+  document.getElementById('editBeli').value=getBeli(d);
+  document.getElementById('editModal').classList.remove('hidden');
+}
+window.closeEditModal=()=>{ document.getElementById('editModal').classList.add('hidden'); }
+
+document.addEventListener('DOMContentLoaded', ()=>{
+  const form=document.getElementById('editForm');
+  form.addEventListener('submit', async (e)=>{
+    e.preventDefault();
+    const id=document.getElementById('editId').value;
+    try{
+      await updateDoc(doc(db,"penjualan",id), {
+        nama:document.getElementById('editNama').value,
+        noHp:document.getElementById('editNoHp').value,
+        produk:document.getElementById('editProduk').value,
+        imei:document.getElementById('editImei').value,
+        hargaJual:Number(document.getElementById('editJual').value||0),
+        hargaBeli:Number(document.getElementById('editBeli').value||0),
+        laba:Number(document.getElementById('editJual').value||0)-Number(document.getElementById('editBeli').value||0),
+        updatedAt:new Date().toISOString()
+      });
+      closeEditModal(); loadRealData();
+    }catch(err){ alert(err.message); }
+  });
+});
+
+window.refreshData=()=>loadRealData();
 </script>
 </head>
 <body class="bg-[#f6f7fb] dark:bg-[#070e1f] min-h-screen">
-<!-- HEADER HITAM + LOGO BACKGROUND HITAM -->
-<header class="bg-[#0f1d33] dark:bg-black text-white px-4 sm:px-6 py-3.5 flex justify-between items-center sticky top-0 z-30 border-b border-white/5">
+<header class="bg-[#0f1d33] dark:bg-black text-white px-4 sm:px-6 py-3.5 flex justify-between items-center sticky top-0 z-40 border-b border-white/5">
   <div class="flex items-center gap-3">
-    <!-- LOGO BACKGROUND HITAM - sesuai request -->
     <div class="h-9 w-9 bg-black rounded-xl flex items-center justify-center border border-white/10 overflow-hidden">
-      <img src="logo.png" class="h-7 w-auto object-contain" onerror="this.style.display='none'; document.getElementById('logoFallback').style.display='flex'" style="background:black;">
-      <div id="logoFallback" style="display:none" class="font-black text-[14px]">F</div>
+      <img src="logo.png" class="h-7 w-auto object-contain" onerror="this.style.display='none'" style="background:black;">
     </div>
-    <div class="leading-tight"><p class="font-bold text-[15px] tracking-wide">limudahkan</p><p class="text-[11px] opacity-70 -mt-0.5">Fixzy System</p></div>
+    <div class="leading-tight"><p class="font-bold text-[15px] tracking-wide">limudahkan</p><p class="text-[11px] opacity-60 -mt-0.5">Fixzy System</p></div>
   </div>
   <div class="flex items-center gap-3">
     <button id="darkToggle" class="w-9 h-9 rounded-xl bg-white/10 hover:bg-white/20 flex items-center justify-center">🌙</button>
@@ -233,23 +318,50 @@ window.exportReal=()=>{
 </header>
 
 <div class="max-w-7xl mx-auto p-4 sm:p-6">
-  <div class="flex flex-wrap justify-between items-center gap-2 mb-3">
-    <div><h1 class="text-[22px] font-extrabold dark:text-white">Data Penjualan Asli</h1><p id="countInfo" class="text-[11px] text-gray-500 dark:text-gray-400">Data sesuai inputan, logo background hitam</p></div>
-    <div class="flex gap-2"><button onclick="exportReal()" class="px-4 py-2 bg-green-600 text-white rounded-xl text-xs font-bold">⬇ Export</button><button onclick="refreshData()" class="px-3 py-2 bg-white dark:bg-white/10 dark:text-white border dark:border-white/10 rounded-xl text-xs">🔄</button></div>
+  <div class="flex flex-wrap justify-between items-center gap-2 mb-4">
+    <div><h1 class="text-[20px] font-extrabold dark:text-white">Data Penjualan Asli</h1><p id="countInfo" class="text-[11px] text-gray-500 dark:text-gray-400">Rapi: Nama pelanggan terpisah, aksi dropdown</p></div>
+    <button onclick="refreshData()" class="px-3 py-2 bg-white dark:bg-white/10 dark:text-white border dark:border-white/10 rounded-xl text-xs">🔄 Refresh</button>
   </div>
 
-  <div id="errorBox" class="hidden bg-red-50 dark:bg-red-900/20 border p-3 rounded-xl text-sm mb-3"></div>
+  <div id="errorBox" class="hidden bg-red-50 dark:bg-red-900/20 border p-3 rounded-xl text-sm mb-4"></div>
 
-  <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-4">
-    <div class="bg-white dark:bg-[#162544] p-4 rounded-2xl border dark:border-white/10"><p class="text-[11px] text-gray-500 dark:text-gray-400 uppercase font-semibold">Omset Asli</p><p id="totalOmset" class="text-[20px] font-extrabold dark:text-white">Rp 0</p></div>
-    <div class="bg-white dark:bg-[#162544] p-4 rounded-2xl border dark:border-white/10"><p class="text-[11px] text-gray-500 dark:text-gray-400 uppercase font-semibold">Laba Asli</p><p id="totalLaba" class="text-[20px] font-extrabold text-green-600 dark:text-green-400">Rp 0</p></div>
-    <div class="bg-white dark:bg-[#162544] p-4 rounded-2xl border dark:border-white/10"><p class="text-[11px] text-gray-500 dark:text-gray-400 uppercase font-semibold">Hari Ini</p><p id="omsetHariIni" class="text-[18px] font-bold dark:text-white">Rp 0</p><p id="labaHariIni" class="text-[11px] text-green-600"></p></div>
-    <div class="bg-[#0f1d33] dark:bg-black p-4 rounded-2xl text-white border dark:border-white/10"><p class="text-[11px] opacity-60 uppercase">Transaksi Asli</p><p class="mt-1"><span id="totalTransaksi" class="text-[20px] font-extrabold">0</span> trx</p><p id="avgTransaksi" class="text-[12px] opacity-80 mt-1">Rp 0</p></div>
+  <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-5">
+    <div class="bg-white dark:bg-[#162544] p-4 rounded-2xl border border-gray-100 dark:border-white/10"><p class="text-[10px] text-gray-400 uppercase font-bold">Omset Asli</p><p id="totalOmset" class="text-[18px] font-extrabold dark:text-white mt-1">Rp 0</p></div>
+    <div class="bg-white dark:bg-[#162544] p-4 rounded-2xl border border-gray-100 dark:border-white/10"><p class="text-[10px] text-gray-400 uppercase font-bold">Laba Asli</p><p id="totalLaba" class="text-[18px] font-extrabold text-green-600 dark:text-green-400 mt-1">Rp 0</p></div>
+    <div class="bg-white dark:bg-[#162544] p-4 rounded-2xl border border-gray-100 dark:border-white/10"><p class="text-[10px] text-gray-400 uppercase font-bold">Hari Ini</p><p id="omsetHariIni" class="text-[16px] font-bold dark:text-white mt-1">Rp 0</p><p id="labaHariIni" class="text-[11px] text-green-600"></p></div>
+    <div class="bg-[#0f1d33] dark:bg-black p-4 rounded-2xl text-white border border-white/5"><p class="text-[10px] opacity-60 uppercase font-bold">Transaksi</p><p class="mt-1"><span id="totalTransaksi" class="text-[18px] font-extrabold">0</span> <span class="text-[11px] opacity-70">trx</span></p><p id="avgTransaksi" class="text-[11px] opacity-70 mt-1">Rp 0</p></div>
   </div>
 
-  <div class="bg-white dark:bg-[#162544] rounded-2xl border dark:border-white/10 overflow-hidden">
-    <div class="p-4 border-b dark:border-white/10"><h2 class="font-bold dark:text-white">Data Penjualan - Sesuai Inputan</h2><p class="text-[11px] text-gray-400">Kolom Pelanggan/Produk sekarang ambil dari semua kemungkinan nama field inputan</p></div>
-    <div class="overflow-x-auto"><table class="w-full text-left"><thead class="bg-[#f8f9fc] dark:bg-black/20 text-[11px] text-gray-500 dark:text-gray-400 uppercase"><tr><th class="p-3">Tanggal & ID</th><th class="p-3">Pelanggan / Produk</th><th class="p-3 text-right">Jual</th><th class="p-3 text-right">Laba</th><th class="p-3">Status</th><th class="p-3">Karyawan</th><th class="p-3">Aksi</th></tr></thead><tbody id="tbody"></tbody></table></div>
+  <!-- DESKTOP TABLE - RAPIH -->
+  <div class="hidden md:block bg-white dark:bg-[#162544] rounded-2xl border border-gray-100 dark:border-white/10 overflow-hidden">
+    <div class="p-4 border-b border-gray-100 dark:border-white/10"><h2 class="font-bold text-[14px] dark:text-white">Data Penjualan - Desktop Rapi</h2><p class="text-[11px] text-gray-400">Nama pelanggan terpisah, aksi dropdown: Edit, Hapus, Masuk, Tagihan, Tunai, Dibayar, Batal</p></div>
+    <div class="overflow-x-auto"><table class="w-full text-left"><thead class="bg-[#f8f9fc] dark:bg-black/20 text-[10px] text-gray-500 dark:text-gray-400 uppercase font-bold"><tr><th class="p-3 whitespace-nowrap">Tanggal & ID</th><th class="p-3">Nama Pelanggan</th><th class="p-3">Produk</th><th class="p-3 text-right">Jual</th><th class="p-3 text-right">Laba</th><th class="p-3">Status</th><th class="p-3">Karyawan</th><th class="p-3">Aksi</th></tr></thead><tbody id="tbody"></tbody></table></div>
+  </div>
+
+  <!-- MOBILE CARD - RAPIH -->
+  <div class="md:hidden space-y-3" id="cardList"></div>
+
+</div>
+
+<!-- EDIT MODAL -->
+<div id="editModal" class="hidden fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+  <div class="bg-white dark:bg-[#0f1d33] rounded-2xl p-5 w-full max-w-md border dark:border-white/10 shadow-2xl">
+    <h3 class="font-bold text-[16px] dark:text-white mb-4">✏️ Edit Penjualan</h3>
+    <form id="editForm" class="space-y-3">
+      <input type="hidden" id="editId">
+      <div><label class="text-[11px] font-bold dark:text-gray-300">Nama Pelanggan</label><input id="editNama" required class="w-full mt-1 px-3 py-2.5 rounded-xl border border-gray-200 dark:border-white/10 dark:bg-black/30 dark:text-white text-sm"></div>
+      <div><label class="text-[11px] font-bold dark:text-gray-300">No HP</label><input id="editNoHp" class="w-full mt-1 px-3 py-2.5 rounded-xl border border-gray-200 dark:border-white/10 dark:bg-black/30 dark:text-white text-sm"></div>
+      <div><label class="text-[11px] font-bold dark:text-gray-300">Produk</label><input id="editProduk" required class="w-full mt-1 px-3 py-2.5 rounded-xl border border-gray-200 dark:border-white/10 dark:bg-black/30 dark:text-white text-sm"></div>
+      <div><label class="text-[11px] font-bold dark:text-gray-300">IMEI</label><input id="editImei" class="w-full mt-1 px-3 py-2.5 rounded-xl border border-gray-200 dark:border-white/10 dark:bg-black/30 dark:text-white text-sm"></div>
+      <div class="grid grid-cols-2 gap-3">
+        <div><label class="text-[11px] font-bold dark:text-gray-300">Harga Jual</label><input id="editJual" type="number" required class="w-full mt-1 px-3 py-2.5 rounded-xl border border-gray-200 dark:border-white/10 dark:bg-black/30 dark:text-white text-sm"></div>
+        <div><label class="text-[11px] font-bold dark:text-gray-300">Harga Beli</label><input id="editBeli" type="number" class="w-full mt-1 px-3 py-2.5 rounded-xl border border-gray-200 dark:border-white/10 dark:bg-black/30 dark:text-white text-sm"></div>
+      </div>
+      <div class="flex gap-2 pt-3">
+        <button type="submit" class="flex-1 py-3 bg-[#0f1d33] dark:bg-white dark:text-black text-white rounded-xl text-sm font-bold">Simpan</button>
+        <button type="button" onclick="closeEditModal()" class="px-5 py-3 bg-gray-100 dark:bg-white/10 dark:text-white rounded-xl text-sm">Batal</button>
+      </div>
+    </form>
   </div>
 </div>
 
