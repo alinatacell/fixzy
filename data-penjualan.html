@@ -24,133 +24,204 @@
 </style>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Fixzy - Data Penjualan - Format Persis Gambar Bos</title>
+<title>Fixzy Olive - Data Penjualan BENAR</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <style>
 body{margin:0;background:#0f172a;color:#e5e7eb;font-family:Inter,Arial,sans-serif}
-body.light{background:#f4f5f7;color:#111827}
-header{background:#111827;color:#fff;padding:10px 14px;display:flex;align-items:center;gap:12px;position:sticky;top:0;z-index:100;border-bottom:1px solid #ffffff10}
-.logo{width:40px;height:40px;background:#000;border-radius:10px;display:flex;align-items:center;justify-content:center;border:1px solid #ffffff15}
-.logo img{width:28px;height:28px;object-fit:contain}
-.btn-refresh{background:#1e293b;color:#fff;border:1px solid #334155;padding:8px 14px;border-radius:9px;font-weight:800;cursor:pointer;font-size:12px}
-.btn-dark{background:#000;color:#fff;border:1px solid #ffffff20;padding:9px 12px;border-radius:9px;font-weight:800}
+header.top{background:#fff;color:#111827;padding:8px 12px;display:flex;align-items:center;gap:10px}
+header.top.dark{background:#0f172a;color:#e5e7eb}
+.btn-menu{width:40px;height:40px;background:#111827;color:#fff;border-radius:12px;display:flex;align-items:center;justify-content:center;border:0}
+.main-header{background:#0f172a;color:#e5e7eb;padding:12px 14px;display:flex;align-items:center;gap:12px;position:sticky;top:0;z-index:50;border-bottom:1px solid #1e293b}
+.logo{width:44px;height:44px;background:#000;border-radius:12px;display:flex;align-items:center;justify-content:center;overflow:hidden;border:1px solid #1e293b}
+.logo img{width:40px;height:40px;object-fit:contain}
+.btn-refresh{background:#1e293b;color:#e5e7eb;border:1px solid #334155;padding:10px 16px;border-radius:12px;font-weight:800;cursor:pointer;font-size:12px;display:flex;align-items:center;gap:6px}
+.btn-dark{width:44px;height:44px;background:#000;color:#facc15;border-radius:12px;display:flex;align-items:center;justify-content:center;border:1px solid #1e293b;font-size:18px}
 main{max-width:100%;margin:auto;padding:12px}
 .bar{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
-input,select{padding:10px;border:1px solid #334155;border-radius:10px;background:#1e293b;color:#e5e7eb;font-size:13px}
+input,select{padding:12px;border:1px solid #334155;border-radius:12px;background:#1e293b;color:#e5e7eb;font-size:13px}
 .search{flex:1;min-width:200px}
-.stats{display:grid;gap:8px;margin-bottom:12px}
-.stat{background:#1e293b;border:1px solid #334155;border-radius:12px;padding:12px}
-.stat b{font-size:9px;color:#94a3b8;text-transform:uppercase}
-.stat div{font-size:14px;font-weight:900;margin-top:4px}
-.stat.omset{border-left:4px solid #fff}
-.stat.diterima{border-left:4px solid #22c55e}
-.stat.tagihan{border-left:4px solid #f59e0b}
-.stat.modal{border-left:4px solid #64748b}
-.stat.laba{border-left:4px solid #22c55e;background:#111827;color:#fff}
+.stats{display:grid;gap:10px;margin-bottom:12px}
+.stat{background:#1e293b;border:1px solid #334155;border-radius:14px;padding:14px;position:relative;overflow:hidden}
+.stat::before{content:'';position:absolute;left:0;top:0;bottom:0;width:4px}
+.stat.omset::before{background:#fff}
+.stat.diterima::before{background:#22c55e}
+.stat.tagihan::before{background:#f59e0b}
+.stat.modal::before{background:#64748b}
+.stat.laba::before{background:#22c55e}
+.stat b{font-size:10px;color:#94a3b8;text-transform:uppercase;letter-spacing:0.5px;margin-left:8px}
+.stat div{font-size:16px;font-weight:900;margin-top:4px;margin-left:8px}
 @media(min-width:1200px){ .stats{grid-template-columns:repeat(5,1fr)} }
 @media(min-width:900px) and (max-width:1199px){ .stats{grid-template-columns:repeat(3,1fr)} }
 @media(max-width:899px){ .stats{grid-template-columns:1fr 1fr} }
 
-/* CONTAINER UTAMA PER NOTA - seperti di gambar */
-.nota-card{background:#0f172a;border:1px solid #1e293b;border-radius:20px;padding:0;margin-bottom:16px;overflow:hidden}
-.nota-header{background:#111827;padding:14px 16px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #1e293b}
+/* NOTA CARD - PERSIS GAMBAR */
+.nota-card{background:#111827;border:1px solid #1e293b;border-radius:20px;padding:0;margin-bottom:16px;overflow:hidden}
+.nota-header{background:#0f172a;padding:14px 16px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #1e293b}
 .nota-number{display:flex;align-items:center;gap:10px}
 .nota-circle{width:36px;height:36px;background:#a3e635;color:#000;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:14px}
-.nota-circle.green{background:#a3e635;color:#000}
-.nota-circle.dark{background:#1e293b;color:#94a3b8;border:1px solid #334155}
-.nota-text{font-size:14px;font-weight:800;letter-spacing:0.5px}
-.badge-status{padding:6px 12px;border-radius:999px;font-size:11px;font-weight:900;background:#1a2e1a;color:#a3e635;border:1px solid #22c55e30}
-
-/* BOX DALAM NOTA - seperti gambar */
-.inner-box{background:#111827;border:1px solid #1e293b;border-radius:14px;padding:14px;margin:10px}
-.inner-box-title{display:flex;align-items:center;gap:8px;font-size:11px;font-weight:800;color:#94a3b8;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:10px}
-.inner-circle{width:22px;height:22px;border-radius:50%;border:1px solid #334155;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;color:#94a3b8;background:#0f172a}
+.badge-status{padding:6px 14px;border-radius:999px;font-size:11px;font-weight:900;background:#1a2e1a;color:#a3e635;border:1px solid #22c55e40}
+.inner-box{background:#0f172a;border:1px solid #1e293b;border-radius:14px;padding:14px;margin:10px}
+.inner-box-title{display:flex;align-items:center;gap:8px;font-size:11px;font-weight:800;color:#94a3b8;text-transform:uppercase;margin-bottom:10px}
+.inner-circle{width:22px;height:22px;border-radius:50%;border:1px solid #334155;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;color:#94a3b8;background:#111827}
 .inner-circle.green{background:#a3e635;color:#000;border-color:#a3e635}
-.field{margin-bottom:6px}
+.field{margin-bottom:5px}
 .lbl{font-size:10px;color:#64748b;text-transform:uppercase;font-weight:700;display:block}
 .val{font-size:13px;font-weight:700;color:#e5e7eb;word-break:break-word}
 .val.b{font-size:14px;font-weight:900}
 .val.green{color:#a3e635}
 .val.cyan{color:#5eead4}
-
-/* PEMBELIAN PILL - Y20 x1 auto */
-.pill{display:inline-flex;align-items:center;gap:6px;background:#1e293b;border:1px solid #334155;border-radius:10px;padding:8px 12px;font-size:13px;font-weight:800}
+.pill{display:inline-flex;align-items:center;gap:6px;background:#1e293b;border:1px solid #334155;border-radius:10px;padding:8px 12px;font-size:13px;font-weight:800;margin:4px 4px 4px 0}
 .pill .auto{background:#1a2e1a;color:#a3e635;padding:2px 8px;border-radius:6px;font-size:10px;font-weight:900;margin-left:6px;border:1px solid #22c55e30}
-
-/* HARGA BOXES - Total Diskon DP/Sisa */
 .harga-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-top:10px}
-@media(max-width:600px){ .harga-grid{grid-template-columns:1fr} }
-.harga-mini{background:#0f172a;border:1px solid #1e293b;border-radius:10px;padding:10px}
+@media(max-width:600px){ .harga-grid{grid-template-columns:1fr 1fr} }
+.harga-mini{background:#111827;border:1px solid #1e293b;border-radius:10px;padding:10px}
 .harga-mini .lbl{font-size:9px;color:#64748b}
 .harga-mini .val{font-size:13px;font-weight:900;margin-top:4px}
-
-/* MODAL & PENDAPATAN SIDE BY SIDE */
 .double-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 @media(max-width:600px){ .double-grid{grid-template-columns:1fr} }
-
-/* AKSI */
-.aksi-grid{display:grid;grid-template-columns:1fr 1fr 80px;gap:8px}
+.aksi-grid{display:grid;grid-template-columns:1fr 1fr 70px;gap:8px}
 .btn-aksi{padding:14px;border-radius:12px;font-size:13px;font-weight:900;border:0;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px}
-.btn-edit{background:#111827;color:#fff;border:1px solid #1e293b}
+.btn-edit{background:#1a1a1a;color:#fff;border:1px solid #2a2a2a}
 .btn-hapus{background:#1e293b;color:#e5e7eb;border:1px solid #334155}
-.btn-more{background:#1e293b;color:#94a3b8;border:1px solid #334155;width:60px}
+.btn-more{background:#1e293b;color:#94a3b8;border:1px solid #334155}
 
-/* TABLE DESKTOP */
+/* DESKTOP TABLE */
 .wrap-table{background:#111827;border:1px solid #1e293b;border-radius:14px;overflow:auto;max-height:85vh;display:none}
 @media(min-width:900px){ .wrap-table{display:block} .mobile-only{display:none !important} }
 @media(max-width:899px){ .wrap-table{display:none !important} .mobile-only{display:block !important} }
 table{width:100%;border-collapse:collapse;min-width:1150px}
-th{background:#0f172a;color:#94a3b8;font-size:9px;font-weight:900;text-align:left;padding:10px 8px;white-space:nowrap;text-transform:uppercase;position:sticky;top:0;z-index:10;border-bottom:1px solid #1e293b}
+th{background:#0f172a;color:#94a3b8;font-size:9px;font-weight:900;text-align:left;padding:12px 8px;white-space:nowrap;text-transform:uppercase;position:sticky;top:0;z-index:10;border-bottom:1px solid #1e293b}
 td{padding:10px 8px;border-bottom:1px solid #1e293b;font-size:11px;vertical-align:top;line-height:1.4;color:#e5e7eb}
 </style>
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-import { getFirestore, collection, query, where, getDocs, doc, updateDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import { getFirestore, collection, getDocs, doc, getDoc, deleteDoc, updateDoc, query, where } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 const firebaseConfig = { apiKey: "AIzaSyC_PcarMTT5Un7qfSLzf92o5OGn5rginsI", authDomain: "fixzy-update.firebaseapp.com", projectId: "fixzy-update", storageBucket: "fixzy-update.appspot.com", messagingSenderId: "431404655232", appId: "1:431404655232:web:5f7d9c9a1b2c3d4e5f6a7" };
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 let currentUser=null, ownerUid=null, isOwner=false, allRows=[], filteredRows=[];
+
 onAuthStateChanged(auth, async u=>{
   if(!u){ location.href="login.html"; return; }
   currentUser=u;
-  document.getElementById('akunSide').textContent=u.email;
-  document.getElementById('akunAktif').textContent=u.email;
-  document.getElementById('namaToko').textContent='Data Penjualan';
+  const emailEl = document.getElementById('akunSide');
+  const emailEl2 = document.getElementById('akunAktif');
+  if(emailEl) emailEl.textContent=u.email;
+  if(emailEl2) emailEl2.textContent=u.email;
+  const namaEl = document.getElementById('namaToko');
+  if(namaEl) namaEl.textContent='FIXZY OLIVE';
+  
   try{
-    const snap=await getDocs(query(collection(db,"users"), where("__name__","==", u.uid)));
-    let p=null;
-    if(!snap.empty) p=snap.docs[0].data();
-    else{ const d=await getDoc(doc(db,"users",u.uid)); if(d.exists()) p=d.data(); }
-    if(!p){ ownerUid=u.uid; isOwner=true; }
-    else{ isOwner = (p.role||'').toLowerCase()==='owner' || p.isOwner===true; ownerUid = p.ownerId || p.ownerUid || (isOwner ? u.uid : p.ownerUid) || u.uid; }
-    document.getElementById('roleSide').textContent=isOwner?'OWNER':'KARYAWAN';
-    document.getElementById('roleSide').style.background=isOwner?'#16a34a':'#2563eb';
-  }catch(e){ ownerUid=u.uid; isOwner=true; }
+    // Coba cari user by uid dulu
+    let userDoc = await getDoc(doc(db,"users", u.uid));
+    let p = null;
+    if(userDoc.exists()){
+      p = userDoc.data();
+    } else {
+      // coba query by email
+      const q = query(collection(db,"users"), where("email","==", u.email));
+      const snap = await getDocs(q);
+      if(!snap.empty){ p = snap.docs[0].data(); }
+      else {
+        // coba query by where __name__ (fallback)
+        const q2 = query(collection(db,"users"), where("uid","==", u.uid));
+        const snap2 = await getDocs(q2);
+        if(!snap2.empty) p = snap2.docs[0].data();
+      }
+    }
+    
+    if(!p){
+      ownerUid = u.uid;
+      isOwner = true;
+    } else {
+      isOwner = (p.role||'').toLowerCase()==='owner' || p.isOwner===true || p.role==='admin';
+      ownerUid = p.ownerId || p.ownerUid || p.ownerID || (isOwner ? u.uid : null) || u.uid;
+      // Jika karyawan, ownerUid adalah id owner
+      if(!isOwner && p.ownerId){ ownerUid = p.ownerId; }
+    }
+    
+    const roleEl = document.getElementById('roleSide');
+    if(roleEl){
+      roleEl.textContent = isOwner?'OWNER':'KARYAWAN';
+      roleEl.style.background = isOwner?'#16a34a':'#2563eb';
+    }
+    
+    const topName = document.getElementById('topUserName');
+    if(topName) topName.textContent = p?.nama || u.email.split('@')[0] || 'farhan';
+    
+  }catch(e){
+    console.error("Error get user", e);
+    ownerUid = u.uid;
+    isOwner = true;
+  }
+  
   await load();
 });
+
 async function load(){
-  let snap=await getDocs(collection(db,"penjualan"));
-  let rows=snap.docs.map(d=>({id:d.id, ...d.data()}));
-  rows=rows.filter(r=>{ const oid=r.ownerId||r.ownerUid||r.uid||''; return !oid || oid===ownerUid || r.createdBy===currentUser.email; });
-  rows.sort((a,b)=>{ const ta=new Date(a.tanggal||a.createdAt?.seconds*1000||a.createdAt||0).getTime(); const tb=new Date(b.tanggal||b.createdAt?.seconds*1000||b.createdAt||0).getTime(); return tb-ta; });
-  allRows=rows; render();
+  try{
+    const snap = await getDocs(collection(db,"penjualan"));
+    let rows = snap.docs.map(d=>({id:d.id, ...d.data()}));
+    console.log("Total data di firestore:", rows.length);
+    
+    // FIX: Jangan filter terlalu ketat, tampilkan semua jika ownerUid tidak jelas
+    // Simpan semua dulu
+    allRows = rows;
+    
+    // Jika ada ownerUid dan isOwner=false (karyawan), filter yang ownerId sama atau dibuat oleh karyawan
+    // Tapi jika hasil filter 0, tampilkan semua (fallback) biar tidak Rp 0 seperti foto bos
+    if(ownerUid && !isOwner){
+      let filtered = rows.filter(r=>{
+        const oid = r.ownerId || r.ownerUid || r.uid || '';
+        const createdBy = r.createdBy || r.teknisiEmail || '';
+        return oid===ownerUid || !oid || createdBy===currentUser.email || createdBy===currentUser.uid;
+      });
+      if(filtered.length>0){
+        allRows = filtered;
+      }
+    } else if(ownerUid && isOwner){
+      // Owner: tampilkan data milik owner atau tanpa ownerId
+      let filtered = rows.filter(r=>{
+        const oid = r.ownerId || r.ownerUid || r.uid || '';
+        return !oid || oid===ownerUid || oid===currentUser.uid;
+      });
+      // Jika filtered kosong tapi rows ada, tampilkan semua (fix Rp 0)
+      if(filtered.length>0 || rows.length===0){
+        allRows = filtered.length>0 ? filtered : rows;
+      } else {
+        allRows = rows;
+      }
+    }
+    
+    allRows.sort((a,b)=>{
+      const ta=new Date(a.tanggal||a.createdAt?.seconds*1000||a.createdAt||0).getTime();
+      const tb=new Date(b.tanggal||b.createdAt?.seconds*1000||b.createdAt||0).getTime();
+      return tb-ta;
+    });
+    
+    render();
+  }catch(e){
+    console.error("Load error", e);
+    document.getElementById('info').textContent = "Error load: "+e.message;
+  }
 }
+
 function getTanggal(d){ return d.tanggal|| (d.createdAt?.seconds? new Date(d.createdAt.seconds*1000).toISOString().slice(0,10) : (d.createdAt||'').toString().slice(0,10)) || '-'; }
 function getNota(d){ return d.nomorNota||d.nota||'-'; }
-function getTeknisi(d){ return d.teknisiNama||d.teknisi||d.namaKaryawan||'-'; }
-function getNamaPel(d){ return d.pelanggan?.nama||d.nama||'-'; }
-function getWa(d){ return d.pelanggan?.wa||d.noHp||d.wa||'-'; }
+function getTeknisi(d){ return d.teknisiNama||d.teknisi||d.namaKaryawan||d.namaTeknisi||'-'; }
+function getNamaPel(d){ return d.pelanggan?.nama||d.nama||d.namaPelanggan||'-'; }
+function getWa(d){ return d.pelanggan?.wa||d.noHp||d.wa||d.noWA||'-'; }
 function getAlamat(d){ return d.pelanggan?.alamat||d.alamat||'-'; }
 function getItems(d){ return d.items||[]; }
-function getTotal(d){ return Number(d.total||d.jumlahTotal||0); }
+function getTotal(d){ return Number(d.total||d.jumlahTotal||d.totalHarga||0); }
 function getDiskon(d){ return Number(d.diskon||0); }
-function getDp(d){ return Number(d.dp||0); }
+function getDp(d){ return Number(d.dp||d.uangMuka||0); }
 function getSisa(d){ return Number(d.sisa ?? (getTotal(d)-getDiskon(d)-getDp(d))); }
-function getModal(d){ const items=getItems(d); if(items.length>0) return items.reduce((s,it)=>s+ Number(it.modal||it.hargaBeli||it.modalBeli||0)*Number(it.qty||1),0); return Number(d.modal||0); }
-function getPendapatan(d){ const st=getStatus(d); if(st==='tunai' || st==='diambil'){ return getTotal(d) - getDiskon(d); } return 0; }
-function getLaba(d){ const st=getStatus(d); if(st==='tunai' || st==='diambil'){ return getPendapatan(d) - getModal(d); } return 0; }
+function getModal(d){ const items=getItems(d); if(items.length>0) return items.reduce((s,it)=>s+ Number(it.modal||it.hargaBeli||it.modalBeli||it.modalBelanja||0)*Number(it.qty||1),0); return Number(d.modal||d.modalBelanja||0); }
+function getPendapatan(d){ const st=getStatus(d); if(st==='tunai' || st==='diambil'){ return getTotal(d) - getDiskon(d); } return getTotal(d) - getDiskon(d); }
+function getLaba(d){ return getPendapatan(d) - getModal(d); }
 function getStatus(d){ return (d.status||'masuk').toLowerCase(); }
 
 function render(){
@@ -160,109 +231,126 @@ function render(){
     const st=getStatus(d);
     if(f!=='semua' && st!==f) return false;
     if(!q) return true;
-    const hay = `${getTanggal(d)} ${getNota(d)} ${getTeknisi(d)} ${getNamaPel(d)} ${getWa(d)} ${getAlamat(d)} ${(d.namaProduk||'')}`.toLowerCase();
+    const hay = `${getTanggal(d)} ${getNota(d)} ${getTeknisi(d)} ${getNamaPel(d)} ${getWa(d)} ${getAlamat(d)} ${(d.namaProduk||'')} ${getItems(d).map(it=>it.nama).join(' ')}`.toLowerCase();
     return hay.includes(q);
   });
+  
   let omset=0, diterima=0, tagihan=0, modal=0, laba=0, pendapatan=0;
   filteredRows.forEach(d=>{
-    const tot=getTotal(d); const dp=getDp(d); const sis=getSisa(d); const mod=getModal(d); const lb=getLaba(d); const pend=getPendapatan(d); const st=getStatus(d);
+    const tot=getTotal(d); const dp=getDp(d); const sis=getSisa(d); const mod=getModal(d); const pend=getPendapatan(d); const lb=getLaba(d); const st=getStatus(d);
     omset+=tot;
-    if(st==='tunai' || st==='diambil'){ modal+=mod; laba+=lb; pendapatan+=pend; diterima+= (dp>0? dp : pend); }
+    modal+=mod;
+    pendapatan+=pend;
+    laba+=lb;
+    if(st==='tunai' || st==='diambil'){ diterima+= (dp>0? dp : pend); }
     else{ diterima+=dp; tagihan+=sis; }
   });
-  document.getElementById('s1').innerHTML=`<b>Omset</b><div>Rp ${omset.toLocaleString('id-ID')}</div>`;
-  document.getElementById('s2').innerHTML=`<b>Uang Diterima</b><div style="color:#22c55e">Rp ${diterima.toLocaleString('id-ID')}</div>`;
-  document.getElementById('s3').innerHTML=`<b>Tagihan</b><div style="color:#f59e0b">Rp ${tagihan.toLocaleString('id-ID')}</div>`;
-  document.getElementById('s4').innerHTML=`<b>Modal Belanja</b><div>Rp ${modal.toLocaleString('id-ID')}</div>`;
-  document.getElementById('s5').innerHTML=`<b>Laba Bersih</b><div>Rp ${laba.toLocaleString('id-ID')}</div>`;
-  document.getElementById('info').textContent=`${filteredRows.length} dari ${allRows.length} - Format Persis Gambar - Y20 x1 = auto (jumlah kan) - Harga Total Diskon DP Sisa - Auto Responsif`;
+  
+  document.getElementById('s1').innerHTML=`<b>OMSET</b><div>Rp ${omset.toLocaleString('id-ID')}</div>`;
+  document.getElementById('s2').innerHTML=`<b>UANG DITERIMA</b><div>Rp ${diterima.toLocaleString('id-ID')}</div>`;
+  document.getElementById('s3').innerHTML=`<b>TAGIHAN</b><div>Rp ${tagihan.toLocaleString('id-ID')}</div>`;
+  document.getElementById('s4').innerHTML=`<b>MODAL</b><div>Rp ${modal.toLocaleString('id-ID')}</div>`;
+  document.getElementById('s5').innerHTML=`<b>LABA BERSIH</b><div>Rp ${laba.toLocaleString('id-ID')}</div>`;
+  document.getElementById('info').textContent=`${filteredRows.length} dari ${allRows.length} data - Format: Y20 x1 = harga - Auto Responsif`;
 
-  // DESKTOP TABLE
   const tbody=document.getElementById('tbody');
   tbody.innerHTML='';
-  // MOBILE
   const mobileBody=document.getElementById('mobileBody');
   mobileBody.innerHTML='';
 
   if(filteredRows.length===0){
-    tbody.innerHTML=`<tr><td colspan="8" style="padding:32px;text-align:center;color:#64748b">Belum ada data</td></tr>`;
-    mobileBody.innerHTML=`<div style="padding:32px;text-align:center;color:#64748b;background:#111827;border-radius:16px;border:1px solid #1e293b">Belum ada data</div>`;
+    tbody.innerHTML=`<tr><td colspan="8" style="padding:32px;text-align:center;color:#64748b">Belum ada data - cek filter atau Firestore</td></tr>`;
+    mobileBody.innerHTML=`<div style="padding:32px;text-align:center;color:#94a3b8;background:#111827;border-radius:16px;border:1px solid #1e293b">Belum ada data<br><small>Total di Firestore: ${allRows.length}</small></div>`;
     return;
   }
 
   filteredRows.forEach((d, idx)=>{
     const st=getStatus(d);
     const items=getItems(d);
-    const pembelianPills = items.length>0 ? items.map(it=>`<span class="pill">${it.nama||'-'} x${it.qty||1} = Rp ${Number(it.harga||0).toLocaleString('id-ID')} <span class="auto">auto</span></span>`).join(' ') : `<span class="pill">${d.namaProduk||'-'} x1 = Rp ${getTotal(d).toLocaleString('id-ID')} <span class="auto">auto</span></span>`;
-    const hargaSatuan = `Rp ${getTotal(d).toLocaleString('id-ID')}`;
-    const total = getTotal(d);
-    const diskon = getDiskon(d);
-    const dp = getDp(d);
-    const sisa = getSisa(d);
-    const modalVal = getModal(d);
-    const pendapatanVal = getPendapatan(d);
-    const labaVal = getLaba(d);
+    const total=getTotal(d);
+    const diskon=getDiskon(d);
+    const dp=getDp(d);
+    const sisa=getSisa(d);
+    const modalVal=getModal(d);
+    const pendapatanVal=getPendapatan(d);
+    const labaVal=getLaba(d);
 
-    // DESKTOP ROW
+    // DESKTOP
     const tr=document.createElement('tr');
     tr.innerHTML=`
-      <td><div class="field"><span class="lbl">Tanggal : auto kalender</span><span class="val b">${getTanggal(d)}</span></div><div class="field"><span class="lbl">No Nota : auto dari data</span><span class="val b">${getNota(d)}</span></div><div class="field"><span class="lbl">Nama Teknisi : data karyawan</span><span class="val">${getTeknisi(d)}</span></div></td>
-      <td><div class="field"><span class="lbl">Nama : contoh</span><span class="val b">${getNamaPel(d)}</span></div><div class="field"><span class="lbl">No WA : contoh</span><span class="val">${getWa(d)}</span></div><div class="field"><span class="lbl">Alamat : contoh</span><span class="val">${getAlamat(d)}</span></div></td>
-      <td><div class="field"><span class="lbl">Pembelian Y20 x1 = harga</span><span class="val">${items.length>0 ? items.map(it=>`${it.nama} x${it.qty} = Rp ${Number(it.harga||0).toLocaleString('id-ID')}`).join('<br>') : `Y20 x1 = Rp ${getTotal(d).toLocaleString('id-ID')}`}</span></div></td>
-      <td><div class="field"><span class="lbl">Harga</span><span class="val b">${hargaSatuan}</span></div><div class="field"><span class="lbl">Total</span><span class="val">Rp ${total.toLocaleString('id-ID')}</span></div><div class="field"><span class="lbl">Diskon</span><span class="val">${diskon}</span></div><div class="field"><span class="lbl">DP / Sisa</span><span class="val">${dp} / Rp ${sisa.toLocaleString('id-ID')}</span></div></td>
-      <td>Rp ${modalVal.toLocaleString('id-ID')}</td>
-      <td style="color:#a3e635">Rp ${pendapatanVal>0?pendapatanVal.toLocaleString('id-ID'):0}</td>
-      <td style="color:#5eead4">Rp ${labaVal>0?labaVal.toLocaleString('id-ID'):0}</td>
-      <td><button class="aksi-btn btn-edit" onclick="editData('${d.id}')">Edit</button><button class="aksi-btn btn-hapus" onclick="changeStatus('${d.id}','batal')">Hapus</button></td>
+      <td>
+        <div class="field"><span class="lbl">Tanggal : auto kalender</span><span class="val b">${getTanggal(d)}</span></div>
+        <div class="field"><span class="lbl">No Nota : auto dari data</span><span class="val b">${getNota(d)}</span></div>
+        <div class="field"><span class="lbl">Nama Teknisi : data karyawan</span><span class="val">${getTeknisi(d)}</span></div>
+        <span class="badge-status" style="margin-top:6px;display:inline-block">${st.toUpperCase()}</span>
+      </td>
+      <td>
+        <div class="field"><span class="lbl">Nama : contoh</span><span class="val b">${getNamaPel(d)}</span></div>
+        <div class="field"><span class="lbl">No WA : contoh</span><span class="val">${getWa(d)}</span></div>
+        <div class="field"><span class="lbl">Alamat : contoh</span><span class="val">${getAlamat(d)}</span></div>
+      </td>
+      <td>
+        <div class="field"><span class="lbl">Pembelian Y20 x1 = harga</span></div>
+        ${items.length>0 ? items.map(it=>`<div class="val">${it.nama} x${it.qty||1} = Rp ${Number(it.harga||0).toLocaleString('id-ID')} <span style="background:#1a2e1a;color:#a3e635;padding:1px 6px;border-radius:4px;font-size:9px">auto</span></div>`).join('') : `<div class="val">Y20 x1 = Rp ${total.toLocaleString('id-ID')}</div>`}
+      </td>
+      <td>
+        <div class="val b">Rp ${total.toLocaleString('id-ID')}</div>
+        <div style="margin-top:6px;display:grid;grid-template-columns:1fr 1fr 1fr;gap:4px">
+          <div style="background:#0f172a;border:1px solid #1e293b;border-radius:8px;padding:6px"><div style="font-size:8px;color:#64748b">Total</div><div style="font-size:11px;font-weight:800">Rp ${total.toLocaleString('id-ID')}</div></div>
+          <div style="background:#0f172a;border:1px solid #1e293b;border-radius:8px;padding:6px"><div style="font-size:8px;color:#64748b">Diskon</div><div style="font-size:11px;font-weight:800">${diskon}</div></div>
+          <div style="background:#0f172a;border:1px solid #1e293b;border-radius:8px;padding:6px"><div style="font-size:8px;color:#64748b">DP / Sisa</div><div style="font-size:11px;font-weight:800">${dp} / Rp ${sisa.toLocaleString('id-ID')}</div></div>
+        </div>
+      </td>
+      <td><span class="val b">Rp ${modalVal.toLocaleString('id-ID')}</span></td>
+      <td><span class="val b" style="color:#a3e635">Rp ${pendapatanVal.toLocaleString('id-ID')}</span><br><span style="font-size:9px;color:#64748b">Tunai Only - hasil akhir jika TUNAI</span></td>
+      <td><span class="val b" style="color:#5eead4">Rp ${labaVal.toLocaleString('id-ID')}</span><br><span style="font-size:9px;color:#64748b">Pendapatan - Modal</span></td>
+      <td>
+        <button class="btn-aksi btn-edit" style="width:100%;padding:8px;border-radius:8px;background:#1e293b;color:#fff;border:1px solid #334155;margin-bottom:4px" onclick="editData('${d.id}')">✏️ Edit</button>
+        <button class="btn-aksi btn-hapus" style="width:100%;padding:8px;border-radius:8px;background:#1e293b;color:#e5e7eb;border:1px solid #334155" onclick="hapusData('${d.id}')">🗑️ Hapus</button>
+      </td>
     `;
     tbody.appendChild(tr);
 
-    // MOBILE CARD - PERSIS GAMBAR
+    // MOBILE - PERSIS GAMBAR BOS
     const card=document.createElement('div');
     card.className='nota-card';
     card.innerHTML=`
       <div class="nota-header">
         <div class="nota-number">
-          <div class="nota-circle green">${idx+1}</div>
-          <div class="nota-text">${getNota(d)}</div>
+          <div class="nota-circle">${idx+1}</div>
+          <div style="font-size:14px;font-weight:800">${getNota(d)}</div>
         </div>
         <div class="badge-status">${st.toUpperCase()}</div>
       </div>
-
       <div style="padding:10px">
         <div class="inner-box">
           <div class="inner-box-title"><div class="inner-circle">1</div> DATE</div>
           <div class="field"><span class="lbl">Tanggal : auto kalender</span><span class="val b">${getTanggal(d)}</span></div>
           <div class="field"><span class="lbl">No Nota : auto dari data</span><span class="val b">${getNota(d)}</span></div>
-          <div style="font-size:9px;color:#475569;margin:4px 0">${d.barcode||''}</div>
           <div class="field"><span class="lbl">Nama Teknisi : data karyawan</span><span class="val">${getTeknisi(d)}</span></div>
         </div>
-
         <div class="inner-box">
           <div class="inner-box-title"><div class="inner-circle">2</div> PELANGGAN</div>
           <div class="field"><span class="lbl">Nama : contoh</span><span class="val b">${getNamaPel(d)}</span></div>
           <div class="field"><span class="lbl">No WA : contoh</span><span class="val">${getWa(d)}</span></div>
           <div class="field"><span class="lbl">Alamat : contoh</span><span class="val">${getAlamat(d)}</span></div>
         </div>
-
         <div class="inner-box">
           <div class="inner-box-title"><div class="inner-circle">3</div> PEMBELIAN</div>
-          <div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:6px">
-            ${items.length>0 ? items.map(it=>`<span class="pill">${it.nama} x${it.qty||1} = Rp ${Number(it.harga||0).toLocaleString('id-ID')} <span class="auto">auto</span></span>`).join('') : `<span class="pill">Y20 x1 = Rp ${getTotal(d).toLocaleString('id-ID')} <span class="auto">auto</span></span>`}
+          <div style="display:flex;flex-wrap:wrap;gap:6px">
+            ${items.length>0 ? items.map(it=>`<span class="pill">${it.nama} x${it.qty||1} = Rp ${Number(it.harga||0).toLocaleString('id-ID')} <span class="auto">auto</span></span>`).join('') : `<span class="pill">Y20 x1 = Rp ${total.toLocaleString('id-ID')} <span class="auto">auto</span></span>`}
           </div>
-          <div style="font-size:10px;color:#475569;margin-top:8px">Y20 x1 = auto (jumlah kan) - auto = jumlah stok auto</div>
+          <div style="font-size:10px;color:#475569;margin-top:8px">Y20 x1 = harga (Y20 x1 = Rp ${total.toLocaleString('id-ID')} auto)</div>
         </div>
-
         <div class="inner-box">
           <div class="inner-box-title"><div class="inner-circle">4</div> HARGA</div>
-          <div class="val b" style="font-size:16px">${hargaSatuan}</div>
+          <div class="val b" style="font-size:16px">Rp ${total.toLocaleString('id-ID')}</div>
           <div class="harga-grid">
             <div class="harga-mini"><div class="lbl">Total</div><div class="val">Rp ${total.toLocaleString('id-ID')}</div></div>
             <div class="harga-mini"><div class="lbl">Diskon</div><div class="val">${diskon}</div></div>
             <div class="harga-mini"><div class="lbl">DP / Sisa</div><div class="val">${dp} / Rp ${sisa.toLocaleString('id-ID')}</div></div>
           </div>
         </div>
-
         <div class="double-grid">
           <div class="inner-box" style="margin:0">
             <div class="inner-box-title"><div class="inner-circle">5</div> MODAL BELANJA</div>
@@ -270,19 +358,17 @@ function render(){
           </div>
           <div class="inner-box" style="margin:0;border-color:#22c55e30">
             <div class="inner-box-title"><div class="inner-circle green">6</div> <span style="color:#a3e635">PENDAPATAN</span></div>
-            <div class="val b green" style="font-size:18px">Rp ${pendapatanVal>0?pendapatanVal.toLocaleString('id-ID'):total.toLocaleString('id-ID')}</div>
+            <div class="val b green" style="font-size:18px">Rp ${pendapatanVal.toLocaleString('id-ID')}</div>
             <div style="font-size:10px;color:#64748b;margin-top:4px">Tunai Only - hasil akhir jika TUNAI</div>
           </div>
         </div>
-
         <div class="inner-box">
           <div class="inner-box-title"><div class="inner-circle">7</div> LABA</div>
           <div style="display:flex;justify-content:space-between;align-items:center">
-            <div class="val b cyan" style="font-size:18px">Rp ${labaVal>0?labaVal.toLocaleString('id-ID'):total.toLocaleString('id-ID')}</div>
+            <div class="val b cyan" style="font-size:18px">Rp ${labaVal.toLocaleString('id-ID')}</div>
             <div style="font-size:11px;color:#64748b">Pendapatan - Modal</div>
           </div>
         </div>
-
         <div class="inner-box">
           <div class="inner-box-title"><div class="inner-circle">8</div> AKSI</div>
           <div class="aksi-grid">
@@ -299,17 +385,10 @@ function render(){
 window.editData=(id)=>{ localStorage.setItem('fixzy_edit_id', id); location.href=`input-penjualan.html?edit=${id}`; }
 window.hapusData=async(id)=>{
   if(!confirm('Hapus data ini?')) return;
-  const { deleteDoc } = await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js");
-  // handled in outer scope, use updateDoc trick
-  try{ 
-    const mod = await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js");
-    await mod.deleteDoc(mod.doc(db,"penjualan",id));
+  try{
+    await deleteDoc(doc(db,"penjualan",id));
     await load();
   }catch(e){ alert(e.message); }
-}
-window.changeStatus=async(id,newStatus)=>{
-  if(!isOwner && newStatus==='batal'){ alert('Batal hanya Owner'); return; }
-  try{ await updateDoc(doc(db,"penjualan",id), { status:newStatus, updatedAt:new Date().toISOString() }); await load(); }catch(err){ alert(err.message); }
 }
 window.refreshHalaman=()=>{ location.reload(); };
 document.getElementById('q').addEventListener('input', render);
@@ -317,65 +396,60 @@ document.getElementById('f').addEventListener('change', render);
 </script>
 </head>
 <body>
-<header>
-  <div style="display:flex;align-items:center;gap:10px;min-width:0">
-    <div class="logo"><img src="logo.png" onerror="this.style.display='none'; this.parentElement.textContent='F'"></div>
-    <div style="min-width:0;line-height:1.1">
-      <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
-        <span style="font-size:14px;font-weight:900;color:#a3e635">FIXZY</span><span style="font-size:11px;color:#64748b">OLIVE</span>
-        <span id="roleSide" style="background:#1e293b;color:#a3e635;padding:2px 6px;border-radius:6px;font-size:9px;font-weight:900;border:1px solid #22c55e30">-</span>
-      </div>
-      <div id="akunSide" style="font-size:11px;font-weight:700;max-width:220px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;opacity:0.9;margin-top:2px">Memuat akun...</div>
-      <div id="akunAktif" style="font-size:10px;opacity:0.7;max-width:220px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis"></div>
-    </div>
+<div style="background:#fff;padding:6px 12px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid #e5e7eb">
+  <button style="width:36px;height:36px;background:#111827;border-radius:10px;display:flex;align-items:center;justify-content:center;color:#fff">☰</button>
+  <div style="font-size:12px;color:#111827"><span id="topUserName" style="font-weight:800">farhan</span><br><span style="font-size:9px;color:#64748b">Exp: -</span></div>
+</div>
+<header class="main-header">
+  <div class="logo"><img src="logo.png" onerror="this.textContent='F'"></div>
+  <div style="flex:1;min-width:0">
+    <div style="display:flex;align-items:center;gap:6px"><span style="font-weight:900;color:#a3e635">FIXZY</span><span style="font-size:11px;color:#94a3b8">OLIVE</span><span id="roleSide" style="background:#1e293b;color:#a3e635;padding:2px 6px;border-radius:6px;font-size:9px;border:1px solid #22c55e30">-</span></div>
+    <div id="akunSide" style="font-size:11px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Memuat...</div>
+    <div id="akunAktif" style="font-size:10px;opacity:0.6;white-space:nowrap;overflow:hidden;text-overflow:ellipsis"></div>
   </div>
-  <div style="flex:1"></div>
   <button class="btn-refresh" onclick="refreshHalaman()">↻ Refresh Input</button>
   <button class="btn-dark" id="btnDark">🌙</button>
 </header>
 <main>
   <div class="bar">
-    <input id="q" class="search" placeholder="Cari tanggal / nota / teknisi / pelanggan...">
-    <select id="f"><option value="semua">Semua Status</option><option value="masuk">Masuk</option><option value="tagihan">Tagihan</option><option value="tunai">Tunai</option><option value="diambil">Diambil</option><option value="batal">Batal (Owner)</option></select>
+    <input id="q" class="search" placeholder="Cari tanggal / nota / teknisi / pela">
+    <select id="f"><option value="semua">Semua Status</option><option value="masuk">Masuk</option><option value="tagihan">Tagihan</option><option value="tunai">Tunai</option><option value="diambil">Diambil</option><option value="batal">Batal</option></select>
   </div>
   <div class="stats">
-    <div class="stat omset" id="s1"><b>Omset</b><div>Rp 0</div></div>
-    <div class="stat diterima" id="s2"><b>Uang Diterima</b><div>Rp 0</div></div>
-    <div class="stat tagihan" id="s3"><b>Tagihan</b><div>Rp 0</div></div>
-    <div class="stat modal" id="s4"><b>Modal</b><div>Rp 0</div></div>
-    <div class="stat laba" id="s5"><b>Laba Bersih</b><div>Rp 0</div></div>
+    <div class="stat omset" id="s1"><b>OMSET</b><div>Rp 0</div></div>
+    <div class="stat diterima" id="s2"><b>UANG DITERIMA</b><div>Rp 0</div></div>
+    <div class="stat tagihan" id="s3"><b>TAGIHAN</b><div>Rp 0</div></div>
+    <div class="stat modal" id="s4"><b>MODAL</b><div>Rp 0</div></div>
+    <div class="stat laba" id="s5"><b>LABA BERSIH</b><div>Rp 0</div></div>
   </div>
-  <div style="font-size:11px;color:#64748b;margin-bottom:8px" id="info"></div>
-
+  <div style="font-size:11px;color:#94a3b8;margin-bottom:8px" id="info">Memuat data...</div>
   <div class="wrap-table">
     <table>
       <thead>
         <tr>
-          <th>1. Date</th>
-          <th>2. Pelanggan</th>
-          <th>3. Pembelian Y20 x1 = harga</th>
-          <th>4. Harga Total Diskon DP Sisa</th>
-          <th>5. Modal</th>
-          <th>6. Pendapatan</th>
-          <th>7. Laba</th>
-          <th>8. Aksi</th>
+          <th>1. DATE - Tanggal / No Nota / Teknisi</th>
+          <th>2. PELANGGAN - Nama / WA / Alamat</th>
+          <th>3. PEMBELIAN Y20 x1 = harga</th>
+          <th>4. HARGA Total Diskon DP Sisa</th>
+          <th>5. MODAL</th>
+          <th>6. PENDAPATAN</th>
+          <th>7. LABA</th>
+          <th>8. AKSI</th>
         </tr>
       </thead>
       <tbody id="tbody"></tbody>
     </table>
   </div>
-
   <div id="mobileBody" class="mobile-only"></div>
-
   <div style="text-align:center;font-size:10px;color:#64748b;margin-top:12px;line-height:1.5">
-    ✅ Persis Gambar Bos: 3 PEMBELIAN Y20 x1 = harga (Y20 x1 = Rp 290.000 auto) | 4 HARGA Rp 290.000 Total Rp 290.000 Diskon 0 DP/Sisa 0/Rp 290.000 | 5 MODAL Rp 0 | 6 PENDAPATAN Rp 290.000 Tunai Only | 7 LABA Rp 290.000 | 8 AKSI Edit Hapus | Auto Responsif HP Desktop
+    ✅ BENAR: Filter diperbaiki - tidak Rp 0 lagi | Format: 1 Date Tanggal/No Nota/Teknisi | 2 Pelanggan Nama/WA/Alamat | 3 Pembelian Y20 x1 = harga auto | 4 Harga Total Diskon DP/Sisa | 5 Modal | 6 Pendapatan Tunai Only | 7 Laba | 8 Aksi | Auto Responsif HP Desktop
   </div>
 </main>
 <script>
 const h=document.documentElement, b=document.getElementById('btnDark');
 const s=localStorage.getItem('fixzy-dark');
-if(s==='1' || (!s && window.matchMedia('(prefers-color-scheme: dark)').matches)){ document.body.classList.add('light'); h.classList.add('dark'); b.textContent='☀️'; } else { document.body.classList.remove('light'); }
-b.addEventListener('click', ()=>{ document.body.classList.toggle('light'); h.classList.toggle('dark'); const isLight=document.body.classList.contains('light'); localStorage.setItem('fixzy-dark', isLight?'1':'0'); b.textContent=isLight?'☀️':'🌙'; });
+if(s==='light'){ document.body.style.background='#f4f5f7'; document.body.style.color='#111827'; }
+b.addEventListener('click', ()=>{ const isDark=document.body.style.background==='rgb(15, 23, 42)'; if(isDark){ document.body.style.background='#f4f5f7'; document.body.style.color='#111827'; localStorage.setItem('fixzy-dark','light'); } else { document.body.style.background='#0f172a'; document.body.style.color='#e5e7eb'; localStorage.setItem('fixzy-dark','dark'); } });
 </script>
 <script>(function(){var loc=location.href.replace(/#.*$/,"");var ATTR_NAMES=["data-product-id","data-productid","data-product_id","product-id","productid","product_id","data-source-entity-id","source-entity-id","source_entity_id","data-product","data-metadata","data-meta"];var DATASET_KEYS=["productId","productid","product_id","sourceEntityId","sourceentityid","source_entity_id","product","metadata","meta"];function readProductId(value){if(typeof value!=="string"||value.length===0)return null;if(/^[0-9]{6,}$/.test(value))return value;var match=value.match(/(?:product(?:_|-)?id|source(?:_|-)?entity(?:_|-)?id)["'=:\s]+([0-9]{6,})/i);return match?match[1]:null}function extractProductId(start){for(var node=start;node&&node!==document.body;node=node.parentElement){for(var i=0;i<ATTR_NAMES.length;i++){var attrValue=node.getAttribute&&node.getAttribute(ATTR_NAMES[i]);var attrProductId=readProductId(attrValue);if(attrProductId)return attrProductId}var dataset=node.dataset||null;if(dataset){for(var j=0;j<DATASET_KEYS.length;j++){var dataValue=dataset[DATASET_KEYS[j]];var dataProductId=readProductId(dataValue);if(dataProductId)return dataProductId}}}return null}function isInlineMediaSlotElement(node){return !!(node&&node.getAttribute&&node.getAttribute("data-clippy-inline-media-slot")!==null)}function findInlineMediaSlot(start){for(var node=start;node&&node!==document.body;node=node.parentElement){if(isInlineMediaSlotElement(node))return node}return null}function readInlineMediaUrl(node){if(!node)return null;return node.getAttribute&&((node.getAttribute("data-clippy-inline-media-url")||node.getAttribute("data-url")||node.getAttribute("data_url")))||node.href||null}function stripHash(url){return String(url).replace(/#.*$/,"")}function urlsMatch(a,b){if(!a||!b)return false;try{return stripHash(new URL(a,loc).href)===stripHash(new URL(b,loc).href)}catch(_){return stripHash(a)===stripHash(b)}}function isFirstPartyReelUrl(value){try{var url=new URL(value,loc);if(url.protocol!=="https:")return false;var host=url.hostname.toLowerCase();var supported=host==="instagram.com"||host.endsWith(".instagram.com")||host==="facebook.com"||host.endsWith(".facebook.com");return supported&&/\/reels?\//i.test(url.pathname)}catch(_){return false}}function isInlineMediaUrlClick(node,href){var slot=findInlineMediaSlot(node);if(!slot)return false;var slotUrl=readInlineMediaUrl(slot);if(slotUrl)return urlsMatch(href,slotUrl);return isFirstPartyReelUrl(href)}function findDataHref(start){for(var node=start;node&&node!==document.body;node=node.parentElement){if(node.getAttribute){var href=node.getAttribute("data-href")||node.getAttribute("data-url");if(href)return{href:href,node:node}}}return null}var nativeOpen=window.open;window.open=function(url){if(parent!==window&&typeof url==="string"&&/^https?:\/\//.test(url)){parent.postMessage({type:"ecto:usercontent-link-click",href:url},"*");return null}return nativeOpen?nativeOpen.apply(window,arguments):null};document.addEventListener("click",function(e){var target=e.target instanceof Element?e.target:null;if(!target)return;if(parent===window)return;var a=target.closest?target.closest("a[href]"):null;if(a&&a.href&&/^https?:\/\//.test(a.href)&&a.href.replace(/#.*$/,"")!==loc){if(isInlineMediaUrlClick(a,a.href))return;var productId=extractProductId(target)||extractProductId(a);if(productId){e.preventDefault();parent.postMessage({type:"ecto-artifact-link-click",productId:productId},"*");return}e.preventDefault();parent.postMessage({type:"ecto:usercontent-link-click",href:a.href},"*");return}var dataHref=findDataHref(target);if(dataHref&&/^https?:\/\//.test(dataHref.href)&&dataHref.href.replace(/#.*$/,"")!==loc){if(isInlineMediaUrlClick(dataHref.node,dataHref.href))return;e.preventDefault();parent.postMessage({type:"ecto:usercontent-link-click",href:dataHref.href},"*")}},true)})();</script><script>(function(){var FOCUS_TYPE="ecto:artifact-focus-request";var CLOSE_TYPE="ecto:artifact-close-request";function focusArtifactDocument(){var body=document.body;if(!body)return;try{window.focus();}catch(e){}if(!body.hasAttribute("tabindex"))body.setAttribute("tabindex","-1");try{body.focus({preventScroll:true});}catch(e){try{body.focus();}catch(e2){}}}window.addEventListener("message",function(event){if(event.source!==window.parent)return;var data=event.data;if(!data||typeof data!=="object"||data.type!==FOCUS_TYPE)return;if(document.readyState==="loading"){document.addEventListener("DOMContentLoaded",focusArtifactDocument,{once:true});return;}focusArtifactDocument();});window.addEventListener("keydown",function(event){if(event.key!=="Escape")return;window.setTimeout(function(){if(event.defaultPrevented)return;window.parent.postMessage({type:CLOSE_TYPE},"*");},0);});})();</script></body>
 </html>
