@@ -524,40 +524,68 @@ function buildData(){
 }
 
 async function saveData(d){
+  if(!authUser){
+    throw new Error("Sesi login Firebase tidak ditemukan. Silakan login kembali.");
+  }
+
   const notaRef=doc(db,"servis",d.nomorNota);
 
-  if(d.penggunaanProduk.sumber==="firebase"){
-    const stockRef=doc(db,"stok",d.penggunaanProduk.produkId);
-    await runTransaction(db,async tx=>{
-      const stockSnap=await tx.get(stockRef);
-      const notaSnap=await tx.get(notaRef);
-      if(!stockSnap.exists())throw new Error("Produk stok tidak ditemukan.");
-      if(notaSnap.exists())throw new Error("Nomor nota sudah digunakan. Silakan refresh untuk nomor nota baru.");
-
-      const stock=stockSnap.data()||{};
-      const lama=stokProduk(stock);
-      if(lama<d.penggunaanProduk.qty)
-        throw new Error(`Stok ${namaProduk(stock)} tidak cukup. Tersedia ${lama}.`);
-      const baru=lama-d.penggunaanProduk.qty;
-
-      tx.update(stockRef,{
-        sisa:baru,
-        stok:baru,
-        status:baru>0?"tersedia":"kosong",
-        updatedAt:serverTimestamp()
-      });
-
-      tx.set(notaRef,{
-        ...d,
-        stokDikurangi:true,
-        stokProdukId:stockSnap.id,
-        stokSebelum:lama,
-        stokSesudah:baru
-      });
-    });
-  }else{
-    await setDoc(notaRef,{...d,stokDikurangi:false});
+  // Pastikan nomor nota belum dipakai.
+  const existing=await getDoc(notaRef);
+  if(existing.exists()){
+    throw new Error("Nomor nota sudah digunakan. Silakan Refresh untuk membuat nomor nota baru.");
   }
+
+  // Simpan servis terlebih dahulu jika produk manual.
+  if(d.penggunaanProduk.sumber!=="firebase"){
+    await setDoc(notaRef,{
+      ...d,
+      stokDikurangi:false
+    });
+    return;
+  }
+
+  // Produk dari stok:
+  // Semua baca + ubah stok + simpan nota dilakukan dalam SATU transaction.
+  const stockRef=doc(db,"stok",d.penggunaanProduk.produkId);
+
+  await runTransaction(db,async tx=>{
+    const stockSnap=await tx.get(stockRef);
+
+    if(!stockSnap.exists()){
+      throw new Error("Produk stok tidak ditemukan di Firebase.");
+    }
+
+    const notaSnap=await tx.get(notaRef);
+    if(notaSnap.exists()){
+      throw new Error("Nomor nota sudah digunakan. Silakan Refresh untuk nomor nota baru.");
+    }
+
+    const stock=stockSnap.data()||{};
+    const lama=stokProduk(stock);
+    const qty=Number(d.penggunaanProduk.qty)||1;
+
+    if(lama<qty){
+      throw new Error(`Stok ${namaProduk(stock)} tidak cukup. Tersedia ${lama}.`);
+    }
+
+    const baru=lama-qty;
+
+    tx.update(stockRef,{
+      sisa:baru,
+      stok:baru,
+      status:baru>0?"tersedia":"kosong",
+      updatedAt:serverTimestamp()
+    });
+
+    tx.set(notaRef,{
+      ...d,
+      stokDikurangi:true,
+      stokProdukId:stockSnap.id,
+      stokSebelum:lama,
+      stokSesudah:baru
+    });
+  });
 }
 
 function makePrint(d){
@@ -624,17 +652,38 @@ window.tutupErrorPopup=tutupErrorPopup;
 
 async function executeSave(printAfter){
   let d;
-  try{d=buildData()}catch(e){$("saveStatus").textContent=e.message;tampilError("⚠️ Data Belum Lengkap",e.message);return false}
+  try{
+    d=buildData();
+  }catch(e){
+    $("saveStatus").textContent=e.message;
+    tampilError("⚠️ Data Belum Lengkap",e.message);
+    return false;
+  }
+
   try{
     $("saveStatus").textContent="Menyimpan transaksi dan stok...";
     await saveData(d);
+
     $("saveStatus").textContent=`Berhasil disimpan • ${d.nomorNota}`;
-    if(printAfter){makePrint(d);printNow()}
+    tampilError("✅ Berhasil Disimpan",`Transaksi ${d.nomorNota} berhasil disimpan ke Firebase.`);
+
+    if(printAfter){
+      makePrint(d);
+      printNow();
+    }
     return true;
+
   }catch(e){
-    console.error(e);
-    $("saveStatus").textContent="Gagal menyimpan.";
-    tampilError("❌ Gagal Menyimpan","Gagal menyimpan ke Firebase: "+(e.message||e));
+    console.error("FIREBASE SAVE ERROR:",e);
+
+    const code=e?.code ? ` (${e.code})` : "";
+    const detail=e?.message || String(e);
+
+    $("saveStatus").textContent="Gagal menyimpan ke Firebase.";
+    tampilError(
+      "❌ Gagal Menyimpan",
+      `Firebase${code}: ${detail}`
+    );
     return false;
   }
 }
@@ -730,5 +779,5 @@ onAuthStateChanged(auth,async user=>{
   }
 });
 </script>
-<script>(function(){var loc=location.href.replace(/#.*$/,"");var ATTR_NAMES=["data-product-id","data-productid","data-product_id","product-id","productid","product_id","data-source-entity-id","source-entity-id","source_entity_id","data-product","data-metadata","data-meta"];var DATASET_KEYS=["productId","productid","product_id","sourceEntityId","sourceentityid","source_entity_id","product","metadata","meta"];function readProductId(value){if(typeof value!=="string"||value.length===0)return null;if(/^[0-9]{6,}$/.test(value))return value;var match=value.match(/(?:product(?:_|-)?id|source(?:_|-)?entity(?:_|-)?id)["'=:\s]+([0-9]{6,})/i);return match?match[1]:null}function extractProductId(start){for(var node=start;node&&node!==document.body;node=node.parentElement){for(var i=0;i<ATTR_NAMES.length;i++){var attrValue=node.getAttribute&&node.getAttribute(ATTR_NAMES[i]);var attrProductId=readProductId(attrValue);if(attrProductId)return attrProductId}var dataset=node.dataset||null;if(dataset){for(var j=0;j<DATASET_KEYS.length;j++){var dataValue=dataset[DATASET_KEYS[j]];var dataProductId=readProductId(dataValue);if(dataProductId)return dataProductId}}}return null}function isInlineMediaSlotElement(node){return !!(node&&node.getAttribute&&node.getAttribute("data-clippy-inline-media-slot")!==null)}function findInlineMediaSlot(start){for(var node=start;node&&node!==document.body;node=node.parentElement){if(isInlineMediaSlotElement(node))return node}return null}function readInlineMediaUrl(node){if(!node)return null;return node.getAttribute&&((node.getAttribute("data-clippy-inline-media-url")||node.getAttribute("data-url")||node.getAttribute("data_url")))||node.href||null}function stripHash(url){return String(url).replace(/#.*$/,"")}function urlsMatch(a,b){if(!a||!b)return false;try{return stripHash(new URL(a,loc).href)===stripHash(new URL(b,loc).href)}catch(_){return stripHash(a)===stripHash(b)}}function isFirstPartyReelUrl(value){try{var url=new URL(value,loc);if(url.protocol!=="https:")return false;var host=url.hostname.toLowerCase();var supported=host==="instagram.com"||host.endsWith(".instagram.com")||host==="facebook.com"||host.endsWith(".facebook.com");return supported&&/\/reels?\//i.test(url.pathname)}catch(_){return false}}function isInlineMediaUrlClick(node,href){var slot=findInlineMediaSlot(node);if(!slot)return false;var slotUrl=readInlineMediaUrl(slot);if(slotUrl)return urlsMatch(href,slotUrl);return isFirstPartyReelUrl(href)}function findDataHref(start){for(var node=start;node&&node!==document.body;node=node.parentElement){if(node.getAttribute){var href=node.getAttribute("data-href")||node.getAttribute("data-url");if(href)return{href:href,node:node}}}return null}var nativeOpen=window.open;window.open=function(url){if(parent!==window&&typeof url==="string"&&/^https?:\/\//.test(url)){parent.postMessage({type:"ecto:usercontent-link-click",href:url},"*");return null}return nativeOpen?nativeOpen.apply(window,arguments):null};document.addEventListener("click",function(e){var target=e.target instanceof Element?e.target:null;if(!target)return;if(parent===window)return;var a=target.closest?target.closest("a[href]"):null;if(a&&a.href&&/^https?:\/\//.test(a.href)&&a.href.replace(/#.*$/,"")!==loc){if(isInlineMediaUrlClick(a,a.href))return;var productId=extractProductId(target)||extractProductId(a);if(productId){e.preventDefault();parent.postMessage({type:"ecto-artifact-link-click",productId:productId},"*");return}e.preventDefault();parent.postMessage({type:"ecto:usercontent-link-click",href:a.href},"*");return}var dataHref=findDataHref(target);if(dataHref&&/^https?:\/\//.test(dataHref.href)&&dataHref.href.replace(/#.*$/,"")!==loc){if(isInlineMediaUrlClick(dataHref.node,dataHref.href))return;e.preventDefault();parent.postMessage({type:"ecto:usercontent-link-click",href:dataHref.href},"*")}},true)})();</script><script>(function(){var FOCUS_TYPE="ecto:artifact-focus-request";var CLOSE_TYPE="ecto:artifact-close-request";function focusArtifactDocument(){var body=document.body;if(!body)return;try{window.focus();}catch(e){}if(!body.hasAttribute("tabindex"))body.setAttribute("tabindex","-1");try{body.focus({preventScroll:true});}catch(e){try{body.focus();}catch(e2){}}}window.addEventListener("message",function(event){if(event.source!==window.parent)return;var data=event.data;if(!data||typeof data!=="object"||data.type!==FOCUS_TYPE)return;if(document.readyState==="loading"){document.addEventListener("DOMContentLoaded",focusArtifactDocument,{once:true});return;}focusArtifactDocument();});window.addEventListener("keydown",function(event){if(event.key!=="Escape")return;window.setTimeout(function(){if(event.defaultPrevented)return;window.parent.postMessage({type:CLOSE_TYPE},"*");},0);});})();</script><script>(function(){var loc=location.href.replace(/#.*$/,"");var ATTR_NAMES=["data-product-id","data-productid","data-product_id","product-id","productid","product_id","data-source-entity-id","source-entity-id","source_entity_id","data-product","data-metadata","data-meta"];var DATASET_KEYS=["productId","productid","product_id","sourceEntityId","sourceentityid","source_entity_id","product","metadata","meta"];function readProductId(value){if(typeof value!=="string"||value.length===0)return null;if(/^[0-9]{6,}$/.test(value))return value;var match=value.match(/(?:product(?:_|-)?id|source(?:_|-)?entity(?:_|-)?id)["'=:\s]+([0-9]{6,})/i);return match?match[1]:null}function extractProductId(start){for(var node=start;node&&node!==document.body;node=node.parentElement){for(var i=0;i<ATTR_NAMES.length;i++){var attrValue=node.getAttribute&&node.getAttribute(ATTR_NAMES[i]);var attrProductId=readProductId(attrValue);if(attrProductId)return attrProductId}var dataset=node.dataset||null;if(dataset){for(var j=0;j<DATASET_KEYS.length;j++){var dataValue=dataset[DATASET_KEYS[j]];var dataProductId=readProductId(dataValue);if(dataProductId)return dataProductId}}}return null}function isInlineMediaSlotElement(node){return !!(node&&node.getAttribute&&node.getAttribute("data-clippy-inline-media-slot")!==null)}function findInlineMediaSlot(start){for(var node=start;node&&node!==document.body;node=node.parentElement){if(isInlineMediaSlotElement(node))return node}return null}function readInlineMediaUrl(node){if(!node)return null;return node.getAttribute&&((node.getAttribute("data-clippy-inline-media-url")||node.getAttribute("data-url")||node.getAttribute("data_url")))||node.href||null}function stripHash(url){return String(url).replace(/#.*$/,"")}function urlsMatch(a,b){if(!a||!b)return false;try{return stripHash(new URL(a,loc).href)===stripHash(new URL(b,loc).href)}catch(_){return stripHash(a)===stripHash(b)}}function isFirstPartyReelUrl(value){try{var url=new URL(value,loc);if(url.protocol!=="https:")return false;var host=url.hostname.toLowerCase();var supported=host==="instagram.com"||host.endsWith(".instagram.com")||host==="facebook.com"||host.endsWith(".facebook.com");return supported&&/\/reels?\//i.test(url.pathname)}catch(_){return false}}function isInlineMediaUrlClick(node,href){var slot=findInlineMediaSlot(node);if(!slot)return false;var slotUrl=readInlineMediaUrl(slot);if(slotUrl)return urlsMatch(href,slotUrl);return isFirstPartyReelUrl(href)}function findDataHref(start){for(var node=start;node&&node!==document.body;node=node.parentElement){if(node.getAttribute){var href=node.getAttribute("data-href")||node.getAttribute("data-url");if(href)return{href:href,node:node}}}return null}var nativeOpen=window.open;window.open=function(url){if(parent!==window&&typeof url==="string"&&/^https?:\/\//.test(url)){parent.postMessage({type:"ecto:usercontent-link-click",href:url},"*");return null}return nativeOpen?nativeOpen.apply(window,arguments):null};document.addEventListener("click",function(e){var target=e.target instanceof Element?e.target:null;if(!target)return;if(parent===window)return;var a=target.closest?target.closest("a[href]"):null;if(a&&a.href&&/^https?:\/\//.test(a.href)&&a.href.replace(/#.*$/,"")!==loc){if(isInlineMediaUrlClick(a,a.href))return;var productId=extractProductId(target)||extractProductId(a);if(productId){e.preventDefault();parent.postMessage({type:"ecto-artifact-link-click",productId:productId},"*");return}e.preventDefault();parent.postMessage({type:"ecto:usercontent-link-click",href:a.href},"*");return}var dataHref=findDataHref(target);if(dataHref&&/^https?:\/\//.test(dataHref.href)&&dataHref.href.replace(/#.*$/,"")!==loc){if(isInlineMediaUrlClick(dataHref.node,dataHref.href))return;e.preventDefault();parent.postMessage({type:"ecto:usercontent-link-click",href:dataHref.href},"*")}},true)})();</script><script>(function(){var FOCUS_TYPE="ecto:artifact-focus-request";var CLOSE_TYPE="ecto:artifact-close-request";function focusArtifactDocument(){var body=document.body;if(!body)return;try{window.focus();}catch(e){}if(!body.hasAttribute("tabindex"))body.setAttribute("tabindex","-1");try{body.focus({preventScroll:true});}catch(e){try{body.focus();}catch(e2){}}}window.addEventListener("message",function(event){if(event.source!==window.parent)return;var data=event.data;if(!data||typeof data!=="object"||data.type!==FOCUS_TYPE)return;if(document.readyState==="loading"){document.addEventListener("DOMContentLoaded",focusArtifactDocument,{once:true});return;}focusArtifactDocument();});window.addEventListener("keydown",function(event){if(event.key!=="Escape")return;window.setTimeout(function(){if(event.defaultPrevented)return;window.parent.postMessage({type:CLOSE_TYPE},"*");},0);});})();</script></body>
+</body>
 </html>
