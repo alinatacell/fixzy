@@ -159,10 +159,25 @@ function getDp(d){ return Number(d.dp||0); }
 function getSisa(d){ return Number(d.sisa ?? (getTotal(d)-getDiskon(d)-getDp(d))); }
 function getModal(d){
   const items=getItems(d);
-  if(items.length>0) return items.reduce((s,it)=>s+ Number(it.modal||it.hargaBeli||it.harga||0)*Number(it.qty||1),0);
+  if(items.length>0) return items.reduce((s,it)=>s+ Number(it.modal||it.hargaBeli||it.modalBeli||0)*Number(it.qty||1),0);
   return Number(d.modal||0);
 }
-function getLaba(d){ return getTotal(d) - getDiskon(d) - getModal(d); }
+function getPendapatan(d){
+  const st=getStatus(d);
+  // Pendapatan = hasil akhir jika status TUNAI (tambahan bos)
+  if(st==='tunai' || st==='diambil'){
+    return getTotal(d) - getDiskon(d);
+  }
+  return 0;
+}
+function getLaba(d){
+  const st=getStatus(d);
+  // Laba hanya dihitung jika tunai/diambil
+  if(st==='tunai' || st==='diambil'){
+    return getPendapatan(d) - getModal(d);
+  }
+  return 0;
+}
 function getStatus(d){ return (d.status||'masuk').toLowerCase(); }
 
 function render(){
@@ -176,29 +191,31 @@ function render(){
     return hay.includes(q);
   });
 
-  // Ringkasan
-  let omset=0, diterima=0, tagihan=0, modal=0, laba=0;
+  // Ringkasan - Pendapatan hasil akhir jika status TUNAI (tambahan bos)
+  let omset=0, diterima=0, tagihan=0, modal=0, laba=0, pendapatan=0;
   filteredRows.forEach(d=>{
     const tot=getTotal(d);
     const dp=getDp(d);
     const sis=getSisa(d);
     const mod=getModal(d);
     const lb=getLaba(d);
+    const pend=getPendapatan(d);
     const st=getStatus(d);
     omset+=tot;
-    modal+=mod;
-    laba+=lb;
-    if(st==='tunai'||st==='diambil'){
-      diterima+= (dp>0? dp : tot-getDiskon(d));
+    if(st==='tunai' || st==='diambil'){
+      modal+=mod;
+      laba+=lb;
+      pendapatan+=pend;
+      diterima+= (dp>0? dp : pend);
     }else{
       diterima+=dp;
       tagihan+=sis;
     }
   });
   document.getElementById('s1').innerHTML=`<b>Omset (Total Harga)</b><div>Rp ${omset.toLocaleString('id-ID')}</div><span style="font-size:10px;color:#64748b">${filteredRows.length} transaksi</span>`;
-  document.getElementById('s2').innerHTML=`<b>Uang Diterima (DP + Tunai)</b><div style="color:#16a34a">Rp ${diterima.toLocaleString('id-ID')}</div>`;
+  document.getElementById('s2').innerHTML=`<b>Uang Diterima (DP + Tunai)</b><div style="color:#16a34a">Rp ${diterima.toLocaleString('id-ID')}</div><span style="font-size:9px;color:#64748b">Pendapatan Tunai: Rp ${pendapatan.toLocaleString('id-ID')}</span>`;
   document.getElementById('s3').innerHTML=`<b>Tagihan (Piutang / Sisa)</b><div style="color:#d97706">Rp ${tagihan.toLocaleString('id-ID')}</div>`;
-  document.getElementById('s4').innerHTML=`<b>Modal Belanja (Total Modal)</b><div>Rp ${modal.toLocaleString('id-ID')}</div>`;
+  document.getElementById('s4').innerHTML=`<b>Modal Belanja (Tunai)</b><div>Rp ${modal.toLocaleString('id-ID')}</div><span style="font-size:9px;color:#64748b">Hanya hitung Tunai/Diambil</span>`;
   document.getElementById('s5').innerHTML=`<b>Laba Bersih (Total - Modal)</b><div>Rp ${laba.toLocaleString('id-ID')}</div>`;
 
   document.getElementById('info').textContent=`Menampilkan ${filteredRows.length} dari ${allRows.length} data`;
@@ -230,8 +247,8 @@ function render(){
       <td>Rp ${getDp(d).toLocaleString('id-ID')}</td>
       <td style="${getSisa(d)>0?'color:#d97706;font-weight:900':''}">Rp ${getSisa(d).toLocaleString('id-ID')}</td>
       <td>Rp ${getModal(d).toLocaleString('id-ID')}<br><span style="font-size:9px;color:#64748b">Modal Blanja</span></td>
-      <td style="color:#16a34a;font-weight:900">Rp ${getTotal(d).toLocaleString('id-ID')}<br><span style="font-size:9px;color:#64748b">Pendapatan</span></td>
-      <td style="color:${getLaba(d)>=0?'#2563eb':'#dc2626'};font-weight:900">Rp ${getLaba(d).toLocaleString('id-ID')}<br><span style="font-size:9px;color:#64748b">Total - Modal - Diskon</span><br><span class="badge ${badgeCls}" style="margin-top:4px">${st.toUpperCase()}</span></td>
+      <td style="color:${getPendapatan(d)>0?'#16a34a':'#64748b'};font-weight:900">${getPendapatan(d)>0?`Rp ${getPendapatan(d).toLocaleString('id-ID')}`:'-'}<br><span style="font-size:9px;color:#64748b">${st==='tunai'||st==='diambil'?'Pendapatan Tunai':'Belum Tunai'}</span></td>
+      <td style="color:${getLaba(d)>0?'#2563eb': getLaba(d)<0?'#dc2626':'#64748b'};font-weight:900">${getPendapatan(d)>0?`Rp ${getLaba(d).toLocaleString('id-ID')}`:'-'}<br><span style="font-size:9px;color:#64748b">${st==='tunai'||st==='diambil'?'Tunai: Total-Diskon-Modal':'Belum Tunai'}</span><br><span class="badge ${badgeCls}" style="margin-top:4px">${st.toUpperCase()}</span></td>
       <td class="action-cell">
         <div class="action-wrap" id="aw-${d.id}">
           <button class="action-btn" onclick="toggleAction('${d.id}')">Aksi ▾</button>
