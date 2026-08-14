@@ -138,27 +138,90 @@ onAuthStateChanged(auth, async u=>{
 async function loadKaryawan(){
   try{
     let list=[];
+    // FIX: Nama karyawan ambil dari data karyawan, bukan dari nama konter
+    // Coba koleksi karyawan dulu
+    try{
+      const sK=await getDocs(collection(db,"karyawan"));
+      sK.forEach(d=>{
+        const data=d.data();
+        if(data.ownerId===ownerUid || data.ownerUid===ownerUid || !data.ownerId){
+          const namaK = data.nama || data.namaKaryawan || data.name || data.displayName || '';
+          if(namaK) list.push({uid:d.id, email:data.email||'', nama:namaK, asal:'karyawan'});
+        }
+      });
+    }catch{}
+    // Lalu dari users yang ownerId = ownerUid
     try{
       const q=query(collection(db,"users"), where("ownerId","==", ownerUid));
       const s=await getDocs(q);
-      s.forEach(d=>{ const data=d.data(); list.push({uid:d.id, email:data.email||'', nama:data.nama||data.displayName||data.namaKaryawan||data.email||''}); });
+      s.forEach(d=>{
+        const data=d.data();
+        // Nama karyawan ambil dari field nama, bukan email dan bukan konter
+        const namaK = data.nama || data.namaKaryawan || data.displayName || data.name || '';
+        if(namaK && namaK.toLowerCase() !== konterName.toLowerCase()){
+          list.push({uid:d.id, email:data.email||'', nama:namaK, asal:'users'});
+        }else if(namaK){
+          list.push({uid:d.id, email:data.email||'', nama:namaK, asal:'users'});
+        }else if(data.email){
+          // fallback: ambil dari email tanpa domain, tapi jangan pakai konterName
+          const fallbackNama = data.email.split('@')[0];
+          list.push({uid:d.id, email:data.email, nama:fallbackNama, asal:'users-fallback'});
+        }
+      });
     }catch{}
+    // Jika masih kosong, coba semua users role karyawan
     if(list.length===0){
       try{
         const s2=await getDocs(collection(db,"users"));
-        s2.forEach(d=>{ const data=d.data(); if((data.role||'').toLowerCase().includes('karyawan') || data.ownerId===ownerUid) list.push({uid:d.id, email:data.email||'', nama:data.nama||data.displayName||data.email||''}); });
+        s2.forEach(d=>{
+          const data=d.data();
+          if((data.role||'').toLowerCase().includes('karyawan')){
+            const namaK = data.nama || data.namaKaryawan || data.displayName || data.name || data.email?.split('@')[0] || '';
+            if(namaK) list.push({uid:d.id, email:data.email||'', nama:namaK, asal:'users-all'});
+          }
+        });
       }catch{}
     }
+    // Pastikan current user ada, tapi nama dari doc user sendiri, BUKAN dari konterName
     if(!list.find(x=>x.email===currentUser.email)){
-      list.unshift({uid:currentUser.uid, email:currentUser.email, nama:konterName||currentUser.email});
+      try{
+        const curSnap = await getDoc(doc(db,"users", currentUser.uid));
+        let curNama = '';
+        if(curSnap.exists()){
+          const cd = curSnap.data();
+          curNama = cd.nama || cd.namaKaryawan || cd.displayName || cd.name || currentUser.email.split('@')[0];
+        }else{
+          curNama = currentUser.email.split('@')[0];
+        }
+        // Jangan pakai konterName untuk nama karyawan
+        if(curNama.toLowerCase() === konterName.toLowerCase()){
+          curNama = currentUser.email.split('@')[0]; // pakai username email kalau sama dengan konter
+        }
+        list.unshift({uid:currentUser.uid, email:currentUser.email, nama:curNama, asal:'current-user'});
+      }catch{
+        list.unshift({uid:currentUser.uid, email:currentUser.email, nama:currentUser.email.split('@')[0], asal:'current-user-fallback'});
+      }
     }
-    karyawanList=list;
+    // Hapus duplikat berdasarkan nama (case insensitive) dan buang yang nama = konterName kalau ada karyawan lain
+    const seen = new Set();
+    let filtered = [];
+    for(let k of list){
+      const key = (k.nama||'').toLowerCase().trim();
+      if(!key) continue;
+      if(seen.has(key)) continue;
+      seen.add(key);
+      filtered.push(k);
+    }
+    // Jika ada lebih dari 1 karyawan dan salah satu namanya sama dengan konter, prioritaskan yang bukan konter untuk dropdown teknisi
+    // Tapi tetap simpan konter untuk display konter field
+    karyawanList=filtered;
     const sel=document.getElementById('teknisiSelect');
-    // Fix: tampil hanya nama karyawan, jangan pakai email (sesuai request user)
-    sel.innerHTML=list.map(k=>{
-      const namaBersih=(k.nama||'').toString().trim() || k.email.split('@')[0] || 'Karyawan';
-      return `<option value="${namaBersih}" data-email="${k.email}" data-nama="${namaBersih}">${namaBersih}</option>`;
+    // FIX: tampil hanya nama karyawan dari data karyawan, jangan pakai email dan jangan pakai nama konter
+    sel.innerHTML=filtered.map(k=>{
+      const namaBersih=(k.nama||'').toString().trim();
+      return `<option value="${namaBersih}" data-email="${k.email}" data-nama="${namaBersih}" data-asal="${k.asal||''}">${namaBersih}</option>`;
     }).join('');
+    console.log('Karyawan list (nama saja dari data karyawan):', filtered, 'Konter dari admin:', konterName);
   }catch(e){
     document.getElementById('teknisiSelect').innerHTML=`<option value="${currentUser.email}">${currentUser.email}</option>`;
   }
