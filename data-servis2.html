@@ -474,27 +474,45 @@ window.kirimWhatsAppDanSimpan=async()=>{
  const x=data.find(y=>y.id===p.id);
  const pesan=$("statusConfirmMessage").value.trim();
 
- // Simpan status terlebih dahulu supaya status tidak bergantung pada
- // keberhasilan WhatsApp.
+ if(!x){
+   tampilNotice("⚠️ WhatsApp","Data servis tidak ditemukan.");
+   return;
+ }
+
+ const waRaw=x.pelanggan?.wa||x.pelanggan?.whatsapp||"";
+ const wa=normalisasiWA(waRaw);
+
+ if(!wa){
+   tampilNotice("⚠️ WhatsApp","Nomor WhatsApp pelanggan belum tersedia.");
+   return;
+ }
+
+ /*
+  * WAJIB DIBUKA SEBELUM await Firebase.
+  * Kalau window.open dijalankan setelah await, Chrome Android
+  * dapat menganggapnya popup otomatis dan memblokirnya.
+  */
+ const url="https://wa.me/"+wa+"?text="+encodeURIComponent(pesan);
+ let waOpened=false;
+
+ try{
+   const win=window.open(url,"_blank");
+   waOpened=!!win;
+ }catch(e){
+   console.warn("Buka WhatsApp gagal:",e);
+ }
+
+ /*
+  * Setelah perintah buka WhatsApp dipanggil, baru simpan status.
+  * Jadi status tetap tersimpan walaupun browser menolak popup.
+  */
  await simpanStatusDariPopup();
 
- // Setelah status tersimpan, baru coba buka WhatsApp.
- if(x){
-   const waRaw=x.pelanggan?.wa||x.pelanggan?.whatsapp||"";
-   const wa=normalisasiWA(waRaw);
-
-   if(!wa){
-     tampilNotice("⚠️ WhatsApp","Status sudah berubah, tetapi nomor WhatsApp pelanggan belum tersedia.");
-     return;
-   }
-
-   const url="https://wa.me/"+wa+"?text="+encodeURIComponent(pesan);
-   const win=window.open(url,"_blank");
-
-   if(!win){
-     // Jika popup browser diblokir, status tetap sudah tersimpan.
-     tampilNotice("⚠️ WhatsApp","Status sudah berubah. WhatsApp tidak dapat dibuka karena popup browser diblokir.");
-   }
+ if(!waOpened){
+   tampilNotice(
+     "⚠️ WhatsApp",
+     "Status sudah berhasil disimpan. Jika WhatsApp belum terbuka, izinkan popup untuk FIXZY lalu tekan Kirim WhatsApp lagi."
+   );
  }
 };
 
