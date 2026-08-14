@@ -31,16 +31,16 @@
 *{box-sizing:border-box}
 body{margin:0;background:#f1f5f9;color:#111827;font-family:Inter,system-ui,sans-serif;transition:background .3s,color .3s}
 body.dark{background:#0f172a;color:#e5e7eb}
-header{background:#111827;color:#fff;padding:10px 14px;display:flex;align-items:center;gap:12px;position:sticky;top:0;z-index:100;border-bottom:2px solid #facc15}
-.logo{width:52px;height:52px;background:#000;border-radius:14px;display:flex;align-items:center;justify-content:center;border:2px solid #facc15;overflow:hidden;flex:0 0 52px}
+header{background:#111827;color:#fff;padding:10px 14px;display:flex;align-items:center;gap:12px;position:sticky;top:0;z-index:100;border-bottom:1px solid #1e293b}
+.logo{width:52px;height:52px;background:#000;border-radius:14px;display:flex;align-items:center;justify-content:center;border:1px solid #ffffff20;overflow:hidden;flex:0 0 52px}
 .logo img{width:100%;height:100%;object-fit:contain;padding:4px;background:#000;display:block}
 .brand{line-height:1.1}
 .brand b{color:#fff;font-weight:900;font-size:18px;letter-spacing:0.5px}
 .brand b span{color:#facc15}
 .btn{padding:9px 14px;border-radius:12px;font-weight:800;font-size:12px;border:2px solid #111827;cursor:pointer;display:inline-flex;align-items:center;gap:6px;transition:all .2s}
-.btn-refresh{background:#1e293b;color:#fff;border-color:#facc15}
+.btn-refresh{background:#1e293b;color:#fff;border-color:#334155}
 .btn-refresh:hover{background:#facc15;color:#000}
-.btn-moon{background:#000;color:#facc15;border-color:#facc15;width:44px;height:44px;justify-content:center;font-size:18px}
+.btn-moon{background:#1e293b;color:#fff;border-color:#334155;width:44px;height:44px;justify-content:center;font-size:18px}
 .btn-moon:hover{background:#facc15;color:#000}
 main{max-width:1400px;margin:auto;padding:12px}
 .toolbar{display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap}
@@ -51,8 +51,8 @@ body.dark select.filter{background:#1e293b;color:#e5e7eb;border-color:#334155}
 .excel-wrap{background:#fff;border:2px solid #111827;border-radius:16px;overflow:auto;box-shadow:4px 4px 0 #111827;max-height:75vh}
 body.dark .excel-wrap{background:#1e293b;border-color:#334155}
 table{width:100%;border-collapse:collapse;min-width:900px}
-th{background:#111827;color:#fff;font-size:10px;font-weight:900;text-transform:uppercase;padding:12px 10px;white-space:nowrap;position:sticky;top:0;z-index:10;text-align:left;border-bottom:2px solid #facc15}
-th.yellow{background:#facc15;color:#000}
+th{background:#111827;color:#fff;font-size:10px;font-weight:900;text-transform:uppercase;padding:12px 10px;white-space:nowrap;position:sticky;top:0;z-index:10;text-align:left;border-bottom:1px solid #334155}
+th.yellow{background:#111827;color:#fff}
 td{padding:10px;border-bottom:1px solid #e5e7eb;font-size:12px;vertical-align:top}
 body.dark td{border-color:#334155;color:#e5e7eb}
 tr:hover td{background:#fffbeb}
@@ -65,8 +65,8 @@ body.dark tr:hover td{background:#1e293b}
 .modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:200;align-items:center;justify-content:center;padding:12px}
 .modal.show{display:flex}
 .modal-box{width:min(600px,100%);max-height:90vh;overflow:auto;background:#fff;border:3px solid #111827;border-radius:18px;box-shadow:8px 8px 0 #111827}
-body.dark .modal-box{background:#1e293b;border-color:#facc15}
-.modal-head{padding:14px 16px;background:#111827;color:#fff;display:flex;justify-content:space-between;align-items:center;border-bottom:2px solid #facc15;position:sticky;top:0;z-index:5}
+body.dark .modal-box{background:#1e293b;border-color:#334155}
+.modal-head{padding:14px 16px;background:#111827;color:#fff;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #334155;position:sticky;top:0;z-index:5}
 .modal-body{padding:16px}
 .section-title{font-size:10px;font-weight:900;text-transform:uppercase;background:#fff;padding:6px 10px;border-radius:8px;border:1px solid #111827;border-left:4px solid #facc15;width:fit-content;margin-bottom:8px}
 body.dark .section-title{background:#0f172a;color:#fff}
@@ -269,31 +269,42 @@ function showWAPopup(data, status){
   const total=getTotal(data);
   const alamat=getAlamat(data);
   const sisa=getSisa(data);
+  const items=getItems(data);
+  const barang=items.length>0?items.map(i=>i.nama).join(', '):'Y20';
   let msg='';
   if(status==='tagihan'){
-    msg=`Halo ${nama} 🙏
+    msg=`Halo Kak ${nama} 🙏
 
-Tagihan dari *${konterName}*:
-Nota: ${nota}
-Total: Rp ${total.toLocaleString('id-ID')}
-Sisa: Rp ${sisa.toLocaleString('id-ID')}
-Alamat: ${alamat}
+Saya dari *${konterName}*,
+Mau infokan tagihan:
 
-Mohon segera diselesaikan ya. Terima kasih 🙏
-- ${konterName}`;
+📄 Nota: ${nota}
+📦 Barang: ${barang}
+💰 Total: Rp ${total.toLocaleString('id-ID')}
+💳 Sisa Tagihan: Rp ${sisa.toLocaleString('id-ID')}
+📍 Alamat: ${alamat}
+
+Mohon segera diselesaikan ya Kak. Bisa transfer atau datang langsung ke konter.
+
+Terima kasih 🙏
+*${konterName}*`;
   } else {
-    msg=`Halo ${nama} 🙏
+    msg=`Halo Kak ${nama} 🙏
 
-Terima kasih telah berbelanja di *${konterName}*
-Nota: ${nota}
-Total: Rp ${total.toLocaleString('id-ID')} - LUNAS / TUNAI
-Alamat: ${alamat}
+Terima kasih sudah berbelanja di *${konterName}* 🤝
 
-Barang sudah bisa diambil. Ditunggu kedatangannya!
-- ${konterName}`;
+📄 Nota: ${nota}
+📦 Barang: ${barang}
+💰 Total: Rp ${total.toLocaleString('id-ID')} - *LUNAS / TUNAI* ✅
+📍 Alamat: ${alamat}
+
+Barang sudah LUNAS dan bisa diambil kapan saja ya Kak. Ditunggu kedatangannya!
+
+Terima kasih 🙏
+*${konterName}* - Melayani dengan Amanah`;
   }
   document.getElementById('waMessage').textContent=msg;
-  document.getElementById('waInfo').textContent=`Kirim ke ${nama} (${wa}) - ${konterName} - ${status.toUpperCase()}`;
+  document.getElementById('waInfo').textContent=`Akan dikirim ke WA pelanggan: ${nama} (${wa}) - ${konterName}`;
   document.getElementById('waModal').classList.add('show');
 }
 
@@ -307,27 +318,39 @@ window.sendWA=()=>{
   const data=pendingWA.data;
   let waRaw=getWa(data)||'';
   let wa=waRaw.replace(/[^0-9]/g,'');
-  if(!wa){
-    alert('No WA pelanggan kosong: '+waRaw);
+  if(!wa || wa.length<10){
+    alert('No WA pelanggan tidak valid: '+waRaw+'\nPastikan format 08xx');
     return;
   }
   let waNumber=wa;
-  if(waNumber.startsWith('0')) waNumber='62'+waNumber.slice(1);
-  else if(waNumber.startsWith('62')==false && waNumber.length>=10) waNumber='62'+waNumber;
-  const msg=document.getElementById('waMessage').textContent;
+  if(waNumber.startsWith('0')){
+    waNumber='62'+waNumber.slice(1);
+  } else if(!waNumber.startsWith('62')){
+    waNumber='62'+waNumber;
+  }
+  const msg=document.getElementById('waMessage').textContent.trim();
   if(!msg){
     alert('Pesan kosong');
     return;
   }
-  const url=`https://wa.me/${waNumber}?text=${encodeURIComponent(msg)}`;
-  // Coba buka WA - pakai window.open + fallback
-  const win=window.open(url,'_blank');
-  if(!win){
-    // Jika popup blocker, pakai location href
-    window.location.href=url;
-  }
-  // Jangan tutup langsung, beri delay biar user lihat
-  setTimeout(()=>{ closeWAModal(); }, 500);
+  // Langsung arahkan ke WA pelanggan - pakai wa.me
+  const url='https://wa.me/'+waNumber+'?text='+encodeURIComponent(msg);
+  console.log('Kirim WA ke:', waNumber, url);
+  // Buka di tab baru - ini yang langsung ke WA pelanggan
+  const a=document.createElement('a');
+  a.href=url;
+  a.target='_blank';
+  a.rel='noopener noreferrer';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  // Fallback jika tidak kebuka
+  setTimeout(()=>{
+    if(document.hasFocus()){
+      window.open(url,'_blank');
+    }
+  }, 100);
+  closeWAModal();
 }
 
 window.refreshData=()=>{
