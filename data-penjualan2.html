@@ -24,7 +24,7 @@
 </style>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Data Penjualan - Firebase Only</title>
+<title>Data Penjualan - Fix Tampil Firebase</title>
 <script>tailwind = {config:{darkMode:'class'}}</script>
 <script src="https://cdn.tailwindcss.com"></script>
 <script>tailwind.config={darkMode:'class'}</script>
@@ -62,8 +62,8 @@ input,select,textarea{padding:11px;border:1px solid #cbd5e1;border-radius:12px;b
 .dark .salesTable td{border-color:#ffffff08;color:#cbd5e1}
 .salesTable td.wrap{white-space:normal;word-break:break-word;line-height:1.4}
 .badge{padding:5px 9px;border-radius:999px;font-size:10px;font-weight:900;display:inline-flex;white-space:nowrap}
-.status-tunai{background:#dcfce7;color:#15803d}.status-dibayar{background:#dcfce7;color:#15803d}.status-tagihan{background:#fef3c7;color:#b45309}.status-batal{background:#fee2e2;color:#dc2626}.status-masuk{background:#e2e8f0;color:#0f172a}
-.dark .status-tunai,.dark .status-dibayar{background:#052e16;color:#86efac}.dark .status-tagihan{background:#451a03;color:#fcd34d}.dark .status-batal{background:#450a0a;color:#fca5a5}.dark .status-masuk{background:#1e293b;color:#cbd5e1}
+.status-tunai{background:#dcfce7;color:#15803d}.status-dibayar{background:#dcfce7;color:#15803d}.status-lunas{background:#dcfce7;color:#15803d}.status-tagihan{background:#fef3c7;color:#b45309}.status-belum{background:#fef3c7;color:#b45309}.status-batal{background:#fee2e2;color:#dc2626}.status-masuk{background:#e2e8f0;color:#0f172a}.status-{background:#e2e8f0;color:#0f172a}
+.dark .status-tunai,.dark .status-dibayar,.dark .status-lunas{background:#052e16;color:#86efac}.dark .status-tagihan,.dark .status-belum{background:#451a03;color:#fcd34d}.dark .status-batal{background:#450a0a;color:#fca5a5}.dark .status-masuk{background:#1e293b;color:#cbd5e1}
 .actionWrap{position:relative;display:inline-block}
 .actionMain{background:#111827;color:#fff;padding:7px 11px;border-radius:8px;font-size:11px;font-weight:800;cursor:pointer;white-space:nowrap}
 .dark .actionMain{background:#fff;color:#000}
@@ -86,7 +86,7 @@ input,select,textarea{padding:11px;border:1px solid #cbd5e1;border-radius:12px;b
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-import { getFirestore, collection, query, where, getDocs, doc, deleteDoc, updateDoc, getDoc, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import { getFirestore, collection, query, where, getDocs, doc, deleteDoc, updateDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyC_PcarMTT5Un7qfSLzf92o5OGn5rginsI",
@@ -105,18 +105,15 @@ let currentUser=null, ownerUid=null, isOwner=false, allRows=[], filteredRows=[];
 onAuthStateChanged(auth, async u=>{
   if(!u){ location.href="login.html"; return; }
   currentUser=u;
-  // TAMPILKAN AKUN PENGGUNA DI SAMPING LOGO - sesuai request
   document.getElementById('akunSide').textContent=u.email||'-';
-  document.getElementById('akunSideFull').textContent=u.email||'-';
+  document.getElementById('akun').textContent=u.email||'-';
   try{
     const snap=await getDocs(query(collection(db,"users"), where("__name__","==", u.uid)));
     let p=null;
     if(!snap.empty) p=snap.docs[0].data();
     else{ const d=await getDoc(doc(db,"users",u.uid)); if(d.exists()) p=d.data(); }
     if(!p){
-      // jika profil belum ada, buat minimal agar tidak error dan ownerUid = uid sendiri
-      ownerUid=u.uid;
-      isOwner=true;
+      ownerUid=u.uid; isOwner=true;
       document.getElementById('roleBadge').textContent='OWNER';
       document.getElementById('roleBadgeSide').textContent='OWNER';
     }else{
@@ -124,37 +121,110 @@ onAuthStateChanged(auth, async u=>{
       isOwner=p.role==='owner';
       document.getElementById('roleBadge').textContent=isOwner?'OWNER':(p.role||'').toUpperCase();
       document.getElementById('roleBadgeSide').textContent=isOwner?'OWNER':(p.role||'').toUpperCase();
-      document.getElementById('namaKonter').textContent=p.namaKonter||p.namaToko||''; 
+      document.getElementById('namaKonter').textContent=p.namaKonter||p.namaToko||'';
     }
     await load();
   }catch(e){
     document.getElementById('errBox').style.display='block';
-    document.getElementById('errBox').textContent='Error load profil: '+e.message;
+    document.getElementById('errBox').textContent='Error profil: '+e.message;
     ownerUid=u.uid; isOwner=true;
     await load();
   }
 });
 
-function get(d, keys, def=''){ for(let k of keys){ if(d[k]!==undefined && d[k]!==null && d[k]!=='' ) return d[k]; } return def; }
-function getNama(d){ return get(d, ['nama','namaPelanggan','pelanggan','customer','pembeli'],''); }
-function getAlamat(d){ return get(d, ['alamat','alamatPelanggan','alamatLengkap','address'],''); }
-function getNoHp(d){ return get(d, ['noHp','nohp','hp','phone','wa','telp'],''); }
-function getProduk(d){
-  let p=get(d, ['produk','namaProduk','barang','item','product','namaBarang'],'');
-  if(Array.isArray(p)) return p.map(x=>x.nama||x.produk||'').join(', ');
-  if(typeof p==='object'&&p) return p.nama||'';
-  return p;
+// === MAPPING SESUAI STRUKTUR FIREBASE ASLI DARI SCREENSHOT KAMU ===
+function getNested(obj, path, def=''){
+  try{
+    const parts=path.split('.');
+    let cur=obj;
+    for(let p of parts){
+      if(cur===null||cur===undefined) return def;
+      // handle array like items.0.nama
+      if(p.match(/^\d+$/)){
+        cur=cur[parseInt(p)];
+      }else{
+        cur=cur[p];
+      }
+    }
+    if(cur===undefined||cur===null||cur==='') return def;
+    return cur;
+  }catch{ return def; }
 }
-function getImei(d){ return get(d, ['imei','IMEI','sn','serial'],''); }
-function getBeli(d){ return Number(get(d, ['hargaBeli','modal','beli','hargaModal'],0)); }
-function getJual(d){ return Number(get(d, ['hargaJual','total','jual','harga','nominal','grandTotal','biaya','totalBayar'],0)); }
+function getNama(d){
+  // dari screenshot: pelanggan.nama (bisa kosong ""), fallback ke pelanggan.map lain, atau nama atas
+  return d.pelanggan?.nama || d.pelanggan?.name || d.nama || d.namaPelanggan || d.pelangganNama || d.customer || '' || '-';
+}
+function getAlamat(d){
+  return d.pelanggan?.alamat || d.alamat || d.alamatPelanggan || '' ;
+}
+function getNoHp(d){
+  return d.pelanggan?.wa || d.pelanggan?.noHp || d.pelanggan?.hp || d.noHp || d.wa || d.phone || '' ;
+}
+function getProduk(d){
+  // dari screenshot: items array -> items[0].nama
+  if(Array.isArray(d.items) && d.items.length>0){
+    const names=d.items.map(it=>it.nama||it.name||it.produk||'').filter(Boolean);
+    if(names.length>0) return names.join(', ');
+  }
+  return d.produk || d.namaProduk || d.barang || '' ;
+}
+function getImei(d){
+  // screenshot: items[0].barcode atau imei
+  if(Array.isArray(d.items) && d.items.length>0){
+    return d.items[0].barcode || d.items[0].imei || '' ;
+  }
+  return d.imei || d.barcode || '' ;
+}
+function getBeli(d){
+  // screenshot: modal, modalTotal, items[0].modal
+  if(Array.isArray(d.items) && d.items.length>0){
+    const modalTotal=d.items.reduce((s,it)=>s+Number(it.modal||it.modalTotal||0),0);
+    if(modalTotal>0) return modalTotal;
+  }
+  return Number(d.modal || d.modalTotal || d.hargaBeli || 0);
+}
+function getJual(d){
+  // screenshot: total, jumlahTotal, gross, items[0].harga * qty
+  if(d.total) return Number(d.total);
+  if(d.jumlahTotal) return Number(d.jumlahTotal);
+  if(d.gross) return Number(d.gross);
+  if(Array.isArray(d.items) && d.items.length>0){
+    const tot=d.items.reduce((s,it)=>s+Number(it.subtotal||it.harga||0),0);
+    if(tot>0) return tot;
+  }
+  return Number(d.hargaJual || d.harga || 0);
+}
 function getLaba(d){
-  if(d.laba!==''&&d.laba!=null) return Number(d.laba);
+  // screenshot: pendapatan, atau total - modal
+  if(d.pendapatan!==undefined && d.pendapatan!==null && d.pendapatan!=='') return Number(d.pendapatan);
+  if(d.laba!==undefined && d.laba!=='') return Number(d.laba);
   const j=getJual(d), b=getBeli(d);
   return b===0?j:j-b;
 }
-function getStatus(d){ return (get(d, ['status','statusBayar','metodeBayar','metode'],'masuk')).toString().toLowerCase(); }
-function getTeknisi(d){ return get(d, ['teknisi','karyawanEmail','namaTeknisi','namaKaryawan','karyawan'],'-'); }
+function getStatus(d){
+  // screenshot: status: ".." (mungkin kosong), pembayaran, atau piutang/sisa
+  let s=(d.status||'').toString().trim();
+  if(!s || s==='..' || s==='".."' || s.length<2){
+    // fallback dari pembayaran atau sisa/piutang
+    if(d.pembayaran) s=d.pembayaran;
+    else if(d.sisa!==undefined && Number(d.sisa)>0) s='tagihan';
+    else if(d.piutang!==undefined && Number(d.piutang)>0) s='tagihan';
+    else s='lunas';
+  }
+  return s.toLowerCase();
+}
+function getTeknisi(d){
+  return d.teknisi || d.karyawan || d.namaTeknisi || d.createdBy || '' ;
+}
+function getTanggal(d){
+  // screenshot: tanggal: "" kosong, tapi ada createdAt timestamp dan updatedAt
+  if(d.tanggal && d.tanggal.length>3) return d.tanggal;
+  if(d.tanggalMasuk) return d.tanggalMasuk;
+  if(d.createdAt && d.createdAt.toDate) return d.createdAt.toDate().toISOString().slice(0,16).replace('T',' ');
+  if(d.createdAt && d.createdAt.seconds) return new Date(d.createdAt.seconds*1000).toISOString().slice(0,16).replace('T',' ');
+  if(d.createdAt) return String(d.createdAt).slice(0,16);
+  return '';
+}
 
 function renderStats(){
   let total=0, labaTotal=0, masuk=0, tagihan=0, tunai=0, dibayar=0, batal=0;
@@ -162,18 +232,19 @@ function renderStats(){
   filteredRows.forEach(d=>{
     const j=getJual(d); const l=getLaba(d); const s=getStatus(d);
     if(s!=='batal'){ total+=j; labaTotal+=l; }
-    if(s==='masuk'){ masuk++; pMasuk+=j; }
-    else if(s==='tagihan'){ tagihan++; pTagihan+=j; }
-    else if(s==='tunai'){ tunai++; pTunai+=j; }
-    else if(s==='dibayar'){ dibayar++; pDibayar+=j; }
-    else if(s==='batal'){ batal++; }
+    if(s.includes('masuk')){ masuk++; pMasuk+=j; }
+    else if(s.includes('tagih')||s.includes('belum')||s.includes('piutang')){ tagihan++; pTagihan+=j; }
+    else if(s.includes('tunai')){ tunai++; pTunai+=j; }
+    else if(s.includes('lunas')||s.includes('dibayar')||s.includes('bayar')){ dibayar++; pDibayar+=j; }
+    else if(s.includes('batal')){ batal++; }
+    else { masuk++; pMasuk+=j; } // default masuk jika status tidak jelas
   });
-  document.getElementById('statMasuk').innerHTML=`<div style="font-size:10px;font-weight:900;color:#64748b">MASUK</div><div style="font-size:15px;font-weight:900;margin-top:4px">${masuk} trx</div><div style="font-size:11px;color:#64748b;margin-top:2px">Rp ${pMasuk.toLocaleString('id-ID')}</div>`;
+  document.getElementById('statMasuk').innerHTML=`<div style="font-size:10px;font-weight:900;color:#64748b">MASUK / LUNAS</div><div style="font-size:15px;font-weight:900;margin-top:4px">${masuk+dibayar} trx</div><div style="font-size:11px;color:#64748b;margin-top:2px">Rp ${(pMasuk+pDibayar).toLocaleString('id-ID')}</div>`;
   document.getElementById('statTagihan').innerHTML=`<div style="font-size:10px;font-weight:900;color:#64748b">TAGIHAN</div><div style="font-size:15px;font-weight:900;margin-top:4px">${tagihan} trx</div><div style="font-size:11px;color:#64748b;margin-top:2px">Rp ${pTagihan.toLocaleString('id-ID')}</div>`;
-  document.getElementById('statTunai').innerHTML=`<div style="font-size:10px;font-weight:900;color:#64748b">TUNAI/DIBAYAR</div><div style="font-size:15px;font-weight:900;margin-top:4px">${tunai+dibayar} trx</div><div style="font-size:11px;color:#64748b;margin-top:2px">Rp ${(pTunai+pDibayar).toLocaleString('id-ID')}</div>`;
-  document.getElementById('statLaba').innerHTML=`<div style="font-size:10px;font-weight:900;color:#64748b">LABA</div><div style="font-size:15px;font-weight:900;margin-top:4px;color:#15803d">Rp ${labaTotal.toLocaleString('id-ID')}</div><div style="font-size:11px;color:#64748b;margin-top:2px">Batal: ${batal}</div>`;
-  document.getElementById('statTotal').innerHTML=`<div style="font-size:10px;font-weight:900;color:#9ca3af">TOTAL PENDAPATAN</div><div style="font-size:17px;font-weight:900;margin-top:4px;color:#fff">Rp ${total.toLocaleString('id-ID')}</div><div style="font-size:11px;color:#9ca3af;margin-top:2px">${filteredRows.length} transaksi</div>`;
-  document.getElementById('countInfo').textContent=`${filteredRows.length} data dari Firebase - hanya inputan`;
+  document.getElementById('statTunai').innerHTML=`<div style="font-size:10px;font-weight:900;color:#64748b">TUNAI</div><div style="font-size:15px;font-weight:900;margin-top:4px">${tunai} trx</div><div style="font-size:11px;color:#64748b;margin-top:2px">Rp ${pTunai.toLocaleString('id-ID')}</div>`;
+  document.getElementById('statLaba').innerHTML=`<div style="font-size:10px;font-weight:900;color:#64748b">LABA / PENDAPATAN</div><div style="font-size:15px;font-weight:900;margin-top:4px;color:#15803d">Rp ${labaTotal.toLocaleString('id-ID')}</div><div style="font-size:11px;color:#64748b;margin-top:2px">Batal: ${batal}</div>`;
+  document.getElementById('statTotal').innerHTML=`<div style="font-size:10px;font-weight:900;color:#9ca3af">TOTAL JUAL</div><div style="font-size:17px;font-weight:900;margin-top:4px;color:#fff">Rp ${total.toLocaleString('id-ID')}</div><div style="font-size:11px;color:#9ca3af;margin-top:2px">${filteredRows.length} transaksi Firebase</div>`;
+  document.getElementById('countInfo').textContent=`${filteredRows.length} data dari Firebase (struktur asli: pelanggan map + items array)`;
 }
 
 function render(){
@@ -181,9 +252,9 @@ function render(){
   const f=(document.getElementById('filter').value||'').toLowerCase();
   filteredRows=allRows.filter(d=>{
     const s=getStatus(d);
-    if(f && f!=='semua' && s!==f) return false;
+    if(f && f!=='semua' && !s.includes(f)) return false;
     if(q){
-      const hay=[getNama(d), getAlamat(d), getNoHp(d), getProduk(d), getTeknisi(d), d.idTransaksi||''].join(' ').toLowerCase();
+      const hay=[getNama(d), getAlamat(d), getNoHp(d), getProduk(d), getTeknisi(d), d.nomorNota||''].join(' ').toLowerCase();
       if(!hay.includes(q)) return false;
     }
     return true;
@@ -193,7 +264,7 @@ function render(){
   const mobile=document.getElementById('mobileSales');
   tbody.innerHTML=''; mobile.innerHTML='';
   if(filteredRows.length===0){
-    tbody.innerHTML=`<tr><td colspan="12" style="padding:30px;text-align:center;color:#64748b">Belum ada data penjualan di Firebase.<br><span style="font-size:11px">Input lewat form penjualan dulu, otomatis muncul di sini</span></td></tr>`;
+    tbody.innerHTML=`<tr><td colspan="12" style="padding:30px;text-align:center;color:#64748b">Belum ada data penjualan di Firebase.<br><span style="font-size:11px">Cek: koleksi penjualan field uid harus = ${currentUser?.uid||''} atau ownerId = ${ownerUid||''}</span></td></tr>`;
     mobile.innerHTML=`<div class="mobileCard" style="text-align:center;color:#64748b">Belum ada data Firebase</div>`;
     return;
   }
@@ -208,11 +279,13 @@ function render(){
     const laba=getLaba(d);
     const status=getStatus(d);
     const teknisi=getTeknisi(d);
-    const badge=`<span class="badge status-${status}">${status.toUpperCase()}</span>`;
+    const tgl=getTanggal(d);
+    const badgeClass=status.includes('tunai')?'status-tunai':status.includes('lunas')||status.includes('bayar')?'status-dibayar':status.includes('tagih')||status.includes('belum')?'status-tagihan':status.includes('batal')?'status-batal':'status-masuk';
+    const badge=`<span class="badge ${badgeClass}">${status.toUpperCase()}</span>`;
 
     const tr=document.createElement('tr');
     tr.innerHTML=`
-      <td><div style="font-size:11px;font-weight:600">${(d.tanggal||'').slice(0,16)}</div><div style="font-size:10px;color:#94a3b8">${d.idTransaksi||d.id.slice(0,8)}</div></td>
+      <td><div style="font-size:11px;font-weight:600">${tgl.slice(0,16)}</div><div style="font-size:10px;color:#94a3b8">${d.nomorNota||d.id.slice(0,8)}</div></td>
       <td class="wrap" style="font-weight:800">${nama}</td>
       <td class="wrap">${alamat}</td>
       <td>${nohp}</td>
@@ -231,10 +304,9 @@ function render(){
             <button style="color:#dc2626" onclick="hapusData('${d.id}')">🗑 Hapus</button>
             <div style="height:1px;background:#e5e7eb;margin:6px 0"></div>
             <div style="font-size:10px;font-weight:900;color:#94a3b8;padding:4px 8px">UBAH STATUS</div>
-            <button onclick="updateStatus('${d.id}','masuk')">📥 Masuk</button>
-            <button onclick="updateStatus('${d.id}','tagihan')">🧾 Tagihan</button>
+            <button onclick="updateStatus('${d.id}','lunas')">✅ Lunas</button>
             <button onclick="updateStatus('${d.id}','tunai')">💵 Tunai</button>
-            <button onclick="updateStatus('${d.id}','dibayar')">✅ Dibayar</button>
+            <button onclick="updateStatus('${d.id}','tagihan')">🧾 Tagihan</button>
             <button style="color:#b45309" onclick="updateStatus('${d.id}','batal')">❌ Batal</button>
           </div>
         </div>
@@ -251,18 +323,17 @@ function render(){
       </div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:12px">
         <div><div style="font-size:9px;color:#94a3b8;font-weight:800">PRODUK</div><div style="font-weight:700">${produk}</div><div style="font-size:10px;color:#94a3b8">${imei}</div></div>
-        <div><div style="font-size:9px;color:#94a3b8;font-weight:800">PENDAPATAN</div><div style="font-weight:900">Rp ${jual.toLocaleString('id-ID')}</div><div style="font-size:11px;color:#15803d">Laba Rp ${laba.toLocaleString('id-ID')}</div><div style="font-size:10px;color:#64748b">Teknisi: ${teknisi}</div></div>
+        <div><div style="font-size:9px;color:#94a3b8;font-weight:800">JUAL / PENDAPATAN</div><div style="font-weight:900">Rp ${jual.toLocaleString('id-ID')}</div><div style="font-size:11px;color:#15803d">Laba Rp ${laba.toLocaleString('id-ID')}</div><div style="font-size:10px;color:#64748b">Teknisi: ${teknisi}</div></div>
       </div>
       <div style="margin-top:10px">
         <div class="actionWrap" style="width:100%" id="mwrap-${d.id}">
-          <button class="actionMain" style="width:100%" onclick="toggleAction('m${d.id}')">Aksi: Edit / Hapus / Status ▾</button>
+          <button class="actionMain" style="width:100%" onclick="toggleAction('m${d.id}')">Aksi ▾</button>
           <div class="actionMenu" id="menu-m${d.id}">
             <button onclick="editData('${d.id}')">✏️ Edit</button>
             <button style="color:#dc2626" onclick="hapusData('${d.id}')">🗑 Hapus</button>
-            <button onclick="updateStatus('${d.id}','masuk')">📥 Masuk</button>
-            <button onclick="updateStatus('${d.id}','tagihan')">🧾 Tagihan</button>
+            <button onclick="updateStatus('${d.id}','lunas')">✅ Lunas</button>
             <button onclick="updateStatus('${d.id}','tunai')">💵 Tunai</button>
-            <button onclick="updateStatus('${d.id}','dibayar')">✅ Dibayar</button>
+            <button onclick="updateStatus('${d.id}','tagihan')">🧾 Tagihan</button>
             <button style="color:#b45309" onclick="updateStatus('${d.id}','batal')">❌ Batal</button>
           </div>
         </div>
@@ -274,64 +345,70 @@ function render(){
 
 async function load(){
   document.getElementById('errBox').style.display='none';
-  document.getElementById('tbody').innerHTML=`<tr><td colspan="12" style="padding:20px;text-align:center;color:#64748b">Memuat data Firebase...</td></tr>`;
+  document.getElementById('tbody').innerHTML=`<tr><td colspan="12" style="padding:20px;text-align:center;color:#64748b">Memuat data Firebase (cek uid, ownerId, ownerUid)...</td></tr>`;
   try{
-    // LOGIKA BARU: hanya Firebase, tanpa contoh
-    // 1. Coba query ownerId == ownerUid
-    // 2. Jika kosong, coba ownerUid == ownerUid
-    // 3. Jika masih kosong, coba tanpa filter tapi filter client-side (untuk akun lama yang datanya tanpa ownerId)
     let rows=[];
     const ownerIdToQuery = ownerUid || currentUser.uid;
+    const uidToQuery = currentUser.uid;
     
+    // COBA 1: uid == currentUser.uid (sesuai screenshot: uid: "Ee...")
     try{
-      let snap=await getDocs(query(collection(db,"penjualan"), where("ownerId","==", ownerIdToQuery)));
+      let snap=await getDocs(query(collection(db,"penjualan"), where("uid","==", uidToQuery)));
       if(!snap.empty) rows=snap.docs.map(d=>({id:d.id, ...d.data()}));
-    }catch(e){ console.warn("query ownerId error", e); }
+      console.log("query uid", uidToQuery, "found", rows.length);
+    }catch(e){ console.warn("query uid error", e); }
     
+    // COBA 2: ownerId == ownerUid (untuk data lama)
     if(rows.length===0){
       try{
-        let snap2=await getDocs(query(collection(db,"penjualan"), where("ownerUid","==", ownerIdToQuery)));
-        if(!snap2.empty) rows=snap2.docs.map(d=>({id:d.id, ...d.data()}));
+        let snap=await getDocs(query(collection(db,"penjualan"), where("ownerId","==", ownerIdToQuery)));
+        if(!snap.empty) rows=snap.docs.map(d=>({id:d.id, ...d.data()}));
+        console.log("query ownerId", ownerIdToQuery, "found", rows.length);
+      }catch(e){ console.warn("query ownerId error", e); }
+    }
+    
+    // COBA 3: ownerUid == ownerUid
+    if(rows.length===0){
+      try{
+        let snap=await getDocs(query(collection(db,"penjualan"), where("ownerUid","==", ownerIdToQuery)));
+        if(!snap.empty) rows=snap.docs.map(d=>({id:d.id, ...d.data()}));
+        console.log("query ownerUid", ownerIdToQuery, "found", rows.length);
       }catch(e){ console.warn("query ownerUid error", e); }
     }
     
-    // FIX UTAMA: jika masih kosong, ambil semua dan filter manual (untuk data lama tanpa ownerId atau akun baru)
+    // COBA 4: FALLBACK - ambil semua dan filter manual (untuk debug kenapa gak tampil)
     if(rows.length===0){
       try{
-        // coba ambil semua penjualan (limit 100 untuk performa)
         let snapAll=await getDocs(collection(db,"penjualan"));
         let all=snapAll.docs.map(d=>({id:d.id, ...d.data()}));
-        // filter yang ownerId nya cocok atau tidak ada ownerId (data lama) atau uid cocok
+        console.log("Fallback all docs", all.length, "sample", all[0]);
+        // tampilkan semua yang uid nya mirip atau tanpa filter untuk debug
         rows=all.filter(doc=>{
-          const oId=doc.ownerId||doc.ownerUid||doc.uid||'';
-          // tampilkan jika ownerId sama, atau jika doc tidak punya ownerId (data lama input sebelum sistem owner)
-          // dan juga tampilkan jika karyawanEmail sama dengan current user (inputan dia sendiri)
-          return oId===ownerIdToQuery || oId==='' || doc.karyawanEmail===currentUser.email || doc.uid===currentUser.uid;
+          const oUid=doc.uid||'';
+          const oId=doc.ownerId||'';
+          const oUid2=doc.ownerUid||'';
+          const cBy=doc.createdBy||'';
+          // cocok jika salah satu field sama dengan current uid atau ownerUid atau email
+          return oUid===uidToQuery || oId===ownerIdToQuery || oUid2===ownerIdToQuery || cBy===currentUser.email || oUid.startsWith(uidToQuery.slice(0,5));
         });
-        console.log("Fallback all rows:", rows.length, "from", all.length);
+        // Jika masih 0, untuk DEBUG tampilkan semua (biar kamu lihat data ada)
+        if(rows.length===0 && all.length>0){
+          document.getElementById('errBox').style.display='block';
+          document.getElementById('errBox').textContent='DEBUG: Data ada '+all.length+' docs tapi uid/ownerId tidak cocok.\nLogin UID: '+uidToQuery+'\nOwnerID query: '+ownerIdToQuery+'\nContoh doc uid: '+(all[0].uid||'')+' ownerId: '+(all[0].ownerId||'')+' createdBy: '+(all[0].createdBy||'')+'\n\nMenampilkan semua data untuk debug...';
+          rows=all; // tampilkan semua untuk debug
+        }
       }catch(e){
         console.warn("fallback all error", e);
         document.getElementById('errBox').style.display='block';
-        document.getElementById('errBox').textContent='Gagal baca Firebase: '+e.message+'\nCek Rules Firestore untuk koleksi penjualan harus allow read if ownerId == request.auth.uid';
+        document.getElementById('errBox').textContent='Gagal baca Firebase: '+e.message;
       }
     }
 
-    // HAPUS CONTOH: filter hanya yang mengandung idTransaksi contoh
-    rows=rows.filter(d=>{
-      const id=(d.idTransaksi||'').toString();
-      if(id.startsWith('JUAL-17866')) return false;
-      if(["Andi Wijaya","Siti Aminah","Budi Santoso"].includes((d.nama||'').trim())) {
-        // jika ada field isContoh true, buang
-        if(d.isContoh) return false;
-        // tetap tampilkan jika bukan dummy - cek jika ada alamat asli
-        // untuk amannya, jika nama contoh tapi ada alamat asli panjang, tetap tampilkan? Kita buang saja agar sesuai request "hanya inputan"
-        // Tapi jika user input manual nama sama, tetap dibuang - ini sesuai request kamu sebelumnya yang mau buang contoh
-        return false;
-      }
-      return true;
+    rows.sort((a,b)=>{
+      const ta=a.createdAt?.seconds||0, tb=b.createdAt?.seconds||0;
+      if(tb!==ta) return tb-ta;
+      return new Date(b.tanggal||0)-new Date(a.tanggal||0);
     });
-
-    rows.sort((a,b)=> new Date(b.tanggal||b.createdAt||0)-new Date(a.tanggal||a.createdAt||0));
     allRows=rows;
     render();
   }catch(e){
@@ -369,7 +446,7 @@ window.updateStatus=async(id,status)=>{
   try{
     await updateDoc(doc(db,"penjualan",id), {status:status, updatedAt:new Date().toISOString()});
     closeAll(); await load();
-  }catch(err){ alert("Gagal update status: "+err.message); }
+  }catch(err){ alert("Gagal update: "+err.message); }
 }
 window.hapusData=async(id)=>{
   if(!isOwner){ alert("Hanya owner bisa hapus"); return; }
@@ -383,14 +460,12 @@ window.editData=(id)=>{
   const d=allRows.find(x=>x.id===id);
   if(!d) return;
   document.getElementById('editId').value=d.id;
-  document.getElementById('editNama').value=getNama(d);
-  document.getElementById('editAlamat').value=getAlamat(d);
-  document.getElementById('editNoHp').value=getNoHp(d);
-  document.getElementById('editProduk').value=getProduk(d);
-  document.getElementById('editImei').value=getImei(d);
-  document.getElementById('editBeli').value=getBeli(d);
+  document.getElementById('editNama').value=d.pelanggan?.nama||d.nama||'';
+  document.getElementById('editAlamat').value=d.pelanggan?.alamat||d.alamat||'';
+  document.getElementById('editNoHp').value=d.pelanggan?.wa||d.noHp||'';
+  document.getElementById('editProduk').value=Array.isArray(d.items)?d.items.map(i=>i.nama).join(', '):(d.produk||'');
   document.getElementById('editJual').value=getJual(d);
-  document.getElementById('editTeknisi').value=getTeknisi(d);
+  document.getElementById('editTeknisi').value=d.teknisi||'';
   document.getElementById('editModal').classList.add('show');
 }
 window.closeEdit=()=>{ document.getElementById('editModal').classList.remove('show'); }
@@ -401,14 +476,10 @@ document.getElementById('editForm').addEventListener('submit', async e=>{
   const id=document.getElementById('editId').value;
   try{
     await updateDoc(doc(db,"penjualan",id), {
-      nama:document.getElementById('editNama').value,
-      alamat:document.getElementById('editAlamat').value,
-      noHp:document.getElementById('editNoHp').value,
-      produk:document.getElementById('editProduk').value,
-      imei:document.getElementById('editImei').value,
-      hargaBeli:Number(document.getElementById('editBeli').value||0),
-      hargaJual:Number(document.getElementById('editJual').value||0),
-      laba:Number(document.getElementById('editJual').value||0)-Number(document.getElementById('editBeli').value||0),
+      'pelanggan.nama':document.getElementById('editNama').value,
+      'pelanggan.alamat':document.getElementById('editAlamat').value,
+      'pelanggan.wa':document.getElementById('editNoHp').value,
+      total:Number(document.getElementById('editJual').value||0),
       teknisi:document.getElementById('editTeknisi').value,
       updatedAt:new Date().toISOString()
     });
@@ -418,16 +489,14 @@ document.getElementById('editForm').addEventListener('submit', async e=>{
 </script>
 </head>
 <body>
-<!-- HEADER: LOGO BG HITAM, AKUN DI SAMPING LOGO, LIMUDAHKAN + TAGLINE DIHILANGKAN -->
 <header>
   <div style="display:flex;align-items:center;gap:12px;min-width:0">
     <div class="headerLogo">
       <img src="logo.png" style="width:32px;height:32px;object-fit:contain;background:#000" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex'">
       <div style="display:none;width:100%;height:100%;align-items:center;justify-content:center;font-weight:900;font-size:14px;color:#fff">F</div>
     </div>
-    <!-- AKUN PENGGUNA DI SAMPING LOGO - sesuai request, limudahkan + tagline dihilangkan -->
     <div style="min-width:0;line-height:1.25">
-      <div style="font-size:13px;font-weight:900;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:200px" id="akunSide">Memuat...</div>
+      <div style="font-size:13px;font-weight:900;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:200px" id="akunSide">Memuat akun...</div>
       <div style="display:flex;align-items:center;gap:6px;margin-top:2px">
         <span id="roleBadgeSide" style="background:#2563eb;color:#fff;padding:2px 6px;border-radius:6px;font-size:9px;font-weight:900">-</span>
         <span id="namaKonter" style="font-size:11px;color:#9ca3af;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:120px"></span>
@@ -435,20 +504,21 @@ document.getElementById('editForm').addEventListener('submit', async e=>{
     </div>
   </div>
   <div class="grow"></div>
+  <!-- REFRESH 1 AJA DI HEADER - sesuai request -->
   <button class="refresh" onclick="load()">🔄 Refresh</button>
   <button class="refresh" id="darkToggle" style="margin-left:6px">🌙</button>
-  <!-- AKUN DI KANAN JUGA TETAP ADA UNTUK BACKUP -->
   <div style="text-align:right;margin-left:10px;line-height:1.2" class="hidden md:block">
-    <div style="font-size:11px;color:#9ca3af"><span id="akun">-</span></div>
-    <div style="font-size:10px"><span id="roleBadge" style="background:#2563eb;color:#fff;padding:2px 6px;border-radius:6px;font-size:9px"></span></div>
+    <div style="font-size:11px;color:#9ca3af"><span id="akun"></span></div>
+    <div style="margin-top:2px"><span id="roleBadge" style="background:#2563eb;color:#fff;padding:2px 6px;border-radius:6px;font-size:9px"></span></div>
   </div>
 </header>
 
 <main>
   <div id="errBox" class="errBox" style="display:none"></div>
   <div class="bar">
-    <input id="search" class="search" placeholder="Cari nama / alamat / teknisi / produk...">
-    <select id="filter"><option value="semua">Semua Status</option><option value="masuk">Masuk</option><option value="tagihan">Tagihan</option><option value="tunai">Tunai</option><option value="dibayar">Dibayar</option><option value="batal">Batal</option></select>
+    <input id="search" class="search" placeholder="Cari nama / alamat / teknisi / produk / nota...">
+    <select id="filter"><option value="semua">Semua Status</option><option value="lunas">Lunas</option><option value="tunai">Tunai</option><option value="tagihan">Tagihan</option><option value="belum">Belum Bayar</option><option value="batal">Batal</option><option value="masuk">Masuk</option></select>
+    <!-- refresh di bar sudah dihapus, hanya 1 di header -->
   </div>
 
   <div class="stats">
@@ -462,27 +532,25 @@ document.getElementById('editForm').addEventListener('submit', async e=>{
 
   <div class="tableWrap">
     <table class="salesTable">
-      <thead><tr><th>Tanggal</th><th>Nama Pelanggan</th><th>Alamat Pelanggan</th><th>No HP</th><th>Produk</th><th>IMEI</th><th>Beli</th><th>Jual / Pendapatan</th><th>Laba</th><th>Status</th><th>Teknisi</th><th>Aksi</th></tr></thead>
+      <thead><tr><th>Tanggal</th><th>Nama Pelanggan</th><th>Alamat Pelanggan</th><th>No HP / WA</th><th>Produk (items)</th><th>IMEI / Barcode</th><th>Beli (modal)</th><th>Jual / Total</th><th>Laba / Pendapatan</th><th>Status</th><th>Teknisi</th><th>Aksi</th></tr></thead>
       <tbody id="tbody"></tbody>
     </table>
   </div>
   <div class="mobileSales" id="mobileSales"></div>
-  <div style="margin-top:14px;font-size:11px;color:#64748b;text-align:center">Hanya input ke Firebase & tampilkan dari Firebase • Data asli sesuai inputan • No dummy • Akun di samping logo</div>
+  <div style="margin-top:14px;font-size:11px;color:#64748b;text-align:center">Fix: query uid + ownerId + ownerUid + fallback all • Mapping pelanggan map + items array • Hanya Firebase asli • Refresh 1 di header • Akun di samping logo</div>
 </main>
 
 <div class="modal" id="editModal">
   <div class="modalBox">
-    <h2 style="font-weight:900;margin:0 0 12px">Edit Data Firebase</h2>
+    <h2 style="font-weight:900;margin:0 0 12px">Edit Data Firebase (struktur asli)</h2>
     <form id="editForm" style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
       <input type="hidden" id="editId">
-      <div><label style="font-size:11px;font-weight:800">Nama Pelanggan</label><input id="editNama" required style="width:100%;margin-top:4px"></div>
-      <div><label style="font-size:11px;font-weight:800">No HP</label><input id="editNoHp" style="width:100%;margin-top:4px"></div>
-      <div style="grid-column:1/-1"><label style="font-size:11px;font-weight:800">Alamat Pelanggan</label><textarea id="editAlamat" style="width:100%;margin-top:4px;min-height:60px"></textarea></div>
-      <div style="grid-column:1/-1"><label style="font-size:11px;font-weight:800">Produk</label><input id="editProduk" style="width:100%;margin-top:4px"></div>
-      <div><label style="font-size:11px;font-weight:800">IMEI</label><input id="editImei" style="width:100%;margin-top:4px"></div>
+      <div><label style="font-size:11px;font-weight:800">Nama Pelanggan (pelanggan.nama)</label><input id="editNama" required style="width:100%;margin-top:4px"></div>
+      <div><label style="font-size:11px;font-weight:800">No WA (pelanggan.wa)</label><input id="editNoHp" style="width:100%;margin-top:4px"></div>
+      <div style="grid-column:1/-1"><label style="font-size:11px;font-weight:800">Alamat Pelanggan (pelanggan.alamat)</label><textarea id="editAlamat" style="width:100%;margin-top:4px;min-height:60px"></textarea></div>
+      <div style="grid-column:1/-1"><label style="font-size:11px;font-weight:800">Produk (items[0].nama)</label><input id="editProduk" style="width:100%;margin-top:4px" readonly></div>
+      <div><label style="font-size:11px;font-weight:800">Total Jual (total)</label><input id="editJual" type="number" style="width:100%;margin-top:4px"></div>
       <div><label style="font-size:11px;font-weight:800">Teknisi</label><input id="editTeknisi" style="width:100%;margin-top:4px"></div>
-      <div><label style="font-size:11px;font-weight:800">Harga Beli</label><input id="editBeli" type="number" style="width:100%;margin-top:4px"></div>
-      <div><label style="font-size:11px;font-weight:800">Harga Jual</label><input id="editJual" type="number" style="width:100%;margin-top:4px"></div>
       <div style="grid-column:1/-1;display:flex;gap:8px;margin-top:10px"><button type="submit" style="flex:1;background:#111827;color:#fff">Simpan ke Firebase</button><button type="button" onclick="closeEdit()" style="background:#e5e7eb;color:#111827">Batal</button></div>
     </form>
   </div>
