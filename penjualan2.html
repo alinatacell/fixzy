@@ -65,7 +65,7 @@ body.dark .modal-box{background:#1e293b}
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-import { getFirestore, collection, query, where, getDocs, doc, getDoc, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import { getFirestore, collection, query, where, getDocs, doc, getDoc, addDoc, updateDoc, serverTimestamp, increment } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyC_PcarMTT5Un7qfSLzf92o5OGn5rginsI",
@@ -100,12 +100,35 @@ onAuthStateChanged(auth, async u=>{
     }else{
       isOwner = (p.role||'').toLowerCase()==='owner' || p.isOwner===true;
       ownerUid = p.ownerId || p.ownerUid || (isOwner ? u.uid : p.ownerUid) || u.uid;
-      konterName = p.namaKonter || p.namaToko || p.tokoName || p.displayName || p.nama || "Fixzy Konter";
+      // FIX 1: Nama konter ambil dari register ADMIN, bukan dari karyawan
+      if(isOwner){
+        // Jika owner, ambil langsung dari doc sendiri
+        konterName = p.namaKonter || p.namaToko || p.tokoName || p.namaKonterToko || p.konter || p.storeName || p.displayName || p.nama || p.name || p.username || "Fixzy - A Yudi Thea";
+      }else{
+        // Jika karyawan/employee, ambil dari doc ADMIN (ownerUid)
+        try{
+          const ownerSnap = await getDoc(doc(db,"users", ownerUid));
+          if(ownerSnap.exists()){
+            const op = ownerSnap.data();
+            konterName = op.namaKonter || op.namaToko || op.tokoName || op.namaKonterToko || op.konter || op.storeName || op.displayName || op.nama || op.name || op.username || "Fixzy - A Yudi Thea";
+            console.log("Nama konter dari register admin:", konterName, "ownerUid:", ownerUid);
+          }else{
+            konterName = p.namaKonter || p.namaToko || p.nama || "Fixzy - A Yudi Thea";
+          }
+        }catch(e){
+          console.warn("Gagal ambil konter admin, fallback ke data karyawan", e);
+          konterName = p.namaKonter || p.namaToko || p.nama || "Fixzy - A Yudi Thea";
+        }
+      }
       document.getElementById('roleSide').textContent=isOwner?'OWNER':(p.role||'KARYAWAN').toUpperCase();
       document.getElementById('roleSide').style.background=isOwner?'#16a34a':'#2563eb';
     }
   }catch(e){ ownerUid=u.uid; isOwner=true; konterName="Fixzy - A Yudi Thea"; }
   document.getElementById('konterField').value=konterName;
+  // Update info untuk debug
+  const konterInfoEl = document.getElementById('konterField').parentElement?.parentElement?.parentElement?.querySelector('#konterInfo') || document.getElementById('konterInfo');
+  // konterInfo akan diisi nanti
+
   document.getElementById('tanggalField').valueAsDate=new Date();
   autoGenerateNotaBarcode();
   await loadKaryawan();
@@ -115,23 +138,90 @@ onAuthStateChanged(auth, async u=>{
 async function loadKaryawan(){
   try{
     let list=[];
+    // FIX: Nama karyawan ambil dari data karyawan, bukan dari nama konter
+    // Coba koleksi karyawan dulu
+    try{
+      const sK=await getDocs(collection(db,"karyawan"));
+      sK.forEach(d=>{
+        const data=d.data();
+        if(data.ownerId===ownerUid || data.ownerUid===ownerUid || !data.ownerId){
+          const namaK = data.nama || data.namaKaryawan || data.name || data.displayName || '';
+          if(namaK) list.push({uid:d.id, email:data.email||'', nama:namaK, asal:'karyawan'});
+        }
+      });
+    }catch{}
+    // Lalu dari users yang ownerId = ownerUid
     try{
       const q=query(collection(db,"users"), where("ownerId","==", ownerUid));
       const s=await getDocs(q);
-      s.forEach(d=>{ const data=d.data(); list.push({uid:d.id, email:data.email||'', nama:data.nama||data.displayName||data.namaKaryawan||data.email||''}); });
+      s.forEach(d=>{
+        const data=d.data();
+        // Nama karyawan ambil dari field nama, bukan email dan bukan konter
+        const namaK = data.nama || data.namaKaryawan || data.displayName || data.name || '';
+        if(namaK && namaK.toLowerCase() !== konterName.toLowerCase()){
+          list.push({uid:d.id, email:data.email||'', nama:namaK, asal:'users'});
+        }else if(namaK){
+          list.push({uid:d.id, email:data.email||'', nama:namaK, asal:'users'});
+        }else if(data.email){
+          // fallback: ambil dari email tanpa domain, tapi jangan pakai konterName
+          const fallbackNama = data.email.split('@')[0];
+          list.push({uid:d.id, email:data.email, nama:fallbackNama, asal:'users-fallback'});
+        }
+      });
     }catch{}
+    // Jika masih kosong, coba semua users role karyawan
     if(list.length===0){
       try{
         const s2=await getDocs(collection(db,"users"));
-        s2.forEach(d=>{ const data=d.data(); if((data.role||'').toLowerCase().includes('karyawan') || data.ownerId===ownerUid) list.push({uid:d.id, email:data.email||'', nama:data.nama||data.displayName||data.email||''}); });
+        s2.forEach(d=>{
+          const data=d.data();
+          if((data.role||'').toLowerCase().includes('karyawan')){
+            const namaK = data.nama || data.namaKaryawan || data.displayName || data.name || data.email?.split('@')[0] || '';
+            if(namaK) list.push({uid:d.id, email:data.email||'', nama:namaK, asal:'users-all'});
+          }
+        });
       }catch{}
     }
+    // Pastikan current user ada, tapi nama dari doc user sendiri, BUKAN dari konterName
     if(!list.find(x=>x.email===currentUser.email)){
-      list.unshift({uid:currentUser.uid, email:currentUser.email, nama:konterName||currentUser.email});
+      try{
+        const curSnap = await getDoc(doc(db,"users", currentUser.uid));
+        let curNama = '';
+        if(curSnap.exists()){
+          const cd = curSnap.data();
+          curNama = cd.nama || cd.namaKaryawan || cd.displayName || cd.name || currentUser.email.split('@')[0];
+        }else{
+          curNama = currentUser.email.split('@')[0];
+        }
+        // Jangan pakai konterName untuk nama karyawan
+        if(curNama.toLowerCase() === konterName.toLowerCase()){
+          curNama = currentUser.email.split('@')[0]; // pakai username email kalau sama dengan konter
+        }
+        list.unshift({uid:currentUser.uid, email:currentUser.email, nama:curNama, asal:'current-user'});
+      }catch{
+        list.unshift({uid:currentUser.uid, email:currentUser.email, nama:currentUser.email.split('@')[0], asal:'current-user-fallback'});
+      }
     }
-    karyawanList=list;
+    // Hapus duplikat berdasarkan nama (case insensitive) dan buang yang nama = konterName kalau ada karyawan lain
+    const seen = new Set();
+    let filtered = [];
+    for(let k of list){
+      const key = (k.nama||'').toLowerCase().trim();
+      if(!key) continue;
+      if(seen.has(key)) continue;
+      seen.add(key);
+      filtered.push(k);
+    }
+    // Jika ada lebih dari 1 karyawan dan salah satu namanya sama dengan konter, prioritaskan yang bukan konter untuk dropdown teknisi
+    // Tapi tetap simpan konter untuk display konter field
+    karyawanList=filtered;
     const sel=document.getElementById('teknisiSelect');
-    sel.innerHTML=list.map(k=>`<option value="${k.email}" data-nama="${k.nama}">${k.nama} (${k.email})</option>`).join('');
+    // FIX: tampil hanya nama karyawan dari data karyawan, jangan pakai email dan jangan pakai nama konter
+    sel.innerHTML=filtered.map(k=>{
+      const namaBersih=(k.nama||'').toString().trim();
+      return `<option value="${namaBersih}" data-email="${k.email}" data-nama="${namaBersih}" data-asal="${k.asal||''}">${namaBersih}</option>`;
+    }).join('');
+    console.log('Karyawan list (nama saja dari data karyawan):', filtered, 'Konter dari admin:', konterName);
   }catch(e){
     document.getElementById('teknisiSelect').innerHTML=`<option value="${currentUser.email}">${currentUser.email}</option>`;
   }
@@ -143,7 +233,15 @@ async function loadProduk(){
     for(let col of ["stok","produk","products","product"]){
       try{
         const s=await getDocs(collection(db,col));
-        if(!s.empty){ docs=[...docs, ...s.docs.map(d=>({id:d.id, _col:col, ...d.data()}))]; if(docs.length>0) break; }
+        if(!s.empty){
+          docs=[...docs, ...s.docs.map(d=>{
+            const data=d.data();
+            // Stock bisa di field: stok, qty, jumlah, stock, stokTersedia
+            const stokVal = Number(data.stok ?? data.qty ?? data.jumlah ?? data.stock ?? data.stokTersedia ?? 0);
+            return {id:d.id, _col:col, _stok:stokVal, ...data};
+          })];
+          if(docs.length>0) break;
+        }
       }catch{}
     }
     allProduk=docs;
@@ -155,11 +253,13 @@ async function loadProduk(){
       document.getElementById('manualToggle').checked=true;
       toggleManual();
     }else{
-      info.textContent=`${docs.length} produk dari ${docs[0]._col||'stok/produk'} - ketik untuk cari dropdown`;
+      const totalStok = docs.reduce((s,d)=>s+Number(d._stok||0),0);
+      const habis = docs.filter(d=>Number(d._stok||0)<=0).length;
+      info.textContent=`${docs.length} produk dari ${docs[0]._col||'stok/produk'} - Total stok: ${totalStok} - Habis: ${habis} - ketik untuk cari dropdown`;
       document.getElementById('autoProdukWrap').style.opacity='1';
       document.getElementById('autoProdukWrap').style.pointerEvents='auto';
     }
-  }catch(e){ allProduk=[]; }
+  }catch(e){ allProduk=[]; console.error('loadProduk error', e); }
 }
 
 function autoGenerateNotaBarcode(){
@@ -190,12 +290,23 @@ function showProdukDropdown(list){
     dd.innerHTML=list.map(p=>{
       const nama=p.nama||p.namaProduk||p.name||'-';
       const harga=p.harga||p.hargaJual||p.price||0;
-      return `<div class="produk-item" data-id="${p.id}"><div><b>${nama}</b><br><span style="font-size:10px;color:#64748b">${p.barcode||''}</span></div><div>Rp ${Number(harga).toLocaleString('id-ID')}</div></div>`;
+      const stok=Number(p._stok ?? p.stok ?? p.qty ?? p.jumlah ?? 0);
+      const isHabis = stok<=0;
+      const stockText = isHabis ? 'STOK HABIS' : `Stok: ${stok}`;
+      const stockColor = isHabis ? '#ef4444' : '#16a34a';
+      const opacity = isHabis ? '0.4' : '1';
+      const bg = isHabis ? '#fef2f2' : '#fff';
+      return `<div class="produk-item" data-id="${p.id}" data-habis="${isHabis}" style="opacity:${opacity};background:${bg}"><div><b>${nama}</b><br><span style="font-size:10px;color:#64748b">${p.barcode||''} • <span style="color:${stockColor};font-weight:900">${stockText}</span></span></div><div style="text-align:right"><div>Rp ${Number(harga).toLocaleString('id-ID')}</div><div style="font-size:10px;color:${stockColor}">${isHabis?'❌ Habis':'✅ Tersedia'}</div></div></div>`;
     }).join('');
   }
   dd.classList.add('show');
   dd.querySelectorAll('.produk-item').forEach(el=>{
     el.addEventListener('click', ()=>{
+      const isHabis = el.getAttribute('data-habis')==='true';
+      if(isHabis){
+        alert('Stok habis! Produk ini disamarkan - tidak bisa dijual. Pilih produk lain atau pakai manual.');
+        return;
+      }
       const prod=allProduk.find(x=>x.id===el.getAttribute('data-id'));
       selectProdukAuto(prod);
       dd.classList.remove('show');
@@ -207,9 +318,23 @@ function selectProdukAuto(prod){
   document.getElementById('produkSearch').value=prod.nama||prod.namaProduk||prod.name||'';
   document.getElementById('produkNamaAuto').value=prod.nama||prod.namaProduk||prod.name||'';
   document.getElementById('hargaAuto').value=prod.harga||prod.hargaJual||prod.price||0;
+  document.getElementById('modalAuto').value=prod.modal||prod.hargaBeli||0;
+  const stok=Number(prod._stok ?? prod.stok ?? prod.qty ?? 0);
   document.getElementById('qtyAuto').value=1;
+  document.getElementById('qtyAuto').max=stok;
+  document.getElementById('qtyAuto').placeholder=`Max: ${stok}`;
   document.getElementById('barcodeField').value=prod.barcode||document.getElementById('barcodeField').value;
+  // simpan stok untuk validasi
+  document.getElementById('qtyAuto').setAttribute('data-stok', stok);
+  document.getElementById('produkNamaAuto').setAttribute('data-stok', stok);
+  document.getElementById('produkNamaAuto').setAttribute('data-id', prod.id);
+  document.getElementById('produkNamaAuto').setAttribute('data-col', prod._col);
   hitungSubtotalAuto();
+  if(stok<=0){
+    alert('Stok habis! Produk disamarkan.');
+  }else if(stok<=3){
+    alert(`Stok tinggal ${stok} - hampir habis!`);
+  }
 }
 
 function hitungSubtotalAuto(){
@@ -261,8 +386,19 @@ window.tambahProduk=()=>{
     if(!nama){ alert('Pilih produk dari dropdown dulu'); return; }
     const harga=Number(document.getElementById('hargaAuto').value||0);
     const qty=Number(document.getElementById('qtyAuto').value||0);
+    const stok=Number(document.getElementById('qtyAuto').getAttribute('data-stok')||0);
+    const prodId=document.getElementById('produkNamaAuto').getAttribute('data-id')||'';
+    const prodCol=document.getElementById('produkNamaAuto').getAttribute('data-col')||'stok';
     if(qty<=0){ alert('Qty wajib >0'); return; }
-    item={ nama:nama, barcode:document.getElementById('barcodeField').value, harga:harga, modal:document.getElementById('modalAuto').value||harga, qty:qty, subtotal:harga*qty, type:'auto', productId:allProduk.find(p=>(p.nama||p.namaProduk||p.name)===nama)?.id||'' };
+    if(stok>0 && qty>stok){
+      alert(`Stok tidak cukup! Stok tersedia: ${stok}, kamu minta: ${qty}. Kurangi qty atau pilih produk lain. Produk habis akan disamarkan.`);
+      return;
+    }
+    if(stok<=0){
+      alert('Stok habis! Tidak bisa tambah. Produk ini disamarkan.');
+      return;
+    }
+    item={ nama:nama, barcode:document.getElementById('barcodeField').value, harga:harga, modal:document.getElementById('modalAuto').value||harga, qty:qty, subtotal:harga*qty, type:'auto', productId:prodId, _col:prodCol, _stokAwal:stok };
   }
   rincianItems.push(item);
   renderRincian();
@@ -336,8 +472,10 @@ async function simpanData(cetakMode=null){
   const dp=Number(document.getElementById('dpField').value||0);
   const sisa=Number(document.getElementById('sisaField').value||0);
   const status=document.getElementById('statusField').value;
-  const teknisiEmail=document.getElementById('teknisiSelect').value;
-  const teknisiNama=document.getElementById('teknisiSelect').selectedOptions[0]?.getAttribute('data-nama')||teknisiEmail;
+  // Teknisi ambil nama saja, jangan email - sesuai request
+  const teknisiNama=document.getElementById('teknisiSelect').selectedOptions[0]?.getAttribute('data-nama') || document.getElementById('teknisiSelect').value || '';
+  const teknisiEmail=document.getElementById('teknisiSelect').selectedOptions[0]?.getAttribute('data-email') || currentUser.email;
+  const teknisiValue=teknisiNama; // simpan nama saja, jangan email
   try{
     const docRef=await addDoc(collection(db,"penjualan"), {
       // Header 1
@@ -345,7 +483,8 @@ async function simpanData(cetakMode=null){
       akunLogin:document.getElementById('akunLoginField').value,
       namaKonter:konterName,
       konter:document.getElementById('konterField').value,
-      teknisi:teknisiEmail,
+      teknisi:teknisiValue,
+      teknisiEmail:teknisiEmail,
       teknisiNama:teknisiNama,
       namaKaryawan:teknisiNama,
       tanggal:document.getElementById('tanggalField').value,
