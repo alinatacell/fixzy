@@ -304,7 +304,7 @@ function showProdukDropdown(list){
     el.addEventListener('click', ()=>{
       const isHabis = el.getAttribute('data-habis')==='true';
       if(isHabis){
-        alert('Stok habis! Produk ini disamarkan - tidak bisa dijual. Pilih produk lain atau pakai manual.');
+        showKonterPopup('Stok habis! Produk ini disamarkan - tidak bisa dijual. Pilih produk lain atau pakai manual. | Konter: ' + konterName, 'error');
         return;
       }
       const prod=allProduk.find(x=>x.id===el.getAttribute('data-id'));
@@ -395,7 +395,7 @@ window.tambahProduk=()=>{
       return;
     }
     if(stok<=0){
-      alert('Stok habis! Tidak bisa tambah. Produk ini disamarkan.');
+      showKonterPopup('Stok habis! Tidak bisa tambah. Produk ini disamarkan. | Konter: ' + konterName, 'error');
       return;
     }
     item={ nama:nama, barcode:document.getElementById('barcodeField').value, harga:harga, modal:document.getElementById('modalAuto').value||harga, qty:qty, subtotal:harga*qty, type:'auto', productId:prodId, _col:prodCol, _stokAwal:stok };
@@ -464,9 +464,9 @@ window.batalInput=()=>{
 }
 
 async function simpanData(cetakMode=null){
-  if(rincianItems.length===0){ alert('Rincian produk kosong - tambah produk dulu di Header 3 & 4'); return; }
+  if(rincianItems.length===0){ showKonterPopup('Rincian produk kosong - tambah produk dulu di Header 3 & 4 | Konter: ' + konterName, 'error'); return; }
   const namaPelanggan=document.getElementById('namaPelangganField').value.trim();
-  if(!namaPelanggan){ alert('Nama pelanggan wajib (Header 2)'); return; }
+  if(!namaPelanggan){ showKonterPopup('Nama pelanggan wajib (Header 2) | Konter: ' + konterName, 'error'); return; }
   const total=Number(document.getElementById('totalField').value||0);
   const diskon=Number(document.getElementById('diskonField').value||0);
   const dp=Number(document.getElementById('dpField').value||0);
@@ -571,7 +571,40 @@ function openCetakPopup(id, mode){
   setTimeout(()=>{ location.href='data-penjualan.html'; }, 1000);
 }
 
-window.regenerate=()=>{ autoGenerateNotaBarcode(); }
+window.refreshHalaman=()=>{
+  location.reload();
+}
+
+// Popup ganti alert - tampilkan nama konter admin
+function showKonterPopup(message, type='info'){
+  const modal = document.getElementById('konterAlertModal');
+  const msgEl = document.getElementById('konterAlertMessage');
+  const titleEl = document.getElementById('konterAlertTitle');
+  const konterEl = document.getElementById('konterAlertKonter');
+  const iconEl = document.getElementById('konterAlertIcon');
+  
+  if(titleEl) titleEl.textContent = type==='error' ? '❌ Perhatian' : type==='success' ? '✅ Berhasil' : '📢 Info';
+  if(konterEl) konterEl.textContent = konterName || 'Fixzy - A Yudi Thea';
+  if(msgEl) msgEl.textContent = message;
+  if(iconEl) iconEl.textContent = type==='error' ? '❌' : type==='success' ? '✅' : 'ℹ️';
+  if(modal) modal.classList.add('show');
+  
+  // Auto close after 4 detik untuk info biasa
+  if(type==='info'){
+    setTimeout(()=>{ if(modal) modal.classList.remove('show'); }, 4000);
+  }
+}
+
+window.closeKonterPopup=()=>{
+  document.getElementById('konterAlertModal')?.classList.remove('show');
+}
+
+// Ganti alert bawaan dengan popup konter admin
+window.alert = function(msg){
+  showKonterPopup(msg, 'info');
+};
+
+window.regenerate=()=>{ autoGenerateNotaBarcode(); showKonterPopup('Nota & Barcode baru: ' + document.getElementById('notaField').value + ' | Konter: ' + konterName, 'success'); }
 </script>
 </head>
 <body>
@@ -687,6 +720,19 @@ window.regenerate=()=>{ autoGenerateNotaBarcode(); }
 
 <div style="text-align:center;font-size:11px;color:#64748b;margin-top:12px">5 Header Rapi • H1: Akun, Teknisi, Tgl, Nota, Barcode Auto • H2: Nama, WA, Alamat • H3: Produk Auto + Manual (harga qty ikut) • H4: Rincian • H5: Total Diskon DP Sisa Status Tombol Cetak 5x8 & Umum • Header Hitam Logo BG Hitam</div>
 </main>
+
+<!-- POPUP ALERT GANTI ALERT BIASA - NAMA KONTER ADMIN -->
+<div class="modal" id="konterAlertModal">
+  <div class="modal-box" style="max-width:400px;text-align:center">
+    <div id="konterAlertIcon" style="font-size:32px;margin-bottom:8px">ℹ️</div>
+    <h3 id="konterAlertTitle" style="font-weight:900;margin:0 0 4px;font-size:16px">📢 Info</h3>
+    <div style="background:#111827;color:#fff;padding:6px 12px;border-radius:8px;font-size:11px;font-weight:800;margin-bottom:10px">
+      🏪 <span id="konterAlertKonter">Fixzy - A Yudi Thea</span> (Admin)
+    </div>
+    <p id="konterAlertMessage" style="font-size:13px;line-height:1.5;color:#374151;margin-bottom:16px">Pesan</p>
+    <button onclick="closeKonterPopup()" style="width:100%;background:#111827;color:#fff;padding:12px;border-radius:10px;font-weight:900">OK Tutup</button>
+  </div>
+</div>
 
 <!-- MODAL CETAK -->
 <div class="modal" id="cetakModal">
