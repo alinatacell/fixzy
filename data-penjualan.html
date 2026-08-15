@@ -108,6 +108,75 @@ body.dark .section-title{background:#0f172a !important;color:#fff !important}
   .search,select.filter{width:100%;min-width:100%}
   table{min-width:700px}
 }
+
+/* ===== HEADER + RINGKASAN PENJUALAN ===== */
+header{
+  background:#111827;
+  color:#fff;
+  padding:10px 14px;
+  display:flex;
+  align-items:center;
+  gap:12px;
+  position:sticky;
+  top:0;
+  z-index:100;
+  border-bottom:1px solid #facc15;
+  box-shadow:0 1px 6px rgba(15,23,42,.18);
+  min-height:68px;
+}
+.logo{
+  width:52px;height:52px;background:#000;border-radius:14px;
+  display:flex;align-items:center;justify-content:center;
+  border:2px solid #facc15;overflow:hidden;flex:0 0 52px;
+}
+.logo img{width:100%;height:100%;object-fit:contain;padding:4px;background:#000;display:block}
+.brand{line-height:1.15;min-width:0}
+.brand b{color:#fff;font-weight:900;font-size:18px;letter-spacing:.3px;white-space:nowrap}
+.brand small{display:block;margin-top:4px;color:#94a3b8;font-size:11px;font-weight:700}
+.header-actions{margin-left:auto;display:flex;gap:8px;align-items:center}
+.btn-refresh{background:#1e293b;color:#fff;border:1px solid #334155;border-radius:12px}
+.btn-refresh:hover{background:#1e293b;color:#fff;border-color:#facc15}
+.btn-moon{background:#1e293b;color:#fff;border:1px solid #334155;border-radius:12px;width:44px;height:44px;justify-content:center;font-size:18px}
+.btn-moon:hover{background:#1e293b;color:#fff;border-color:#facc15}
+.sales-summary{
+  margin:6px 0 14px;
+  background:#fff;
+  border:2px solid #111827;
+  border-radius:16px;
+  padding:14px 18px;
+  min-height:70px;
+  display:flex;
+  align-items:center;
+  gap:8px;
+  color:#64748b;
+  box-shadow:4px 4px 0 #111827;
+  font-size:15px;
+  line-height:1.25;
+}
+.sales-summary .sum-icon{font-size:20px;color:#cbd5e1;flex:0 0 auto}
+.sales-summary .sum-title{font-weight:500;color:#64748b}
+.sales-summary .sum-title strong{color:#111827;font-weight:900}
+.sales-summary .sum-income{color:#047857;font-weight:900;font-size:17px;margin-left:2px}
+body.dark .sales-summary{background:#1e293b;color:#94a3b8;border-color:#334155;box-shadow:4px 4px 0 #020617}
+body.dark .sales-summary .sum-title{color:#94a3b8}
+body.dark .sales-summary .sum-title strong{color:#fff}
+body.dark .sales-summary .sum-income{color:#34d399}
+@media(max-width:900px){
+  header{padding:8px 10px;gap:8px;min-height:62px}
+  .logo{width:46px;height:46px;flex-basis:46px;border-radius:13px}
+  .brand b{font-size:15px}
+  .brand small{font-size:10px;margin-top:3px}
+  .btn-refresh{padding:8px 10px;font-size:11px}
+  .btn-moon{width:42px;height:42px}
+  .sales-summary{margin:6px 0 12px;padding:13px 14px;min-height:68px;font-size:14px;border-radius:15px;box-shadow:4px 4px 0 #111827}
+  .sales-summary .sum-income{font-size:16px}
+}
+@media(max-width:520px){
+  .sales-summary{font-size:13px;padding:12px 13px;gap:6px}
+  .sales-summary .sum-icon{font-size:18px}
+  .sales-summary .sum-income{font-size:15px}
+}
+
 </style>
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
@@ -232,6 +301,20 @@ function render(){
   const q=document.getElementById('q').value.toLowerCase();
   const f=document.getElementById('f').value;
   filteredRows=allRows.filter(d=>{ const st=getStatus(d); if(f!=='semua'&&st!==f) return false; if(!q) return true; const hay=`${getTanggal(d)} ${getTeknisi(d)} ${getNamaPel(d)} ${getWa(d)} ${getAlamat(d)} ${getNota(d)}`.toLowerCase(); return hay.includes(q); });
+
+  // Ringkasan otomatis mengikuti data yang sedang tampil.
+  // Batal tidak dihitung sebagai penghasilan.
+  const summaryRows=filteredRows.filter(d=>getStatus(d)!=='batal');
+  const summaryTotal=summaryRows.length;
+  const summaryIncome=summaryRows.reduce((sum,d)=>sum+getPendapatan(d),0);
+  const summaryEl=document.getElementById('salesSummary');
+  if(summaryEl){
+    summaryEl.innerHTML=`
+      <span class="sum-icon">☁️</span>
+      <span class="sum-title">Data <strong>penjualan</strong> • Total: <strong>${summaryTotal}</strong> • Penghasilan: <span class="sum-income">Rp ${summaryIncome.toLocaleString('id-ID')}</span></span>
+    `;
+  }
+
   document.getElementById('info').textContent=`${filteredRows.length} dari ${allRows.length} data - Excel tanggal teknisi nama WA alamat - Lihat untuk panel`;
   const tbody=document.getElementById('tbody'); tbody.innerHTML='';
   if(filteredRows.length===0){ tbody.innerHTML=`<tr><td colspan="8" style="padding:20px;text-align:center;color:#64748b">Belum ada data</td></tr>`; return; }
@@ -328,7 +411,7 @@ window.setStatus=async(id,st)=>{
         if(target) showWAPopup(target, st);
       }
     }
-  }catch(e){alert(e.message);}
+  }catch(e){ console.error(e); }
 }
 
 function showWAPopup(data, status){
@@ -463,17 +546,50 @@ if(savedDark==='1'){ document.body.classList.add('dark'); }
 document.getElementById('q').addEventListener('input',render);
 document.getElementById('f').addEventListener('change',render);
 </script>
+
+<style id="sales-summary-auto">
+.sales-summary{
+  width:100%;
+  min-height:76px;
+  display:flex;
+  align-items:center;
+  gap:10px;
+  padding:16px 20px;
+  margin:0 0 14px;
+  background:#fff;
+  border:2px solid #111827;
+  border-radius:14px;
+  box-shadow:5px 5px 0 #111827;
+  color:#64748b;
+}
+.sales-summary .sum-icon{font-size:24px;flex:0 0 auto}
+.sales-summary .sum-title{font-size:18px;line-height:1.35}
+.sales-summary .sum-income{color:#047857;font-weight:900}
+@media(max-width:600px){
+  .sales-summary{min-height:72px;padding:14px 16px}
+  .sales-summary .sum-title{font-size:16px}
+  .sales-summary .sum-icon{font-size:21px}
+}
+</style>
+
 </head>
 <body>
 <header>
   <div class="logo"><img src="logo.png" alt="Fixzy Logo"></div>
-  <div class="brand"><b id="konterNameHeader">FIXZY</b><br><small style="font-size:11px;color:#9ca3af;font-weight:700;letter-spacing:0.3px">Data penjualan</small></div>
-  <div style="margin-left:auto;display:flex;gap:8px;align-items:center">
+  <div class="brand">
+    <b id="konterNameHeader">FIXZY</b>
+    <small>Data penjualan</small>
+  </div>
+  <div class="header-actions">
     <button class="btn btn-refresh" onclick="refreshData()"><i class="ri-refresh-line"></i> Refresh</button>
-    <button class="btn btn-moon" onclick="toggleDarkMode()"><i id="moonIcon" class="ri-moon-fill"></i></button>
+    <button class="btn btn-moon" onclick="toggleDarkMode()" aria-label="Mode gelap"><i id="moonIcon" class="ri-moon-fill"></i></button>
   </div>
 </header>
 <main>
+  <div class="sales-summary" id="salesSummary">
+    <span class="sum-icon">☁️</span>
+    <span class="sum-title">Data <strong>penjualan</strong> • Total: <strong>0</strong> • Penghasilan: <span class="sum-income">Rp 0</span></span>
+  </div>
   <div class="toolbar">
     <input id="q" class="search" placeholder="Cari tanggal / teknisi / nama / WA / alamat...">
     <select id="f" class="filter"><option value="semua">Semua Status</option><option value="masuk">Masuk</option><option value="tagihan">Tagihan</option><option value="tunai">Tunai</option><option value="batal">Batal</option></select>
@@ -495,7 +611,7 @@ document.getElementById('f').addEventListener('change',render);
       <tbody id="tbody"></tbody>
     </table>
   </div>
-  <div id="info" style="font-size:11px;color:#64748b;margin-top:10px;text-align:center">Header FIXZY only - Logo kelihatan - Refresh & Mode berfungsi - Panel tidak tutup otomatis - Popup WA untuk Tagihan & Tunai</div>
+  <div id="info" style="font-size:11px;color:#64748b;margin-top:10px;text-align:center">Data penjualan • Firebase • Refresh & Mode Gelap aktif</div>
 </main>
 <div class="modal" id="modal" onclick="if(event.target===this) closeModal()">
   <div class="modal-box">
