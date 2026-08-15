@@ -642,34 +642,48 @@ document.querySelectorAll(".tab").forEach(btn=>{
   });
 });
 
-onAuthStateChanged(auth,async user=>{
-  if(!user){
-    uid=null;
-    $("statusApp").textContent="Login diperlukan";
-    $("userInfo").textContent="Belum login";
-    $("systemSummary").innerHTML=`
-      <div style="padding:8px 0">
-        <b>🔐 Login diperlukan</b><br>
-        <span style="color:#64748b">Silakan login terlebih dahulu untuk membuka laporan keuangan.</span>
-        <div style="margin-top:12px">
-          <button class="btn btn-blue" type="button" onclick="mintaLogin()">🔐 Login FIXZY</button>
-        </div>
-      </div>`;
-    return;
-  }
+let parentSessionReceived=false;
+let ownAuthUser=null;
 
-  uid=user.uid;
-  $("statusApp").textContent="Sesi login ditemukan...";
-  await loadProfile(user);
+async function gunakanSesi(uidValue,emailValue,profileValue){
+  if(!uidValue) return;
+  uid=uidValue;
+  if(profileValue && typeof profileValue==="object") profile=profileValue;
+  else {
+    await loadProfile({uid:uidValue,email:emailValue||""});
+  }
+  $("statusApp").textContent="Sesi login aktif";
   await muatSemua();
+}
+
+window.addEventListener("message",async event=>{
+  if(event.origin!==location.origin) return;
+  const data=event.data||{};
+  if(data.type!=="FIXZY_AUTH_SESSION" || !data.uid) return;
+  parentSessionReceived=true;
+  await gunakanSesi(data.uid,data.email||"",data.profile||null);
 });
 
-window.mintaLogin=function(){
-  try{
-    sessionStorage.setItem("FIXZY_KEMBALI_SETELAH_LOGIN","laporan-keuangan");
-  }catch(e){}
-  location.href="login.html";
-};
+// Jika halaman dibuka dari Index FIXZY, minta sesi login dari parent.
+if(window.parent!==window){
+  try{ window.parent.postMessage({type:"FIXZY_REQUEST_AUTH_SESSION"},location.origin); }catch(e){}
+}
+
+onAuthStateChanged(auth,async user=>{
+  ownAuthUser=user||null;
+  if(user && !parentSessionReceived){
+    await gunakanSesi(user.uid,user.email||"",null);
+    return;
+  }
+  if(!user && !parentSessionReceived){
+    // Jangan meminta login lagi. Halaman ini seharusnya dibuka dari Index
+    // yang sudah memvalidasi sesi login.
+    uid=null;
+    $("statusApp").textContent="Menunggu sesi login FIXZY...";
+    $("userInfo").textContent="Akun aktif dari Index";
+    $("systemSummary").innerHTML="ℹ️ Menunggu sesi login dari halaman utama FIXZY...";
+  }
+});
 </script>
 </body>
 </html>
