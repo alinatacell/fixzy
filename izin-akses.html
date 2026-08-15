@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
+<meta name="theme-color" content="#111827">
+<title>FIXZY | Izin Akses</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{--bg:#f5f7fb;--card:#fff;--line:#e5e7eb;--y:#f59e0b;--txt:#172033;--muted:#64748b;--green:#16a34a;--red:#dc2626}
+html,body{min-height:100%;background:var(--bg);color:var(--txt);font-family:Arial,Helvetica,sans-serif}
+body{background:linear-gradient(180deg,#fff 0,#f5f7fb 260px)}
+button,input{font:inherit}button{cursor:pointer}
+.header{position:sticky;top:0;z-index:20;background:#111827;border-bottom:1px solid #1f2937;box-shadow:0 2px 12px #0004}
+.header-in{max-width:1180px;margin:auto;padding:10px 14px;display:flex;align-items:center;justify-content:space-between;gap:10px}
+.brand{display:flex;align-items:center;gap:10px;min-width:0}.logo{width:42px;height:42px;border-radius:11px;object-fit:cover;background:#000;padding:2px}
+.brand h1{font-size:17px;font-weight:900;color:#fff}.brand p{font-size:10px;color:#cbd5e1;margin-top:2px}
+.head-actions{display:flex;gap:7px}.head-btn{height:40px;border:1px solid #475569;border-radius:10px;background:#111827;color:#fff;padding:0 12px;font-weight:800}
+.container{width:min(1180px,100%);margin:auto;padding:16px 12px 70px}
+.card{background:#fff;border:1px solid var(--line);border-radius:17px;padding:15px;margin-bottom:13px;box-shadow:0 5px 18px #17203308}
+.topline{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
+.title{font-size:16px;font-weight:900}.sub{font-size:11px;color:var(--muted);line-height:1.5;margin-top:4px}
+.search{height:42px;width:min(360px,100%);border:1px solid #cbd5e1;border-radius:10px;padding:0 12px;outline:0;background:#fff}
+.search:focus{border-color:var(--y);box-shadow:0 0 0 3px #f59e0b18}
+.account{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:12px;border:1px solid var(--line);border-radius:14px;margin-top:12px;background:#fff}
+.account-main{min-width:0}.name{font-weight:900;font-size:13px}.meta{font-size:10px;color:var(--muted);margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.role{font-size:9px;font-weight:900;border-radius:20px;padding:5px 8px;background:#f1f5f9;color:#334155;white-space:nowrap}
+.role.owner,.role.admin,.role.superadmin{background:#fef3c7;color:#92400e}
+.role.employee,.role.karyawan{background:#dcfce7;color:#166534}
+.role.reseller{background:#dbeafe;color:#1d4ed8}
+.permissions{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-top:10px}
+.perm{display:flex;align-items:center;gap:8px;padding:10px;border:1px solid #e5e7eb;border-radius:10px;background:#f8fafc;cursor:pointer}
+.perm:hover{background:#fffbeb}
+.perm input{width:17px;height:17px;accent-color:#f59e0b}
+.perm b{font-size:11px}.perm span{font-size:9px;color:var(--muted);display:block;margin-top:2px}
+.actions{display:flex;gap:7px;justify-content:flex-end;margin-top:11px}
+.btn{border:0;border-radius:10px;padding:9px 13px;font-size:10px;font-weight:900}
+.save{background:#f59e0b;color:#111827}.all{background:#111827;color:#fff}.none{background:#e5e7eb;color:#334155}
+.status{font-size:10px;color:var(--muted);margin-top:7px}
+.empty{padding:30px;text-align:center;color:var(--muted);font-size:12px}
+.notice{position:fixed;inset:0;z-index:1000;background:#111827aa;display:none;align-items:center;justify-content:center;padding:15px}
+.notice.show{display:flex}.notice-box{width:min(430px,100%);background:#fff;border-radius:18px;padding:18px;box-shadow:0 25px 80px #0005}
+.notice-box h3{font-size:17px;margin-bottom:8px}.notice-box p{font-size:12px;color:#475569;line-height:1.5;white-space:pre-line}.okbtn{width:100%;margin-top:14px;padding:11px;border:0;border-radius:10px;background:#111827;color:#fff;font-weight:900}
+.loading{position:fixed;inset:0;z-index:900;background:#11182766;display:none;align-items:center;justify-content:center}.loading.show{display:flex}.loadbox{background:#fff;border-radius:16px;padding:22px;text-align:center;font-size:12px;font-weight:800}.spin{width:30px;height:30px;border:4px solid #e5e7eb;border-top-color:#f59e0b;border-radius:50%;animation:spin .8s linear infinite;margin:0 auto 9px}@keyframes spin{to{transform:rotate(360deg)}}
+@media(max-width:650px){.header-in{padding:9px 10px}.logo{width:39px;height:39px}.brand h1{font-size:15px}.head-btn{height:38px;padding:0 9px}.container{padding:10px}.permissions{grid-template-columns:1fr}.account{align-items:flex-start}.topline{display:block}.search{width:100%;margin-top:10px}.actions{justify-content:stretch}.actions .btn{flex:1}}
+</style>
+</head>
+<body>
+
+<header class="header">
+  <div class="header-in">
+    <div class="brand">
+      <img src="logo.png" class="logo" onerror="this.style.display='none'">
+      <div><h1>FIXZY</h1><p>Izin Akses</p></div>
+    </div>
+    <div class="head-actions">
+      <button class="head-btn" onclick="kembali()">✕ Tutup</button>
+      <button class="head-btn" onclick="location.reload()">↻</button>
+    </div>
+  </div>
+</header>
+
+<main class="container">
+  <section class="card">
+    <div class="topline">
+      <div>
+        <div class="title">🔐 Kelola Izin Akses</div>
+        <div class="sub">Owner/Admin dapat menentukan menu yang boleh dibuka oleh setiap akun. Perubahan tersimpan ke Firebase pada profil akun.</div>
+      </div>
+      <input id="search" class="search" placeholder="Cari nama akun..." oninput="render()">
+    </div>
+  </section>
+
+  <section class="card">
+    <div id="list"></div>
+  </section>
+</main>
+
+<div id="notice" class="notice">
+  <div class="notice-box">
+    <h3 id="noticeTitle">Informasi</h3>
+    <p id="noticeText"></p>
+    <button class="okbtn" onclick="tutupNotice()">OK</button>
+  </div>
+</div>
+
+<div id="loading" class="loading"><div class="loadbox"><div class="spin"></div><div id="loadingText">Memuat...</div></div></div>
+
+<script type="module">
+import {initializeApp} from "https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js";
+import {getAuth,onAuthStateChanged} from "https://www.gstatic.com/firebasejs/11.10.0/firebase-auth.js";
+import {getFirestore,collection,getDocs,getDoc,doc,query,where,updateDoc,serverTimestamp} from "https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js";
+
+const cfg={apiKey:"AIzaSyC_PcarMTT5Un7qfSLzf92o5OGn5rginsI",authDomain:"fixzy-update.firebaseapp.com",projectId:"fixzy-update",storageBucket:"fixzy-update.firebasestorage.app",messagingSenderId:"995892519622",appId:"1:995892519622:web:fa41047944d8e5b35d6dc7"};
+const app=initializeApp(cfg),auth=getAuth(app),db=getFirestore(app);
+
+let uid="",ownerUid="",currentRole="",accounts=[],userProfile=null;
+
+const MENUS=[
+ {id:"beranda",name:"Beranda",desc:"Halaman utama"},
+ {id:"input-servis",name:"Input Servis",desc:"Input nota servis"},
+ {id:"data-servis",name:"Data Servis",desc:"Data dan status servis"},
+ {id:"nota",name:"Nota",desc:"Nota transaksi/servis"},
+ {id:"input-penjualan",name:"Input Penjualan",desc:"Input transaksi penjualan"},
+ {id:"data-penjualan",name:"Data Penjualan",desc:"Riwayat penjualan"},
+ {id:"stock",name:"Produk & Stok",desc:"Stok dan import produk"},
+ {id:"karyawan",name:"Karyawan & Reseller",desc:"Kelola akun bawahan"},
+ {id:"laporan",name:"Laporan",desc:"Ringkasan dan laporan"},
+ {id:"pengaturan",name:"Pengaturan",desc:"Pengaturan usaha"},
+ {id:"izin-akses",name:"Izin Akses",desc:"Atur hak akses akun"}
+];
+
+const $=id=>document.getElementById(id);
+const esc=s=>String(s??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]));
+function roleName(r){return ({employee:"Karyawan",karyawan:"Karyawan",reseller:"Reseller",owner:"Owner",admin:"Admin",superadmin:"Superadmin"}[String(r).toLowerCase()]||String(r||"User"))}
+function showLoading(v,t="Memproses..."){$("loadingText").textContent=t;$("loading").classList.toggle("show",v)}
+function notice(title,text){$("noticeTitle").textContent=title;$("noticeText").textContent=text;$("notice").classList.add("show")}
+window.tutupNotice=()=>{$("notice").classList.remove("show")};
+window.kembali=()=>{try{history.back()}catch(e){location.href="index.html"}};
+
+function izinAkun(a){
+  const raw=Array.isArray(a.izin)?a.izin:(Array.isArray(a.permissions)?a.permissions:[]);
+  return new Set(raw.map(x=>String(x).toLowerCase().trim()));
+}
+function hasPermission(a,id){
+  if(["owner","superadmin"].includes(String(a.role).toLowerCase())) return true;
+  const s=izinAkun(a);
+  return s.has(id)||s.has(id.replace(/-/g," "))||s.has(id.replace(/-/g,""));
+}
+
+function render(){
+  const q=$("search").value.toLowerCase().trim();
+  const arr=accounts.filter(a=>(a.nama+" "+a.email+" "+a.role).toLowerCase().includes(q));
+  if(!arr.length){$("list").innerHTML='<div class="empty">Tidak ada akun yang ditemukan.</div>';return}
+  $("list").innerHTML=arr.map(a=>{
+    const fixedId=esc(a.uid);
+    return `<div class="account" data-account="${fixedId}">
+      <div class="account-main">
+        <div class="name">${esc(a.nama||a.email||"Akun")}</div>
+        <div class="meta">${esc(a.email||"")} • ${esc(a.uid)}</div>
+        <span class="role ${esc(String(a.role||"").toLowerCase())}">${esc(roleName(a.role))}</span>
+        <div class="permissions">
+          ${MENUS.map(m=>`<label class="perm"><input type="checkbox" data-menu="${m.id}" ${hasPermission(a,m.id)?"checked":""}><div><b>${esc(m.name)}</b><span>${esc(m.desc)}</span></div></label>`).join("")}
+        </div>
+        <div class="actions">
+          <button class="btn all" onclick="setAll('${fixedId}',true)">✓ Semua</button>
+          <button class="btn none" onclick="setAll('${fixedId}',false)">Kosongkan</button>
+          <button class="btn save" onclick="saveAccount('${fixedId}')">💾 Simpan</button>
+        </div>
+        <div class="status" id="status-${fixedId}"></div>
+      </div>
+    </div>`;
+  }).join("");
+}
+
+window.setAll=(id,value)=>{
+  const box=document.querySelector(`[data-account="${CSS.escape(id)}"]`);
+  if(!box)return;
+  box.querySelectorAll('input[data-menu]').forEach(x=>x.checked=value);
+};
+
+window.saveAccount=async id=>{
+  if(!["owner","admin","superadmin"].includes(currentRole)){
+    notice("🔒 Akses Ditolak","Hanya Owner/Admin yang boleh mengubah izin akses.");
+    return;
+  }
+  const box=document.querySelector(`[data-account="${CSS.escape(id)}"]`);
+  if(!box)return;
+  const izin=[...box.querySelectorAll('input[data-menu]:checked')].map(x=>x.dataset.menu);
+  const st=$("status-"+id);
+  st.textContent="Menyimpan...";
+  try{
+    await updateDoc(doc(db,"users",id),{
+      izin,
+      permissions:izin,
+      izinDiperbaruiAt:serverTimestamp(),
+      izinDiperbaruiOleh:uid
+    });
+    const a=accounts.find(x=>x.uid===id);
+    if(a){a.izin=izin;a.permissions=izin}
+    st.textContent=`✅ Tersimpan • ${izin.length} menu diizinkan`;
+    notice("✅ Izin Berhasil Disimpan",`${a?.nama||"Akun"} sekarang memiliki ${izin.length} menu yang diizinkan.`);
+  }catch(e){
+    console.error(e);
+    st.textContent="❌ Gagal menyimpan";
+    notice("❌ Gagal Menyimpan",e.message||String(e));
+  }
+};
+
+async function loadAccounts(){
+  showLoading(true,"Memuat daftar akun...");
+  try{
+    const me=await getDoc(doc(db,"users",uid));
+    if(!me.exists())throw new Error("Profil akun tidak ditemukan.");
+    userProfile=me.data()||{};
+    currentRole=String(userProfile.role||"").toLowerCase();
+    if(!["owner","admin","superadmin"].includes(currentRole)){
+      notice("🔒 Akses Ditolak","Halaman Izin Akses hanya dapat dikelola oleh Owner/Admin.");
+      $("list").innerHTML='<div class="empty">Akun ini tidak memiliki hak untuk mengatur izin.</div>';
+      return;
+    }
+    ownerUid=currentRole==="owner"?uid:(userProfile.ownerUid||userProfile.ownerId||uid);
+
+    const map=new Map();
+    const add=(snap)=>{
+      snap.forEach(d=>{
+        const p=d.data()||{};
+        if(!map.has(d.id))map.set(d.id,{uid:d.id,...p});
+      });
+    };
+
+    // Owner/Admin sendiri
+    if(currentRole==="owner") map.set(uid,{uid,...userProfile});
+    if(currentRole==="admin") map.set(uid,{uid,...userProfile});
+
+    // Akun bawahan milik Owner/Admin
+    for(const field of ["ownerUid","ownerId"]){
+      try{add(await getDocs(query(collection(db,"users"),where(field,"==",ownerUid))))}catch(e){}
+    }
+    // Koleksi karyawan lama, bila masih digunakan
+    try{
+      const s=await getDocs(collection(db,"karyawan"));
+      s.forEach(d=>{
+        const p=d.data()||{};
+        if(p.ownerUid===ownerUid||p.ownerId===ownerUid) map.set(d.id,{uid:d.id,...p});
+      });
+    }catch(e){}
+
+    // Jika Admin sedang mengelola, pastikan akun admin sendiri tampil.
+    if(!map.has(uid))map.set(uid,{uid,...userProfile});
+    accounts=[...map.values()].filter(a=>a.status!=="blocked"&&a.status!=="rejected");
+    accounts.sort((a,b)=>String(a.nama||a.namaKaryawan||a.email||"").localeCompare(String(b.nama||b.namaKaryawan||b.email||"")));
+    accounts=accounts.map(a=>({...a,nama:a.nama||a.namaKaryawan||a.displayName||a.name||a.email?.split("@")[0]||"Akun"}));
+    render();
+  }catch(e){
+    console.error(e);
+    $("list").innerHTML='<div class="empty">Gagal memuat akun: '+esc(e.message)+'</div>';
+  }finally{showLoading(false)}
+}
+
+onAuthStateChanged(auth,async u=>{
+  if(!u){location.replace("login.html");return}
+  uid=u.uid;
+  await loadAccounts();
+});
+</script>
+</body>
+</html>
