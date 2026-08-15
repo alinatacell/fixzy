@@ -832,7 +832,8 @@ function rowHTML(p){
   const stat=st>0
     ? `<span class="badge ready">READY • ${st}</span>`
     : `<span class="badge empty">KOSONG</span>`;
-  const jual=num(p.hargaJual)||Math.round(num(p.hargaModal)*1.25);
+  const modalVal = p.hargaModal!=null ? p.hargaModal : (p.hargaBeli||p.modal||0);
+  const jual=num(p.hargaJual)||Math.round(num(modalVal)*1.25);
 
   return `<tr>
     <td class="stockSelectCol">
@@ -842,7 +843,7 @@ function rowHTML(p){
     <td class="code">${esc(p.kode||"-")}</td>
     <td><b>${esc(p.nama||"-")}</b></td>
     <td>${esc(p.kategori||"LAINNYA")}</td>
-    <td>${money(p.hargaModal)}</td>
+    <td>${money(p.hargaModal||p.hargaBeli||0)}</td>
     <td class="price">${money(jual)}</td>
     <td>${st}</td>
     <td>${stat}</td>
@@ -858,7 +859,8 @@ function mobileHTML(p){
   const stat=st>0
     ? `<span class="badge ready">READY • ${st}</span>`
     : `<span class="badge empty">KOSONG</span>`;
-  const jual=num(p.hargaJual)||Math.round(num(p.hargaModal)*1.25);
+  const modalVal = p.hargaModal!=null ? p.hargaModal : (p.hargaBeli||p.modal||0);
+  const jual=num(p.hargaJual)||Math.round(num(modalVal)*1.25);
 
   return `<div class="m-card">
     <div class="m-head">
