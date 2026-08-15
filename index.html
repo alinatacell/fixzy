@@ -708,12 +708,12 @@ function permissionTersedia(izin, permission){
 
   // Kompatibilitas dengan data izin lama yang memakai format kebab-case.
   const alias={
-    "servis":["servis","nota"],
-    "dataServis":["dataServis","data-servis"],
-    "dataPenjualan":["dataPenjualan","data-penjualan"],
-    "garansi":["garansi","monitoring-garansi"],
-    "penjualan":["penjualan"],
-    "stock":["stock"]
+    "servis":["servis","nota","nota.html"],
+    "dataServis":["dataServis","data-servis","data-servis.html"],
+    "dataPenjualan":["dataPenjualan","data-penjualan","data-penjualan.html"],
+    "garansi":["garansi","monitoring-garansi","monitoring-garansi.html"],
+    "penjualan":["penjualan","penjualan.html"],
+    "stock":["stock","stock.html"]
   };
 
   return (alias[permission]||[permission]).some(x=>izin.includes(x));
@@ -728,10 +728,13 @@ function bolehAksesMenu(btn){
 
   if(role==="owner" || role==="superadmin") return true;
 
-  const permission=btn.dataset.permission || FIXZY_PERMISSION_BY_PAGE[btn.dataset.page];
+  const page=String(btn.dataset.page||"").trim();
+  const permission=btn.dataset.permission || FIXZY_PERMISSION_BY_PAGE[page];
   if(!permission) return true;
 
   const izin=Array.isArray(session.permissions)?session.permissions:[];
+  // Hak Akses versi baru menyimpan nama file HTML langsung.
+  if(page && izin.includes(page)) return true;
   return permissionTersedia(izin,permission);
 }
 
@@ -814,8 +817,11 @@ async function validasiDanTampilkan(user){
     }
 
     const data=snap.data()||{};
-    const role=data.role||"";
-    const status=data.status||"";
+    // Normalisasi role agar OWNER/Employee/Admin dengan huruf apa pun tetap terbaca.
+    let role=String(data.role||data.jabatan||"").trim().toLowerCase();
+    if(role==="admin" || role==="administrator") role="owner";
+    if(role==="karyawan") role="employee";
+    const status=String(data.status||"aktif").trim().toLowerCase();
 
     // Identitas pemilik data FIXZY dibuat konsisten untuk semua role.
     // Owner: uid sendiri. Employee/Reseller: ownerUid dari profil.
