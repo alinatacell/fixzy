@@ -98,32 +98,225 @@
 html,body{min-height:100%;background:var(--bg);color:var(--txt);font-family:Arial,Helvetica,sans-serif}
 body{background:linear-gradient(180deg,#fff 0,#f5f7fb 250px)}
 button,input,select{font:inherit}button{cursor:pointer}
+/* HEADER — disamakan dengan Data Penjualan */
 .header{
-  position:sticky;top:0;z-index:20;background:#111827;
-  border-bottom:1px solid #1f2937;box-shadow:0 2px 12px #0004
+  background:#111827 !important;
+  color:#fff !important;
+  padding:10px 14px !important;
+  min-height:66px;
+  display:flex;
+  align-items:center;
+  gap:12px;
+  position:sticky;
+  top:0;
+  z-index:100;
+  border-bottom:2px solid #facc15 !important;
+  box-shadow:0 2px 12px rgba(0,0,0,.3) !important;
 }
-.header-in{max-width:1180px;margin:auto;padding:12px 16px;display:flex;align-items:center;justify-content:space-between;gap:12px}
-.brand{display:flex;align-items:center;gap:10px;min-width:0}
-.logo{width:42px;height:42px;border-radius:12px;object-fit:cover;background:#000;padding:2px}
-.brand h1{font-size:18px;font-weight:900;color:#fff}.brand p{font-size:10px;color:#cbd5e1;margin-top:3px}
-.head-actions{display:flex;gap:7px}
-.head-btn{height:42px;border:1px solid #475569;border-radius:11px;background:#111827;color:#fff;font-size:14px;padding:0 12px;font-weight:800}
-.head-btn.refresh{background:#111827;border-color:#64748b;color:#fff}
-.container{width:min(1180px,100%);margin:auto;padding:18px 14px 70px}
-.top{display:flex;gap:9px;flex-wrap:wrap;margin-bottom:14px}
-.btn{min-height:42px;border:0;border-radius:11px;padding:10px 15px;font-weight:800}
-.primary{background:linear-gradient(135deg,#ffc107,#f59e0b);color:#111827;box-shadow:0 5px 14px #f59e0b22}
+.header-in{
+  width:100%;
+  max-width:1400px;
+  margin:auto;
+  padding:0 !important;
+  min-height:44px;
+  display:flex;
+  align-items:center;
+  gap:12px;
+}
+.brand{
+  min-width:0;
+  flex:0 1 auto;
+}
+.brand b{
+  color:#fff !important;
+  font-weight:900;
+  letter-spacing:.5px;
+}
+.brand b span{color:#facc15 !important}
+.brand .email{font-size:10px;color:#9ca3af}
+.badge-role{
+  background:#facc15;
+  color:#000;
+  padding:2px 8px;
+  border-radius:6px;
+  font-size:10px;
+  font-weight:900;
+  display:inline-block;
+  margin-left:4px;
+}
+.logo{
+  width:46px !important;
+  height:46px !important;
+  flex:0 0 46px !important;
+  background:#000 !important;
+  border-radius:12px !important;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  border:2px solid #facc15 !important;
+  overflow:hidden;
+  box-shadow:0 0 0 2px #111827,0 0 0 4px #facc1530 !important;
+  padding:0 !important;
+  object-fit:contain;
+}
+.logo img{
+  width:40px !important;
+  height:40px !important;
+  object-fit:contain !important;
+  background:#000;
+}
+
+.head-actions{
+  margin-left:auto;
+  display:flex;
+  align-items:center;
+  gap:8px;
+  flex:0 0 auto;
+}
+.header .head-btn{
+  height:42px !important;
+  min-width:auto !important;
+  padding:10px 14px !important;
+  border-radius:12px !important;
+  font-weight:800 !important;
+  font-size:12px !important;
+  border:1px solid #334155 !important;
+  cursor:pointer;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  gap:6px;
+  transition:all .2s;
+  background:#1e293b !important;
+  color:#fff !important;
+}
+.header .head-btn:hover{
+  transform:translateY(-1px);
+}
+.header .head-btn.refresh{
+  background:#1e293b !important;
+  color:#fff !important;
+  border-color:#facc15 !important;
+}
+.header .head-btn.close-like{
+  width:42px !important;
+  min-width:42px !important;
+  padding:0 !important;
+  background:#000 !important;
+  color:#facc15 !important;
+  border:2px solid #facc15 !important;
+  font-size:18px !important;
+  border-radius:12px !important;
+}
+@media(max-width:900px){
+  .header{
+    padding:8px 10px !important;
+    gap:8px;
+    min-height:54px;
+  }
+  .header-in{gap:8px}
+  .logo{
+    width:38px !important;
+    height:38px !important;
+    flex-basis:38px !important;
+    border-radius:10px !important;
+  }
+  .brand b{font-size:13px !important}
+  .brand .email{font-size:9px}
+  .badge-role{font-size:9px;padding:2px 6px}
+  .head-actions{gap:6px}
+  .header .head-btn{
+    height:38px !important;
+    padding:8px 10px !important;
+    font-size:11px !important;
+  }
+  .header .head-btn.close-like{
+    width:38px !important;
+    min-width:38px !important;
+  }
+}
+@media(max-width:520px){
+  .brand p{display:none}
+  .brand h1{font-size:12px !important}
+  .header .head-btn.refresh{
+    padding:8px 9px !important;
+  }
+}
+.container{
+  width:min(1180px,100%);
+  margin:auto;
+  padding:16px 14px 70px;
+}
+.top{
+  display:flex;
+  gap:9px;
+  flex-wrap:wrap;
+  margin-bottom:14px;
+}
+.btn{
+  min-height:42px;
+  border:0;
+  border-radius:11px;
+  padding:10px 15px;
+  font-weight:800;
+}
+.primary{
+  background:linear-gradient(135deg,#ffc107,#f59e0b);
+  color:#111827;
+  box-shadow:0 5px 14px #f59e0b22;
+}
 .dark{background:#111827;color:#fff}
 .green{background:#16a34a;color:#fff}
-.card{background:var(--card);border:1px solid var(--line);border-radius:17px;padding:15px;margin-bottom:14px;box-shadow:0 5px 18px #17203308}
-.title{font-size:15px;font-weight:900;margin-bottom:11px;color:#111827}.sub{font-size:11px;color:var(--muted);line-height:1.5}
-.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:14px}
-.stat{background:#fff;border:1px solid var(--line);border-radius:15px;padding:14px;box-shadow:0 4px 14px #17203308}
-.stat small{font-size:10px;color:var(--muted);font-weight:800}.stat strong{display:block;color:#111827;font-size:23px;margin-top:6px}.stat span{font-size:10px;color:#94a3b8}
-.stat:nth-child(2) strong{color:var(--green)}.stat:nth-child(3) strong{color:var(--red)}.stat:nth-child(4) strong{color:#d97706}
+.card{
+  background:var(--card);
+  border:1px solid var(--line);
+  border-radius:17px;
+  padding:15px;
+  margin-bottom:14px;
+  box-shadow:0 5px 18px #17203308;
+}
+.title{
+  font-size:15px;
+  font-weight:900;
+  margin-bottom:11px;
+  color:#111827;
+}
+.sub{
+  font-size:11px;
+  color:var(--muted);
+  line-height:1.5;
+}
+.stats{
+  display:grid;
+  grid-template-columns:repeat(4,1fr);
+  gap:10px;
+  margin-bottom:14px;
+}
+.stat{
+  background:#fff;
+  border:1px solid var(--line);
+  border-radius:15px;
+  padding:14px;
+  box-shadow:0 4px 14px #17203308;
+}
+.stat small{font-size:10px;color:var(--muted);font-weight:800}
+.stat strong{display:block;color:#111827;font-size:23px;margin-top:6px}
+.stat span{font-size:10px;color:#94a3b8}
+.stat:nth-child(2) strong{color:var(--green)}
+.stat:nth-child(3) strong{color:var(--red)}
+.stat:nth-child(4) strong{color:#d97706}
 .grid4{display:grid;grid-template-columns:2fr 1fr 1fr auto;gap:9px}
 .field label{display:block;color:#475569;font-size:10px;font-weight:900;margin:0 0 5px 2px}
-.field input,.field select{width:100%;height:42px;background:#fff;color:#111827;border:1px solid #cbd5e1;border-radius:10px;padding:0 11px;outline:none}
+.field input,.field select{
+  width:100%;
+  height:42px;
+  background:#fff;
+  color:#111827;
+  border:1px solid #cbd5e1;
+  border-radius:10px;
+  padding:0 11px;
+  outline:none;
+}
 .field input:focus,.field select:focus{border-color:var(--y);box-shadow:0 0 0 3px #f59e0b18}
 .import-box{display:grid;grid-template-columns:1fr auto;gap:9px}
 .import-box input{height:46px;width:100%;background:#fff;color:#111827;border:1px solid #cbd5e1;border-radius:12px;padding:0 13px;outline:none}
@@ -152,13 +345,47 @@ tr:hover td{background:#fffdf5}
 .loading{display:none;position:fixed;inset:0;z-index:200;background:#11182766;align-items:center;justify-content:center}.loading.show{display:flex}
 .loader{background:#fff;border:1px solid var(--line);border-radius:16px;padding:24px;text-align:center;box-shadow:0 20px 60px #0002}.spin{width:32px;height:32px;border:4px solid #e5e7eb;border-top-color:var(--y);border-radius:50%;animation:s .8s linear infinite;margin:auto auto 10px}@keyframes s{to{transform:rotate(360deg)}}
 .toast{position:fixed;left:50%;bottom:22px;z-index:300;transform:translate(-50%,20px);opacity:0;pointer-events:none;background:#111827;color:#fff;border:1px solid #374151;border-radius:12px;padding:11px 15px;font-size:11px;width:min(90%,430px);text-align:center;transition:.2s}.toast.show{opacity:1;transform:translate(-50%,0)}
-@media(max-width:900px){.stats{grid-template-columns:repeat(2,1fr)}.grid4{grid-template-columns:1fr 1fr}.grid4 .search{grid-column:1/-1}}
-@media(max-width:600px){
-  .container{padding:10px}.header-in{padding:10px}.brand h1{font-size:16px}.brand p{font-size:9px}
-  .head-btn{height:39px;padding:0 10px}.stats{gap:7px}.stat{padding:11px}.stat strong{font-size:20px}
-  .grid4{grid-template-columns:1fr}.grid4 .search{grid-column:auto}.import-box{grid-template-columns:1fr}
-  .table-wrap{display:none}.mobile-list{display:grid}.form{grid-template-columns:1fr}.full{grid-column:auto}.top .btn{flex:1}
+@media(max-width:900px){
+  .stats{grid-template-columns:repeat(2,1fr)}
+  .grid4{grid-template-columns:1fr 1fr}
+  .grid4 .search{grid-column:1/-1}
 }
+@media(max-width:600px){
+  .header-in{
+    min-height:62px;
+    padding:8px 10px;
+    gap:8px;
+  }
+  .logo{
+    width:40px;
+    height:40px;
+    flex-basis:40px;
+  }
+  .brand{gap:8px}
+  .brand h1{font-size:15px}
+  .brand p{font-size:9px;margin-top:3px}
+  .head-actions{gap:5px}
+  .header .head-btn{
+    height:38px;
+    min-width:auto;
+    padding:0 9px;
+    font-size:12px;
+    border-radius:10px;
+  }
+  .container{padding:10px}
+  .stats{gap:7px}
+  .stat{padding:11px}
+  .stat strong{font-size:20px}
+  .grid4{grid-template-columns:1fr}
+  .grid4 .search{grid-column:auto}
+  .import-box{grid-template-columns:1fr}
+  .table-wrap{display:none}
+  .mobile-list{display:grid}
+  .form{grid-template-columns:1fr}
+  .full{grid-column:auto}
+  .top .btn{flex:1}
+}
+
 </style>
 <style id="stock-logic-patch">
 .stockBulkBar{display:flex;gap:10px;align-items:center;flex-wrap:wrap;justify-content:flex-start;margin:10px 0;padding:10px;border:1px solid #e5e7eb;border-radius:12px;background:#f8fafc}
@@ -203,13 +430,17 @@ function tutupHalaman(){
 
 <header class="header">
   <div class="header-in">
-    <div class="brand">
-      <img src="logo.png" class="logo" onerror="this.style.display='none'">
-      <div><h1>Fixzy</h1><p>Produk & Stok</p></div>
+    <div class="logo">
+      <img src="logo.png" onerror="this.style.display='none';this.parentElement.innerHTML='<b style="color:#facc15">F</b>'">
     </div>
-    <div>
-      <button class="head-btn" onclick="tutupHalaman()">✕ Tutup</button>
-      <button class="head-btn refresh" id="refreshBtn" onclick="refreshHalaman()">↻ Refresh</button>
+    <div class="brand">
+      <b>FIXZY <span>OLIVE</span></b><br>
+      <span class="email" id="headerUserEmail">-</span>
+      <span class="badge-role" id="headerRole">USER</span>
+    </div>
+    <div class="user-box head-actions">
+      <button class="head-btn btn-refresh" id="refreshBtn" onclick="refreshHalaman()">↻ Refresh</button>
+      <button class="head-btn close-like" onclick="tutupHalaman()" aria-label="Tutup">✕</button>
     </div>
   </div>
 </header>
@@ -706,6 +937,8 @@ async function saveCSVToFirebase(){
     msg(`Berhasil disimpan ke Firebase.\\nProduk baru: ${baru}\\nProduk diperbarui: ${update}`,"ok");
     csvRows=[];$("saveCsvBtn").style.display="none";$("preview").style.display="none";
     await loadProducts();
+  const headerRoleEl=document.getElementById("headerRole");
+  if(headerRoleEl) headerRoleEl.textContent=(currentRole||"USER").toUpperCase();
   }catch(e){
     console.error(e);
     msg("Gagal menyimpan ke Firebase:\\n"+e.message+"\\n\\nJika muncul 'Missing or insufficient permissions', periksa Firestore Rules agar user login boleh membaca/menulis koleksi stok.","err");
@@ -946,6 +1179,10 @@ window.hapusStockTerpilih=async function(){
 };
 
 onAuthStateChanged(auth,async u=>{
+  const he=document.getElementById("headerUserEmail");
+  const hr=document.getElementById("headerRole");
+  if(he) he.firstChild ? he.firstChild.nodeValue=(u?.email||"-")+" " : null;
+  if(hr) hr.textContent=(currentRole||"USER").toUpperCase();
   if(!u){location.replace("login.html");return;}
   uid=u.uid;
   try{
@@ -961,6 +1198,8 @@ onAuthStateChanged(auth,async u=>{
       throw new Error("Owner belum memberikan izin Stock untuk akun ini.");
     }
     ownerUid=currentRole==="owner"?uid:(p.ownerUid||"");
+    const headerRoleEl=document.getElementById("headerRole");
+    if(headerRoleEl) headerRoleEl.textContent=(currentRole||"USER").toUpperCase();
     if(!ownerUid)throw new Error("ownerUid akun tidak ditemukan.");
     await loadProducts();
   }catch(e){
