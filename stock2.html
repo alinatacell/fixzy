@@ -493,6 +493,148 @@ body.dark-mode .modal{
 })();
 </script>
 
+
+<style id="header-data-penjualan-final">
+/* Header disamakan dengan Data Penjualan */
+.header{
+  background:#111827 !important;
+  color:#fff !important;
+  padding:10px 14px !important;
+  min-height:66px !important;
+  display:flex;
+  align-items:center;
+  gap:12px;
+  position:sticky;
+  top:0;
+  z-index:100;
+  border-bottom:2px solid #facc15 !important;
+  box-shadow:0 2px 12px rgba(0,0,0,.30) !important;
+}
+.header-in{
+  width:100%;
+  max-width:1400px;
+  margin:auto;
+  padding:0 !important;
+  min-height:44px;
+  display:flex;
+  align-items:center;
+  gap:12px;
+}
+.logo{
+  width:46px !important;
+  height:46px !important;
+  flex:0 0 46px !important;
+  background:#000 !important;
+  border-radius:12px !important;
+  display:flex !important;
+  align-items:center;
+  justify-content:center;
+  border:2px solid #facc15 !important;
+  overflow:hidden;
+  box-shadow:0 0 0 2px #111827,0 0 0 4px #facc1530 !important;
+  padding:0 !important;
+}
+.logo img{
+  width:40px !important;
+  height:40px !important;
+  object-fit:contain !important;
+  background:#000;
+}
+.brand{
+  min-width:0;
+  flex:0 1 auto;
+}
+.brand b{
+  color:#fff !important;
+  font-weight:900;
+  letter-spacing:.5px;
+}
+.brand b span{color:#facc15 !important}
+.brand .email{font-size:10px;color:#9ca3af}
+.badge-role{
+  background:#facc15;
+  color:#000;
+  padding:2px 8px;
+  border-radius:6px;
+  font-size:10px;
+  font-weight:900;
+  display:inline-block;
+  margin-left:4px;
+}
+.header-actions,.head-actions{
+  margin-left:auto;
+  display:flex;
+  align-items:center;
+  gap:8px;
+  flex:0 0 auto;
+}
+.header .head-btn{
+  height:42px !important;
+  min-width:auto !important;
+  padding:10px 14px !important;
+  border-radius:12px !important;
+  font-weight:800 !important;
+  font-size:12px !important;
+  border:1px solid #334155 !important;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  gap:6px;
+  background:#1e293b !important;
+  color:#fff !important;
+}
+.header .btn-refresh{
+  border-color:#facc15 !important;
+}
+.dark-mode-btn{
+  width:42px !important;
+  min-width:42px !important;
+  padding:0 !important;
+  background:#000 !important;
+  color:#facc15 !important;
+  border:2px solid #facc15 !important;
+  font-size:18px !important;
+  border-radius:12px !important;
+}
+@media(max-width:900px){
+  .header{
+    padding:8px 10px !important;
+    min-height:58px !important;
+    gap:8px;
+  }
+  .header-in{gap:8px;min-height:42px}
+  .logo{
+    width:40px !important;
+    height:40px !important;
+    flex-basis:40px !important;
+    border-radius:10px !important;
+  }
+  .logo img{width:34px !important;height:34px !important}
+  .brand b{font-size:13px !important}
+  .brand .email{font-size:9px}
+  .badge-role{font-size:9px;padding:2px 6px}
+  .head-actions,.header-actions{gap:6px}
+  .header .head-btn{
+    height:38px !important;
+    padding:8px 10px !important;
+    font-size:11px !important;
+  }
+  .dark-mode-btn{
+    width:38px !important;
+    min-width:38px !important;
+    height:38px !important;
+    padding:0 !important;
+    border-radius:10px !important;
+  }
+}
+@media(max-width:520px){
+  .brand .email{display:none}
+  .brand b{font-size:12px !important}
+  .badge-role{font-size:8px;padding:2px 5px}
+  .header .btn-refresh{padding:8px 9px !important}
+}
+</style>
+
 </head>
 <body><script>
 /* FIX TUTUP: hapus iframe yang sedang menampilkan halaman ini. */
@@ -523,15 +665,19 @@ function tutupHalaman(){
 
 <header class="header">
   <div class="header-in">
-    <div class="logo"><img src="logo.png" alt="FIXZY"></div>
+    <div class="logo">
+      <img src="logo.png" alt="Fixzy Logo"
+           onerror="this.style.display='none';this.parentElement.innerHTML='<b style="color:#facc15;font-size:24px">F</b>'">
+    </div>
     <div class="brand">
       <b id="headerAccountName">Memuat akun...</b><br>
-      <span class="email" id="headerUserEmail" style="display:none">-</span>
+      <span class="email" id="headerUserEmail">-</span>
       <span class="badge-role" id="headerRole">USER</span>
     </div>
-    <div class="user-box head-actions">
+    <div class="header-actions head-actions">
       <button class="head-btn btn-refresh" id="refreshBtn" onclick="refreshHalaman()">↻ Refresh</button>
-      <button class="head-btn dark-mode-btn" id="darkModeBtn" onclick="toggleDarkMode()" aria-label="Mode gelap">🌙</button>
+      <button class="head-btn dark-mode-btn" id="darkModeBtn"
+              onclick="toggleDarkMode()" aria-label="Mode gelap">🌙</button>
     </div>
   </div>
 </header>
