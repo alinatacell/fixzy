@@ -846,13 +846,21 @@ async function loadProduk(){
 }
 
 function filterProduk(keyword){
-  if(!keyword){ hideProdukDropdown(); return; }
-  const kw=keyword.toLowerCase();
+  const kw=(keyword||'').toString().trim().toLowerCase();
+
+  // Jika kolom pencarian kosong, langsung tampilkan SEMUA data produk/stok.
+  // Saat ada huruf/barcode, baru difilter sesuai kecocokan.
+  if(!kw){
+    showProdukDropdown(allProduk);
+    return;
+  }
+
   const filtered=allProduk.filter(p=>{
-    const nama=(p.nama||p.namaProduk||p.name||'').toLowerCase();
-    const barcode=(p.barcode||'').toLowerCase();
+    const nama=(p.nama||p.namaProduk||p.name||'').toString().toLowerCase();
+    const barcode=(p.barcode||'').toString().toLowerCase();
     return nama.includes(kw) || barcode.includes(kw);
   });
+
   showProdukDropdown(filtered);
 }
 
@@ -1210,7 +1218,19 @@ window.alert = function(msg){ showKonterPopup(msg, 'info'); };
 window.regenerate=()=>{ autoGenerateNotaBarcode(); showKonterPopup('Nota & Barcode baru: ' + document.getElementById('notaField').value + ' | Konter: ' + konterName, 'success'); }
 
 document.addEventListener('DOMContentLoaded', ()=>{
-  document.getElementById('produkSearch').addEventListener('input', (e)=>filterProduk(e.target.value));
+  const produkSearch=document.getElementById('produkSearch');
+
+  // Klik/fokus kolom pencarian langsung menampilkan seluruh produk yang tersedia.
+  produkSearch.addEventListener('focus', ()=>{
+    filterProduk(produkSearch.value);
+  });
+
+  produkSearch.addEventListener('click', ()=>{
+    filterProduk(produkSearch.value);
+  });
+
+  produkSearch.addEventListener('input', (e)=>filterProduk(e.target.value));
+
   document.getElementById('hargaAuto').addEventListener('input', hitungSubtotalAuto);
   document.getElementById('qtyAuto').addEventListener('input', hitungSubtotalAuto);
   document.getElementById('hargaManual').addEventListener('input', hitungSubtotalManual);
