@@ -430,11 +430,10 @@ function tutupHalaman(){
 
 <header class="header">
   <div class="header-in">
-    <div class="logo">
-      <img src="logo.png" onerror="this.style.display='none';this.parentElement.innerHTML='<b style="color:#facc15">F</b>'">
+    <div class="logo"><img src="logo.png" alt="FIXZY">F</b>'">
     </div>
     <div class="brand">
-      <b>FIXZY <span>OLIVE</span></b><br>
+      <b id="headerAccountName">Memuat akun...</b><br>
       <span class="email" id="headerUserEmail">-</span>
       <span class="badge-role" id="headerRole">USER</span>
     </div>
@@ -1200,6 +1199,12 @@ onAuthStateChanged(auth,async u=>{
     ownerUid=currentRole==="owner"?uid:(p.ownerUid||"");
     const headerRoleEl=document.getElementById("headerRole");
     if(headerRoleEl) headerRoleEl.textContent=(currentRole||"USER").toUpperCase();
+    const headerAccountName=document.getElementById("headerAccountName");
+    if(headerAccountName){
+      headerAccountName.textContent =
+        p.namaKonter || p.namaToko || p.nama || p.name || p.displayName ||
+        p.username || p.email || auth.currentUser?.email || "Akun";
+    }
     if(!ownerUid)throw new Error("ownerUid akun tidak ditemukan.");
     await loadProducts();
   }catch(e){
