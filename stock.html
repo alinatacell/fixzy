@@ -1,1 +1,219 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>FIXZY Stok - FINAL ALL</title>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#f5f7fb;font-family:Arial;color:#172033}
+.header{background:#111827;color:#fff;padding:12px 16px;display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;z-index:10}
+.btn{min-height:38px;border:0;border-radius:10px;padding:8px 14px;font-weight:800;cursor:pointer}
+.primary{background:#f59e0b;color:#111}
+.dark{background:#1e293b;color:#fff}
+.card{background:#fff;border-radius:12px;padding:14px;margin:14px;box-shadow:0 2px 8px #0001}
+table{width:100%;border-collapse:collapse;font-size:12px}
+th,td{padding:8px;border-bottom:1px solid #e5e7eb;text-align:left}
+th{background:#f8fafc;position:sticky;top:0}
+.badge{padding:4px 8px;border-radius:99px;font-size:10px;font-weight:800}
+.ready{background:#dcfce7;color:#15803d}
+.empty{background:#fee2e2;color:#dc2626}
+#log{background:#111827;color:#4ade80;padding:10px;border-radius:8px;font-size:11px;white-space:pre-wrap;max-height:200px;overflow:auto;margin-top:10px}
+</style>
+</head>
+<body>
+<div class="header">
+<div><b>FIXZY - STOK FINAL (Tampil Semua)</b><div id="authInfo" style="font-size:10px;color:#94a3b8">Menunggu login...</div></div>
+<button class="btn dark" onclick="location.reload()">↻ Refresh</button>
+</div>
 
+<div class="card">
+<h3>📤 Upload Excel</h3>
+<input type="file" id="excelFile" accept=".xlsx,.xls,.csv" style="padding:8px;border:1px solid #ddd;border-radius:8px">
+<button class="btn dark" onclick="previewExcel()">Preview</button>
+<button class="btn primary" onclick="uploadExcel()">Upload ke Firebase</button>
+<div id="excelStatus" style="margin-top:8px;font-weight:800;color:#16a34a"></div>
+<div id="excelPreview" style="display:none;margin-top:10px;overflow:auto;max-height:200px"></div>
+</div>
+
+<div class="card">
+<div style="display:flex;gap:8px;margin-bottom:10px">
+<input id="search" placeholder="Cari kode/nama..." style="flex:1;padding:10px;border:1px solid #ddd;border-radius:10px">
+<button class="btn primary" onclick="fixAllKodeKosong()">🔧 Betulin Kode Kosong</button>
+</div>
+<div id="counts" style="font-weight:800;margin-bottom:8px">Memuat...</div>
+<div id="log">Log:</div>
+<div style="overflow:auto;max-height:70vh">
+<table><thead><tr><th>Kode</th><th>Nama</th><th>Kategori</th><th>Modal</th><th>Jual</th><th>Sisa</th><th>uid</th><th>Aksi</th></tr></thead><tbody id="tbody"></tbody></table>
+</div>
+</div>
+
+<script type="module">
+import {initializeApp} from "https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js";
+import {getAuth,onAuthStateChanged} from "https://www.gstatic.com/firebasejs/11.10.0/firebase-auth.js";
+import {getFirestore,collection,getDocs,addDoc,updateDoc,deleteDoc,doc,serverTimestamp} from "https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js";
+
+const cfg={apiKey:"AIzaSyC_PcarMTT5Un7qfSLzf92o5OGn5rginsI",authDomain:"fixzy-update.firebaseapp.com",projectId:"fixzy-update",storageBucket:"fixzy-update.firebasestorage.app",messagingSenderId:"995892519622",appId:"1:995892519622:web:fa41047944d8e5b35d6dc7"};
+const app=initializeApp(cfg);
+const auth=getAuth(app);
+const db=getFirestore(app);
+window.db=db;
+
+let uid=null, ownerUid="";
+let products=[];
+let excelData=[];
+
+const $=id=>document.getElementById(id);
+function log(t){ console.log(t); $("log").textContent+="\n"+t; }
+function money(n){ return "Rp "+Number(n||0).toLocaleString("id-ID"); }
+
+window.previewExcel=()=>{
+  const file=$("excelFile").files[0];
+  if(!file){alert("Pilih file");return;}
+  const reader=new FileReader();
+  reader.onload=e=>{
+    const data=new Uint8Array(e.target.result);
+    const wb=XLSX.read(data,{type:'array'});
+    const sheet=wb.Sheets[wb.SheetNames[0]];
+    const json=XLSX.utils.sheet_to_json(sheet,{defval:""});
+    excelData=json;
+    $("excelPreview").style.display="block";
+    $("excelPreview").innerHTML=`<b>${json.length} baris</b><pre>${JSON.stringify(json.slice(0,3),null,2)}</pre>`;
+    $("excelStatus").textContent=`Preview: ${json.length} baris`;
+  };
+  reader.readAsArrayBuffer(file);
+};
+
+window.uploadExcel=async()=>{
+  if(!excelData.length){alert("Preview dulu");return;}
+  const owner=ownerUid||uid;
+  if(!owner){alert("Belum login");return;}
+  $("excelStatus").textContent="Upload...";
+  let ok=0;
+  for(const row of excelData){
+    const nama=String(row.nama||row.Nama||row.produk||row.NAMA||"").trim();
+    if(!nama) continue;
+    const toNum=v=>{ let x=String(v||"").replace(/[^0-9.-]/g,""); let n=parseFloat(x); return isNaN(n)?0:n; };
+    const kode=String(row.kode||row.sku||row.Kode||"").trim() || "STK"+Date.now()+ok;
+    const payload={
+      kode:kode,
+      nama:nama,
+      kategori:String(row.kategori||row.Kategori||"LAINNYA").toUpperCase(),
+      hargaModal:toNum(row.hargaModal||row.hargaBeli||row.modal||0),
+      hargaJual:toNum(row.hargaJual||row.jual||0)||0,
+      sisa:Math.max(0,Math.round(toNum(row.sisa||row.stok||0))),
+      merk:String(row.merk||"").trim(),
+      catatan:String(row.catatan||row.deskripsi||"").trim(),
+      uid:owner,
+      ownerUid:owner,
+      ownerId:owner,
+      createdAt:serverTimestamp(),
+      updatedAt:serverTimestamp(),
+      sumber:"EXCEL-FINAL"
+    };
+    if(!payload.hargaJual) payload.hargaJual=Math.round(payload.hargaModal*1.25);
+    await addDoc(collection(db,"stok"),payload);
+    ok++;
+  }
+  $("excelStatus").textContent=`Selesai ${ok} produk`;
+  loadAll();
+};
+
+window.fixAllKodeKosong=async()=>{
+  if(!confirm("Betulin semua dokumen yang kode-nya kosong? Akan diisi STK001, STK002, dst")) return;
+  let counter=1;
+  for(const p of products){
+    if(!p.kode || p.kode==="" || p.kode==="(tanpa kode)"){
+      const newKode="STK"+String(counter).padStart(3,"0");
+      // cek apakah kode sudah dipakai
+      const exists=products.some(x=>x.kode===newKode);
+      if(!exists){
+        await updateDoc(doc(db,"stok",p.id),{kode:newKode, ownerUid:ownerUid||uid, uid:ownerUid||uid, ownerId:ownerUid||uid, updatedAt:serverTimestamp()});
+        counter++;
+      }else{
+        counter++;
+      }
+    }
+  }
+  alert("Selesai betulin kode kosong");
+  loadAll();
+};
+
+async function loadAll(){
+  $("counts").textContent="Memuat semua dokumen di koleksi 'stok'...";
+  try{
+    const snap=await getDocs(collection(db,"stok"));
+    log(`Total dokumen di Firebase: ${snap.size}`);
+    const all=[];
+    snap.forEach(d=>{
+      const data=d.data();
+      all.push({id:d.id, ...data});
+    });
+    
+    // Normalisasi
+    products=all.map(p=>{
+      if(p.hargaModal==null && p.hargaBeli!=null) p.hargaModal=p.hargaBeli;
+      if(p.sisa==null && p.stok!=null) p.sisa=p.stok;
+      if(!p.kode && p.sku) p.kode=p.sku;
+      return p;
+    });
+    
+    // Tampilkan SEMUA, tidak filter owner
+    $("counts").textContent=`${products.length} produk tampil dari ${snap.size} dokumen (tanpa filter owner) - Manual + CSV semua harusnya muncul`;
+    
+    const q=$("search").value.toLowerCase();
+    const filtered=products.filter(p=>{
+      if(!q) return true;
+      return String(p.kode+" "+p.nama+" "+p.kategori).toLowerCase().includes(q);
+    }).sort((a,b)=>String(a.kode||"").localeCompare(String(b.kode||"")));
+    
+    $("tbody").innerHTML=filtered.map(p=>{
+      const st=Number(p.sisa||0);
+      const stat=st>0?`<span class="badge ready">READY ${st}</span>`:`<span class="badge empty">KOSONG</span>`;
+      return `<tr>
+        <td><b>${p.kode||'(kosong)'}</b></td>
+        <td>${p.nama||'-'}</td>
+        <td>${p.kategori||'-'}</td>
+        <td>${money(p.hargaModal||0)}</td>
+        <td>${money(p.hargaJual||0)}</td>
+        <td>${st}</td>
+        <td style="font-size:9px">${(p.uid||'').substring(0,8)}...</td>
+        <td><button onclick="hapus('${p.id}')" style="background:#fee2e2;border:0;padding:4px 8px;border-radius:6px;cursor:pointer">Hapus</button></td>
+      </tr>`;
+    }).join("") || `<tr><td colspan=8 style="text-align:center;padding:20px">Tidak ada data. Cek log di bawah. Kalau log bilang 0 dokumen, berarti Rules belum dipublish atau buka file via file:// bukan http://</td></tr>`;
+    
+  }catch(e){
+    log("ERROR loadAll: "+e.message);
+    $("counts").textContent="Gagal: "+e.message;
+  }
+}
+window.loadAll=loadAll;
+window.hapus=async(id)=>{
+  if(!confirm("Hapus?")) return;
+  await deleteDoc(doc(db,"stok",id));
+  loadAll();
+};
+$("search").addEventListener("input",()=>{ loadAll(); });
+
+onAuthStateChanged(auth, async u=>{
+  if(!u){ $("authInfo").textContent="Belum login, buka login.html dulu"; log("Belum login"); return; }
+  uid=u.uid;
+  try{
+    const {getDoc} = await import("https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js");
+    const snap=await getDoc(doc(db,"users",u.uid));
+    if(snap.exists()){
+      const p=snap.data();
+      ownerUid = p.role==="owner" ? u.uid : (p.ownerUid||u.uid);
+      $("authInfo").textContent=`Login: ${p.role||''} | UID: ${u.uid.substring(0,8)} | ownerUid: ${ownerUid.substring(0,8)}`;
+      log(`Auth OK role=${p.role} uid=${u.uid} ownerUid=${ownerUid}`);
+    }else{
+      ownerUid=u.uid;
+      $("authInfo").textContent=`Login: ${u.uid.substring(0,8)} (users tidak ada)`;
+    }
+  }catch(e){ ownerUid=u.uid; log("Error users: "+e.message); }
+  loadAll();
+});
+</script>
+</body>
+</html>
