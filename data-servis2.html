@@ -944,70 +944,89 @@ window.simpanTanpaKirim=async()=>{
 };
 
 window.kirimWhatsAppDanSimpan=async()=>{
- if(!pendingStatusConfirm)return;
+  if(!pendingStatusConfirm)return;
 
- const p=pendingStatusConfirm;
- const x=data.find(y=>y.id===p.id);
- const pesan=$("statusConfirmMessage").value.trim();
+  const p=pendingStatusConfirm;
+  const x=data.find(y=>y.id===p.id);
+  const pesan=$("statusConfirmMessage").value.trim();
 
- if(!x){
-   tampilNotice("⚠️ WhatsApp","Data servis tidak ditemukan.");
-   return;
- }
+  if(!x){
+    tampilNotice("⚠️ WhatsApp","Data servis tidak ditemukan.");
+    return;
+  }
 
- const waRaw=x.pelanggan?.wa||x.pelanggan?.whatsapp||"";
- const wa=normalisasiWA(waRaw);
+  const waRaw=x.pelanggan?.wa||x.pelanggan?.whatsapp||"";
+  const wa=normalisasiWA(waRaw);
 
- if(!wa){
-   tampilNotice("⚠️ WhatsApp","Nomor WhatsApp pelanggan belum tersedia.");
-   return;
- }
+  if(!wa){
+    tampilNotice("⚠️ WhatsApp","Nomor WhatsApp pelanggan belum tersedia.");
+    return;
+  }
 
- /*
-  * VERSI WA BARU:
-  * Jangan memakai whatsapp:// karena pada sebagian Chrome/Windows
-  * protokol tersebut membuat tab berkedip/menutup atau kembali ke FIXZY.
-  *
-  * wa.me adalah URL resmi WhatsApp dan lebih stabil:
-  * - HP: biasanya diteruskan ke aplikasi WhatsApp
-  * - Desktop: membuka WhatsApp Web
-  * - Pesan langsung sudah diisi pada kolom chat
-  *
-  * Tidak mengubah data servis atau Firebase.
-  */
- const waUrl="https://wa.me/"+wa+"?text="+encodeURIComponent(pesan);
+  /*
+   * PENTING:
+   * Buka link WhatsApp SEBELUM await/update Firebase supaya Chrome laptop
+   * menganggapnya sebagai aksi langsung dari klik tombol.
+   *
+   * Desktop  -> WhatsApp Web
+   * HP       -> wa.me (akan memilih aplikasi WhatsApp/browser yang sesuai)
+   */
+  const isMobile=/Android|iPhone|iPad|iPod|Windows Phone/i.test(navigator.userAgent);
+  const waUrl=isMobile
+    ? "https://wa.me/"+wa+"?text="+encodeURIComponent(pesan)
+    : "https://web.whatsapp.com/send?phone="+wa+"&text="+encodeURIComponent(pesan);
 
- let waWindow=null;
+  let opened=false;
 
- try{
-   // Dipanggil langsung dari klik tombol agar tidak dianggap popup otomatis.
-   waWindow=window.open(waUrl,"_blank");
- }catch(e){
-   console.warn("window.open WhatsApp gagal:",e);
- }
+  try{
+    const w=window.open(waUrl,"_blank","noopener,noreferrer");
+    opened=!!w;
+  }catch(e){
+    console.warn("window.open WhatsApp gagal:",e);
+  }
 
- // Fallback jika browser memblokir window.open.
- if(!waWindow){
-   try{
-     const a=document.createElement("a");
-     a.href=waUrl;
-     a.target="_blank";
-     a.rel="noopener noreferrer";
-     a.style.display="none";
-     document.body.appendChild(a);
-     a.click();
-     setTimeout(()=>a.remove(),2000);
-   }catch(e){
-     tampilNotice("⚠️ WhatsApp","WhatsApp tidak dapat dibuka oleh browser. Izinkan popup untuk halaman FIXZY lalu coba lagi.");
-     return;
-   }
- }
+  /*
+   * Fallback kalau Chrome memblokir window.open.
+   * Anchor diklik langsung tanpa menunggu proses Firebase.
+   */
+  if(!opened){
+    try{
+      const a=document.createElement("a");
+      a.href=waUrl;
+      a.target="_blank";
+      a.rel="noopener noreferrer";
+      a.style.display="none";
+      document.body.appendChild(a);
+      a.click();
+      setTimeout(()=>a.remove(),2000);
+      opened=true;
+    }catch(e){
+      console.warn("Fallback link WhatsApp gagal:",e);
+    }
+  }
 
- /*
-  * Jangan menunggu WhatsApp selesai.
-  * Status tetap disimpan seperti fungsi sebelumnya.
-  */
- await simpanStatusDariPopup();
+  /*
+   * Tutup popup sekarang agar tidak ada popup FIXZY yang tertinggal.
+   * pendingStatusConfirm dibuat null setelah data disalin ke variabel lokal.
+   */
+  pendingStatusConfirm=null;
+  $("statusConfirmPopup").classList.remove("show");
+
+  /*
+   * Status terakhir tetap disimpan ke Firebase.
+   * Tidak mengubah data/logic servis lainnya.
+   */
+  try{
+    await updateStatus(
+      p.id,
+      p.status,
+      p.catatan,
+      p.durasi,
+      pesan
+    );
+  }catch(e){
+    tampilNotice("⚠️ Status","WhatsApp sudah dibuka, tetapi status gagal disimpan: "+(e.message||e));
+  }
 };
 
 function normalisasiWA(value){
