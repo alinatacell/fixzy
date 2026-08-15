@@ -387,71 +387,31 @@ window.editData=(id)=>{localStorage.setItem('fixzy_edit_id',id);location.href=`i
 window.setStatus=async(id,st)=>{
   try{
     const d=allRows.find(x=>x.id===id);
-    if(!d){
-      console.error('Data penjualan tidak ditemukan:', id);
-      return;
-    }
-
-    // STATUS TERAKHIR WAJIB DISIMPAN KE FIREBASE.
-    // status = status aktif saat ini
-    // statusTerakhir = status terakhir yang dipilih dari popup
-    // statusUpdatedAt = waktu terakhir status diubah
-    const waktuStatus = new Date().toISOString();
-
-    await updateDoc(doc(db,"penjualan",id),{
-      status:st,
-      statusTerakhir:st,
-      statusUpdatedAt:waktuStatus,
-      updatedAt:waktuStatus
-    });
-
-    // Update data lokal hanya SETELAH Firebase berhasil disimpan.
-    d.status=st;
-    d.statusTerakhir=st;
-    d.statusUpdatedAt=waktuStatus;
-    d.updatedAt=waktuStatus;
-
+    await updateDoc(doc(db,"penjualan",id),{status:st,updatedAt:new Date().toISOString()});
+    // JANGAN TUTUP PANEL - biar pengguna yang tutup
+    // Update allRows
+    if(d) d.status=st;
+    render();
+    // Jika panel sedang terbuka, update badge di modal juga
     if(currentDetail && currentDetail.id===id){
       currentDetail.status=st;
-      currentDetail.statusTerakhir=st;
-      currentDetail.statusUpdatedAt=waktuStatus;
-      currentDetail.updatedAt=waktuStatus;
-    }
-
-    // Render ulang agar tabel langsung memakai status yang sudah tersimpan.
-    render();
-
-    // Jika panel sedang terbuka, update badge STATUS saja.
-    if(currentDetail && currentDetail.id===id){
-      const badges=document.querySelectorAll('#modalBody .badge');
-      const badgeInModal=badges.length ? badges[badges.length-1] : null;
+      const badgeInModal=document.querySelector('#modalBody .badge');
       if(badgeInModal){
         badgeInModal.className=`badge ${st}`;
         badgeInModal.textContent=st.toUpperCase();
       }
-
-      // Tampilkan popup WA jika status berubah menjadi tagihan/tunai.
+      // Tampilkan popup WA jika tagihan atau tunai
       if(st==='tagihan' || st==='tunai'){
         showWAPopup(d, st);
       }
-    }else{
+    } else {
+      // Jika ganti dari tabel langsung
       if(st==='tagihan' || st==='tunai'){
-        showWAPopup(d, st);
+        const target=allRows.find(x=>x.id===id);
+        if(target) showWAPopup(target, st);
       }
     }
-
-    console.log('Status berhasil tersimpan ke Firebase:', {
-      id,
-      status:st,
-      statusTerakhir:st,
-      statusUpdatedAt:waktuStatus
-    });
-
-  }catch(e){
-    console.error('Gagal menyimpan status ke Firebase:',e);
-    // Jangan mengubah tampilan seolah-olah berhasil jika Firebase gagal.
-    alert('Status gagal disimpan ke Firebase: ' + (e.message || e));
-  }
+  }catch(e){ console.error(e); }
 }
 
 function showWAPopup(data, status){
@@ -504,15 +464,7 @@ Terima kasih 🙏
   pendingWA.konterReal=konterReal;
 }
 
-window.closeWAModal=()=>{
-  // Tutup popup WA sekaligus popup/detail penjualan di belakangnya.
-  const waModal=document.getElementById('waModal');
-  const detailModal=document.getElementById('modal');
-  if(waModal) waModal.classList.remove('show');
-  if(detailModal) detailModal.classList.remove('show');
-  pendingWA=null;
-  currentDetail=null;
-}
+window.closeWAModal=()=>{ document.getElementById('waModal').classList.remove('show'); pendingWA=null; }
 
 window.sendWA=()=>{
   try{
@@ -566,7 +518,6 @@ window.sendWA=()=>{
       try{ a.remove(); }catch(e){}
     },1000);
 
-    // Setelah WA dibuka, tutup SEMUA popup FIXZY.
     closeWAModal();
 
   }catch(err){
