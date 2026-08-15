@@ -213,6 +213,7 @@ function tutupHalaman(){
     </div>
   </div>
 </header>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 
 <main class="container">
   
@@ -228,7 +229,6 @@ function tutupHalaman(){
   <div id="excelStatus" class="sub" style="margin-top:8px;color:#16a34a;font-weight:800"></div>
   <div id="excelPreview" class="excel-preview" style="display:none"></div>
 </div>
-<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <script>
 let excelData=[];
 function downloadTemplate(){
@@ -238,7 +238,7 @@ function downloadTemplate(){
 }
 function previewExcel(){
   const file=document.getElementById('excelFile').files[0];
-  if(!file){ if(typeof showPopup==='function') showPopup('Pilih file Excel dulu.','Import Excel'); return; }
+  if(!file){ showPopup('Pilih file Excel dulu', 'FIXZY'); return; }
   const reader=new FileReader();
   reader.onload=function(e){
     const data=new Uint8Array(e.target.result);
@@ -264,100 +264,113 @@ function previewExcel(){
   reader.readAsArrayBuffer(file);
 }
 async function uploadExcelToFirebase(){
-  if(!excelData.length){
-    if(typeof showPopup==="function") showPopup("Preview dulu file Excel yang akan diupload.","Import Excel");
-    else console.error("Preview dulu file Excel yang akan diupload.");
-    return;
-  }
-  if(!window.uid || !window.ownerUid){
-    if(typeof showPopup==="function") showPopup("Akun Firebase belum siap. Tunggu sampai data stok selesai dimuat, lalu coba lagi.","Import Excel");
-    return;
-  }
+  if(typeof XLSX==='undefined'){ showPopup('Library Excel belum loaded. Refresh halaman.', 'Error'); return; }
+  if(!excelData.length){ showPopup('Preview dulu file nya - klik Preview', 'FIXZY'); return; }
+  if(!punyaIzinStock()){ showPopup("Akses Stock tidak diberikan oleh Owner."); return; }
+  if(!(await showConfirmPopup(`Upload ${excelData.length} data stok ke Firebase fixzy-update?`, 'Konfirmasi Upload'))) return;
+  
+  const statusEl=document.getElementById('excelStatus');
+  statusEl.textContent='Mengupload...';
+  statusEl.style.color='#16a34a';
+  
+  const dbRef = window.db || window.firestoreDb;
+  const owner = window.ownerUid || window.uid || ownerUid || uid || '';
+  
+  if(!dbRef){ statusEl.textContent='❌ Firebase belum siap, tunggu login'; statusEl.style.color='#dc2626'; return; }
+  if(!owner){ statusEl.textContent='❌ ownerUid tidak ditemukan, login dulu'; statusEl.style.color='#dc2626'; return; }
 
-  const statusEl=document.getElementById("excelStatus");
-  statusEl.textContent="Menyiapkan upload...";
-  showLoading(true,"Mengupload Excel ke Firebase...");
-
-  let ok=0,fail=0,skipped=0;
-  const errors=[];
-
+  let ok=0, fail=0;
   try{
-    // Pakai Firestore db yang benar dari module utama.
-    const ref=collection(db,"stok");
-
-    // Ambil data milik owner yang sedang aktif.
-    const snap=await getDocs(query(ref,where("uid","==",ownerUid)));
+    const { collection, addDoc, serverTimestamp, getDocs, updateDoc, doc } = await import("https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js");
+    
+    // Ambil existing kode untuk cek duplikat
+    const ref=collection(dbRef,"stok");
+    const snap=await getDocs(ref);
     const existing=new Map();
     snap.forEach(d=>{
-      const x=d.data()||{};
-      const kode=String(x.kode||"").trim().toLowerCase();
-      if(kode) existing.set(kode,d.id);
+      const x=d.data();
+      const docOwner = x.ownerUid || x.uid || x.ownerId || "";
+      // Hanya cek duplikat untuk owner yang sama
+      if(docOwner===owner || docOwner==="" || !x.ownerUid){
+        if(x.kode) existing.set(String(x.kode).trim().toLowerCase(), d.id);
+      }
     });
+    log && console.log("Existing kode:", existing.size);
 
-    for(let i=0;i<excelData.length;i++){
-      const row=excelData[i]||{};
+    for(const row of excelData){
       try{
-        const nama=String(row.nama??row.Nama??row.NAMA??row["Nama Produk"]??row.produk??"").trim();
-        const kategori=String(row.kategori??row.Kategori??row.KATEGORI??"LAINNYA").trim().toUpperCase();
-        const kode=String(row.sku??row.SKU??row.kode??row.Kode??"").trim();
-        const hargaModal=num(row.hargaBeli??row.harga_beli??row.hargaModal??row.modal??0);
-        const hargaJual=num(row.hargaJual??row.harga_jual??row.jual??0);
-        const sisa=Math.max(0,num(row.stok??row.Stok??row.sisa??row["sisa stok"]??0));
-        const merk=String(row.merk??row.Merk??row.brand??row.supplier??"").trim();
-        const catatan=String(row.deskripsi??row.Deskripsi??row.catatan??row.keterangan??"").trim();
+        // Support format fleksibel
+        const namaRaw = row.nama || row.Nama || row.NAMA || row['nama produk'] || row.produk || row.Produk || '';
+        const kodeRaw = row.kode || row.Kode || row.sku || row.SKU || row.kode_produk || '';
+        const katRaw = row.kategori || row.Kategori || row.category || 'LAINNYA';
+        const modalRaw = row.hargaModal || row.hargaBeli || row.modal || row['harga beli'] || row['harga modal'] || 0;
+        const jualRaw = row.hargaJual || row.jual || row['harga jual'] || 0;
+        const stokRaw = row.sisa || row.stok || row.stock || row.qty || row.jumlah || 0;
+        const merkRaw = row.merk || row.brand || row.supplier || '';
+        const catatRaw = row.catatan || row.deskripsi || row.keterangan || '';
 
-        if(!nama){
-          skipped++;
-          continue;
-        }
+        const nama = String(namaRaw).trim();
+        if(!nama){ fail++; continue; }
 
-        const data={
-          uid:ownerUid,
-          ownerUid:ownerUid,
-          ownerId:ownerUid,
-          kode:kode,
-          nama:nama,
-          kategori:kategori||"LAINNYA",
-          hargaModal:hargaModal,
-          hargaJual:hargaJual||Math.round(hargaModal*1.25),
-          sisa:sisa,
-          merk:merk,
-          catatan:catatan,
-          sumber:"Excel",
-          updatedAt:serverTimestamp()
+        const toNum = (v)=>{
+          if(typeof v==='number') return v;
+          let s=String(v||'').trim();
+          if(!s) return 0;
+          s=s.replace(/[^\d,.-]/g,'');
+          if(s.includes(',') && s.includes('.')){
+            if(s.lastIndexOf(',')>s.lastIndexOf('.')) s=s.replace(/\./g,'').replace(',','.');
+            else s=s.replace(/,/g,'');
+          }else if(s.includes(',')){
+            s=s.replace(',','.');
+          }
+          const n=parseFloat(s);
+          return isNaN(n)?0:n;
         };
 
-        const key=kode.toLowerCase();
-        if(key && existing.has(key)){
-          await updateDoc(doc(db,"stok",existing.get(key)),data);
-        }else{
-          const added=await addDoc(ref,{...data,createdAt:serverTimestamp()});
-          if(key) existing.set(key,added.id);
-        }
+        const kodeFinal = String(kodeRaw||'').trim() || ('STK'+String(Date.now()+ok).slice(-6));
+        
+        const payload={
+          kode: kodeFinal,
+          nama: nama,
+          kategori: String(katRaw).trim().toUpperCase(),
+          hargaModal: toNum(modalRaw),
+          hargaJual: toNum(jualRaw) || Math.round(toNum(modalRaw)*1.25),
+          sisa: Math.max(0, Math.round(toNum(stokRaw))),
+          merk: String(merkRaw).trim(),
+          catatan: String(catatRaw).trim(),
+          uid: owner,
+          ownerUid: owner,
+          ownerId: owner,
+          createdBy: window.uid || uid || owner,
+          updatedAt: serverTimestamp(),
+          sumber: "EXCEL"
+        };
 
+        const key = payload.kode.toLowerCase();
+        if(key && existing.has(key)){
+          await updateDoc(doc(dbRef,"stok",existing.get(key)), payload);
+        }else{
+          await addDoc(ref, {...payload, createdAt: serverTimestamp()});
+        }
         ok++;
-        statusEl.textContent=`Progress: ${ok}/${excelData.length} berhasil, ${skipped} dilewati, ${fail} gagal`;
+        statusEl.textContent=`Progress: ${ok}/${excelData.length} OK, ${fail} gagal`;
       }catch(err){
+        console.error("Row gagal:", row, err);
         fail++;
-        errors.push(`Baris ${i+2}: ${err.message||err}`);
       }
     }
-
-    await loadProducts();
-
-    let hasil=`Upload Excel selesai.\n\nBerhasil: ${ok}\nDilewati: ${skipped}\nGagal: ${fail}`;
-    if(errors.length) hasil+=`\n\n${errors.slice(0,5).join("\n")}`;
-
-    statusEl.textContent=`Selesai: ${ok} berhasil, ${skipped} dilewati, ${fail} gagal.`;
-    if(typeof showPopup==="function") showPopup(hasil,"Import Excel");
+    statusEl.textContent=`✅ Selesai: ${ok} berhasil, ${fail} gagal. Refresh daftar...`;
+    if(window.loadProducts) await window.loadProducts();
+    else if(window.refreshHalaman) await window.refreshHalaman();
   }catch(e){
-    console.error("EXCEL UPLOAD ERROR:",e);
-    statusEl.textContent="Gagal upload Excel: "+e.message;
-    if(typeof showPopup==="function") showPopup("Gagal upload Excel ke Firebase.\n\n"+e.message,"Import Excel");
-  }finally{
-    showLoading(false);
+    console.error(e);
+    statusEl.textContent='❌ Error: '+e.message;
+    statusEl.style.color='#dc2626';
   }
-}</script>
+}
+window.uploadExcelToFirebase = uploadExcelToFirebase;
+
+</script>
 
 <div class="top">
     <button class="btn primary" onclick="openManual()">Tambah Stok Manual</button>
@@ -467,6 +480,9 @@ const cfg={apiKey:"AIzaSyC_PcarMTT5Un7qfSLzf92o5OGn5rginsI",authDomain:"fixzy-up
 const app=initializeApp(cfg);
 const auth=getAuth(app);
 const db=getFirestore(app);
+window.db=db;
+window.firestoreDb=db;
+
 
 let uid=null;
 let ownerUid="",currentRole="",permissions=[];
@@ -762,37 +778,85 @@ async function saveCSVToFirebase(){
 }
 
 function punyaIzinStock(){
-  // MODE SEMENTARA:
-  // Semua akun yang sudah login diizinkan mengakses halaman Stock.
-  // Pembatasan per menu akan dibuat nanti melalui halaman Izin Akses.
-  return !!uid;
+  // Owner & superadmin selalu boleh
+  if(["owner","superadmin","admin"].includes(String(currentRole).toLowerCase())) return true;
+  // Karyawan: cek izin dari pengaturan (field izin / permissions)
+  const izinList = (permissions||[]).map(x=>String(x).toLowerCase());
+  // Jika di pengaturan sudah ada izin akses stok, izinkan
+  if(izinList.includes("stok") || izinList.includes("stock") || izinList.includes("produk") || izinList.includes("inventory") || izinList.includes("stok_produk")) return true;
+  // Jika permissions kosong tapi role employee (untuk backward compatibility), izinkan kalau sudah login
+  if(["employee","karyawan","staff"].includes(String(currentRole).toLowerCase())){
+    // Cek apakah di pengaturan ada izin apapun -> kalau ada, anggap boleh lihat stok
+    if(izinList.length>0) return true;
+    // Fallback: izinkan karyawan lihat stok (bisa diubah jadi false kalau mau ketat)
+    return true;
+  }
+  return true; // Default allow untuk sekarang, ganti jadi false kalau mau ketat
 }
+window.punyaIzinStock = punyaIzinStock;
+
 
 async function loadProducts(){
   if(!uid){$("listMsg").textContent="Menunggu login Firebase...";return}
   if(!punyaIzinStock()){
-    $("listMsg").textContent="🔒 Akses Stock tidak diberikan oleh Owner.";
+    $("listMsg").textContent="🔒 Akses Stock tidak diberikan oleh Owner. Cek pengaturan izin karyawan.";
     products=[];
     render();
     return;
   }
-  $("listMsg").textContent="Memuat data stok...";
+  $("listMsg").textContent="Memuat data stok... (mode karyawan & admin)";
   try{
-    // Ambil dari 3 kemungkinan field biar data lama & baru kebaca semua
-    let snaps=[];
-    try{ snaps.push(await getDocs(query(collection(db,"stok"),where("ownerUid","==",ownerUid)))); }catch(e){}
-    try{ snaps.push(await getDocs(query(collection(db,"stok"),where("uid","==",ownerUid)))); }catch(e){}
-    try{ snaps.push(await getDocs(query(collection(db,"stok"),where("ownerId","==",ownerUid)))); }catch(e){}
-    const map=new Map();
-    snaps.forEach(snap=>{ snap.forEach(d=>{ if(!map.has(d.id)) map.set(d.id,{id:d.id,...d.data()}); }); });
-    products=Array.from(map.values());
-    $("listMsg").textContent=products.length?`${products.length} produk tersimpan di Firebase.`:"Belum ada data stok. Klik Tambah Stok Manual.";
-    fillCategories();render();
+    // Untuk karyawan/admin: ambil semua, lalu filter client-side biar pasti tampil
+    // Ini mengatasi masalah ownerUid yang kadang tidak konsisten
+    const ref=collection(db,"stok");
+    const snapAll=await getDocs(ref);
+    
+    let allDocs=[];
+    snapAll.forEach(d=>{ allDocs.push({id:d.id, ...d.data()}); });
+    
+    console.log("[STOK] Total dokumen di koleksi stok:", snapAll.size, "ownerUid sesi:", ownerUid, "uid sesi:", uid, "role:", currentRole);
+    
+    // Filter untuk karyawan: tampilkan yang ownerUid/uid/ownerId == ownerUid (punya owner) ATAU yang tidak punya owner (data lama)
+    let filtered = allDocs;
+    if(["employee","karyawan","staff","admin"].includes(String(currentRole).toLowerCase())){
+      filtered = allDocs.filter(p=>{
+        const docOwner = p.ownerUid || p.uid || p.ownerId || "";
+        // Tampilkan kalau: owner sama, atau doc tidak punya owner (data lama bug), atau uid sama
+        return docOwner===ownerUid || docOwner===uid || docOwner==="" || !p.ownerUid;
+      });
+      console.log(`[STOK] Filter karyawan: ${filtered.length} dari ${allDocs.length} (ownerUid=${ownerUid})`);
+    }
+    
+    // Normalisasi field lama -> baru biar tetap tampil
+    products = filtered.map(p=>{
+      if(p.hargaModal==null){
+        if(p.hargaBeli!=null) p.hargaModal=p.hargaBeli;
+        else if(p.modal!=null) p.hargaModal=p.modal;
+        else p.hargaModal=0;
+      }
+      if(p.hargaJual==null) p.hargaJual=Math.round(Number(p.hargaModal||0)*1.25);
+      if(p.sisa==null){
+        if(p.stok!=null) p.sisa=p.stok;
+        else if(p.stock!=null) p.sisa=p.stock;
+        else if(p.qty!=null) p.sisa=p.qty;
+        else p.sisa=0;
+      }
+      if(!p.kode && p.sku) p.kode=p.sku;
+      if(!p.kode) p.kode="(tanpa kode)";
+      if(!p.kategori) p.kategori="LAINNYA";
+      return p;
+    });
+    
+    $("listMsg").textContent=products.length?`${products.length} produk dari total ${snapAll.size} dokumen di Firebase (role: ${currentRole})`:"Belum ada data stok. Upload dulu via Excel atau Tambah Manual.";
+    fillCategories();
+    render();
   }catch(e){
     console.error(e);
-    $("listMsg").textContent="Gagal membaca stok: "+e.message;
+    $("listMsg").textContent="Gagal membaca stok: "+e.message+" - cek Rules & console F12";
   }
 }
+window.loadProducts=loadProducts;
+
 
 function fillCategories(){
   const sel=$("cat"),old=sel.value;
@@ -903,7 +967,7 @@ window.saveManual=async()=>{
   }catch(e){showPopup("Gagal menyimpan:\\n"+e.message)}finally{showLoading(false)}
 }
 window.deleteProduct=async id=>{
-  if(!confirm("Hapus produk ini dari Firebase?"))return;
+  if(!(await showConfirmPopup("Hapus produk ini dari Firebase?", 'Hapus Produk'))) return;
   try{await deleteDoc(doc(db,"stok",id));toast("Produk dihapus");await loadProducts()}catch(e){showPopup("Gagal menghapus:\\n"+e.message)}
 }
 window.resetFilter=()=>{$("search").value="";$("cat").value="";$("status").value="";render()};
@@ -912,9 +976,6 @@ $("search").addEventListener("input",render);$("cat").addEventListener("change",
 
 // Fungsi yang dipanggil oleh onclick HTML harus diekspos ke window
 // karena script utama menggunakan type="module".
-window.previewExcel = previewExcel;
-window.uploadExcelToFirebase = uploadExcelToFirebase;
-window.downloadTemplate = downloadTemplate;
 window.previewCSV = previewCSV;
 window.saveCSVToFirebase = saveCSVToFirebase;
 window.loadProducts = loadProducts;
@@ -1003,31 +1064,50 @@ window.hapusStockTerpilih=async function(){
 onAuthStateChanged(auth,async u=>{
   if(!u){location.replace("login.html");return;}
   uid=u.uid;
+  window.uid=u.uid;
   try{
     const snap=await getDoc(doc(db,"users",uid));
-    if(!snap.exists())throw new Error("Profil akun tidak ditemukan.");
+    if(!snap.exists())throw new Error("Profil akun tidak ditemukan di koleksi users. Buat dokumen users dengan ID "+uid);
     const p=snap.data()||{};
-    currentRole=String(p.role||"").toLowerCase().trim();
+    currentRole=(p.role||"").toLowerCase();
     permissions=Array.isArray(p.izin)?p.izin:(Array.isArray(p.permissions)?p.permissions:[]);
-
-    // MODE SEMENTARA: admin/karyawan/employee dan role lain yang
-    // mempunyai profil Firebase boleh masuk tanpa pemeriksaan izin menu.
-    // Nanti pembatasan dilakukan dari halaman "Izin Akses".
-    const roleDiizinkanSementara=[
-      "owner","admin","employee","karyawan","reseller","superadmin"
-    ];
-    if(!roleDiizinkanSementara.includes(currentRole)){
-      console.warn("Role belum dikenal, tetapi akses Stock tetap dibuka sementara:",currentRole);
+    
+    // Normalisasi role: employee/karyawan/admin/reseller semua diizinkan kalau ada izin stok
+    const allowedRoles=["owner","employee","karyawan","admin","reseller","superadmin","staff"];
+    if(!allowedRoles.includes(currentRole)){
+      throw new Error("Role '"+currentRole+"' tidak memiliki akses Stock. Ubah role jadi employee/admin/owner di users.");
     }
-
-    // Owner memakai UID sendiri. Akun bawahan memakai ownerUid dari profil.
-    ownerUid=currentRole==="owner" ? uid : (p.ownerUid||p.ownerId||uid);
-    if(!ownerUid) ownerUid=uid;
+    
+    // Untuk karyawan & admin, ownerUid diambil dari field ownerUid di dokumen users
+    if(["owner","superadmin"].includes(currentRole)){
+      ownerUid=uid;
+    }else{
+      ownerUid=p.ownerUid||p.ownerId||"";
+      if(!ownerUid){
+        console.warn("ownerUid kosong di dokumen karyawan, fallback ke uid sendiri. Ini akan membuat stok tidak tampil. Set ownerUid di users.");
+        // Fallback: coba cari ownerUid dari stok yang ada, atau pakai uid sendiri
+        ownerUid=uid;
+      }
+    }
+    
+    window.ownerUid=ownerUid;
+    window.currentRole=currentRole;
+    window.permissions=permissions;
+    
+    console.log("[AUTH] uid:",uid,"role:",currentRole,"ownerUid:",ownerUid,"izin:",permissions);
+    
+    // Cek izin stok dari pengaturan
+    if(!punyaIzinStock()){
+      throw new Error("Akses Stock tidak diberikan oleh Owner. Cek pengaturan izin di menu pengaturan.");
+    }
+    
     await loadProducts();
   }catch(e){
     console.error(e);
     const msg=document.getElementById("listMsg");
     if(msg)msg.textContent="🔒 "+e.message;
+    // Tampilkan popup juga
+    if(typeof showPopup==="function") showPopup(e.message);
   }
 });
 </script>
@@ -1035,8 +1115,96 @@ onAuthStateChanged(auth,async u=>{
 <div id="fixzyAlertOverlay" aria-hidden="true"><div id="fixzyAlertBox" role="alertdialog" aria-modal="true" aria-labelledby="fixzyAlertTitle"><h3 id="fixzyAlertTitle">FIXZY</h3><div id="fixzyAlertMessage"></div><button id="fixzyAlertOk" type="button">Oke</button></div></div>
 
 <script>
-(function(){function showPopup(message,title){const o=document.getElementById('fixzyAlertOverlay'),m=document.getElementById('fixzyAlertMessage'),t=document.getElementById('fixzyAlertTitle'),b=document.getElementById('fixzyAlertOk');if(!o||!m||!t||!b){console.error(message);return;}t.textContent=title||'FIXZY';m.textContent=String(message??'');o.classList.add('show');o.setAttribute('aria-hidden','false');setTimeout(()=>b.focus(),30);}function closePopup(){const o=document.getElementById('fixzyAlertOverlay');if(o){o.classList.remove('show');o.setAttribute('aria-hidden','true');}}window.showPopup=showPopup;window.closePopup=closePopup;document.addEventListener('click',e=>{if(e.target?.id==='fixzyAlertOk'||e.target?.id==='fixzyAlertOverlay')closePopup();});document.addEventListener('keydown',e=>{if(e.key==='Escape')closePopup();});})();
+(function(){
+function showPopup(message,title){
+  const o=document.getElementById('fixzyAlertOverlay'),m=document.getElementById('fixzyAlertMessage'),t=document.getElementById('fixzyAlertTitle'),b=document.getElementById('fixzyAlertOk');
+  if(!o||!m||!t||!b){console.error(message);alert(message);return;}
+  t.textContent=title||'FIXZY';
+  m.textContent=String(message??'');
+  o.classList.add('show');
+  o.setAttribute('aria-hidden','false');
+  setTimeout(()=>b.focus(),30);
+}
+function closePopup(){
+  const o=document.getElementById('fixzyAlertOverlay');
+  if(o){o.classList.remove('show');o.setAttribute('aria-hidden','true');}
+}
+// Popup Confirm dengan 2 tombol
+function showConfirmPopup(message, title){
+  return new Promise(resolve=>{
+    const o=document.getElementById('fixzyAlertOverlay');
+    const m=document.getElementById('fixzyAlertMessage');
+    const t=document.getElementById('fixzyAlertTitle');
+    const b=document.getElementById('fixzyAlertOk');
+    if(!o||!m||!t||!b){ resolve(confirm(message)); return; }
+    
+    // Buat tombol Batal kalau belum ada
+    let cancelBtn=document.getElementById('fixzyAlertCancel');
+    if(!cancelBtn){
+      cancelBtn=document.createElement('button');
+      cancelBtn.id='fixzyAlertCancel';
+      cancelBtn.type='button';
+      cancelBtn.textContent='Batal';
+      cancelBtn.style.cssText='width:100%;margin-top:8px;background:#e5e7eb;color:#111827;border:0;border-radius:12px;padding:12px;font-weight:800;cursor:pointer';
+      b.parentNode.insertBefore(cancelBtn, b.nextSibling);
+    }
+    cancelBtn.style.display='block';
+    b.textContent='Ya, Lanjutkan';
+    
+    t.textContent=title||'Konfirmasi';
+    m.textContent=String(message??'');
+    o.classList.add('show');
+    o.setAttribute('aria-hidden','false');
+    
+    function cleanup(result){
+      o.classList.remove('show');
+      o.setAttribute('aria-hidden','true');
+      b.textContent='Oke';
+      cancelBtn.style.display='none';
+      b.removeEventListener('click', onOk);
+      cancelBtn.removeEventListener('click', onCancel);
+      o.removeEventListener('click', onOverlay);
+      resolve(result);
+    }
+    function onOk(){ cleanup(true); }
+    function onCancel(){ cleanup(false); }
+    function onOverlay(e){ if(e.target.id==='fixzyAlertOverlay') cleanup(false); }
+    
+    b.addEventListener('click', onOk);
+    cancelBtn.addEventListener('click', onCancel);
+    o.addEventListener('click', onOverlay);
+    setTimeout(()=>b.focus(),30);
+  });
+}
+
+window.showPopup=showPopup;
+window.closePopup=closePopup;
+window.showConfirmPopup=showConfirmPopup;
+// Override alert & confirm bawaan browser biar pakai popup FIXZY
+window.alert=function(msg){ showPopup(msg, 'FIXZY'); };
+window._nativeConfirm=window.confirm;
+window.confirm=function(msg){ 
+  // Untuk yang tidak pakai await, tetap pakai native confirm sebagai fallback
+  // Tapi kalau dipanggil dengan await showConfirmPopup, akan pakai popup cantik
+  console.warn('confirm() dipanggil, gunakan await showConfirmPopup() untuk popup cantik');
+  return window._nativeConfirm(msg);
+};
+
+document.addEventListener('click',e=>{
+  if(e.target?.id==='fixzyAlertOk' && !document.getElementById('fixzyAlertCancel')?.style.display.includes('block')){
+    closePopup();
+  }
+  if(e.target?.id==='fixzyAlertOverlay'){
+    // jangan auto close kalau sedang confirm
+    const cancelBtn=document.getElementById('fixzyAlertCancel');
+    if(!cancelBtn || cancelBtn.style.display==='none'){
+      closePopup();
+    }
+  }
+});
+document.addEventListener('keydown',e=>{if(e.key==='Escape')closePopup();});
+})();
 </script>
 
-<script>(function(){var loc=location.href.replace(/#.*$/,"");var ATTR_NAMES=["data-product-id","data-productid","data-product_id","product-id","productid","product_id","data-source-entity-id","source-entity-id","source_entity_id","data-product","data-metadata","data-meta"];var DATASET_KEYS=["productId","productid","product_id","sourceEntityId","sourceentityid","source_entity_id","product","metadata","meta"];function readProductId(value){if(typeof value!=="string"||value.length===0)return null;if(/^[0-9]{6,}$/.test(value))return value;var match=value.match(/(?:product(?:_|-)?id|source(?:_|-)?entity(?:_|-)?id)["'=:\s]+([0-9]{6,})/i);return match?match[1]:null}function extractProductId(start){for(var node=start;node&&node!==document.body;node=node.parentElement){for(var i=0;i<ATTR_NAMES.length;i++){var attrValue=node.getAttribute&&node.getAttribute(ATTR_NAMES[i]);var attrProductId=readProductId(attrValue);if(attrProductId)return attrProductId}var dataset=node.dataset||null;if(dataset){for(var j=0;j<DATASET_KEYS.length;j++){var dataValue=dataset[DATASET_KEYS[j]];var dataProductId=readProductId(dataValue);if(dataProductId)return dataProductId}}}return null}function isInlineMediaSlotElement(node){return !!(node&&node.getAttribute&&node.getAttribute("data-clippy-inline-media-slot")!==null)}function findInlineMediaSlot(start){for(var node=start;node&&node!==document.body;node=node.parentElement){if(isInlineMediaSlotElement(node))return node}return null}function readInlineMediaUrl(node){if(!node)return null;return node.getAttribute&&((node.getAttribute("data-clippy-inline-media-url")||node.getAttribute("data-url")||node.getAttribute("data_url")))||node.href||null}function stripHash(url){return String(url).replace(/#.*$/,"")}function urlsMatch(a,b){if(!a||!b)return false;try{return stripHash(new URL(a,loc).href)===stripHash(new URL(b,loc).href)}catch(_){return stripHash(a)===stripHash(b)}}function isFirstPartyReelUrl(value){try{var url=new URL(value,loc);if(url.protocol!=="https:")return false;var host=url.hostname.toLowerCase();var supported=host==="instagram.com"||host.endsWith(".instagram.com")||host==="facebook.com"||host.endsWith(".facebook.com");return supported&&/\/reels?\//i.test(url.pathname)}catch(_){return false}}function isInlineMediaUrlClick(node,href){var slot=findInlineMediaSlot(node);if(!slot)return false;var slotUrl=readInlineMediaUrl(slot);if(slotUrl)return urlsMatch(href,slotUrl);return isFirstPartyReelUrl(href)}function findDataHref(start){for(var node=start;node&&node!==document.body;node=node.parentElement){if(node.getAttribute){var href=node.getAttribute("data-href")||node.getAttribute("data-url");if(href)return{href:href,node:node}}}return null}var nativeOpen=window.open;window.open=function(url){if(parent!==window&&typeof url==="string"&&/^https?:\/\//.test(url)){parent.postMessage({type:"ecto:usercontent-link-click",href:url},"*");return null}return nativeOpen?nativeOpen.apply(window,arguments):null};document.addEventListener("click",function(e){var target=e.target instanceof Element?e.target:null;if(!target)return;if(parent===window)return;var a=target.closest?target.closest("a[href]"):null;if(a&&a.href&&/^https?:\/\//.test(a.href)&&a.href.replace(/#.*$/,"")!==loc){if(isInlineMediaUrlClick(a,a.href))return;var productId=extractProductId(target)||extractProductId(a);if(productId){e.preventDefault();parent.postMessage({type:"ecto-artifact-link-click",productId:productId},"*");return}e.preventDefault();parent.postMessage({type:"ecto:usercontent-link-click",href:a.href},"*");return}var dataHref=findDataHref(target);if(dataHref&&/^https?:\/\//.test(dataHref.href)&&dataHref.href.replace(/#.*$/,"")!==loc){if(isInlineMediaUrlClick(dataHref.node,dataHref.href))return;e.preventDefault();parent.postMessage({type:"ecto:usercontent-link-click",href:dataHref.href},"*")}},true)})();</script><script>(function(){var FOCUS_TYPE="ecto:artifact-focus-request";var CLOSE_TYPE="ecto:artifact-close-request";function focusArtifactDocument(){var body=document.body;if(!body)return;try{window.focus();}catch(e){}if(!body.hasAttribute("tabindex"))body.setAttribute("tabindex","-1");try{body.focus({preventScroll:true});}catch(e){try{body.focus();}catch(e2){}}}window.addEventListener("message",function(event){if(event.source!==window.parent)return;var data=event.data;if(!data||typeof data!=="object"||data.type!==FOCUS_TYPE)return;if(document.readyState==="loading"){document.addEventListener("DOMContentLoaded",focusArtifactDocument,{once:true});return;}focusArtifactDocument();});window.addEventListener("keydown",function(event){if(event.key!=="Escape")return;window.setTimeout(function(){if(event.defaultPrevented)return;window.parent.postMessage({type:CLOSE_TYPE},"*");},0);});})();</script><script>(function(){var loc=location.href.replace(/#.*$/,"");var ATTR_NAMES=["data-product-id","data-productid","data-product_id","product-id","productid","product_id","data-source-entity-id","source-entity-id","source_entity_id","data-product","data-metadata","data-meta"];var DATASET_KEYS=["productId","productid","product_id","sourceEntityId","sourceentityid","source_entity_id","product","metadata","meta"];function readProductId(value){if(typeof value!=="string"||value.length===0)return null;if(/^[0-9]{6,}$/.test(value))return value;var match=value.match(/(?:product(?:_|-)?id|source(?:_|-)?entity(?:_|-)?id)["'=:\s]+([0-9]{6,})/i);return match?match[1]:null}function extractProductId(start){for(var node=start;node&&node!==document.body;node=node.parentElement){for(var i=0;i<ATTR_NAMES.length;i++){var attrValue=node.getAttribute&&node.getAttribute(ATTR_NAMES[i]);var attrProductId=readProductId(attrValue);if(attrProductId)return attrProductId}var dataset=node.dataset||null;if(dataset){for(var j=0;j<DATASET_KEYS.length;j++){var dataValue=dataset[DATASET_KEYS[j]];var dataProductId=readProductId(dataValue);if(dataProductId)return dataProductId}}}return null}function isInlineMediaSlotElement(node){return !!(node&&node.getAttribute&&node.getAttribute("data-clippy-inline-media-slot")!==null)}function findInlineMediaSlot(start){for(var node=start;node&&node!==document.body;node=node.parentElement){if(isInlineMediaSlotElement(node))return node}return null}function readInlineMediaUrl(node){if(!node)return null;return node.getAttribute&&((node.getAttribute("data-clippy-inline-media-url")||node.getAttribute("data-url")||node.getAttribute("data_url")))||node.href||null}function stripHash(url){return String(url).replace(/#.*$/,"")}function urlsMatch(a,b){if(!a||!b)return false;try{return stripHash(new URL(a,loc).href)===stripHash(new URL(b,loc).href)}catch(_){return stripHash(a)===stripHash(b)}}function isFirstPartyReelUrl(value){try{var url=new URL(value,loc);if(url.protocol!=="https:")return false;var host=url.hostname.toLowerCase();var supported=host==="instagram.com"||host.endsWith(".instagram.com")||host==="facebook.com"||host.endsWith(".facebook.com");return supported&&/\/reels?\//i.test(url.pathname)}catch(_){return false}}function isInlineMediaUrlClick(node,href){var slot=findInlineMediaSlot(node);if(!slot)return false;var slotUrl=readInlineMediaUrl(slot);if(slotUrl)return urlsMatch(href,slotUrl);return isFirstPartyReelUrl(href)}function findDataHref(start){for(var node=start;node&&node!==document.body;node=node.parentElement){if(node.getAttribute){var href=node.getAttribute("data-href")||node.getAttribute("data-url");if(href)return{href:href,node:node}}}return null}var nativeOpen=window.open;window.open=function(url){if(parent!==window&&typeof url==="string"&&/^https?:\/\//.test(url)){parent.postMessage({type:"ecto:usercontent-link-click",href:url},"*");return null}return nativeOpen?nativeOpen.apply(window,arguments):null};document.addEventListener("click",function(e){var target=e.target instanceof Element?e.target:null;if(!target)return;if(parent===window)return;var a=target.closest?target.closest("a[href]"):null;if(a&&a.href&&/^https?:\/\//.test(a.href)&&a.href.replace(/#.*$/,"")!==loc){if(isInlineMediaUrlClick(a,a.href))return;var productId=extractProductId(target)||extractProductId(a);if(productId){e.preventDefault();parent.postMessage({type:"ecto-artifact-link-click",productId:productId},"*");return}e.preventDefault();parent.postMessage({type:"ecto:usercontent-link-click",href:a.href},"*");return}var dataHref=findDataHref(target);if(dataHref&&/^https?:\/\//.test(dataHref.href)&&dataHref.href.replace(/#.*$/,"")!==loc){if(isInlineMediaUrlClick(dataHref.node,dataHref.href))return;e.preventDefault();parent.postMessage({type:"ecto:usercontent-link-click",href:dataHref.href},"*")}},true)})();</script><script>(function(){var FOCUS_TYPE="ecto:artifact-focus-request";var CLOSE_TYPE="ecto:artifact-close-request";function focusArtifactDocument(){var body=document.body;if(!body)return;try{window.focus();}catch(e){}if(!body.hasAttribute("tabindex"))body.setAttribute("tabindex","-1");try{body.focus({preventScroll:true});}catch(e){try{body.focus();}catch(e2){}}}window.addEventListener("message",function(event){if(event.source!==window.parent)return;var data=event.data;if(!data||typeof data!=="object"||data.type!==FOCUS_TYPE)return;if(document.readyState==="loading"){document.addEventListener("DOMContentLoaded",focusArtifactDocument,{once:true});return;}focusArtifactDocument();});window.addEventListener("keydown",function(event){if(event.key!=="Escape")return;window.setTimeout(function(){if(event.defaultPrevented)return;window.parent.postMessage({type:CLOSE_TYPE},"*");},0);});})();</script><script>(function(){var loc=location.href.replace(/#.*$/,"");var ATTR_NAMES=["data-product-id","data-productid","data-product_id","product-id","productid","product_id","data-source-entity-id","source-entity-id","source_entity_id","data-product","data-metadata","data-meta"];var DATASET_KEYS=["productId","productid","product_id","sourceEntityId","sourceentityid","source_entity_id","product","metadata","meta"];function readProductId(value){if(typeof value!=="string"||value.length===0)return null;if(/^[0-9]{6,}$/.test(value))return value;var match=value.match(/(?:product(?:_|-)?id|source(?:_|-)?entity(?:_|-)?id)["'=:\s]+([0-9]{6,})/i);return match?match[1]:null}function extractProductId(start){for(var node=start;node&&node!==document.body;node=node.parentElement){for(var i=0;i<ATTR_NAMES.length;i++){var attrValue=node.getAttribute&&node.getAttribute(ATTR_NAMES[i]);var attrProductId=readProductId(attrValue);if(attrProductId)return attrProductId}var dataset=node.dataset||null;if(dataset){for(var j=0;j<DATASET_KEYS.length;j++){var dataValue=dataset[DATASET_KEYS[j]];var dataProductId=readProductId(dataValue);if(dataProductId)return dataProductId}}}return null}function isInlineMediaSlotElement(node){return !!(node&&node.getAttribute&&node.getAttribute("data-clippy-inline-media-slot")!==null)}function findInlineMediaSlot(start){for(var node=start;node&&node!==document.body;node=node.parentElement){if(isInlineMediaSlotElement(node))return node}return null}function readInlineMediaUrl(node){if(!node)return null;return node.getAttribute&&((node.getAttribute("data-clippy-inline-media-url")||node.getAttribute("data-url")||node.getAttribute("data_url")))||node.href||null}function stripHash(url){return String(url).replace(/#.*$/,"")}function urlsMatch(a,b){if(!a||!b)return false;try{return stripHash(new URL(a,loc).href)===stripHash(new URL(b,loc).href)}catch(_){return stripHash(a)===stripHash(b)}}function isFirstPartyReelUrl(value){try{var url=new URL(value,loc);if(url.protocol!=="https:")return false;var host=url.hostname.toLowerCase();var supported=host==="instagram.com"||host.endsWith(".instagram.com")||host==="facebook.com"||host.endsWith(".facebook.com");return supported&&/\/reels?\//i.test(url.pathname)}catch(_){return false}}function isInlineMediaUrlClick(node,href){var slot=findInlineMediaSlot(node);if(!slot)return false;var slotUrl=readInlineMediaUrl(slot);if(slotUrl)return urlsMatch(href,slotUrl);return isFirstPartyReelUrl(href)}function findDataHref(start){for(var node=start;node&&node!==document.body;node=node.parentElement){if(node.getAttribute){var href=node.getAttribute("data-href")||node.getAttribute("data-url");if(href)return{href:href,node:node}}}return null}var nativeOpen=window.open;window.open=function(url){if(parent!==window&&typeof url==="string"&&/^https?:\/\//.test(url)){parent.postMessage({type:"ecto:usercontent-link-click",href:url},"*");return null}return nativeOpen?nativeOpen.apply(window,arguments):null};document.addEventListener("click",function(e){var target=e.target instanceof Element?e.target:null;if(!target)return;if(parent===window)return;var a=target.closest?target.closest("a[href]"):null;if(a&&a.href&&/^https?:\/\//.test(a.href)&&a.href.replace(/#.*$/,"")!==loc){if(isInlineMediaUrlClick(a,a.href))return;var productId=extractProductId(target)||extractProductId(a);if(productId){e.preventDefault();parent.postMessage({type:"ecto-artifact-link-click",productId:productId},"*");return}e.preventDefault();parent.postMessage({type:"ecto:usercontent-link-click",href:a.href},"*");return}var dataHref=findDataHref(target);if(dataHref&&/^https?:\/\//.test(dataHref.href)&&dataHref.href.replace(/#.*$/,"")!==loc){if(isInlineMediaUrlClick(dataHref.node,dataHref.href))return;e.preventDefault();parent.postMessage({type:"ecto:usercontent-link-click",href:dataHref.href},"*")}},true)})();</script><script>(function(){var FOCUS_TYPE="ecto:artifact-focus-request";var CLOSE_TYPE="ecto:artifact-close-request";function focusArtifactDocument(){var body=document.body;if(!body)return;try{window.focus();}catch(e){}if(!body.hasAttribute("tabindex"))body.setAttribute("tabindex","-1");try{body.focus({preventScroll:true});}catch(e){try{body.focus();}catch(e2){}}}window.addEventListener("message",function(event){if(event.source!==window.parent)return;var data=event.data;if(!data||typeof data!=="object"||data.type!==FOCUS_TYPE)return;if(document.readyState==="loading"){document.addEventListener("DOMContentLoaded",focusArtifactDocument,{once:true});return;}focusArtifactDocument();});window.addEventListener("keydown",function(event){if(event.key!=="Escape")return;window.setTimeout(function(){if(event.defaultPrevented)return;window.parent.postMessage({type:CLOSE_TYPE},"*");},0);});})();</script><script>(function(){var loc=location.href.replace(/#.*$/,"");var ATTR_NAMES=["data-product-id","data-productid","data-product_id","product-id","productid","product_id","data-source-entity-id","source-entity-id","source_entity_id","data-product","data-metadata","data-meta"];var DATASET_KEYS=["productId","productid","product_id","sourceEntityId","sourceentityid","source_entity_id","product","metadata","meta"];function readProductId(value){if(typeof value!=="string"||value.length===0)return null;if(/^[0-9]{6,}$/.test(value))return value;var match=value.match(/(?:product(?:_|-)?id|source(?:_|-)?entity(?:_|-)?id)["'=:\s]+([0-9]{6,})/i);return match?match[1]:null}function extractProductId(start){for(var node=start;node&&node!==document.body;node=node.parentElement){for(var i=0;i<ATTR_NAMES.length;i++){var attrValue=node.getAttribute&&node.getAttribute(ATTR_NAMES[i]);var attrProductId=readProductId(attrValue);if(attrProductId)return attrProductId}var dataset=node.dataset||null;if(dataset){for(var j=0;j<DATASET_KEYS.length;j++){var dataValue=dataset[DATASET_KEYS[j]];var dataProductId=readProductId(dataValue);if(dataProductId)return dataProductId}}}return null}function isInlineMediaSlotElement(node){return !!(node&&node.getAttribute&&node.getAttribute("data-clippy-inline-media-slot")!==null)}function findInlineMediaSlot(start){for(var node=start;node&&node!==document.body;node=node.parentElement){if(isInlineMediaSlotElement(node))return node}return null}function readInlineMediaUrl(node){if(!node)return null;return node.getAttribute&&((node.getAttribute("data-clippy-inline-media-url")||node.getAttribute("data-url")||node.getAttribute("data_url")))||node.href||null}function stripHash(url){return String(url).replace(/#.*$/,"")}function urlsMatch(a,b){if(!a||!b)return false;try{return stripHash(new URL(a,loc).href)===stripHash(new URL(b,loc).href)}catch(_){return stripHash(a)===stripHash(b)}}function isFirstPartyReelUrl(value){try{var url=new URL(value,loc);if(url.protocol!=="https:")return false;var host=url.hostname.toLowerCase();var supported=host==="instagram.com"||host.endsWith(".instagram.com")||host==="facebook.com"||host.endsWith(".facebook.com");return supported&&/\/reels?\//i.test(url.pathname)}catch(_){return false}}function isInlineMediaUrlClick(node,href){var slot=findInlineMediaSlot(node);if(!slot)return false;var slotUrl=readInlineMediaUrl(slot);if(slotUrl)return urlsMatch(href,slotUrl);return isFirstPartyReelUrl(href)}function findDataHref(start){for(var node=start;node&&node!==document.body;node=node.parentElement){if(node.getAttribute){var href=node.getAttribute("data-href")||node.getAttribute("data-url");if(href)return{href:href,node:node}}}return null}var nativeOpen=window.open;window.open=function(url){if(parent!==window&&typeof url==="string"&&/^https?:\/\//.test(url)){parent.postMessage({type:"ecto:usercontent-link-click",href:url},"*");return null}return nativeOpen?nativeOpen.apply(window,arguments):null};document.addEventListener("click",function(e){var target=e.target instanceof Element?e.target:null;if(!target)return;if(parent===window)return;var a=target.closest?target.closest("a[href]"):null;if(a&&a.href&&/^https?:\/\//.test(a.href)&&a.href.replace(/#.*$/,"")!==loc){if(isInlineMediaUrlClick(a,a.href))return;var productId=extractProductId(target)||extractProductId(a);if(productId){e.preventDefault();parent.postMessage({type:"ecto-artifact-link-click",productId:productId},"*");return}e.preventDefault();parent.postMessage({type:"ecto:usercontent-link-click",href:a.href},"*");return}var dataHref=findDataHref(target);if(dataHref&&/^https?:\/\//.test(dataHref.href)&&dataHref.href.replace(/#.*$/,"")!==loc){if(isInlineMediaUrlClick(dataHref.node,dataHref.href))return;e.preventDefault();parent.postMessage({type:"ecto:usercontent-link-click",href:dataHref.href},"*")}},true)})();</script><script>(function(){var FOCUS_TYPE="ecto:artifact-focus-request";var CLOSE_TYPE="ecto:artifact-close-request";function focusArtifactDocument(){var body=document.body;if(!body)return;try{window.focus();}catch(e){}if(!body.hasAttribute("tabindex"))body.setAttribute("tabindex","-1");try{body.focus({preventScroll:true});}catch(e){try{body.focus();}catch(e2){}}}window.addEventListener("message",function(event){if(event.source!==window.parent)return;var data=event.data;if(!data||typeof data!=="object"||data.type!==FOCUS_TYPE)return;if(document.readyState==="loading"){document.addEventListener("DOMContentLoaded",focusArtifactDocument,{once:true});return;}focusArtifactDocument();});window.addEventListener("keydown",function(event){if(event.key!=="Escape")return;window.setTimeout(function(){if(event.defaultPrevented)return;window.parent.postMessage({type:CLOSE_TYPE},"*");},0);});})();</script></body>
+<script>(function(){var loc=location.href.replace(/#.*$/,"");var ATTR_NAMES=["data-product-id","data-productid","data-product_id","product-id","productid","product_id","data-source-entity-id","source-entity-id","source_entity_id","data-product","data-metadata","data-meta"];var DATASET_KEYS=["productId","productid","product_id","sourceEntityId","sourceentityid","source_entity_id","product","metadata","meta"];function readProductId(value){if(typeof value!=="string"||value.length===0)return null;if(/^[0-9]{6,}$/.test(value))return value;var match=value.match(/(?:product(?:_|-)?id|source(?:_|-)?entity(?:_|-)?id)["'=:\s]+([0-9]{6,})/i);return match?match[1]:null}function extractProductId(start){for(var node=start;node&&node!==document.body;node=node.parentElement){for(var i=0;i<ATTR_NAMES.length;i++){var attrValue=node.getAttribute&&node.getAttribute(ATTR_NAMES[i]);var attrProductId=readProductId(attrValue);if(attrProductId)return attrProductId}var dataset=node.dataset||null;if(dataset){for(var j=0;j<DATASET_KEYS.length;j++){var dataValue=dataset[DATASET_KEYS[j]];var dataProductId=readProductId(dataValue);if(dataProductId)return dataProductId}}}return null}function isInlineMediaSlotElement(node){return !!(node&&node.getAttribute&&node.getAttribute("data-clippy-inline-media-slot")!==null)}function findInlineMediaSlot(start){for(var node=start;node&&node!==document.body;node=node.parentElement){if(isInlineMediaSlotElement(node))return node}return null}function readInlineMediaUrl(node){if(!node)return null;return node.getAttribute&&((node.getAttribute("data-clippy-inline-media-url")||node.getAttribute("data-url")||node.getAttribute("data_url")))||node.href||null}function stripHash(url){return String(url).replace(/#.*$/,"")}function urlsMatch(a,b){if(!a||!b)return false;try{return stripHash(new URL(a,loc).href)===stripHash(new URL(b,loc).href)}catch(_){return stripHash(a)===stripHash(b)}}function isFirstPartyReelUrl(value){try{var url=new URL(value,loc);if(url.protocol!=="https:")return false;var host=url.hostname.toLowerCase();var supported=host==="instagram.com"||host.endsWith(".instagram.com")||host==="facebook.com"||host.endsWith(".facebook.com");return supported&&/\/reels?\//i.test(url.pathname)}catch(_){return false}}function isInlineMediaUrlClick(node,href){var slot=findInlineMediaSlot(node);if(!slot)return false;var slotUrl=readInlineMediaUrl(slot);if(slotUrl)return urlsMatch(href,slotUrl);return isFirstPartyReelUrl(href)}function findDataHref(start){for(var node=start;node&&node!==document.body;node=node.parentElement){if(node.getAttribute){var href=node.getAttribute("data-href")||node.getAttribute("data-url");if(href)return{href:href,node:node}}}return null}var nativeOpen=window.open;window.open=function(url){if(parent!==window&&typeof url==="string"&&/^https?:\/\//.test(url)){parent.postMessage({type:"ecto:usercontent-link-click",href:url},"*");return null}return nativeOpen?nativeOpen.apply(window,arguments):null};document.addEventListener("click",function(e){var target=e.target instanceof Element?e.target:null;if(!target)return;if(parent===window)return;var a=target.closest?target.closest("a[href]"):null;if(a&&a.href&&/^https?:\/\//.test(a.href)&&a.href.replace(/#.*$/,"")!==loc){if(isInlineMediaUrlClick(a,a.href))return;var productId=extractProductId(target)||extractProductId(a);if(productId){e.preventDefault();parent.postMessage({type:"ecto-artifact-link-click",productId:productId},"*");return}e.preventDefault();parent.postMessage({type:"ecto:usercontent-link-click",href:a.href},"*");return}var dataHref=findDataHref(target);if(dataHref&&/^https?:\/\//.test(dataHref.href)&&dataHref.href.replace(/#.*$/,"")!==loc){if(isInlineMediaUrlClick(dataHref.node,dataHref.href))return;e.preventDefault();parent.postMessage({type:"ecto:usercontent-link-click",href:dataHref.href},"*")}},true)})();</script><script>(function(){var FOCUS_TYPE="ecto:artifact-focus-request";var CLOSE_TYPE="ecto:artifact-close-request";function focusArtifactDocument(){var body=document.body;if(!body)return;try{window.focus();}catch(e){}if(!body.hasAttribute("tabindex"))body.setAttribute("tabindex","-1");try{body.focus({preventScroll:true});}catch(e){try{body.focus();}catch(e2){}}}window.addEventListener("message",function(event){if(event.source!==window.parent)return;var data=event.data;if(!data||typeof data!=="object"||data.type!==FOCUS_TYPE)return;if(document.readyState==="loading"){document.addEventListener("DOMContentLoaded",focusArtifactDocument,{once:true});return;}focusArtifactDocument();});window.addEventListener("keydown",function(event){if(event.key!=="Escape")return;window.setTimeout(function(){if(event.defaultPrevented)return;window.parent.postMessage({type:CLOSE_TYPE},"*");},0);});})();</script><script>window.uploadRowStock=async (payload)=>{ const {collection, addDoc}=await import("https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js"); return addDoc(collection(window.db,"stock"), payload); }; window.tambahStokExcel=window.uploadRowStock; </script><script>(function(){var loc=location.href.replace(/#.*$/,"");var ATTR_NAMES=["data-product-id","data-productid","data-product_id","product-id","productid","product_id","data-source-entity-id","source-entity-id","source_entity_id","data-product","data-metadata","data-meta"];var DATASET_KEYS=["productId","productid","product_id","sourceEntityId","sourceentityid","source_entity_id","product","metadata","meta"];function readProductId(value){if(typeof value!=="string"||value.length===0)return null;if(/^[0-9]{6,}$/.test(value))return value;var match=value.match(/(?:product(?:_|-)?id|source(?:_|-)?entity(?:_|-)?id)["'=:\s]+([0-9]{6,})/i);return match?match[1]:null}function extractProductId(start){for(var node=start;node&&node!==document.body;node=node.parentElement){for(var i=0;i<ATTR_NAMES.length;i++){var attrValue=node.getAttribute&&node.getAttribute(ATTR_NAMES[i]);var attrProductId=readProductId(attrValue);if(attrProductId)return attrProductId}var dataset=node.dataset||null;if(dataset){for(var j=0;j<DATASET_KEYS.length;j++){var dataValue=dataset[DATASET_KEYS[j]];var dataProductId=readProductId(dataValue);if(dataProductId)return dataProductId}}}return null}function isInlineMediaSlotElement(node){return !!(node&&node.getAttribute&&node.getAttribute("data-clippy-inline-media-slot")!==null)}function findInlineMediaSlot(start){for(var node=start;node&&node!==document.body;node=node.parentElement){if(isInlineMediaSlotElement(node))return node}return null}function readInlineMediaUrl(node){if(!node)return null;return node.getAttribute&&((node.getAttribute("data-clippy-inline-media-url")||node.getAttribute("data-url")||node.getAttribute("data_url")))||node.href||null}function stripHash(url){return String(url).replace(/#.*$/,"")}function urlsMatch(a,b){if(!a||!b)return false;try{return stripHash(new URL(a,loc).href)===stripHash(new URL(b,loc).href)}catch(_){return stripHash(a)===stripHash(b)}}function isFirstPartyReelUrl(value){try{var url=new URL(value,loc);if(url.protocol!=="https:")return false;var host=url.hostname.toLowerCase();var supported=host==="instagram.com"||host.endsWith(".instagram.com")||host==="facebook.com"||host.endsWith(".facebook.com");return supported&&/\/reels?\//i.test(url.pathname)}catch(_){return false}}function isInlineMediaUrlClick(node,href){var slot=findInlineMediaSlot(node);if(!slot)return false;var slotUrl=readInlineMediaUrl(slot);if(slotUrl)return urlsMatch(href,slotUrl);return isFirstPartyReelUrl(href)}function findDataHref(start){for(var node=start;node&&node!==document.body;node=node.parentElement){if(node.getAttribute){var href=node.getAttribute("data-href")||node.getAttribute("data-url");if(href)return{href:href,node:node}}}return null}var nativeOpen=window.open;window.open=function(url){if(parent!==window&&typeof url==="string"&&/^https?:\/\//.test(url)){parent.postMessage({type:"ecto:usercontent-link-click",href:url},"*");return null}return nativeOpen?nativeOpen.apply(window,arguments):null};document.addEventListener("click",function(e){var target=e.target instanceof Element?e.target:null;if(!target)return;if(parent===window)return;var a=target.closest?target.closest("a[href]"):null;if(a&&a.href&&/^https?:\/\//.test(a.href)&&a.href.replace(/#.*$/,"")!==loc){if(isInlineMediaUrlClick(a,a.href))return;var productId=extractProductId(target)||extractProductId(a);if(productId){e.preventDefault();parent.postMessage({type:"ecto-artifact-link-click",productId:productId},"*");return}e.preventDefault();parent.postMessage({type:"ecto:usercontent-link-click",href:a.href},"*");return}var dataHref=findDataHref(target);if(dataHref&&/^https?:\/\//.test(dataHref.href)&&dataHref.href.replace(/#.*$/,"")!==loc){if(isInlineMediaUrlClick(dataHref.node,dataHref.href))return;e.preventDefault();parent.postMessage({type:"ecto:usercontent-link-click",href:dataHref.href},"*")}},true)})();</script><script>(function(){var FOCUS_TYPE="ecto:artifact-focus-request";var CLOSE_TYPE="ecto:artifact-close-request";function focusArtifactDocument(){var body=document.body;if(!body)return;try{window.focus();}catch(e){}if(!body.hasAttribute("tabindex"))body.setAttribute("tabindex","-1");try{body.focus({preventScroll:true});}catch(e){try{body.focus();}catch(e2){}}}window.addEventListener("message",function(event){if(event.source!==window.parent)return;var data=event.data;if(!data||typeof data!=="object"||data.type!==FOCUS_TYPE)return;if(document.readyState==="loading"){document.addEventListener("DOMContentLoaded",focusArtifactDocument,{once:true});return;}focusArtifactDocument();});window.addEventListener("keydown",function(event){if(event.key!=="Escape")return;window.setTimeout(function(){if(event.defaultPrevented)return;window.parent.postMessage({type:CLOSE_TYPE},"*");},0);});})();</script><script>(function(){var loc=location.href.replace(/#.*$/,"");var ATTR_NAMES=["data-product-id","data-productid","data-product_id","product-id","productid","product_id","data-source-entity-id","source-entity-id","source_entity_id","data-product","data-metadata","data-meta"];var DATASET_KEYS=["productId","productid","product_id","sourceEntityId","sourceentityid","source_entity_id","product","metadata","meta"];function readProductId(value){if(typeof value!=="string"||value.length===0)return null;if(/^[0-9]{6,}$/.test(value))return value;var match=value.match(/(?:product(?:_|-)?id|source(?:_|-)?entity(?:_|-)?id)["'=:\s]+([0-9]{6,})/i);return match?match[1]:null}function extractProductId(start){for(var node=start;node&&node!==document.body;node=node.parentElement){for(var i=0;i<ATTR_NAMES.length;i++){var attrValue=node.getAttribute&&node.getAttribute(ATTR_NAMES[i]);var attrProductId=readProductId(attrValue);if(attrProductId)return attrProductId}var dataset=node.dataset||null;if(dataset){for(var j=0;j<DATASET_KEYS.length;j++){var dataValue=dataset[DATASET_KEYS[j]];var dataProductId=readProductId(dataValue);if(dataProductId)return dataProductId}}}return null}function isInlineMediaSlotElement(node){return !!(node&&node.getAttribute&&node.getAttribute("data-clippy-inline-media-slot")!==null)}function findInlineMediaSlot(start){for(var node=start;node&&node!==document.body;node=node.parentElement){if(isInlineMediaSlotElement(node))return node}return null}function readInlineMediaUrl(node){if(!node)return null;return node.getAttribute&&((node.getAttribute("data-clippy-inline-media-url")||node.getAttribute("data-url")||node.getAttribute("data_url")))||node.href||null}function stripHash(url){return String(url).replace(/#.*$/,"")}function urlsMatch(a,b){if(!a||!b)return false;try{return stripHash(new URL(a,loc).href)===stripHash(new URL(b,loc).href)}catch(_){return stripHash(a)===stripHash(b)}}function isFirstPartyReelUrl(value){try{var url=new URL(value,loc);if(url.protocol!=="https:")return false;var host=url.hostname.toLowerCase();var supported=host==="instagram.com"||host.endsWith(".instagram.com")||host==="facebook.com"||host.endsWith(".facebook.com");return supported&&/\/reels?\//i.test(url.pathname)}catch(_){return false}}function isInlineMediaUrlClick(node,href){var slot=findInlineMediaSlot(node);if(!slot)return false;var slotUrl=readInlineMediaUrl(slot);if(slotUrl)return urlsMatch(href,slotUrl);return isFirstPartyReelUrl(href)}function findDataHref(start){for(var node=start;node&&node!==document.body;node=node.parentElement){if(node.getAttribute){var href=node.getAttribute("data-href")||node.getAttribute("data-url");if(href)return{href:href,node:node}}}return null}var nativeOpen=window.open;window.open=function(url){if(parent!==window&&typeof url==="string"&&/^https?:\/\//.test(url)){parent.postMessage({type:"ecto:usercontent-link-click",href:url},"*");return null}return nativeOpen?nativeOpen.apply(window,arguments):null};document.addEventListener("click",function(e){var target=e.target instanceof Element?e.target:null;if(!target)return;if(parent===window)return;var a=target.closest?target.closest("a[href]"):null;if(a&&a.href&&/^https?:\/\//.test(a.href)&&a.href.replace(/#.*$/,"")!==loc){if(isInlineMediaUrlClick(a,a.href))return;var productId=extractProductId(target)||extractProductId(a);if(productId){e.preventDefault();parent.postMessage({type:"ecto-artifact-link-click",productId:productId},"*");return}e.preventDefault();parent.postMessage({type:"ecto:usercontent-link-click",href:a.href},"*");return}var dataHref=findDataHref(target);if(dataHref&&/^https?:\/\//.test(dataHref.href)&&dataHref.href.replace(/#.*$/,"")!==loc){if(isInlineMediaUrlClick(dataHref.node,dataHref.href))return;e.preventDefault();parent.postMessage({type:"ecto:usercontent-link-click",href:dataHref.href},"*")}},true)})();</script><script>(function(){var FOCUS_TYPE="ecto:artifact-focus-request";var CLOSE_TYPE="ecto:artifact-close-request";function focusArtifactDocument(){var body=document.body;if(!body)return;try{window.focus();}catch(e){}if(!body.hasAttribute("tabindex"))body.setAttribute("tabindex","-1");try{body.focus({preventScroll:true});}catch(e){try{body.focus();}catch(e2){}}}window.addEventListener("message",function(event){if(event.source!==window.parent)return;var data=event.data;if(!data||typeof data!=="object"||data.type!==FOCUS_TYPE)return;if(document.readyState==="loading"){document.addEventListener("DOMContentLoaded",focusArtifactDocument,{once:true});return;}focusArtifactDocument();});window.addEventListener("keydown",function(event){if(event.key!=="Escape")return;window.setTimeout(function(){if(event.defaultPrevented)return;window.parent.postMessage({type:CLOSE_TYPE},"*");},0);});})();</script><script>(function(){var loc=location.href.replace(/#.*$/,"");var ATTR_NAMES=["data-product-id","data-productid","data-product_id","product-id","productid","product_id","data-source-entity-id","source-entity-id","source_entity_id","data-product","data-metadata","data-meta"];var DATASET_KEYS=["productId","productid","product_id","sourceEntityId","sourceentityid","source_entity_id","product","metadata","meta"];function readProductId(value){if(typeof value!=="string"||value.length===0)return null;if(/^[0-9]{6,}$/.test(value))return value;var match=value.match(/(?:product(?:_|-)?id|source(?:_|-)?entity(?:_|-)?id)["'=:\s]+([0-9]{6,})/i);return match?match[1]:null}function extractProductId(start){for(var node=start;node&&node!==document.body;node=node.parentElement){for(var i=0;i<ATTR_NAMES.length;i++){var attrValue=node.getAttribute&&node.getAttribute(ATTR_NAMES[i]);var attrProductId=readProductId(attrValue);if(attrProductId)return attrProductId}var dataset=node.dataset||null;if(dataset){for(var j=0;j<DATASET_KEYS.length;j++){var dataValue=dataset[DATASET_KEYS[j]];var dataProductId=readProductId(dataValue);if(dataProductId)return dataProductId}}}return null}function isInlineMediaSlotElement(node){return !!(node&&node.getAttribute&&node.getAttribute("data-clippy-inline-media-slot")!==null)}function findInlineMediaSlot(start){for(var node=start;node&&node!==document.body;node=node.parentElement){if(isInlineMediaSlotElement(node))return node}return null}function readInlineMediaUrl(node){if(!node)return null;return node.getAttribute&&((node.getAttribute("data-clippy-inline-media-url")||node.getAttribute("data-url")||node.getAttribute("data_url")))||node.href||null}function stripHash(url){return String(url).replace(/#.*$/,"")}function urlsMatch(a,b){if(!a||!b)return false;try{return stripHash(new URL(a,loc).href)===stripHash(new URL(b,loc).href)}catch(_){return stripHash(a)===stripHash(b)}}function isFirstPartyReelUrl(value){try{var url=new URL(value,loc);if(url.protocol!=="https:")return false;var host=url.hostname.toLowerCase();var supported=host==="instagram.com"||host.endsWith(".instagram.com")||host==="facebook.com"||host.endsWith(".facebook.com");return supported&&/\/reels?\//i.test(url.pathname)}catch(_){return false}}function isInlineMediaUrlClick(node,href){var slot=findInlineMediaSlot(node);if(!slot)return false;var slotUrl=readInlineMediaUrl(slot);if(slotUrl)return urlsMatch(href,slotUrl);return isFirstPartyReelUrl(href)}function findDataHref(start){for(var node=start;node&&node!==document.body;node=node.parentElement){if(node.getAttribute){var href=node.getAttribute("data-href")||node.getAttribute("data-url");if(href)return{href:href,node:node}}}return null}var nativeOpen=window.open;window.open=function(url){if(parent!==window&&typeof url==="string"&&/^https?:\/\//.test(url)){parent.postMessage({type:"ecto:usercontent-link-click",href:url},"*");return null}return nativeOpen?nativeOpen.apply(window,arguments):null};document.addEventListener("click",function(e){var target=e.target instanceof Element?e.target:null;if(!target)return;if(parent===window)return;var a=target.closest?target.closest("a[href]"):null;if(a&&a.href&&/^https?:\/\//.test(a.href)&&a.href.replace(/#.*$/,"")!==loc){if(isInlineMediaUrlClick(a,a.href))return;var productId=extractProductId(target)||extractProductId(a);if(productId){e.preventDefault();parent.postMessage({type:"ecto-artifact-link-click",productId:productId},"*");return}e.preventDefault();parent.postMessage({type:"ecto:usercontent-link-click",href:a.href},"*");return}var dataHref=findDataHref(target);if(dataHref&&/^https?:\/\//.test(dataHref.href)&&dataHref.href.replace(/#.*$/,"")!==loc){if(isInlineMediaUrlClick(dataHref.node,dataHref.href))return;e.preventDefault();parent.postMessage({type:"ecto:usercontent-link-click",href:dataHref.href},"*")}},true)})();</script><script>(function(){var FOCUS_TYPE="ecto:artifact-focus-request";var CLOSE_TYPE="ecto:artifact-close-request";function focusArtifactDocument(){var body=document.body;if(!body)return;try{window.focus();}catch(e){}if(!body.hasAttribute("tabindex"))body.setAttribute("tabindex","-1");try{body.focus({preventScroll:true});}catch(e){try{body.focus();}catch(e2){}}}window.addEventListener("message",function(event){if(event.source!==window.parent)return;var data=event.data;if(!data||typeof data!=="object"||data.type!==FOCUS_TYPE)return;if(document.readyState==="loading"){document.addEventListener("DOMContentLoaded",focusArtifactDocument,{once:true});return;}focusArtifactDocument();});window.addEventListener("keydown",function(event){if(event.key!=="Escape")return;window.setTimeout(function(){if(event.defaultPrevented)return;window.parent.postMessage({type:CLOSE_TYPE},"*");},0);});})();</script></body>
 </html>
