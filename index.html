@@ -4,269 +4,721 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 <meta name="theme-color" content="#FFC107">
-<meta name="fixzy-version" content="index-firebase-session-v2">
-<title>FIXZY</title>
+<meta name="fixzy-index-version" content="finishing-login-refresh-20260815"><title>FIXZY</title>
+
 <style>
 *{box-sizing:border-box}
-html,body{margin:0;width:100%;height:100%;font-family:Arial,Helvetica,sans-serif;background:#f3f4f6;color:#111827}
+
+html,body{
+  margin:0;
+  width:100%;
+  height:100%;
+  font-family:Arial,Helvetica,sans-serif;
+  background:#f3f4f6;
+  color:#111827;
+}
+
 body{overflow:hidden}
-.header{height:62px;background:#fff;border-bottom:1px solid #e5e7eb;display:flex;align-items:center;position:fixed;top:0;left:0;right:0;z-index:20;box-shadow:0 2px 12px rgba(0,0,0,.06)}
-.menu-btn{width:44px;height:44px;margin-left:9px;border:0;border-radius:11px;background:#111827;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;cursor:pointer;flex:none}
-.menu-btn span{width:21px;height:2px;background:#fff;border-radius:4px}
-.header-running{flex:1;min-width:0;height:42px;margin-left:12px;margin-right:8px;overflow:hidden;display:flex;align-items:center;position:relative;border-radius:10px;background:#fff}
-.running-track{display:flex;align-items:center;width:max-content;white-space:nowrap;animation:fixzyRunning 28s linear infinite;font-size:12px;font-weight:800;color:#374151}
-.running-track span{display:inline-flex;align-items:center;margin-right:42px}
-@keyframes fixzyRunning{from{transform:translateX(100%)}to{transform:translateX(-100%)}}
-.header-account{margin-left:auto;margin-right:13px;text-align:right;line-height:1.15;flex:none}
-.account-name{font-size:12px;font-weight:900;max-width:190px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.account-exp{font-size:9px;color:#6b7280;margin-top:3px}
-.content{position:fixed;top:62px;left:0;right:0;bottom:0;background:#f3f4f6;overflow:hidden}
-.content iframe{width:100%;height:100%;border:0;display:block;background:#fff}
-.loading{height:100%;display:flex;align-items:center;justify-content:center;padding:20px;text-align:center}
-.loading-card{width:min(420px,100%);background:#fff;border:1px solid #e5e7eb;border-radius:18px;padding:28px;box-shadow:0 8px 30px rgba(0,0,0,.07)}
-.loading-icon{font-size:42px}.loading-title{font-size:20px;font-weight:900;margin:10px 0 6px}
-.loading-text{font-size:13px;color:#667085;line-height:1.6}
-.overlay{position:fixed;inset:0;z-index:40;background:rgba(0,0,0,.28);opacity:0;visibility:hidden;transition:.2s}
-.overlay.show{opacity:1;visibility:visible}
-.menu{position:fixed;z-index:50;top:0;left:0;height:100dvh;width:min(330px,88vw);background:#fff;transform:translateX(-105%);transition:.25s ease;box-shadow:8px 0 30px rgba(0,0,0,.15);overflow:auto}
-.menu.show{transform:translateX(0)}
-.menu-head{min-height:62px;padding:10px 13px;background:#111827;color:#fff;display:flex;align-items:center;gap:10px}
-.menu-head img{width:78px;height:40px;object-fit:contain;background:#000;border-radius:7px}
-.menu-title{font-weight:900;font-size:15px}.menu-sub{font-size:9px;color:#d1d5db;margin-top:3px}
-.close{margin-left:auto;border:0;background:rgba(255,255,255,.12);color:#fff;width:34px;height:34px;border-radius:9px;font-size:20px;cursor:pointer}
-.menu-list{padding:9px}.menu-section{font-size:10px;font-weight:900;color:#9ca3af;padding:10px 11px 5px;text-transform:uppercase;letter-spacing:.5px}
-.menu-link{width:100%;display:flex;align-items:center;gap:10px;border:0;background:transparent;color:#111827;padding:12px 11px;border-radius:10px;font-size:13px;font-weight:800;text-align:left;cursor:pointer}
-.menu-link:hover,.menu-link.active{background:#f3f4f6}.menu-link .ico{width:25px;text-align:center;font-size:16px}
-.logout-link{color:#dc2626;font-weight:900}.menu-divider{height:1px;background:#e5e7eb;margin:7px 5px}
-.denied{height:100%;display:flex;align-items:center;justify-content:center;padding:20px;background:#f3f4f6}
-.denied-card{width:min(460px,100%);background:#fff;border:1px solid #e5e7eb;border-radius:16px;padding:24px;text-align:center;box-shadow:0 5px 20px rgba(0,0,0,.08)}
-.denied-card .ico{font-size:42px}.denied-card h2{margin:10px 0 7px;font-size:20px}.denied-card p{margin:0;color:#667085;font-size:13px;line-height:1.6}
-.action{margin-top:15px;border:0;border-radius:10px;padding:11px 15px;background:#111827;color:#fff;font-weight:900;cursor:pointer}
-@media(max-width:480px){.header-running{margin-left:8px;margin-right:5px;height:38px}.running-track{font-size:10px;animation-duration:24s}.header-account{margin-right:9px}.account-name{font-size:11px;max-width:150px}}
+
+/* ================= HEADER ================= */
+.header{
+  height:62px;
+  background:#fff;
+  border-bottom:1px solid #e5e7eb;
+  display:flex;
+  align-items:center;
+  position:fixed;
+  top:0;
+  left:0;
+  right:0;
+  z-index:20;
+  box-shadow:0 2px 12px rgba(0,0,0,.06);
+}
+
+.menu-btn{
+  width:44px;
+  height:44px;
+  margin-left:9px;
+  border:0;
+  border-radius:11px;
+  background:#111827;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  gap:5px;
+  cursor:pointer;
+}
+
+.menu-btn span{
+  width:21px;
+  height:2px;
+  background:#fff;
+  border-radius:4px;
+}
+
+/* Logo HEADER sengaja DIHAPUS */
+
+.header-account{
+  margin-left:auto;
+  margin-right:13px;
+  text-align:right;
+  line-height:1.15;
+}
+
+.account-name{
+  font-size:12px;
+  font-weight:900;
+  max-width:190px;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+
+.account-exp{
+  font-size:9px;
+  color:#6b7280;
+  margin-top:3px;
+}
+
+/* ================= CONTENT ================= */
+.content{
+  position:fixed;
+  top:62px;
+  left:0;
+  right:0;
+  bottom:0;
+  background:#f3f4f6;
+  overflow:hidden;
+}
+
+.content iframe{
+  width:100%;
+  height:100%;
+  border:0;
+  display:block;
+  background:#fff;
+}
+
+/* ================= HALAMAN SELAMAT DATANG ================= */
+.welcome{
+  width:100%;
+  height:100%;
+  overflow:auto;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:28px 18px;
+  background:#f3f4f6;
+}
+
+.welcome-card{
+  width:min(760px,100%);
+  text-align:center;
+  padding:25px 20px 32px;
+}
+
+.welcome-logo{
+  display:block;
+  width:min(430px,78vw);
+  max-height:330px;
+  object-fit:contain;
+  margin:0 auto 18px;
+}
+
+.welcome-title{
+  margin:0;
+  font-size:clamp(25px,5vw,42px);
+  font-weight:1000;
+  letter-spacing:.5px;
+  color:#111827;
+}
+
+.welcome-tagline{
+  margin:7px 0 14px;
+  font-size:clamp(17px,3vw,24px);
+  font-weight:900;
+  color:#f59e0b;
+}
+
+.welcome-desc{
+  margin:0 auto;
+  max-width:650px;
+  font-size:clamp(13px,2.2vw,16px);
+  line-height:1.65;
+  color:#6b7280;
+}
+
+.welcome-hint{
+  display:inline-block;
+  margin-top:22px;
+  padding:10px 16px;
+  border-radius:12px;
+  background:#fff;
+  border:1px solid #e5e7eb;
+  font-size:12px;
+  font-weight:800;
+  color:#374151;
+}
+
+/* ================= OVERLAY ================= */
+.overlay{
+  position:fixed;
+  inset:0;
+  z-index:40;
+  background:rgba(0,0,0,.28);
+  opacity:0;
+  visibility:hidden;
+  transition:.2s;
+}
+
+.overlay.show{
+  opacity:1;
+  visibility:visible;
+}
+
+/* ================= MENU ================= */
+.menu{
+  position:fixed;
+  z-index:50;
+  top:0;
+  left:0;
+  height:100dvh;
+  width:min(310px,86vw);
+  background:#fff;
+  transform:translateX(-105%);
+  transition:.25s ease;
+  box-shadow:8px 0 30px rgba(0,0,0,.15);
+  overflow:auto;
+}
+
+.menu.show{
+  transform:translateX(0);
+}
+
+.menu-head{
+  min-height:62px;
+  padding:10px 13px;
+  background:#111827;
+  color:#fff;
+  display:flex;
+  align-items:center;
+  gap:10px;
+}
+
+.menu-head img{
+  width:78px;
+  max-height:40px;
+  object-fit:contain;
+  background:#fff;
+  border-radius:7px;
+}
+
+.menu-title{
+  font-weight:900;
+  font-size:15px;
+}
+
+.menu-sub{
+  font-size:9px;
+  color:#d1d5db;
+  margin-top:3px;
+}
+
+.close{
+  margin-left:auto;
+  border:0;
+  background:rgba(255,255,255,.12);
+  color:#fff;
+  width:34px;
+  height:34px;
+  border-radius:9px;
+  font-size:20px;
+  cursor:pointer;
+}
+
+.menu-list{
+  padding:9px;
+}
+
+.menu-link{
+  width:100%;
+  display:flex;
+  align-items:center;
+  gap:10px;
+  border:0;
+  background:transparent;
+  text-decoration:none;
+  color:#111827;
+  padding:12px 11px;
+  border-radius:10px;
+  font-size:13px;
+  font-weight:800;
+  text-align:left;
+  cursor:pointer;
+}
+
+.menu-link:hover,
+.menu-link.active{
+  background:#f3f4f6;
+}
+
+.menu-link .ico{
+  width:25px;
+  text-align:center;
+  font-size:16px;
+}
+
+.menu-divider{
+  height:1px;
+  background:#e5e7eb;
+  margin:7px 5px;
+}
+
+/* ================= MOBILE ================= */
+@media(max-width:480px){
+  .header-account{
+    margin-right:9px;
+  }
+
+  .account-name{
+    font-size:11px;
+    max-width:150px;
+  }
+
+  .welcome{
+    padding:20px 12px;
+  }
+
+  .welcome-card{
+    padding:18px 10px 28px;
+  }
+
+  .welcome-logo{
+    width:min(330px,82vw);
+    max-height:250px;
+    margin-bottom:12px;
+  }
+
+  .welcome-tagline{
+    margin-top:5px;
+  }
+}
+
+/* LOGIN POPUP - struktur index asli dipertahankan */
+.login-overlay{position:fixed;inset:0;z-index:100;background:rgba(15,23,42,.62);display:none;align-items:center;justify-content:center;padding:14px}
+.login-overlay.show{display:flex}
+.login-box{width:min(440px,100%);height:min(720px,92vh);background:#fff;border-radius:18px;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,.28);position:relative}
+.login-box iframe{width:100%;height:100%;border:0;background:#fff}
+.login-close{position:absolute;right:10px;top:10px;z-index:2;width:34px;height:34px;border:0;border-radius:10px;background:#111827;color:#fff;font-size:20px;display:none}
 </style>
 </head>
+
 <body>
+<div class="login-overlay" id="loginOverlay">
+  <div class="login-box">
+    <iframe id="loginFrame" title="Login FIXZY"></iframe>
+  </div>
+</div>
+
+
+<!-- ================= HEADER ================= -->
 <header class="header">
-  <button class="menu-btn" onclick="bukaMenu()" aria-label="Menu"><span></span><span></span><span></span></button>
-  <div class="header-running"><div class="running-track">
-    <span>🌟 Selamat Datang di FIXZY</span><span>🤲 Semoga usaha hari ini lancar</span>
-    <span>💰 Semoga rezeki bertambah dan berkah</span><span>🙏 Semoga semua urusan dimudahkan</span>
-  </div></div>
-  <div class="header-account"><div class="account-name" id="accountName">Memuat...</div><div class="account-exp">Exp: <span id="accountExp">-</span></div></div>
+  <button class="menu-btn" onclick="bukaMenu()" aria-label="Menu">
+    <span></span>
+    <span></span>
+    <span></span>
+  </button>
+
+  <!-- Logo header DIHAPUS sesuai permintaan -->
+
+  <div class="header-account">
+    <div class="account-name" id="accountName">Akun</div>
+    <div class="account-exp">
+      Exp: <span id="accountExp">-</span>
+    </div>
+  </div>
 </header>
 
-<div class="content" id="contentArea">
-  <div class="loading"><div class="loading-card">
-    <div class="loading-icon">🔐</div><div class="loading-title">Memeriksa sesi FIXZY</div>
-    <div class="loading-text">Index sedang membaca login dan profil dari Firebase.</div>
-  </div></div>
-</div>
+<!-- ================= CONTENT ================= -->
+<div class="content" id="contentArea"></div>
+
+<!-- ================= OVERLAY ================= -->
 <div class="overlay" id="overlay" onclick="tutupMenu()"></div>
 
+<!-- ================= MENU ================= -->
 <aside class="menu" id="menu">
   <div class="menu-head">
-    <img src="logo.png?v=3" alt="FIXZY">
-    <div><div class="menu-title">Menu FIXZY</div><div class="menu-sub">Pilih halaman</div></div>
+    <img src="logo.png?v=2" alt="FIXZY">
+    <div>
+      <div class="menu-title">Menu FIXZY</div>
+      <div class="menu-sub">Pilih halaman</div>
+    </div>
     <button class="close" onclick="tutupMenu()">×</button>
   </div>
-  <nav class="menu-list" id="menuList"></nav>
+
+  <nav class="menu-list">
+
+    <button class="menu-link"
+      data-page="dashboard-admin.html"
+      onclick="bukaHalaman(this)">
+      <span class="ico">📊</span>
+      Dashboard Admin
+    </button>
+
+    <button class="menu-link"
+      data-page="data-servis.html"
+      onclick="bukaHalaman(this)">
+      <span class="ico">🔧</span>
+      Data Servis
+    </button>
+
+    <button class="menu-link"
+      data-page="data-penjualan.html"
+      onclick="bukaHalaman(this)">
+      <span class="ico">🛒</span>
+      Data Penjualan
+    </button>
+
+    <button class="menu-link"
+      data-page="stock.html"
+      onclick="bukaHalaman(this)">
+      <span class="ico">📦</span>
+      Stock
+    </button>
+
+    <button class="menu-link"
+      data-page="data-karyawan.html"
+      onclick="bukaHalaman(this)">
+      <span class="ico">👥</span>
+      Data Karyawan
+    </button>
+
+    <button class="menu-link"
+      data-page="upah-kerja.html"
+      onclick="bukaHalaman(this)">
+      <span class="ico">💰</span>
+      Upah Karyawan
+    </button>
+
+    <button class="menu-link"
+      data-page="pengeluaran.html"
+      onclick="bukaHalaman(this)">
+      <span class="ico">💸</span>
+      Pengeluaran
+    </button>
+
+    <button class="menu-link"
+      data-page="ringkasan-pendapatan.html"
+      onclick="bukaHalaman(this)">
+      <span class="ico">📊</span>
+      Ringkasan Pendapatan
+    </button>
+
+    <button class="menu-link"
+      data-page="nota.html"
+      onclick="bukaHalaman(this)">
+      <span class="ico">🧾</span>
+      Nota
+    </button>
+
+    <div class="menu-divider"></div>
+
+    <button class="menu-link"
+      data-page="aktivasi.html"
+      onclick="bukaHalaman(this)">
+      <span class="ico">🔐</span>
+      Cek Aktivasi
+    </button>
+
+    <button class="menu-link"
+      data-page="page.html"
+      onclick="bukaHalaman(this)">
+      <span class="ico">ℹ️</span>
+      About
+    </button>
+
+    <div class="menu-divider"></div>
+
+    <button class="menu-link"
+      type="button"
+      onclick="refreshIndex()">
+      <span class="ico">🔄</span>
+      Refresh Halaman
+    </button>
+
+  </nav>
 </aside>
 
 <script type="module">
-import {initializeApp,getApps,getApp} from "https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js";
-import {getAuth,onAuthStateChanged,signOut} from "https://www.gstatic.com/firebasejs/11.10.0/firebase-auth.js";
-import {getFirestore,doc,getDoc} from "https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js";
+import { initializeApp } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js";
+import {
+  getAuth,
+  onAuthStateChanged,
+  signOut
+} from "https://www.gstatic.com/firebasejs/11.10.0/firebase-auth.js";
+import {
+  getFirestore,
+  doc,
+  getDoc
+} from "https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js";
 
-const cfg={apiKey:"AIzaSyC_PcarMTT5Un7qfSLzf92o5OGn5rginsI",authDomain:"fixzy-update.firebaseapp.com",projectId:"fixzy-update",storageBucket:"fixzy-update.firebasestorage.app",messagingSenderId:"995892519622",appId:"1:995892519622:web:fa41047944d8e5b35d6dc7"};
-const app=getApps().length?getApp():initializeApp(cfg);
-const auth=getAuth(app);
-const db=getFirestore(app);
+const firebaseConfig = {
+  apiKey: "AIzaSyCwMbJsuORhIq4QCmp4c1r6OsjAUlfxU5Y",
+  authDomain: "fixzy-f056f.firebaseapp.com",
+  projectId: "fixzy-f056f",
+  storageBucket: "fixzy-f056f.firebasestorage.app",
+  messagingSenderId: "838081521031",
+  appId: "1:838081521031:web:50fdee909b56460b055f22"
+};
 
-/*
-  DAFTAR MENU TERPUSAT.
-  Kalau nanti membuat HTML baru, cukup tambah 1 object di sini.
-  Hak akses employee/reseller tetap ditentukan oleh field izin di Firebase.
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+
+let currentUser = null;
+let currentProfile = null;
+let authReady = false;
+
+function bukaMenu(){
+  document.getElementById("menu").classList.add("show");
+  document.getElementById("overlay").classList.add("show");
+}
+
+function tutupMenu(){
+  document.getElementById("menu").classList.remove("show");
+  document.getElementById("overlay").classList.remove("show");
+}
+
+/* ================= REFRESH INDEX =================
+   Tetap menggunakan index lama: refresh hanya memuat ulang index,
+   bukan menghapus sesi Firebase.
 */
-const MENU=[
- {section:"Transaksi"},
- {page:"nota.html",icon:"🧾",label:"Input Servisan",permission:"servis",roles:["owner","employee","reseller"]},
- {page:"penjualan.html",icon:"🛒",label:"Input Penjualan",permission:"penjualan",roles:["owner","employee","reseller"]},
-
- {section:"Data"},
- {page:"data-servis.html",icon:"🔧",label:"Data Servis",permission:"dataServis",roles:["owner","employee","reseller"]},
- {page:"data-penjualan.html",icon:"🛒",label:"Data Penjualan",permission:"dataPenjualan",roles:["owner","employee","reseller"]},
- {page:"stock.html",icon:"📦",label:"Stock",permission:"stock",roles:["owner","employee","reseller"]},
- {page:"monitoring-garansi.html",icon:"🛡️",label:"Monitoring Garansi",permission:"garansi",roles:["owner","employee"]},
-
- {section:"Laporan"},
- {page:"ringkasan-pendapatan.html",icon:"📊",label:"Ringkasan Pendapatan",permission:"ringkasanPendapatan",roles:["owner","employee"]},
- {page:"laporan-keuangan.html",icon:"💰",label:"Laporan Keuangan",permission:"laporanKeuangan",roles:["owner","employee"]},
- {page:"rekap-teknisi.html",icon:"🧰",label:"Rekap Teknisi",permission:"rekapTeknisi",roles:["owner","employee"]},
-
- {section:"Administrasi"},
- {page:"upah-kerja.html",icon:"💵",label:"Upah Karyawan",permission:"ownerOnly",roles:["owner"]},
- {page:"pengeluaran.html",icon:"💸",label:"Pengeluaran",permission:"ownerOnly",roles:["owner"]},
- {page:"dashboard-admin.html",icon:"📊",label:"Dashboard Admin",permission:"ownerOnly",roles:["owner"]},
- {page:"data-karyawan.html",icon:"👤",label:"Data Karyawan",permission:"ownerOnly",roles:["owner"]},
- {page:"kelola-karyawan-reseller.html",icon:"👥",label:"Kelola Karyawan & Reseller",permission:"ownerOnly",roles:["owner"]},
- {page:"hak-akses.html",icon:"🔐",label:"Hak Akses",permission:"ownerOnly",roles:["owner"]},
- {page:"cek-aktivasi.html",icon:"🔐",label:"Cek Aktivasi",permission:"ownerOnly",roles:["owner"]},
- {page:"pengaturan.html",icon:"⚙️",label:"Pengaturan",permission:"ownerOnly",roles:["owner"]},
-
- {section:"Sistem"},
- {page:"page.html",icon:"ℹ️",label:"About",permission:null,roles:["owner","employee","reseller","superadmin"]}
-];
-
-let authReady=false,currentUser=null;
-
-function formatExp(v){
- if(v===undefined||v===null||String(v).trim()==="")return "-";
- try{
-  if(typeof v==="object"&&typeof v.toDate==="function")return v.toDate().toLocaleDateString("id-ID",{day:"2-digit",month:"long",year:"numeric"});
-  if(typeof v==="object"&&v.seconds!==undefined)return new Date(Number(v.seconds)*1000).toLocaleDateString("id-ID",{day:"2-digit",month:"long",year:"numeric"});
-  const d=new Date(String(v));if(!Number.isNaN(d.getTime()))return d.toLocaleDateString("id-ID",{day:"2-digit",month:"long",year:"numeric"});
- }catch(e){}
- return String(v);
+function refreshIndex(){
+  const url = new URL(window.location.href);
+  url.searchParams.set("v", Date.now().toString());
+  window.location.replace(url.toString());
 }
 
-function izinAda(permission){
- const s=window.fixzySession||{};
- if(s.role==="owner"||s.role==="superadmin")return true;
- if(permission==="ownerOnly")return false;
- if(!permission)return true;
- const izin=Array.isArray(s.permissions)?s.permissions:[];
- const alias={
-  servis:["servis","nota","inputServis"],
-  penjualan:["penjualan","inputPenjualan"],
-  dataServis:["dataServis","data-servis"],
-  dataPenjualan:["dataPenjualan","data-penjualan"],
-  stock:["stock","stok"],
-  garansi:["garansi","monitoring-garansi"],
-  ringkasanPendapatan:["ringkasanPendapatan","ringkasan-pendapatan","laporanPendapatan"],
-  laporanKeuangan:["laporanKeuangan","laporan-keuangan","keuangan"],
-  rekapTeknisi:["rekapTeknisi","rekap-teknisi"]
- };
- return(alias[permission]||[permission]).some(x=>izin.includes(x));
+/* ================= HALAMAN LOGIN =================
+   Tampilan iframe tetap dipakai seperti versi FIXZY lama.
+   Index hanya mengendalikan kapan iframe ditampilkan.
+*/
+function tampilkanLogin(){
+  const overlay = document.getElementById("loginOverlay");
+  const frame = document.getElementById("loginFrame");
+
+  if(!frame.getAttribute("src")){
+    frame.src = "login.html?v=2";
+  }
+
+  overlay.classList.add("show");
+  document.querySelectorAll(".menu-link")
+    .forEach(x => x.classList.remove("active"));
 }
 
-function boleh(item){
- const s=window.fixzySession||{};
- if(s.role==="owner"||s.role==="superadmin")return true;
- if(!item.roles.includes(s.role))return false;
- return izinAda(item.permission);
+function tutupLogin(){
+  document.getElementById("loginOverlay").classList.remove("show");
 }
 
-function renderMenu(){
- const list=document.getElementById("menuList");list.innerHTML="";
- MENU.forEach(item=>{
-  if(item.section){const h=document.createElement("div");h.className="menu-section";h.textContent=item.section;list.appendChild(h);return;}
-  if(!boleh(item))return;
-  const b=document.createElement("button");b.className="menu-link";b.type="button";
-  b.innerHTML=`<span class="ico">${item.icon}</span><span>${item.label}</span>`;
-  b.onclick=()=>bukaHalaman(item,b);list.appendChild(b);
- });
- const div=document.createElement("div");div.className="menu-divider";list.appendChild(div);
- const refresh=document.createElement("button");refresh.className="menu-link";refresh.type="button";
- refresh.innerHTML='<span class="ico">🔄</span><span>Refresh Halaman</span>';refresh.onclick=refreshIndex;list.appendChild(refresh);
- const logout=document.createElement("button");logout.className="menu-link logout-link";logout.type="button";
- logout.innerHTML='<span class="ico">🚪</span><span>Logout</span>';logout.onclick=logoutFixzy;list.appendChild(logout);
-}
-
-function setStatus(title,text,icon="🔐"){
- document.getElementById("contentArea").innerHTML=`<div class="loading"><div class="loading-card">
- <div class="loading-icon">${icon}</div><div class="loading-title">${title}</div><div class="loading-text">${text}</div>
- </div></div>`;
-}
-
+/* ================= HALAMAN SAMBUTAN ================= */
 function tampilkanBeranda(){
- document.getElementById("contentArea").innerHTML='<iframe src="page.html" title="FIXZY"></iframe>';
- document.querySelectorAll(".menu-link").forEach(x=>x.classList.remove("active"));
+  const area = document.getElementById("contentArea");
+
+  area.innerHTML = `
+    <section class="welcome">
+      <div class="welcome-card">
+
+        <img
+          src="logo.png?v=2"
+          class="welcome-logo"
+          alt="FIXZY Pembukuan Servis HP"
+        >
+
+        <h1 class="welcome-title">FIXZY</h1>
+
+        <div class="welcome-tagline">
+          PEMBUKUAN SERVIS HP
+        </div>
+
+        <p class="welcome-desc">
+          Sistem pembukuan khusus usaha servis HP untuk membantu
+          mengelola data servis, pelanggan, penjualan, stok, nota,
+          dan aktivitas usaha secara lebih rapi dalam satu aplikasi.
+        </p>
+
+        <div class="welcome-hint">
+          Gunakan tombol menu ☰ untuk mulai menggunakan FIXZY
+        </div>
+
+      </div>
+    </section>
+  `;
+
+  document.querySelectorAll(".menu-link")
+    .forEach(x => x.classList.remove("active"));
 }
 
-function tampilkanAksesDitolak(){
- document.getElementById("contentArea").innerHTML=`<div class="denied"><div class="denied-card">
- <div class="ico">🔒</div><h2>Akses Terbatas</h2>
- <p>Akun ini belum diberi izin untuk membuka halaman tersebut.</p>
- <button class="action" onclick="tampilkanBeranda()">Kembali ke Beranda</button>
- </div></div>`;
+/* ================= TANGGAL FIRESTORE ================= */
+function dateObj(value){
+  if(!value) return null;
+
+  if(value && typeof value.toDate === "function"){
+    const d = value.toDate();
+    return Number.isNaN(d.getTime()) ? null : d;
+  }
+
+  if(value instanceof Date){
+    return Number.isNaN(value.getTime()) ? null : value;
+  }
+
+  const d = new Date(value);
+  return Number.isNaN(d.getTime()) ? null : d;
 }
 
-function bukaHalaman(item,btn){
- if(!authReady||!currentUser||!window.fixzySession){
-  setStatus("Sesi Belum Siap","Index masih menyiapkan sesi Firebase. Tunggu sebentar lalu coba lagi.");
-  return;
- }
- if(!boleh(item)){tampilkanAksesDitolak();tutupMenu();return;}
- const area=document.getElementById("contentArea");area.innerHTML="";
- const frame=document.createElement("iframe");frame.title=item.label;frame.src=item.page;
- frame.style.cssText="width:100%;height:100%;border:0;display:block;background:#fff";
- area.appendChild(frame);
- document.querySelectorAll(".menu-link").forEach(x=>x.classList.remove("active"));
- if(btn)btn.classList.add("active");tutupMenu();
-}
-window.bukaHalaman=bukaHalaman;
+/* ================= VALIDASI PROFIL RULES BARU =================
+   users/{uid} hanya boleh dibaca oleh user sendiri.
+   Profil registrasi baru harus owner + aktif + trial.
+*/
+async function bacaProfilFirebase(user){
+  const snap = await getDoc(doc(db, "users", user.uid));
 
-function bukaMenu(){document.getElementById("menu").classList.add("show");document.getElementById("overlay").classList.add("show")}
-function tutupMenu(){document.getElementById("menu").classList.remove("show");document.getElementById("overlay").classList.remove("show")}
-window.bukaMenu=bukaMenu;window.tutupMenu=tutupMenu;
+  if(!snap.exists()){
+    throw new Error("Data akun tidak ditemukan di Firebase.");
+  }
 
-function refreshIndex(){const u=new URL(location.href);u.searchParams.set("v",Date.now());location.replace(u.toString())}
-window.refreshIndex=refreshIndex;
+  const data = snap.data() || {};
+  const role = String(data.role || "").toLowerCase();
+  const status = String(data.status || "").toLowerCase();
+  const paket = String(data.paket || "").toLowerCase();
 
-function logoutFixzy(){
- const old=document.getElementById("logoutPopup");if(old)old.remove();
- const wrap=document.createElement("div");wrap.id="logoutPopup";
- wrap.style.cssText="position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.55);display:flex;align-items:center;justify-content:center;padding:18px";
- wrap.innerHTML=`<div style="width:min(420px,100%);background:#fff;border-radius:16px;padding:20px;box-shadow:0 15px 40px #0004">
- <h3 style="margin:0 0 8px">🚪 Keluar dari FIXZY?</h3>
- <p style="font-size:13px;line-height:1.6;color:#667085">Sesi akun akan ditutup dan kembali ke login.</p>
- <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:15px">
- <button id="logoutCancel" style="border:0;border-radius:9px;padding:10px 14px;background:#e5e7eb;font-weight:900">Batal</button>
- <button id="logoutOk" style="border:0;border-radius:9px;padding:10px 14px;background:#dc2626;color:#fff;font-weight:900">Logout</button>
- </div></div>`;
- document.body.appendChild(wrap);
- document.getElementById("logoutCancel").onclick=()=>wrap.remove();
- document.getElementById("logoutOk").onclick=async()=>{try{await signOut(auth)}catch(e){console.error(e)}location.replace("login.html")};
-}
-window.logoutFixzy=logoutFixzy;
+  const allowedRoles = ["owner","employee","reseller","superadmin"];
 
-async function siapkanSession(user){
- if(!user){authReady=true;location.replace("login.html");return}
- setStatus("Memuat akun FIXZY","Sedang membaca profil dan hak akses dari Firebase...");
- try{
-  const snap=await getDoc(doc(db,"users",user.uid));
-  if(!snap.exists()){await signOut(auth).catch(()=>{});location.replace("login.html");return}
-  const data=snap.data()||{};
-  const role=String(data.role||"").toLowerCase();
-  const status=String(data.status||"").toLowerCase();
-  if(!["owner","employee","reseller","superadmin"].includes(role)){await signOut(auth).catch(()=>{});location.replace("login.html");return}
-  if(status&& !["aktif","active"].includes(status)){await signOut(auth).catch(()=>{});location.replace("login.html");return}
+  if(!allowedRoles.includes(role)){
+    throw new Error("Role akun tidak dikenali.");
+  }
 
-  const exp=data.tanggalBerakhir;let expDate=null;
-  try{if(exp&&typeof exp.toDate==="function")expDate=exp.toDate();else if(exp)expDate=new Date(exp)}catch(e){}
-  if(expDate&&!Number.isNaN(expDate.getTime())&&new Date()>expDate){await signOut(auth).catch(()=>{});location.replace("login.html");return}
+  if(status === "blocked" || status === "rejected"){
+    throw new Error("Akun diblokir atau ditolak. Hubungi Admin Fixzy.");
+  }
 
-  const ownerUid=role==="owner"?user.uid:(data.ownerUid||"");
-  window.fixzySession={
-   uid:user.uid,role,ownerUid:ownerUid||user.uid,email:user.email||"",profile:data,
-   permissions:Array.isArray(data.izin)?data.izin:(Array.isArray(data.permissions)?data.permissions:[])
-  };
-  currentUser=user;authReady=true;
-  document.getElementById("accountName").textContent=data.namaKonter||data.namaPemilik||data.nama||user.email||"Akun";
-  document.getElementById("accountExp").textContent=formatExp(exp);
-  renderMenu();tampilkanBeranda();
+  if(status !== "aktif" && status !== "active"){
+    throw new Error("Akun belum aktif.");
+  }
 
-  // Session tersedia di parent window; tidak memakai localStorage.
-  window.dispatchEvent(new CustomEvent("fixzy-session-ready",{detail:window.fixzySession}));
- }catch(err){
-  console.error("FIXZY Firebase/Auth:",err);
-  setStatus("Firebase belum dapat dibaca","Koneksi atau Firebase sedang bermasalah. Sesi tidak dihapus dan Anda tidak dipaksa kembali ke login.","⚠️");
-  authReady=false;
- }
+  /* Trial 3 bulan berlaku untuk akun owner trial.
+     Role lain tidak dipaksa memiliki field trial.
+  */
+  if(role === "owner" && (paket === "trial" || data.trial === true)){
+    const akhir = dateObj(data.tanggalBerakhir || data.trialSelesai);
+
+    if(akhir && Date.now() > akhir.getTime()){
+      throw new Error("Masa Trial 3 Bulan sudah berakhir.");
+    }
+  }
+
+  currentUser = user;
+  currentProfile = data;
+
+  document.getElementById("accountName").textContent =
+    data.namaKonter || data.namaPemilik || user.email || "Akun";
+
+  const akhir = dateObj(data.tanggalBerakhir || data.trialSelesai);
+  document.getElementById("accountExp").textContent =
+    akhir
+      ? akhir.toLocaleDateString("id-ID")
+      : "-";
+
+  return data;
 }
 
-onAuthStateChanged(auth,user=>{currentUser=user||null;siapkanSession(user)});
-window.getFixzySession=()=>window.fixzySession||null;
+/* ================= BUKA HALAMAN MENU ================= */
+function bukaHalaman(btn){
+  if(!currentUser || !currentProfile){
+    tampilkanLogin();
+    tutupMenu();
+    return;
+  }
+
+  const page = btn.dataset.page;
+  const area = document.getElementById("contentArea");
+
+  area.innerHTML = "";
+
+  const frame = document.createElement("iframe");
+  frame.title = "Halaman FIXZY";
+  frame.src = page + "?v=20260809-01";
+  frame.style.cssText =
+    "width:100%;height:100%;border:0;display:block;background:#fff;";
+
+  area.appendChild(frame);
+
+  document.querySelectorAll(".menu-link")
+    .forEach(x => x.classList.remove("active"));
+
+  btn.classList.add("active");
+  tutupMenu();
+}
+
+/* ================= LOGIN MESSAGE =================
+   Message lama tetap diterima untuk kompatibilitas.
+   Sumber kebenaran tetap Firebase Auth + Firestore.
+*/
+window.addEventListener("message", function(e){
+  const d = e.data || {};
+
+  if(d.type === "FIXZY_LOGIN_SUCCESS"){
+    /* Login sebenarnya diverifikasi oleh onAuthStateChanged.
+       Jangan simpan UID/role ke localStorage/sessionStorage. */
+    return;
+  }
+
+  if(d.type === "FIXZY_REGISTER_SUCCESS"){
+    tampilkanLogin();
+  }
+});
+
+/* ================= AUTH GATE =================
+   Index tidak menampilkan aplikasi sebelum Firebase Auth
+   dan profil users/{uid} berhasil diverifikasi.
+*/
+onAuthStateChanged(auth, async (user) => {
+  if(!user){
+    currentUser = null;
+    currentProfile = null;
+    authReady = true;
+    tampilkanLogin();
+    return;
+  }
+
+  try{
+    await bacaProfilFirebase(user);
+    authReady = true;
+    tutupLogin();
+    tampilkanBeranda();
+  }catch(err){
+    console.error("FIXZY auth gate:", err);
+    currentUser = null;
+    currentProfile = null;
+    authReady = true;
+
+    try{
+      await signOut(auth);
+    }catch(e){
+      console.warn("Sign out gagal:", e);
+    }
+
+    tampilkanLogin();
+  }
+});
+
+/* Logout dari halaman lain dapat memicu listener ini.
+   Tidak ada sessionStorage/localStorage sebagai sumber login. */
+window.addEventListener("beforeunload", () => {
+  currentUser = null;
+  currentProfile = null;
+});
 </script>
+
 </body>
 </html>
