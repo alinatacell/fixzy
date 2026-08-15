@@ -179,10 +179,29 @@ let currentUser=null, ownerUid=null, isOwner=false, allProduk=[], konterName="",
 
 onAuthStateChanged(auth, async u=>{
   if(!u){ location.href="login.html"; return; }
+
   currentUser=u;
-  document.getElementById('akunSide').textContent=u.email;
+
+  // Isi Informasi Transaksi SECEPATNYA dari Firebase Auth.
+  // Jangan menunggu query Firestore agar panel tidak tertahan "Memuat...".
+  const akunEmail = u.email || u.uid || '-';
+  document.getElementById('akunSide').textContent=akunEmail;
   document.getElementById('namaToko').textContent='Input Penjualan';
-  document.getElementById('akunLoginField').value=u.email;
+  document.getElementById('akunLoginField').value=akunEmail;
+
+  // Nilai transaksi dasar dibuat langsung sebelum membaca profil usaha.
+  // Dengan begitu panel selalu mempunyai data meskipun query profil Firestore lambat/gagal.
+  const tanggalAwal = new Date().toISOString().slice(0,10);
+  document.getElementById('tanggalField').value=tanggalAwal;
+  autoGenerateNotaBarcode();
+
+  // Tampilkan data minimum sekarang juga.
+  document.getElementById('infoAkun').textContent=akunEmail;
+  document.getElementById('infoUsaha').textContent='Memuat usaha...';
+  document.getElementById('infoNota').textContent=document.getElementById('notaField').value || '-';
+  document.getElementById('infoTanggal').textContent=tanggalAwal;
+  document.getElementById('infoBarcode').textContent=document.getElementById('barcodeField').value || '-';
+
   try{
     const snap=await getDocs(query(collection(db,"users"), where("__name__","==", u.uid)));
     let p=null;
@@ -219,11 +238,31 @@ onAuthStateChanged(auth, async u=>{
     konterName = konterName || 'A Yudi Thea';
   }
   document.getElementById('konterField').value=konterName;
-  document.getElementById('tanggalField').value=new Date().toISOString().slice(0,10);
-  autoGenerateNotaBarcode();
-  syncInfoTransaksiHeader();
-  await loadKaryawan();
-  await loadProduk();
+  if(!document.getElementById('tanggalField').value){
+    document.getElementById('tanggalField').value=new Date().toISOString().slice(0,10);
+  }
+  if(!document.getElementById('notaField').value || !document.getElementById('barcodeField').value){
+    autoGenerateNotaBarcode();
+  }
+
+  // Sinkronkan panel setelah nama usaha/profil selesai diketahui.
+  // Tidak boleh gagal hanya karena elemen/Firestore lain bermasalah.
+  try{
+    syncInfoTransaksiHeader();
+  }catch(err){
+    console.error('Gagal sinkron panel informasi transaksi:', err);
+    document.getElementById('infoAkun').textContent=akunEmail;
+    document.getElementById('infoUsaha').textContent=konterName || 'A Yudi Thea';
+    document.getElementById('infoNota').textContent=document.getElementById('notaField').value || '-';
+    document.getElementById('infoTanggal').textContent=document.getElementById('tanggalField').value || tanggalAwal;
+    document.getElementById('infoBarcode').textContent=document.getElementById('barcodeField').value || '-';
+  }
+
+  try{ await loadKaryawan(); }catch(err){ console.error('loadKaryawan:',err); }
+  try{ await loadProduk(); }catch(err){ console.error('loadProduk:',err); }
+
+  // Final refresh panel setelah seluruh proses selesai.
+  try{ syncInfoTransaksiHeader(); }catch(err){ console.error('syncInfo final:',err); }
 });
 
 async function loadKaryawan(){
@@ -596,11 +635,11 @@ function syncInfoTransaksiHeader(){
   if(nota && !nota.value) autoGenerateNotaBarcode();
   if(barcode && !barcode.value) autoGenerateNotaBarcode();
 
-  document.getElementById('infoAkun').textContent=akun?.value || currentUser?.email || 'Memuat...';
-  document.getElementById('infoUsaha').textContent=usaha?.value || konterName || 'Memuat...';
-  document.getElementById('infoNota').textContent=nota?.value || 'Memuat...';
-  document.getElementById('infoTanggal').textContent=tanggal?.value || 'Memuat...';
-  document.getElementById('infoBarcode').textContent=barcode?.value || 'Memuat...';
+  document.getElementById('infoAkun').textContent=akun?.value || currentUser?.email || currentUser?.uid || '-';
+  document.getElementById('infoUsaha').textContent=usaha?.value || konterName || 'A Yudi Thea';
+  document.getElementById('infoNota').textContent=nota?.value || '-';
+  document.getElementById('infoTanggal').textContent=tanggal?.value || new Date().toISOString().slice(0,10);
+  document.getElementById('infoBarcode').textContent=barcode?.value || '-';
 
   const role=document.getElementById('roleSide');
   const email=document.getElementById('akunSide');
