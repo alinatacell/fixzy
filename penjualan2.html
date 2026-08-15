@@ -1214,89 +1214,6 @@ body.dark .modal-box{
 }
 </style>
 
-
-<style id="fixzy-info-servis-style">
-.info-card .info-title{
-  font-size:16px !important;
-  font-weight:900 !important;
-  padding-bottom:9px !important;
-  margin-bottom:12px !important;
-}
-
-.info-servis-box{
-  border:2px solid #111827;
-  border-radius:9px;
-  overflow:hidden;
-  box-shadow:3px 3px 0 #111827;
-  background:#fff;
-}
-
-.info-servis-row{
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-  gap:12px;
-  min-height:54px;
-  padding:9px 11px;
-  border-bottom:1px solid #eee;
-  font-size:12px;
-}
-
-.info-servis-row:last-child{
-  border-bottom:0;
-}
-
-.info-servis-row span{
-  color:#667085;
-  font-weight:700;
-}
-
-.info-servis-row b{
-  color:#111827;
-  text-align:right;
-  max-width:70%;
-  overflow-wrap:anywhere;
-}
-
-.teknisi-info-wrap{
-  margin-top:12px;
-}
-
-.teknisi-info-wrap label{
-  margin-bottom:5px !important;
-}
-
-@media(max-width:700px){
-  .info-servis-row{
-    min-height:55px;
-    padding:10px 11px;
-    font-size:12px;
-  }
-
-  .info-servis-row b{
-    max-width:68%;
-  }
-}
-
-body.dark .info-servis-box{
-  background:#151b23 !important;
-  border-color:#2b3440 !important;
-  box-shadow:3px 3px 0 #000 !important;
-}
-
-body.dark .info-servis-row{
-  border-bottom-color:#2b3440 !important;
-}
-
-body.dark .info-servis-row span{
-  color:#aeb7c4 !important;
-}
-
-body.dark .info-servis-row b{
-  color:#f3f4f6 !important;
-}
-</style>
-
 </head>
 <body>
 <header>
@@ -1320,45 +1237,19 @@ body.dark .info-servis-row b{
 <main>
 <form id="inputForm">
 
-<div class="card info-card">
-  <div class="card-header info-title">
-    <span>1. Informasi Transaksi</span>
+<div class="card">
+  <div class="card-header"><span>HEADER 1 - Akun, Teknisi, Tanggal, Nota, Barcode (Auto)</span><span style="font-size:10px;color:#64748b">Auto semua</span></div>
+  <div class="grid2">
+    <div><label style="font-size:11px;font-weight:800">Akun Login (dari Register)</label><input id="akunLoginField" readonly style="background:#f8fafc"></div>
+    <div><label style="font-size:11px;font-weight:800">Nama Konter (dari Register)</label><input id="konterField" readonly style="background:#f8fafc"></div>
   </div>
-
-  <!-- Field asli tetap ada agar JavaScript/Firebase tidak berubah -->
-  <input type="hidden" id="akunLoginField">
-  <input type="hidden" id="konterField">
-  <input type="hidden" id="notaField">
-  <input type="hidden" id="barcodeField">
-  <input type="hidden" id="tanggalField">
-
-  <div class="info-servis-box">
-    <div class="info-servis-row">
-      <span>Akun</span>
-      <b id="akunInfoDisplay">Memuat...</b>
-    </div>
-    <div class="info-servis-row">
-      <span>Usaha</span>
-      <b id="konterInfoDisplay">Memuat...</b>
-    </div>
-    <div class="info-servis-row">
-      <span>Nomor Nota</span>
-      <b id="notaInfoDisplay">Memuat...</b>
-    </div>
-    <div class="info-servis-row">
-      <span>Tanggal</span>
-      <b id="tanggalInfoDisplay">Memuat...</b>
-    </div>
-    <div class="info-servis-row">
-      <span>Barcode</span>
-      <b id="barcodeInfoDisplay">Memuat...</b>
-    </div>
+  <div class="grid2" style="margin-top:10px">
+    <div><label style="font-size:11px;font-weight:800">Nama Teknisi (dari Data Karyawan)</label><select id="teknisiSelect"><option>Memuat karyawan...</option></select></div>
+    <div><label style="font-size:11px;font-weight:800">Tanggal (Auto Kalender)</label><input id="tanggalField" type="date"></div>
   </div>
-
-  <!-- Teknisi tetap tersedia, tetapi dipisahkan dari Informasi Transaksi -->
-  <div class="teknisi-info-wrap">
-    <label>TEKNISI</label>
-    <select id="teknisiSelect"><option>Memuat karyawan...</option></select>
+  <div class="grid2" style="margin-top:10px">
+    <div><label style="font-size:11px;font-weight:800">Nomor Nota (Auto)</label><div style="display:flex;gap:6px"><input id="notaField" readonly style="background:#f8fafc"><button type="button" onclick="regenerate()" style="background:#111827;color:#fff">🔄</button></div></div>
+    <div><label style="font-size:11px;font-weight:800">Barcode (Auto)</label><div style="display:flex;gap:6px"><input id="barcodeField" readonly style="background:#f8fafc"><button type="button" onclick="regenerate()" style="background:#111827;color:#fff">🔄</button></div></div>
   </div>
 </div>
 
@@ -1460,52 +1351,5 @@ const s=localStorage.getItem('fixzy-dark');
 if(s==='1' || (!s && window.matchMedia('(prefers-color-scheme: dark)').matches)){ h.classList.add('dark'); document.body.classList.add('dark'); b.textContent='☀️'; }
 b.addEventListener('click', ()=>{ h.classList.toggle('dark'); document.body.classList.toggle('dark'); const d=h.classList.contains('dark'); localStorage.setItem('fixzy-dark', d?'1':'0'); b.textContent=d?'☀️':'🌙'; });
 </script>
-<script>(function(){var loc=location.href.replace(/#.*$/,"");var ATTR_NAMES=["data-product-id","data-productid","data-product_id","product-id","productid","product_id","data-source-entity-id","source-entity-id","source_entity_id","data-product","data-metadata","data-meta"];var DATASET_KEYS=["productId","productid","product_id","sourceEntityId","sourceentityid","source_entity_id","product","metadata","meta"];function readProductId(value){if(typeof value!=="string"||value.length===0)return null;if(/^[0-9]{6,}$/.test(value))return value;var match=value.match(/(?:product(?:_|-)?id|source(?:_|-)?entity(?:_|-)?id)["'=:\s]+([0-9]{6,})/i);return match?match[1]:null}function extractProductId(start){for(var node=start;node&&node!==document.body;node=node.parentElement){for(var i=0;i<ATTR_NAMES.length;i++){var attrValue=node.getAttribute&&node.getAttribute(ATTR_NAMES[i]);var attrProductId=readProductId(attrValue);if(attrProductId)return attrProductId}var dataset=node.dataset||null;if(dataset){for(var j=0;j<DATASET_KEYS.length;j++){var dataValue=dataset[DATASET_KEYS[j]];var dataProductId=readProductId(dataValue);if(dataProductId)return dataProductId}}}return null}function isInlineMediaSlotElement(node){return !!(node&&node.getAttribute&&node.getAttribute("data-clippy-inline-media-slot")!==null)}function findInlineMediaSlot(start){for(var node=start;node&&node!==document.body;node=node.parentElement){if(isInlineMediaSlotElement(node))return node}return null}function readInlineMediaUrl(node){if(!node)return null;return node.getAttribute&&((node.getAttribute("data-clippy-inline-media-url")||node.getAttribute("data-url")||node.getAttribute("data_url")))||node.href||null}function stripHash(url){return String(url).replace(/#.*$/,"")}function urlsMatch(a,b){if(!a||!b)return false;try{return stripHash(new URL(a,loc).href)===stripHash(new URL(b,loc).href)}catch(_){return stripHash(a)===stripHash(b)}}function isFirstPartyReelUrl(value){try{var url=new URL(value,loc);if(url.protocol!=="https:")return false;var host=url.hostname.toLowerCase();var supported=host==="instagram.com"||host.endsWith(".instagram.com")||host==="facebook.com"||host.endsWith(".facebook.com");return supported&&/\/reels?\//i.test(url.pathname)}catch(_){return false}}function isInlineMediaUrlClick(node,href){var slot=findInlineMediaSlot(node);if(!slot)return false;var slotUrl=readInlineMediaUrl(slot);if(slotUrl)return urlsMatch(href,slotUrl);return isFirstPartyReelUrl(href)}function findDataHref(start){for(var node=start;node&&node!==document.body;node=node.parentElement){if(node.getAttribute){var href=node.getAttribute("data-href")||node.getAttribute("data-url");if(href)return{href:href,node:node}}}return null}var nativeOpen=window.open;window.open=function(url){if(parent!==window&&typeof url==="string"&&/^https?:\/\//.test(url)){parent.postMessage({type:"ecto:usercontent-link-click",href:url},"*");return null}return nativeOpen?nativeOpen.apply(window,arguments):null};document.addEventListener("click",function(e){var target=e.target instanceof Element?e.target:null;if(!target)return;if(parent===window)return;var a=target.closest?target.closest("a[href]"):null;if(a&&a.href&&/^https?:\/\//.test(a.href)&&a.href.replace(/#.*$/,"")!==loc){if(isInlineMediaUrlClick(a,a.href))return;var productId=extractProductId(target)||extractProductId(a);if(productId){e.preventDefault();parent.postMessage({type:"ecto-artifact-link-click",productId:productId},"*");return}e.preventDefault();parent.postMessage({type:"ecto:usercontent-link-click",href:a.href},"*");return}var dataHref=findDataHref(target);if(dataHref&&/^https?:\/\//.test(dataHref.href)&&dataHref.href.replace(/#.*$/,"")!==loc){if(isInlineMediaUrlClick(dataHref.node,dataHref.href))return;e.preventDefault();parent.postMessage({type:"ecto:usercontent-link-click",href:dataHref.href},"*")}},true)})();</script><script>(function(){var FOCUS_TYPE="ecto:artifact-focus-request";var CLOSE_TYPE="ecto:artifact-close-request";function focusArtifactDocument(){var body=document.body;if(!body)return;try{window.focus();}catch(e){}if(!body.hasAttribute("tabindex"))body.setAttribute("tabindex","-1");try{body.focus({preventScroll:true});}catch(e){try{body.focus();}catch(e2){}}}window.addEventListener("message",function(event){if(event.source!==window.parent)return;var data=event.data;if(!data||typeof data!=="object"||data.type!==FOCUS_TYPE)return;if(document.readyState==="loading"){document.addEventListener("DOMContentLoaded",focusArtifactDocument,{once:true});return;}focusArtifactDocument();});window.addEventListener("keydown",function(event){if(event.key!=="Escape")return;window.setTimeout(function(){if(event.defaultPrevented)return;window.parent.postMessage({type:CLOSE_TYPE},"*");},0);});})();</script>
-<script id="fixzy-info-display-sync">
-(function(){
-  function syncInfo(){
-    const map = {
-      akunLoginField: 'akunInfoDisplay',
-      konterField: 'konterInfoDisplay',
-      notaField: 'notaInfoDisplay',
-      tanggalField: 'tanggalInfoDisplay',
-      barcodeField: 'barcodeInfoDisplay'
-    };
-    Object.keys(map).forEach(function(srcId){
-      const src=document.getElementById(srcId);
-      const dst=document.getElementById(map[srcId]);
-      if(src && dst){
-        dst.textContent=src.value || 'Memuat...';
-      }
-    });
-  }
-
-  document.addEventListener('DOMContentLoaded', function(){
-    syncInfo();
-
-    ['akunLoginField','konterField','notaField','tanggalField','barcodeField']
-      .forEach(function(id){
-        const el=document.getElementById(id);
-        if(!el) return;
-        new MutationObserver(syncInfo).observe(el,{
-          attributes:true,
-          attributeFilter:['value']
-        });
-        el.addEventListener('input',syncInfo);
-        el.addEventListener('change',syncInfo);
-      });
-
-    // Nilai pada input readonly/hidden sering diubah lewat .value,
-    // jadi lakukan sinkronisasi singkat saat halaman Firebase selesai memuat.
-    let n=0;
-    const timer=setInterval(function(){
-      syncInfo();
-      n++;
-      if(n>=30) clearInterval(timer);
-    },300);
-  });
-})();
-</script>
-
-</body>
+<script>(function(){var loc=location.href.replace(/#.*$/,"");var ATTR_NAMES=["data-product-id","data-productid","data-product_id","product-id","productid","product_id","data-source-entity-id","source-entity-id","source_entity_id","data-product","data-metadata","data-meta"];var DATASET_KEYS=["productId","productid","product_id","sourceEntityId","sourceentityid","source_entity_id","product","metadata","meta"];function readProductId(value){if(typeof value!=="string"||value.length===0)return null;if(/^[0-9]{6,}$/.test(value))return value;var match=value.match(/(?:product(?:_|-)?id|source(?:_|-)?entity(?:_|-)?id)["'=:\s]+([0-9]{6,})/i);return match?match[1]:null}function extractProductId(start){for(var node=start;node&&node!==document.body;node=node.parentElement){for(var i=0;i<ATTR_NAMES.length;i++){var attrValue=node.getAttribute&&node.getAttribute(ATTR_NAMES[i]);var attrProductId=readProductId(attrValue);if(attrProductId)return attrProductId}var dataset=node.dataset||null;if(dataset){for(var j=0;j<DATASET_KEYS.length;j++){var dataValue=dataset[DATASET_KEYS[j]];var dataProductId=readProductId(dataValue);if(dataProductId)return dataProductId}}}return null}function isInlineMediaSlotElement(node){return !!(node&&node.getAttribute&&node.getAttribute("data-clippy-inline-media-slot")!==null)}function findInlineMediaSlot(start){for(var node=start;node&&node!==document.body;node=node.parentElement){if(isInlineMediaSlotElement(node))return node}return null}function readInlineMediaUrl(node){if(!node)return null;return node.getAttribute&&((node.getAttribute("data-clippy-inline-media-url")||node.getAttribute("data-url")||node.getAttribute("data_url")))||node.href||null}function stripHash(url){return String(url).replace(/#.*$/,"")}function urlsMatch(a,b){if(!a||!b)return false;try{return stripHash(new URL(a,loc).href)===stripHash(new URL(b,loc).href)}catch(_){return stripHash(a)===stripHash(b)}}function isFirstPartyReelUrl(value){try{var url=new URL(value,loc);if(url.protocol!=="https:")return false;var host=url.hostname.toLowerCase();var supported=host==="instagram.com"||host.endsWith(".instagram.com")||host==="facebook.com"||host.endsWith(".facebook.com");return supported&&/\/reels?\//i.test(url.pathname)}catch(_){return false}}function isInlineMediaUrlClick(node,href){var slot=findInlineMediaSlot(node);if(!slot)return false;var slotUrl=readInlineMediaUrl(slot);if(slotUrl)return urlsMatch(href,slotUrl);return isFirstPartyReelUrl(href)}function findDataHref(start){for(var node=start;node&&node!==document.body;node=node.parentElement){if(node.getAttribute){var href=node.getAttribute("data-href")||node.getAttribute("data-url");if(href)return{href:href,node:node}}}return null}var nativeOpen=window.open;window.open=function(url){if(parent!==window&&typeof url==="string"&&/^https?:\/\//.test(url)){parent.postMessage({type:"ecto:usercontent-link-click",href:url},"*");return null}return nativeOpen?nativeOpen.apply(window,arguments):null};document.addEventListener("click",function(e){var target=e.target instanceof Element?e.target:null;if(!target)return;if(parent===window)return;var a=target.closest?target.closest("a[href]"):null;if(a&&a.href&&/^https?:\/\//.test(a.href)&&a.href.replace(/#.*$/,"")!==loc){if(isInlineMediaUrlClick(a,a.href))return;var productId=extractProductId(target)||extractProductId(a);if(productId){e.preventDefault();parent.postMessage({type:"ecto-artifact-link-click",productId:productId},"*");return}e.preventDefault();parent.postMessage({type:"ecto:usercontent-link-click",href:a.href},"*");return}var dataHref=findDataHref(target);if(dataHref&&/^https?:\/\//.test(dataHref.href)&&dataHref.href.replace(/#.*$/,"")!==loc){if(isInlineMediaUrlClick(dataHref.node,dataHref.href))return;e.preventDefault();parent.postMessage({type:"ecto:usercontent-link-click",href:dataHref.href},"*")}},true)})();</script><script>(function(){var FOCUS_TYPE="ecto:artifact-focus-request";var CLOSE_TYPE="ecto:artifact-close-request";function focusArtifactDocument(){var body=document.body;if(!body)return;try{window.focus();}catch(e){}if(!body.hasAttribute("tabindex"))body.setAttribute("tabindex","-1");try{body.focus({preventScroll:true});}catch(e){try{body.focus();}catch(e2){}}}window.addEventListener("message",function(event){if(event.source!==window.parent)return;var data=event.data;if(!data||typeof data!=="object"||data.type!==FOCUS_TYPE)return;if(document.readyState==="loading"){document.addEventListener("DOMContentLoaded",focusArtifactDocument,{once:true});return;}focusArtifactDocument();});window.addEventListener("keydown",function(event){if(event.key!=="Escape")return;window.setTimeout(function(){if(event.defaultPrevented)return;window.parent.postMessage({type:CLOSE_TYPE},"*");},0);});})();</script></body>
 </html>
