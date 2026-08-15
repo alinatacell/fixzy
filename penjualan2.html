@@ -21,81 +21,6 @@
 :where(code, pre, kbd, samp) {
   font-family: "Optimistic Mono", ui-monospace, monospace;
 }
-
-/* ===== FIXZY 3D BLACK SHADOW THEME ===== */
-.card{
-  background:#fff;
-  border:2px solid #111827 !important;
-  border-radius:12px !important;
-  padding:15px !important;
-  margin-bottom:14px !important;
-  box-shadow:4px 4px 0 #111827 !important;
-  transition:transform .14s ease,box-shadow .14s ease;
-}
-.card:active{
-  transform:translate(2px,2px);
-  box-shadow:2px 2px 0 #111827 !important;
-}
-.card-header{
-  font-weight:900;
-  font-size:13px;
-  margin-bottom:10px;
-  padding-bottom:8px;
-  border-bottom:2px solid #111827 !important;
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-}
-input,select,textarea{
-  padding:11px !important;
-  border:2px solid #111827 !important;
-  border-radius:8px !important;
-  box-shadow:2px 2px 0 #111827 !important;
-}
-button{
-  border:2px solid #111827;
-  box-shadow:3px 3px 0 #000;
-  transition:transform .12s ease,box-shadow .12s ease;
-}
-button:active{transform:translate(2px,2px);box-shadow:1px 1px 0 #000}
-.logo{border:2px solid #000 !important;box-shadow:3px 3px 0 #000}
-.produk-dropdown{border:2px solid #111827 !important;box-shadow:5px 5px 0 #000 !important}
-.produk-item{border-bottom:2px solid #e5e7eb !important}
-.modal-box{border:2px solid #111827 !important;box-shadow:6px 6px 0 #000 !important}
-.rincian-table{border:2px solid #111827;border-radius:10px;overflow:hidden}
-.rincian-table th{border-bottom:2px solid #111827 !important}
-body.dark .card{
-  border-color:#000 !important;
-  box-shadow:5px 5px 0 #000 !important;
-}
-body.dark input,body.dark select,body.dark textarea{
-  border-color:#000 !important;
-  box-shadow:2px 2px 0 #000 !important;
-}
-
-
-.rincian-table{
-  border:2px solid #111827;
-  border-radius:9px;
-  overflow:hidden;
-  box-shadow:3px 3px 0 #111827;
-}
-.rincian-table th{
-  border-bottom:2px solid #111827 !important;
-}
-body.dark .card{
-  background:#1e293b !important;
-  border-color:#000 !important;
-  box-shadow:4px 4px 0 #000 !important;
-}
-body.dark .card-header{
-  border-bottom-color:#334155 !important;
-}
-@media(max-width:700px){
-  main{padding:10px}
-  .card{padding:15px !important;margin-bottom:14px !important}
-}
-
 </style>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
@@ -110,7 +35,7 @@ button{border:0;border-radius:9px;padding:9px 12px;font-weight:800;cursor:pointe
 .btn-refresh{background:transparent;color:#fff;border:1px solid #ffffff30;padding:8px 10px;font-size:13px}
 .btn-refresh:hover{background:#1e293b}
 .btn-dark{background:#000;color:#fff;border:1px solid #ffffff20}
-main{max-width:920px;margin:auto;padding:12px}
+main{max-width:1000px;margin:auto;padding:12px}
 input,select,textarea{padding:10px;border:1px solid #cbd5e1;border-radius:10px;background:#fff;color:#111827;font-size:13px;width:100%}
 body.dark input,body.dark select,body.dark textarea{background:#1e293b;border-color:#ffffff15;color:#e5e7eb}
 .card{background:#fff;border:1px solid #e5e7eb;border-radius:16px;padding:16px;margin-bottom:14px}
@@ -179,29 +104,10 @@ let currentUser=null, ownerUid=null, isOwner=false, allProduk=[], konterName="",
 
 onAuthStateChanged(auth, async u=>{
   if(!u){ location.href="login.html"; return; }
-
   currentUser=u;
-
-  // Isi Informasi Transaksi SECEPATNYA dari Firebase Auth.
-  // Jangan menunggu query Firestore agar panel tidak tertahan "Memuat...".
-  const akunEmail = u.email || u.uid || '-';
-  document.getElementById('akunSide').textContent=akunEmail;
+  document.getElementById('akunSide').textContent=u.email;
   document.getElementById('namaToko').textContent='Input Penjualan';
-  document.getElementById('akunLoginField').value=akunEmail;
-
-  // Nilai transaksi dasar dibuat langsung sebelum membaca profil usaha.
-  // Dengan begitu panel selalu mempunyai data meskipun query profil Firestore lambat/gagal.
-  const tanggalAwal = new Date().toISOString().slice(0,10);
-  document.getElementById('tanggalField').value=tanggalAwal;
-  autoGenerateNotaBarcode();
-
-  // Tampilkan data minimum sekarang juga.
-  document.getElementById('infoAkun').textContent=akunEmail;
-  document.getElementById('infoUsaha').textContent='Memuat usaha...';
-  document.getElementById('infoNota').textContent=document.getElementById('notaField').value || '-';
-  document.getElementById('infoTanggal').textContent=tanggalAwal;
-  document.getElementById('infoBarcode').textContent=document.getElementById('barcodeField').value || '-';
-
+  document.getElementById('akunLoginField').value=u.email;
   try{
     const snap=await getDocs(query(collection(db,"users"), where("__name__","==", u.uid)));
     let p=null;
@@ -234,35 +140,11 @@ onAuthStateChanged(auth, async u=>{
       document.getElementById('roleSide').style.background=isOwner?'#16a34a':'#2563eb';
     }
   }catch(e){ ownerUid=u.uid; isOwner=true; konterName="Fixzy - A Yudi Thea"; }
-  if(!konterName || /^Fixzy\s*-\s*A Yudi Thea$/i.test(konterName)){
-    konterName = konterName || 'A Yudi Thea';
-  }
   document.getElementById('konterField').value=konterName;
-  if(!document.getElementById('tanggalField').value){
-    document.getElementById('tanggalField').value=new Date().toISOString().slice(0,10);
-  }
-  if(!document.getElementById('notaField').value || !document.getElementById('barcodeField').value){
-    autoGenerateNotaBarcode();
-  }
-
-  // Sinkronkan panel setelah nama usaha/profil selesai diketahui.
-  // Tidak boleh gagal hanya karena elemen/Firestore lain bermasalah.
-  try{
-    syncInfoTransaksiHeader();
-  }catch(err){
-    console.error('Gagal sinkron panel informasi transaksi:', err);
-    document.getElementById('infoAkun').textContent=akunEmail;
-    document.getElementById('infoUsaha').textContent=konterName || 'A Yudi Thea';
-    document.getElementById('infoNota').textContent=document.getElementById('notaField').value || '-';
-    document.getElementById('infoTanggal').textContent=document.getElementById('tanggalField').value || tanggalAwal;
-    document.getElementById('infoBarcode').textContent=document.getElementById('barcodeField').value || '-';
-  }
-
-  try{ await loadKaryawan(); }catch(err){ console.error('loadKaryawan:',err); }
-  try{ await loadProduk(); }catch(err){ console.error('loadProduk:',err); }
-
-  // Final refresh panel setelah seluruh proses selesai.
-  try{ syncInfoTransaksiHeader(); }catch(err){ console.error('syncInfo final:',err); }
+  document.getElementById('tanggalField').valueAsDate=new Date();
+  autoGenerateNotaBarcode();
+  await loadKaryawan();
+  await loadProduk();
 });
 
 async function loadKaryawan(){
@@ -621,35 +503,6 @@ function hitungSisa(){
   document.getElementById('sisaDisplay').textContent='Rp ' + sisa.toLocaleString('id-ID');
 }
 
-
-function syncInfoTransaksiHeader(){
-  const akun=document.getElementById('akunLoginField');
-  const usaha=document.getElementById('konterField');
-  const nota=document.getElementById('notaField');
-  const tanggal=document.getElementById('tanggalField');
-  const barcode=document.getElementById('barcodeField');
-
-  if(akun && currentUser) akun.value=currentUser.email || '';
-  if(usaha && konterName) usaha.value=konterName;
-  if(tanggal && !tanggal.value) tanggal.value=new Date().toISOString().slice(0,10);
-  if(nota && !nota.value) autoGenerateNotaBarcode();
-  if(barcode && !barcode.value) autoGenerateNotaBarcode();
-
-  document.getElementById('infoAkun').textContent=akun?.value || currentUser?.email || currentUser?.uid || '-';
-  document.getElementById('infoUsaha').textContent=usaha?.value || konterName || 'A Yudi Thea';
-  document.getElementById('infoNota').textContent=nota?.value || '-';
-  document.getElementById('infoTanggal').textContent=tanggal?.value || new Date().toISOString().slice(0,10);
-  document.getElementById('infoBarcode').textContent=barcode?.value || '-';
-
-  const role=document.getElementById('roleSide');
-  const email=document.getElementById('akunSide');
-  if(email && currentUser) email.textContent=currentUser.email || 'Memuat akun...';
-  if(role){
-    role.textContent=isOwner ? 'OWNER' : 'KARYAWAN';
-    role.style.background=isOwner ? '#16a34a' : '#2563eb';
-  }
-}
-
 function autoGenerateNotaBarcode(){
   const now=new Date();
   const dd=String(now.getDate()).padStart(2,'0');
@@ -667,7 +520,7 @@ window.batalInput=()=>{
     rincianItems=[];
     renderRincian();
     document.getElementById('inputForm').reset();
-    document.getElementById('tanggalField').value=new Date().toISOString().slice(0,10);
+    document.getElementById('tanggalField').valueAsDate=new Date();
     autoGenerateNotaBarcode();
   }
 }
@@ -866,428 +719,122 @@ document.addEventListener('DOMContentLoaded', ()=>{
 });
 </script>
 
-<style id="fixzy-input-service-header">
-/* HEADER INPUT PENJUALAN - disamakan dengan HEADER INPUT SERVIS */
-header{
-  min-height:88px !important;
-  box-sizing:border-box !important;
-  padding:12px 18px !important;
-  background:#0f172a !important;
+<style id="fixzy-header-info-only">
+/* ===== HEADER INPUT PENJUALAN — mengikuti INPUT SERVIS ===== */
+.fixzy-sales-header{
+  background:#111827 !important;
   color:#fff !important;
-  display:flex !important;
-  align-items:center !important;
-  gap:14px !important;
+  padding:10px 14px !important;
   position:sticky !important;
   top:0 !important;
   z-index:100 !important;
-  box-shadow:0 2px 8px rgba(0,0,0,.28) !important;
+  border-bottom:2px solid #000 !important;
+  box-shadow:0 3px 0 #000 !important;
 }
-header > div:first-child{
-  display:flex !important;
-  align-items:center !important;
-  gap:14px !important;
-  min-width:0 !important;
-}
-header .logo{
-  width:72px !important;
-  height:72px !important;
-  min-width:72px !important;
-  flex:0 0 72px !important;
-  background:#000 !important;
-  border:2px solid #facc15 !important;
-  border-radius:18px !important;
-  box-shadow:3px 3px 0 #000 !important;
-  overflow:hidden !important;
-}
-header .logo img{
-  width:100% !important;
-  height:100% !important;
-  object-fit:contain !important;
-  background:#000 !important;
-}
-#namaToko{
-  font-size:25px !important;
-  line-height:1.05 !important;
-  font-weight:900 !important;
-  color:#fff !important;
-}
-#roleSide{
-  padding:4px 10px !important;
-  border-radius:14px !important;
-  font-size:11px !important;
-  font-weight:900 !important;
-  line-height:1 !important;
-}
-#akunSide{
-  font-size:16px !important;
-  line-height:1.15 !important;
-  font-weight:700 !important;
-  max-width:360px !important;
-  margin-top:5px !important;
-  opacity:.92 !important;
-}
-header > div:nth-child(2){flex:1 !important}
-header button[onclick="refreshHalaman()"]{
-  background:#16263b !important;
-  color:#fff !important;
-  border:2px solid #30445b !important;
-  border-radius:16px !important;
-  box-shadow:none !important;
-  min-width:150px !important;
-  min-height:58px !important;
-  padding:12px 22px !important;
-  font-size:22px !important;
-  font-weight:900 !important;
-}
-header button[onclick="refreshHalaman()"]:active{
-  transform:translate(1px,1px) !important;
-  box-shadow:none !important;
-}
-#btnDark{
-  width:64px !important;
-  min-width:64px !important;
-  height:58px !important;
-  margin-left:0 !important;
-  padding:0 !important;
-  background:#16263b !important;
-  color:#fff !important;
-  border:2px solid #30445b !important;
-  border-radius:16px !important;
-  box-shadow:none !important;
-  font-size:28px !important;
-}
-@media(max-width:700px){
-  header{
-    min-height:82px !important;
-    padding:9px 12px !important;
-    gap:10px !important;
-  }
-  header > div:first-child{gap:10px !important}
-  header .logo{
-    width:64px !important;
-    height:64px !important;
-    min-width:64px !important;
-    flex-basis:64px !important;
-    border-radius:16px !important;
-  }
-  #namaToko{font-size:21px !important}
-  #roleSide{font-size:9px !important;padding:4px 8px !important}
-  #akunSide{
-    font-size:13px !important;
-    max-width:210px !important;
-    margin-top:4px !important;
-  }
-  header button[onclick="refreshHalaman()"]{
-    min-width:0 !important;
-    width:112px !important;
-    min-height:52px !important;
-    padding:9px 12px !important;
-    font-size:18px !important;
-    border-radius:14px !important;
-  }
-  #btnDark{
-    width:54px !important;
-    min-width:54px !important;
-    height:52px !important;
-    border-radius:14px !important;
-    font-size:24px !important;
-  }
-}
-@media(max-width:430px){
-  header .logo{width:58px !important;height:58px !important;min-width:58px !important;flex-basis:58px !important}
-  #namaToko{font-size:18px !important}
-  #akunSide{font-size:11px !important;max-width:155px !important}
-  header button[onclick="refreshHalaman()"]{width:88px !important;font-size:15px !important}
-  #btnDark{width:48px !important;min-width:48px !important;height:48px !important;font-size:21px !important}
-}
-</style>
-
-
-<style>
-/* ===== HEADER 1: INFORMASI TRANSAKSI - STYLE INPUT SERVIS ===== */
-.info-transaksi-card{
-  padding:18px !important;
-}
-.info-transaksi-title{
-  font-size:24px;
-  font-weight:900;
-  color:#111827;
-  margin:0 0 14px;
-  padding:0 0 12px;
-  border-bottom:2px solid #111827;
-  line-height:1.2;
-}
-.info-transaksi-box{
-  border:2px solid #111827;
-  border-radius:14px;
-  overflow:hidden;
-  box-shadow:3px 3px 0 #111827;
-  background:#fff;
-}
-.info-transaksi-row{
-  min-height:54px;
-  display:grid;
-  grid-template-columns:180px minmax(0,1fr);
+.fixzy-sales-head{
+  width:100%;
+  max-width:920px;
+  margin:auto;
+  display:flex;
   align-items:center;
   gap:12px;
-  padding:0 16px;
-  border-bottom:1px solid #e5e7eb;
-  box-sizing:border-box;
+  min-height:52px;
 }
-.info-transaksi-row:last-child{
-  border-bottom:0;
+.fixzy-sales-logo{
+  width:52px !important;
+  height:52px !important;
+  border-radius:14px !important;
+  object-fit:contain;
+  background:#000;
+  padding:4px;
+  border:1px solid #ffffff20;
+  flex:0 0 52px;
 }
-.info-transaksi-label{
-  color:#64748b;
-  font-size:17px;
-  font-weight:800;
-}
-.info-transaksi-value{
+.fixzy-sales-head-info{
   min-width:0;
-  text-align:right;
-  font-size:17px;
-  font-weight:900;
-  color:#111827;
+  flex:1;
+  line-height:1.2;
+}
+.fixzy-sales-title-row{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  min-width:0;
+}
+.fixzy-sales-title-row #namaToko{
+  font-size:18px !important;
+  font-weight:900 !important;
+  white-space:nowrap;
+}
+.fixzy-role-badge{
+  display:inline-flex;
+  align-items:center;
+  padding:5px 9px;
+  border-radius:999px;
+  background:#16c75b !important;
+  color:#fff !important;
+  font-size:11px !important;
+  font-weight:900 !important;
+  white-space:nowrap;
+}
+.fixzy-head-email{
+  display:block;
+  margin-top:2px;
+  font-size:11px !important;
+  color:#9ca3af !important;
+  font-weight:700 !important;
   white-space:nowrap;
   overflow:hidden;
   text-overflow:ellipsis;
+  max-width:480px;
 }
-.info-transaksi-value input,
-.info-transaksi-value select{
-  width:100% !important;
-  padding:0 !important;
-  margin:0 !important;
-  border:0 !important;
-  box-shadow:none !important;
-  border-radius:0 !important;
-  background:transparent !important;
-  color:#111827 !important;
-  font-size:17px !important;
-  font-weight:900 !important;
-  text-align:right;
-  outline:none !important;
+.fixzy-sales-actions{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  flex:none;
 }
-.info-transaksi-value select{
-  appearance:none;
-  -webkit-appearance:none;
-  pointer-events:none;
-}
-.info-transaksi-hidden-tech{
-  display:none !important;
-}
-body.dark .info-transaksi-title{
-  color:#f1f5f9;
-  border-bottom-color:#334155;
-}
-body.dark .info-transaksi-box{
-  background:#1e293b;
-  border-color:#000;
-  box-shadow:3px 3px 0 #000;
-}
-body.dark .info-transaksi-row{
-  border-bottom-color:#334155;
-}
-body.dark .info-transaksi-label{
-  color:#94a3b8;
-}
-body.dark .info-transaksi-value,
-body.dark .info-transaksi-value input,
-body.dark .info-transaksi-value select{
-  color:#f1f5f9 !important;
-}
-@media(max-width:700px){
-  .info-transaksi-card{
-    padding:16px !important;
-  }
-  .info-transaksi-title{
-    font-size:22px;
-  }
-  .info-transaksi-row{
-    min-height:54px;
-    grid-template-columns:105px minmax(0,1fr);
-    gap:8px;
-    padding:0 14px;
-  }
-  .info-transaksi-label{
-    font-size:16px;
-  }
-  .info-transaksi-value,
-  .info-transaksi-value input,
-  .info-transaksi-value select{
-    font-size:16px !important;
-  }
-}
-@media(max-width:380px){
-  .info-transaksi-row{
-    grid-template-columns:92px minmax(0,1fr);
-    padding:0 11px;
-  }
-  .info-transaksi-label{
-    font-size:14px;
-  }
-  .info-transaksi-value,
-  .info-transaksi-value input,
-  .info-transaksi-value select{
-    font-size:14px !important;
-  }
-}
-</style>
-
-
-<style id="pelanggan-satu-panel">
-.pelanggan-group-card{
-  padding:18px!important;background:#fff!important;
-  border:2px solid #111827!important;border-radius:14px!important;
-  box-shadow:4px 4px 0 #111827!important;
-}
-.pelanggan-group-title{
-  margin:0!important;padding:0 0 12px!important;
-  border-bottom:2px solid #111827!important;
-  font-size:24px!important;font-weight:900!important;
-  background:transparent!important;
-}
-.pelanggan-group-body{
-  margin-top:14px;border:2px solid #111827;border-radius:14px;
-  overflow:hidden;box-shadow:3px 3px 0 #111827;background:#fff;
-}
-.pelanggan-field{
-  padding:0 16px;border-bottom:1px solid #e5e7eb;
-}
-.pelanggan-field:last-child{border-bottom:0}
-.pelanggan-field label{
-  display:block!important;margin:12px 0 6px!important;
-  color:#64748b!important;font-size:16px!important;font-weight:800!important;
-}
-.pelanggan-field input,.pelanggan-field textarea{
-  width:100%!important;box-sizing:border-box!important;
-  margin:0 0 12px!important;border:2px solid #111827!important;
-  border-radius:12px!important;box-shadow:3px 3px 0 #111827!important;
-  background:#fff!important;color:#111827!important;
-}
-.pelanggan-field textarea{min-height:105px!important}
-body.dark .pelanggan-group-card,body.dark .pelanggan-group-body{
-  background:#1e293b!important;color:#f1f5f9!important;
-}
-@media(max-width:700px){
- .pelanggan-group-card{padding:16px!important}
- .pelanggan-group-title{font-size:22px!important}
- .pelanggan-field{padding:0 12px}
-}
-</style>
-
-
-<style id="header-input-servis-final">
-.info-transaksi-card{padding:18px!important;background:#fff!important;border:2px solid #111827!important;border-radius:14px!important;box-shadow:4px 4px 0 #111827!important}
-.info-transaksi-title{font-size:24px!important;font-weight:900!important;color:#111827!important;margin:0 0 14px!important;padding:0 0 12px!important;border-bottom:2px solid #111827!important;line-height:1.2!important}
-.info-transaksi-box{border:2px solid #111827!important;border-radius:14px!important;overflow:hidden!important;box-shadow:3px 3px 0 #111827!important;background:#fff!important}
-.info-transaksi-row{min-height:54px!important;display:grid!important;grid-template-columns:180px minmax(0,1fr)!important;align-items:center!important;gap:12px!important;padding:0 16px!important;border-bottom:1px solid #e5e7eb!important;box-sizing:border-box!important}
-.info-transaksi-row:last-child{border-bottom:0!important}
-.info-transaksi-label{color:#64748b!important;font-size:17px!important;font-weight:800!important}
-.info-transaksi-value{min-width:0!important;text-align:right!important;font-size:17px!important;font-weight:900!important;color:#111827!important}
-.info-transaksi-value input{width:100%!important;padding:0!important;margin:0!important;border:0!important;box-shadow:none!important;border-radius:0!important;background:transparent!important;color:#111827!important;font-size:17px!important;font-weight:900!important;text-align:right!important}
-.info-transaksi-hidden-tech{display:none!important}
-@media(max-width:700px){.info-transaksi-card{padding:16px!important}.info-transaksi-title{font-size:22px!important}.info-transaksi-row{min-height:54px!important;grid-template-columns:105px minmax(0,1fr)!important;gap:8px!important;padding:0 14px!important}.info-transaksi-label{font-size:16px!important}.info-transaksi-value,.info-transaksi-value input{font-size:16px!important}}
-@media(max-width:380px){.info-transaksi-row{grid-template-columns:92px minmax(0,1fr)!important;padding:0 11px!important}.info-transaksi-label{font-size:14px!important}.info-transaksi-value,.info-transaksi-value input{font-size:14px!important}}
-</style>
-
-
-<style id="FINAL-SAMA-INPUT-SERVIS">
-/* ===== HEADER ATAS — SAMA DENGAN INPUT SERVIS ===== */
-body > header{
-  background:#0f1b2f !important;
+.fixzy-refresh{
+  background:#1e293b !important;
   color:#fff !important;
-  min-height:96px !important;
-  padding:14px 22px !important;
-  margin:0 !important;
-  border-bottom:0 !important;
-  box-shadow:0 4px 0 #000 !important;
-  box-sizing:border-box !important;
-  display:flex !important;
-  align-items:center !important;
-  gap:16px !important;
-}
-body > header > div:first-child{
-  display:flex !important;
-  align-items:center !important;
-  gap:16px !important;
-  min-width:0 !important;
-}
-body > header .logo{
-  width:74px !important;
-  height:74px !important;
-  min-width:74px !important;
-  flex:0 0 74px !important;
-  border:2px solid #facc15 !important;
-  border-radius:18px !important;
-  background:#000 !important;
-  box-shadow:3px 3px 0 #000 !important;
-  overflow:hidden !important;
-}
-body > header .logo img{
-  width:100% !important;
-  height:100% !important;
-  object-fit:contain !important;
-  background:#000 !important;
-}
-body > header #namaToko{
-  font-size:28px !important;
-  line-height:1.05 !important;
-  font-weight:900 !important;
-  color:#fff !important;
-}
-body > header #roleSide{
-  background:#16a34a !important;
-  color:#fff !important;
-  padding:7px 12px !important;
-  border-radius:18px !important;
+  border:2px solid #334155 !important;
+  border-radius:12px !important;
+  height:44px !important;
+  padding:9px 14px !important;
   font-size:12px !important;
-  font-weight:900 !important;
-  line-height:1 !important;
+  font-weight:800 !important;
 }
-body > header #akunSide{
-  font-size:18px !important;
-  line-height:1.1 !important;
-  font-weight:700 !important;
-  max-width:420px !important;
-  margin-top:6px !important;
-  opacity:.92 !important;
+.fixzy-refresh:hover{
+  background:#facc15 !important;
+  color:#000 !important;
 }
-body > header > div:nth-child(2){flex:1 !important}
-body > header button[onclick="refreshHalaman()"]{
-  background:#16263b !important;
-  color:#fff !important;
-  border:2px solid #30445b !important;
-  border-radius:18px !important;
-  box-shadow:none !important;
-  min-width:150px !important;
-  height:60px !important;
-  padding:12px 24px !important;
-  font-size:23px !important;
-  font-weight:900 !important;
-}
-body > header #btnDark{
-  width:66px !important;
-  min-width:66px !important;
-  height:60px !important;
-  margin-left:0 !important;
+.fixzy-theme-btn{
+  width:44px !important;
+  height:44px !important;
   padding:0 !important;
-  background:#16263b !important;
+  border:2px solid #334155 !important;
+  border-radius:12px !important;
+  background:#1e293b !important;
   color:#fff !important;
-  border:2px solid #30445b !important;
-  border-radius:18px !important;
-  box-shadow:none !important;
-  font-size:30px !important;
+  font-size:18px !important;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}
+.fixzy-theme-btn:hover{
+  background:#facc15 !important;
+  color:#000 !important;
 }
 
 /* ===== HEADER 1 / INFORMASI TRANSAKSI — SAMA DENGAN INPUT SERVIS ===== */
-.info-transaksi-card{
+.fixzy-info-transaksi-card{
   padding:24px !important;
   border:2px solid #111827 !important;
   border-radius:18px !important;
   box-shadow:6px 6px 0 #111827 !important;
   background:#fff !important;
 }
-.info-transaksi-title{
+.fixzy-info-transaksi-title{
   font-size:30px !important;
   font-weight:900 !important;
   color:#111827 !important;
@@ -1296,14 +843,14 @@ body > header #btnDark{
   border-bottom:2px solid #111827 !important;
   line-height:1.15 !important;
 }
-.info-transaksi-box{
+.fixzy-info-transaksi-box{
   border:2px solid #111827 !important;
   border-radius:18px !important;
   overflow:hidden !important;
   box-shadow:5px 5px 0 #111827 !important;
   background:#fff !important;
 }
-.info-transaksi-row{
+.fixzy-info-transaksi-row{
   min-height:68px !important;
   display:grid !important;
   grid-template-columns:240px minmax(0,1fr) !important;
@@ -1313,212 +860,130 @@ body > header #btnDark{
   border-bottom:1px solid #e5e7eb !important;
   box-sizing:border-box !important;
 }
-.info-transaksi-row:last-child{border-bottom:0 !important}
-.info-transaksi-label{
+.fixzy-info-transaksi-row:last-child{border-bottom:0 !important}
+.fixzy-info-transaksi-row span{
   color:#64748b !important;
   font-size:21px !important;
   font-weight:800 !important;
 }
-.info-transaksi-value{
+.fixzy-info-transaksi-row b{
   min-width:0 !important;
   text-align:right !important;
   font-size:21px !important;
   font-weight:900 !important;
   color:#111827 !important;
+  white-space:nowrap !important;
+  overflow:hidden !important;
+  text-overflow:ellipsis !important;
 }
-.info-transaksi-value input{
-  width:100% !important;
-  padding:0 !important;
-  margin:0 !important;
-  border:0 !important;
-  box-shadow:none !important;
-  border-radius:0 !important;
-  background:transparent !important;
-  color:#111827 !important;
-  font-size:21px !important;
-  font-weight:900 !important;
-  text-align:right !important;
-  outline:none !important;
-}
-.info-transaksi-hidden-tech{display:none !important}
+.fixzy-hidden-tech{display:none !important}
 
-@media(max-width:700px){
-  body > header{
-    min-height:82px !important;
-    padding:9px 12px !important;
-    gap:10px !important;
-  }
-  body > header > div:first-child{gap:10px !important}
-  body > header .logo{
-    width:64px !important;height:64px !important;
-    min-width:64px !important;flex-basis:64px !important;
-    border-radius:16px !important;
-  }
-  body > header #namaToko{font-size:21px !important}
-  body > header #roleSide{font-size:10px !important;padding:5px 9px !important}
-  body > header #akunSide{
-    font-size:13px !important;
-    max-width:210px !important;
-    margin-top:4px !important;
-  }
-  body > header button[onclick="refreshHalaman()"]{
-    width:112px !important;min-width:112px !important;
-    height:54px !important;padding:9px 12px !important;
-    font-size:18px !important;border-radius:15px !important;
-  }
-  body > header #btnDark{
-    width:56px !important;min-width:56px !important;
-    height:54px !important;border-radius:15px !important;
-    font-size:25px !important;
-  }
-  .info-transaksi-card{padding:16px !important}
-  .info-transaksi-title{
-    font-size:25px !important;
-    margin-bottom:15px !important;
-    padding-bottom:12px !important;
-  }
-  .info-transaksi-box{
-    border-radius:15px !important;
-    box-shadow:4px 4px 0 #111827 !important;
-  }
-  .info-transaksi-row{
-    min-height:58px !important;
-    grid-template-columns:115px minmax(0,1fr) !important;
-    gap:8px !important;
-    padding:0 14px !important;
-  }
-  .info-transaksi-label{font-size:17px !important}
-  .info-transaksi-value,
-  .info-transaksi-value input{font-size:17px !important}
+body.dark .fixzy-info-transaksi-card{
+  background:#151b23 !important;
+  color:#f3f4f6 !important;
+  border-color:#000 !important;
+  box-shadow:6px 6px 0 #000 !important;
 }
-@media(max-width:430px){
-  body > header .logo{
-    width:58px !important;height:58px !important;
-    min-width:58px !important;flex-basis:58px !important;
-  }
-  body > header #namaToko{font-size:18px !important}
-  body > header #akunSide{font-size:11px !important;max-width:155px !important}
-  body > header button[onclick="refreshHalaman()"]{
-    width:88px !important;min-width:88px !important;font-size:15px !important;
-  }
-  body > header #btnDark{
-    width:48px !important;min-width:48px !important;
-    height:48px !important;font-size:21px !important;
-  }
-  .info-transaksi-title{font-size:22px !important}
-  .info-transaksi-row{
-    grid-template-columns:92px minmax(0,1fr) !important;
-    padding:0 11px !important;
-  }
-  .info-transaksi-label{font-size:15px !important}
-  .info-transaksi-value,
-  .info-transaksi-value input{font-size:15px !important}
+body.dark .fixzy-info-transaksi-title{
+  color:#f1f5f9 !important;
+  border-bottom-color:#334155 !important;
 }
-</style>
-
-
-<style id="FINAL-INPUT-SERVIS-EXACT">
-header{
-  background:#111827 !important;color:#fff !important;padding:10px 14px !important;
-  position:sticky !important;top:0 !important;z-index:50 !important;
-  border-bottom:2px solid #000 !important;box-shadow:0 3px 0 #000 !important;
+body.dark .fixzy-info-transaksi-box{
+  background:#1e293b !important;
+  border-color:#000 !important;
+  box-shadow:5px 5px 0 #000 !important;
 }
-.head{
-  width:100% !important;max-width:920px !important;margin:auto !important;
-  display:flex !important;align-items:center !important;gap:12px !important;min-height:52px !important;
+body.dark .fixzy-info-transaksi-row{
+  border-bottom-color:#334155 !important;
 }
-.head-logo{
-  width:52px !important;height:52px !important;border-radius:14px !important;
-  object-fit:contain !important;background:#000 !important;padding:4px !important;
-  border:1px solid #ffffff20 !important;flex:0 0 52px !important;
+body.dark .fixzy-info-transaksi-row span{
+  color:#94a3b8 !important;
 }
-.head-info{min-width:0 !important;flex:1 !important;line-height:1.2 !important}
-.head-title-row{display:flex !important;align-items:center !important;gap:8px !important;min-width:0 !important}
-.head h1{font-size:18px !important;margin:0 !important;font-weight:900 !important;white-space:nowrap !important}
-.head-email{
-  display:block !important;margin-top:2px !important;font-size:11px !important;
-  color:#9ca3af !important;font-weight:700 !important;white-space:nowrap !important;
-  overflow:hidden !important;text-overflow:ellipsis !important;max-width:480px !important;
+body.dark .fixzy-info-transaksi-row b{
+  color:#f1f5f9 !important;
 }
-.role-badge{
-  display:inline-flex !important;align-items:center !important;padding:5px 9px !important;
-  border-radius:999px !important;background:#16c75b !important;color:#fff !important;
-  font-size:11px !important;font-weight:900 !important;white-space:nowrap !important;
-}
-.head-actions{display:flex !important;align-items:center !important;gap:8px !important;flex:none !important}
-.head button{border-radius:12px !important;font-weight:800 !important;cursor:pointer !important}
-.refresh{
-  background:#1e293b !important;color:#fff !important;border:2px solid #334155 !important;
-  height:44px !important;padding:9px 14px !important;font-size:12px !important;box-shadow:none !important;
-}
-.theme-btn{
-  width:44px !important;height:44px !important;padding:0 !important;
-  border:2px solid #334155 !important;background:#1e293b !important;color:#fff !important;
-  font-size:18px !important;display:flex !important;align-items:center !important;
-  justify-content:center !important;box-shadow:none !important;
-}
-.refresh:hover,.theme-btn:hover{background:#facc15 !important;color:#000 !important}
-
-.info-transaksi-card{
-  background:#fff !important;border:2px solid #111827 !important;border-radius:12px !important;
-  padding:15px !important;margin-bottom:14px !important;box-shadow:4px 4px 0 #111827 !important;
-}
-.info-transaksi-title{
-  font-size:16px !important;font-weight:900 !important;color:#111827 !important;
-  border-bottom:2px solid #111827 !important;padding-bottom:9px !important;margin-bottom:12px !important;
-}
-.info-transaksi-box{
-  border:2px solid #111827 !important;border-radius:9px !important;overflow:hidden !important;
-  box-shadow:3px 3px 0 #111827 !important;background:#fff !important;
-}
-.info-transaksi-row{
-  display:flex !important;justify-content:space-between !important;align-items:center !important;
-  gap:12px !important;padding:9px 11px !important;min-height:42px !important;
-  border-bottom:1px solid #eee !important;font-size:12px !important;
-}
-.info-transaksi-row:last-child{border-bottom:0 !important}
-.info-transaksi-row span{color:#667085 !important;font-weight:700 !important}
-.info-transaksi-row b{
-  text-align:right !important;color:#111827 !important;font-weight:900 !important;
-  overflow-wrap:anywhere !important;
-}
-.info-transaksi-hidden-tech{display:none !important}
-
-body.dark .info-transaksi-card{background:#151b23 !important;color:#f3f4f6 !important;border-color:#000 !important;box-shadow:4px 4px 0 #000 !important}
-body.dark .info-transaksi-title{color:#f3f4f6 !important;border-bottom-color:#2b3440 !important}
-body.dark .info-transaksi-box{background:#151b23 !important;border-color:#2b3440 !important;box-shadow:3px 3px 0 #000 !important}
-body.dark .info-transaksi-row{border-bottom-color:#2b3440 !important}
-body.dark .info-transaksi-row span{color:#aeb7c4 !important}
-body.dark .info-transaksi-row b{color:#f3f4f6 !important}
 
 @media(max-width:650px){
-  header{padding:10px 14px !important}
-  .head{gap:8px !important;min-height:52px !important}
-  .head-logo{width:52px !important;height:52px !important;flex-basis:52px !important}
-  .head h1{font-size:16px !important}
-  .head-email{font-size:10px !important;max-width:240px !important}
-  .role-badge{font-size:10px !important;padding:4px 7px !important}
-  .head-actions{gap:6px !important}
-  .refresh{height:44px !important;padding:9px 12px !important;font-size:12px !important}
-  .theme-btn{width:44px !important;height:44px !important;font-size:18px !important}
+  .fixzy-sales-header{
+    padding:10px 14px !important;
+  }
+  .fixzy-sales-head{
+    gap:8px;
+    min-height:52px;
+  }
+  .fixzy-sales-logo{
+    width:52px !important;
+    height:52px !important;
+    flex-basis:52px !important;
+  }
+  .fixzy-sales-title-row #namaToko{
+    font-size:16px !important;
+  }
+  .fixzy-head-email{
+    font-size:10px !important;
+    max-width:240px !important;
+  }
+  .fixzy-role-badge{
+    font-size:10px !important;
+    padding:4px 7px !important;
+  }
+  .fixzy-sales-actions{
+    gap:6px;
+  }
+  .fixzy-refresh{
+    height:44px !important;
+    padding:9px 12px !important;
+    font-size:12px !important;
+  }
+  .fixzy-theme-btn{
+    width:44px !important;
+    height:44px !important;
+    font-size:18px !important;
+  }
+  .fixzy-info-transaksi-card{
+    padding:18px !important;
+    border-radius:14px !important;
+    box-shadow:4px 4px 0 #111827 !important;
+  }
+  .fixzy-info-transaksi-title{
+    font-size:24px !important;
+    margin-bottom:14px !important;
+    padding-bottom:12px !important;
+  }
+  .fixzy-info-transaksi-box{
+    border-radius:14px !important;
+    box-shadow:3px 3px 0 #111827 !important;
+  }
+  .fixzy-info-transaksi-row{
+    min-height:54px !important;
+    grid-template-columns:120px minmax(0,1fr) !important;
+    gap:10px !important;
+    padding:0 16px !important;
+  }
+  .fixzy-info-transaksi-row span,
+  .fixzy-info-transaksi-row b{
+    font-size:17px !important;
+  }
 }
 </style>
 
 </head>
 <body>
-<header>
-  <div class="head">
-    <img class="head-logo" src="logo.png" alt="FIXZY">
-    <div class="head-info">
-      <div class="head-title-row">
-        <h1>Input Penjualan</h1>
-        <span id="roleSide" class="role-badge">USER</span>
+<header class="fixzy-sales-header">
+  <div class="fixzy-sales-head">
+    <img class="fixzy-sales-logo" src="logo.png" alt="FIXZY">
+
+    <div class="fixzy-sales-head-info">
+      <div class="fixzy-sales-title-row">
+        <span id="namaToko">Input Penjualan</span>
+        <span id="roleSide" class="fixzy-role-badge">USER</span>
       </div>
-      <span id="akunSide" class="head-email">-</span>
+      <span id="akunSide" class="fixzy-head-email">Memuat akun...</span>
     </div>
-    <div class="head-actions">
-      <button class="refresh" type="button" onclick="refreshHalaman()">Refresh</button>
-      <button class="theme-btn" id="btnDark" type="button" onclick="toggleDarkMode()" aria-label="Mode gelap">🌙</button>
+
+    <div class="fixzy-sales-actions">
+      <button type="button" class="fixzy-refresh" onclick="refreshHalaman()">Refresh</button>
+      <button id="btnDark" type="button" class="fixzy-theme-btn" aria-label="Mode gelap">🌙</button>
     </div>
   </div>
 </header>
@@ -1526,37 +991,46 @@ body.dark .info-transaksi-row b{color:#f3f4f6 !important}
 <main>
 <form id="inputForm">
 
-<div class="card info-transaksi-card">
-  <div class="info-transaksi-title">1. Informasi Transaksi</div>
+<div class="card fixzy-info-transaksi-card">
+  <div class="fixzy-info-transaksi-title">1. Informasi Transaksi</div>
 
-  <!-- Hidden fields tetap dipertahankan karena dipakai logic Input Penjualan -->
+  <!-- Field asli TETAP dipertahankan karena dipakai logic penjualan2.html -->
   <input type="hidden" id="akunLoginField" value="">
   <input type="hidden" id="konterField" value="">
   <input type="hidden" id="notaField" value="">
   <input type="hidden" id="tanggalField" value="">
   <input type="hidden" id="barcodeField" value="">
 
-  <div class="info-transaksi-box">
-    <div class="info-transaksi-row"><span>Akun</span><b id="infoAkun">Memuat...</b></div>
-    <div class="info-transaksi-row"><span>Usaha</span><b id="infoUsaha">Memuat...</b></div>
-    <div class="info-transaksi-row"><span>Nomor Nota</span><b id="infoNota">Memuat...</b></div>
-    <div class="info-transaksi-row"><span>Tanggal</span><b id="infoTanggal">Memuat...</b></div>
-    <div class="info-transaksi-row"><span>Barcode</span><b id="infoBarcode">Memuat...</b></div>
+  <div class="fixzy-info-transaksi-box">
+    <div class="fixzy-info-transaksi-row">
+      <span>Akun</span><b id="fixzyInfoAkun">Memuat...</b>
+    </div>
+    <div class="fixzy-info-transaksi-row">
+      <span>Usaha</span><b id="fixzyInfoUsaha">Memuat...</b>
+    </div>
+    <div class="fixzy-info-transaksi-row">
+      <span>Nomor Nota</span><b id="fixzyInfoNota">Memuat...</b>
+    </div>
+    <div class="fixzy-info-transaksi-row">
+      <span>Tanggal</span><b id="fixzyInfoTanggal">Memuat...</b>
+    </div>
+    <div class="fixzy-info-transaksi-row">
+      <span>Barcode</span><b id="fixzyInfoBarcode">Memuat...</b>
+    </div>
   </div>
 
-  <div class="info-transaksi-hidden-tech">
+  <!-- Tetap ada agar fungsi loadKaryawan dan penyimpanan lama tidak berubah -->
+  <div class="fixzy-hidden-tech">
     <select id="teknisiSelect"><option>Memuat karyawan...</option></select>
   </div>
 </div>
 
-<div class="card pelanggan-group-card">
-  <div class="card-header pelanggan-group-title">
-    <span>2. Pelanggan</span>
-  </div>
-  <div class="pelanggan-group-body">
-    <div class="pelanggan-field"><label style="font-size:11px;font-weight:800">Nama Pelanggan *</label><input id="namaPelangganField" placeholder="Wajib" required></div>
-    <div class="pelanggan-field"><label style="font-size:11px;font-weight:800">No Whatsapp</label><input id="waField" placeholder="62..."></div>
-    <div class="pelanggan-field"><label style="font-size:11px;font-weight:800">Alamat</label><textarea id="alamatField" placeholder="Alamat pelanggan" style="min-height:60px"></textarea></div>
+<div class="card">
+  <div class="card-header"><span>HEADER 2 - Pelanggan</span></div>
+  <div><label style="font-size:11px;font-weight:800">Nama Pelanggan *</label><input id="namaPelangganField" placeholder="Wajib" required></div>
+  <div class="grid2" style="margin-top:10px">
+    <div><label style="font-size:11px;font-weight:800">No Whatsapp</label><input id="waField" placeholder="62..."></div>
+    <div><label style="font-size:11px;font-weight:800">Alamat</label><textarea id="alamatField" placeholder="Alamat pelanggan" style="min-height:60px"></textarea></div>
   </div>
 </div>
 
@@ -1649,7 +1123,35 @@ const s=localStorage.getItem('fixzy-dark');
 if(s==='1' || (!s && window.matchMedia('(prefers-color-scheme: dark)').matches)){ h.classList.add('dark'); document.body.classList.add('dark'); b.textContent='☀️'; }
 b.addEventListener('click', ()=>{ h.classList.toggle('dark'); document.body.classList.toggle('dark'); const d=h.classList.contains('dark'); localStorage.setItem('fixzy-dark', d?'1':'0'); b.textContent=d?'☀️':'🌙'; });
 </script>
-<script>(function(){var loc=location.href.replace(/#.*$/,"");var ATTR_NAMES=["data-product-id","data-productid","data-product_id","product-id","productid","product_id","data-source-entity-id","source-entity-id","source_entity_id","data-product","data-metadata","data-meta"];var DATASET_KEYS=["productId","productid","product_id","sourceEntityId","sourceentityid","source_entity_id","product","metadata","meta"];function readProductId(value){if(typeof value!=="string"||value.length===0)return null;if(/^[0-9]{6,}$/.test(value))return value;var match=value.match(/(?:product(?:_|-)?id|source(?:_|-)?entity(?:_|-)?id)["'=:\s]+([0-9]{6,})/i);return match?match[1]:null}function extractProductId(start){for(var node=start;node&&node!==document.body;node=node.parentElement){for(var i=0;i<ATTR_NAMES.length;i++){var attrValue=node.getAttribute&&node.getAttribute(ATTR_NAMES[i]);var attrProductId=readProductId(attrValue);if(attrProductId)return attrProductId}var dataset=node.dataset||null;if(dataset){for(var j=0;j<DATASET_KEYS.length;j++){var dataValue=dataset[DATASET_KEYS[j]];var dataProductId=readProductId(dataValue);if(dataProductId)return dataProductId}}}return null}function isInlineMediaSlotElement(node){return !!(node&&node.getAttribute&&node.getAttribute("data-clippy-inline-media-slot")!==null)}function findInlineMediaSlot(start){for(var node=start;node&&node!==document.body;node=node.parentElement){if(isInlineMediaSlotElement(node))return node}return null}function readInlineMediaUrl(node){if(!node)return null;return node.getAttribute&&((node.getAttribute("data-clippy-inline-media-url")||node.getAttribute("data-url")||node.getAttribute("data_url")))||node.href||null}function stripHash(url){return String(url).replace(/#.*$/,"")}function urlsMatch(a,b){if(!a||!b)return false;try{return stripHash(new URL(a,loc).href)===stripHash(new URL(b,loc).href)}catch(_){return stripHash(a)===stripHash(b)}}function isFirstPartyReelUrl(value){try{var url=new URL(value,loc);if(url.protocol!=="https:")return false;var host=url.hostname.toLowerCase();var supported=host==="instagram.com"||host.endsWith(".instagram.com")||host==="facebook.com"||host.endsWith(".facebook.com");return supported&&/\/reels?\//i.test(url.pathname)}catch(_){return false}}function isInlineMediaUrlClick(node,href){var slot=findInlineMediaSlot(node);if(!slot)return false;var slotUrl=readInlineMediaUrl(slot);if(slotUrl)return urlsMatch(href,slotUrl);return isFirstPartyReelUrl(href)}function findDataHref(start){for(var node=start;node&&node!==document.body;node=node.parentElement){if(node.getAttribute){var href=node.getAttribute("data-href")||node.getAttribute("data-url");if(href)return{href:href,node:node}}}return null}var nativeOpen=window.open;window.open=function(url){if(parent!==window&&typeof url==="string"&&/^https?:\/\//.test(url)){parent.postMessage({type:"ecto:usercontent-link-click",href:url},"*");return null}return nativeOpen?nativeOpen.apply(window,arguments):null};document.addEventListener("click",function(e){var target=e.target instanceof Element?e.target:null;if(!target)return;if(parent===window)return;var a=target.closest?target.closest("a[href]"):null;if(a&&a.href&&/^https?:\/\//.test(a.href)&&a.href.replace(/#.*$/,"")!==loc){if(isInlineMediaUrlClick(a,a.href))return;var productId=extractProductId(target)||extractProductId(a);if(productId){e.preventDefault();parent.postMessage({type:"ecto-artifact-link-click",productId:productId},"*");return}e.preventDefault();parent.postMessage({type:"ecto:usercontent-link-click",href:a.href},"*");return}var dataHref=findDataHref(target);if(dataHref&&/^https?:\/\//.test(dataHref.href)&&dataHref.href.replace(/#.*$/,"")!==loc){if(isInlineMediaUrlClick(dataHref.node,dataHref.href))return;e.preventDefault();parent.postMessage({type:"ecto:usercontent-link-click",href:dataHref.href},"*")}},true)})();</script><script>(function(){var FOCUS_TYPE="ecto:artifact-focus-request";var CLOSE_TYPE="ecto:artifact-close-request";function focusArtifactDocument(){var body=document.body;if(!body)return;try{window.focus();}catch(e){}if(!body.hasAttribute("tabindex"))body.setAttribute("tabindex","-1");try{body.focus({preventScroll:true});}catch(e){try{body.focus();}catch(e2){}}}window.addEventListener("message",function(event){if(event.source!==window.parent)return;var data=event.data;if(!data||typeof data!=="object"||data.type!==FOCUS_TYPE)return;if(document.readyState==="loading"){document.addEventListener("DOMContentLoaded",focusArtifactDocument,{once:true});return;}focusArtifactDocument();});window.addEventListener("keydown",function(event){if(event.key!=="Escape")return;window.setTimeout(function(){if(event.defaultPrevented)return;window.parent.postMessage({type:CLOSE_TYPE},"*");},0);});})();
-function refreshHalaman(){location.reload();} window.refreshHalaman=refreshHalaman;
-</script></body>
+<script>(function(){var loc=location.href.replace(/#.*$/,"");var ATTR_NAMES=["data-product-id","data-productid","data-product_id","product-id","productid","product_id","data-source-entity-id","source-entity-id","source_entity_id","data-product","data-metadata","data-meta"];var DATASET_KEYS=["productId","productid","product_id","sourceEntityId","sourceentityid","source_entity_id","product","metadata","meta"];function readProductId(value){if(typeof value!=="string"||value.length===0)return null;if(/^[0-9]{6,}$/.test(value))return value;var match=value.match(/(?:product(?:_|-)?id|source(?:_|-)?entity(?:_|-)?id)["'=:\s]+([0-9]{6,})/i);return match?match[1]:null}function extractProductId(start){for(var node=start;node&&node!==document.body;node=node.parentElement){for(var i=0;i<ATTR_NAMES.length;i++){var attrValue=node.getAttribute&&node.getAttribute(ATTR_NAMES[i]);var attrProductId=readProductId(attrValue);if(attrProductId)return attrProductId}var dataset=node.dataset||null;if(dataset){for(var j=0;j<DATASET_KEYS.length;j++){var dataValue=dataset[DATASET_KEYS[j]];var dataProductId=readProductId(dataValue);if(dataProductId)return dataProductId}}}return null}function isInlineMediaSlotElement(node){return !!(node&&node.getAttribute&&node.getAttribute("data-clippy-inline-media-slot")!==null)}function findInlineMediaSlot(start){for(var node=start;node&&node!==document.body;node=node.parentElement){if(isInlineMediaSlotElement(node))return node}return null}function readInlineMediaUrl(node){if(!node)return null;return node.getAttribute&&((node.getAttribute("data-clippy-inline-media-url")||node.getAttribute("data-url")||node.getAttribute("data_url")))||node.href||null}function stripHash(url){return String(url).replace(/#.*$/,"")}function urlsMatch(a,b){if(!a||!b)return false;try{return stripHash(new URL(a,loc).href)===stripHash(new URL(b,loc).href)}catch(_){return stripHash(a)===stripHash(b)}}function isFirstPartyReelUrl(value){try{var url=new URL(value,loc);if(url.protocol!=="https:")return false;var host=url.hostname.toLowerCase();var supported=host==="instagram.com"||host.endsWith(".instagram.com")||host==="facebook.com"||host.endsWith(".facebook.com");return supported&&/\/reels?\//i.test(url.pathname)}catch(_){return false}}function isInlineMediaUrlClick(node,href){var slot=findInlineMediaSlot(node);if(!slot)return false;var slotUrl=readInlineMediaUrl(slot);if(slotUrl)return urlsMatch(href,slotUrl);return isFirstPartyReelUrl(href)}function findDataHref(start){for(var node=start;node&&node!==document.body;node=node.parentElement){if(node.getAttribute){var href=node.getAttribute("data-href")||node.getAttribute("data-url");if(href)return{href:href,node:node}}}return null}var nativeOpen=window.open;window.open=function(url){if(parent!==window&&typeof url==="string"&&/^https?:\/\//.test(url)){parent.postMessage({type:"ecto:usercontent-link-click",href:url},"*");return null}return nativeOpen?nativeOpen.apply(window,arguments):null};document.addEventListener("click",function(e){var target=e.target instanceof Element?e.target:null;if(!target)return;if(parent===window)return;var a=target.closest?target.closest("a[href]"):null;if(a&&a.href&&/^https?:\/\//.test(a.href)&&a.href.replace(/#.*$/,"")!==loc){if(isInlineMediaUrlClick(a,a.href))return;var productId=extractProductId(target)||extractProductId(a);if(productId){e.preventDefault();parent.postMessage({type:"ecto-artifact-link-click",productId:productId},"*");return}e.preventDefault();parent.postMessage({type:"ecto:usercontent-link-click",href:a.href},"*");return}var dataHref=findDataHref(target);if(dataHref&&/^https?:\/\//.test(dataHref.href)&&dataHref.href.replace(/#.*$/,"")!==loc){if(isInlineMediaUrlClick(dataHref.node,dataHref.href))return;e.preventDefault();parent.postMessage({type:"ecto:usercontent-link-click",href:dataHref.href},"*")}},true)})();</script><script>(function(){var FOCUS_TYPE="ecto:artifact-focus-request";var CLOSE_TYPE="ecto:artifact-close-request";function focusArtifactDocument(){var body=document.body;if(!body)return;try{window.focus();}catch(e){}if(!body.hasAttribute("tabindex"))body.setAttribute("tabindex","-1");try{body.focus({preventScroll:true});}catch(e){try{body.focus();}catch(e2){}}}window.addEventListener("message",function(event){if(event.source!==window.parent)return;var data=event.data;if(!data||typeof data!=="object"||data.type!==FOCUS_TYPE)return;if(document.readyState==="loading"){document.addEventListener("DOMContentLoaded",focusArtifactDocument,{once:true});return;}focusArtifactDocument();});window.addEventListener("keydown",function(event){if(event.key!=="Escape")return;window.setTimeout(function(){if(event.defaultPrevented)return;window.parent.postMessage({type:CLOSE_TYPE},"*");},0);});})();</script>
+<script>
+(function(){
+  function syncFixzyInfoPanel(){
+    const get = id => document.getElementById(id);
+    const set = (id, value) => { const el=get(id); if(el) el.textContent=value || '-'; };
+
+    set('fixzyInfoAkun', get('akunLoginField')?.value || get('akunSide')?.textContent || '-');
+    set('fixzyInfoUsaha', get('konterField')?.value || 'A Yudi Thea');
+    set('fixzyInfoNota', get('notaField')?.value || '-');
+    set('fixzyInfoTanggal', get('tanggalField')?.value || '-');
+    set('fixzyInfoBarcode', get('barcodeField')?.value || '-');
+  }
+
+  // Sinkronisasi ringan saja. Tidak menyentuh Firebase, stok, pelanggan,
+  // produk, pembayaran, teknisi, maupun fungsi simpan.
+  document.addEventListener('DOMContentLoaded', syncFixzyInfoPanel);
+
+  const ids=['akunLoginField','konterField','notaField','tanggalField','barcodeField'];
+  ids.forEach(id=>{
+    const el=document.getElementById(id);
+    if(el) el.addEventListener('input', syncFixzyInfoPanel);
+    if(el) el.addEventListener('change', syncFixzyInfoPanel);
+  });
+
+  // Memberi kesempatan pada logic penjualan2.html asli mengisi data terlebih dahulu.
+  [100,300,700,1200,2000].forEach(ms=>setTimeout(syncFixzyInfoPanel,ms));
+})();
+</script>
+
+</body>
 </html>
