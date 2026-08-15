@@ -56,7 +56,7 @@ header{
   position:sticky;
   top:0;
   z-index:50;
-  border-bottom:1px solid #1e293b;
+  border-bottom:2px solid #000;box-shadow:0 3px 0 #000;
 }
 .head{
   width:100%;
@@ -167,6 +167,8 @@ body.dark header{
 body.dark .card{
   background:#151b23;
   color:#f3f4f6;
+  border-color:#000;
+  box-shadow:4px 4px 0 #000;
 }
 body.dark .title{
   border-bottom-color:#2b3440;
@@ -227,15 +229,15 @@ body.dark .popup-box p{
   color:#aeb7c4;
 }
 main{max-width:920px;margin:auto;padding:12px}
-.card{background:#fff;border-radius:12px;padding:15px;margin-bottom:12px;box-shadow:0 2px 10px #0001}
-.title{font-size:16px;font-weight:900;border-bottom:1px solid #e5e7eb;padding-bottom:9px;margin-bottom:12px}
+.card{background:#fff;border:2px solid #111827;border-radius:12px;padding:15px;margin-bottom:14px;box-shadow:4px 4px 0 #111827;transition:transform .15s ease,box-shadow .15s ease}.card:active{transform:translate(2px,2px);box-shadow:2px 2px 0 #111827}
+.title{font-size:16px;font-weight:900;border-bottom:2px solid #111827;padding-bottom:9px;margin-bottom:12px}
 .grid{display:grid;grid-template-columns:1fr 1fr;gap:11px}
 .full{grid-column:1/-1}
 label{display:block;font-size:12px;font-weight:800;color:#4b5563;margin-bottom:5px}
-input,select,textarea{width:100%;padding:11px;border:1px solid #d1d5db;border-radius:8px;background:#fff;font:inherit}
+input,select,textarea{width:100%;padding:11px;border:2px solid #111827;border-radius:8px;background:#fff;font:inherit;box-shadow:2px 2px 0 #111827}
 textarea{min-height:78px;resize:vertical}
 .readonly{background:#f8fafc;color:#475467}
-.info{border:1px solid #e5e7eb;border-radius:9px;overflow:hidden}
+.info{border:2px solid #111827;border-radius:9px;overflow:hidden;box-shadow:3px 3px 0 #111827}
 .info-row{display:flex;justify-content:space-between;gap:12px;padding:9px 11px;border-bottom:1px solid #eee;font-size:12px}
 .info-row:last-child{border-bottom:0}.info-row span{color:#667085;font-weight:700}.info-row b{text-align:right}
 .checks{display:flex;flex-wrap:wrap;gap:10px}
@@ -252,12 +254,12 @@ textarea{min-height:78px;resize:vertical}
 .money{font-size:12px;color:#667085;margin-top:7px}
 .money strong{color:#111827}
 .actions{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
-button.action{border:0;border-radius:9px;padding:12px;font-weight:900;cursor:pointer}
+button.action{border:2px solid #111827;border-radius:9px;padding:12px;font-weight:900;cursor:pointer;box-shadow:3px 3px 0 #111827}
 .danger{background:#fee2e2;color:#991b1b}.secondary{background:#e5e7eb}.primary{background:#111827;color:#fff}
 .status-msg{font-size:12px;color:#667085;margin-top:8px}
 .popup{position:fixed;inset:0;background:#0008;display:none;align-items:center;justify-content:center;z-index:100}
 .popup.show{display:flex}
-.popup-box{width:min(420px,calc(100% - 30px));background:#fff;border-radius:14px;padding:18px;box-shadow:0 15px 45px #0004}
+.popup-box{width:min(420px,calc(100% - 30px));background:#fff;border:2px solid #111827;border-radius:14px;padding:18px;box-shadow:6px 6px 0 #111827}
 .popup-box h3{margin:0 0 8px}.popup-box p{font-size:13px;color:#475467;line-height:1.5}
 .popup-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:13px}.popup-actions button{border:0;border-radius:8px;padding:10px 14px;font-weight:800}
 #garansiWrap{display:none}
@@ -836,6 +838,39 @@ function makePrint(d){
 
 function printNow(){setTimeout(()=>window.print(),200)}
 
+function kosongkanFormSetelahSimpan(){
+  const ids=[
+    "namaPelanggan","waPelanggan","alamatPelanggan",
+    "brandTipe","imei","kerusakan","sandiPola",
+    "cariProduk","produkManual","biayaService","diskon","dp","catatan",
+    "catatanStatus"
+  ];
+  ids.forEach(id=>{const el=$(id);if(el)el.value="";});
+
+  $("qtyProduk").value="1";
+  $("diskon").value="0";
+  $("dp").value="0";
+  $("metodePembayaran").value="tunai";
+  $("status").value="masuk";
+  $("garansiDurasi").value="0";
+
+  document.querySelectorAll(".kelengkapan").forEach(cb=>cb.checked=false);
+
+  selectedProduct=null;
+  $("produkTerpilih").className="selected empty";
+  $("produkTerpilih").textContent="Belum memilih produk.";
+  $("hasilProduk").classList.remove("show");
+  $("garansiWrap").style.display="none";
+
+  $("nomorNota").value=notaBaru();
+  $("barcode").value=makeBarcode($("nomorNota").value);
+  $("tanggalNota").value=dateOnly();
+  setInfo();
+  hitung();
+  $("saveStatus").textContent="Siap untuk input transaksi baru.";
+}
+
+
 function tampilError(judul,pesan){
   $("fixzyErrorTitle").textContent=judul||"⚠️ Pemberitahuan";
   $("fixzyErrorText").textContent=String(pesan||"Terjadi kesalahan.");
@@ -865,7 +900,10 @@ async function executeSave(printAfter){
 
     if(printAfter){
       makePrint(d);
+      kosongkanFormSetelahSimpan();
       printNow();
+    }else{
+      kosongkanFormSetelahSimpan();
     }
     return true;
 
