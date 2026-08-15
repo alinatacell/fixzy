@@ -66,6 +66,7 @@
 </style>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
+<link href="https://cdnjs.cloudflare.com/ajax/libs/remixicon/4.2.0/remixicon.min.css" rel="stylesheet">
 <title>FIXZY | Data Servis</title>
 <style>
 *{box-sizing:border-box}
@@ -135,56 +136,413 @@ textarea{width:100%;padding:10px;border:1px solid #d1d5db;border-radius:8px;font
   .refresh,.close-btn{padding:7px 8px;font-size:11px}
 }
 </style>
+
+<style id="fixzy-3d-style">
+:root{--fx-black:#111827;--fx-yellow:#facc15;--fx-bg:#eef2f6}
+*{box-sizing:border-box}
+body{background:var(--fx-bg)!important;color:#111827}
+header{background:var(--fx-black)!important;color:#fff!important;border-bottom:3px solid var(--fx-black)!important;box-shadow:0 4px 0 #000!important}
+.header-logo{border:2px solid #fff!important;box-shadow:2px 2px 0 #000!important}
+.header-title h1{font-weight:900!important}
+.header-actions button,.head button{border:2px solid #000!important;box-shadow:2px 2px 0 #000!important}
+.refresh{background:#fff!important;color:#111827!important}
+.refresh:hover{background:var(--fx-yellow)!important}
+.close-btn{background:#374151!important;color:#fff!important}
+main{padding:14px!important}
+.card,.dataStats,.status-filter-card{
+  background:#fff!important;
+  border:2px solid var(--fx-black)!important;
+  border-radius:14px!important;
+  box-shadow:4px 4px 0 var(--fx-black)!important;
+}
+.title{font-weight:900!important}
+input,select,textarea{
+  border:2px solid var(--fx-black)!important;
+  border-radius:10px!important;
+  box-shadow:2px 2px 0 var(--fx-black)!important;
+}
+button.action,.mini{
+  border:2px solid var(--fx-black)!important;
+  border-radius:9px!important;
+  box-shadow:2px 2px 0 var(--fx-black)!important;
+}
+button.action:active,.mini:active,.head button:active{transform:translate(2px,2px);box-shadow:none!important}
+.primary{background:var(--fx-black)!important;color:#fff!important}
+.secondary{background:#fff!important;color:#111827!important}
+.primary:hover,.secondary:hover{background:var(--fx-yellow)!important;color:#000!important}
+.danger{border-color:#991b1b!important;box-shadow:2px 2px 0 #991b1b!important}
+.summary-card,.stat{
+  border:2px solid var(--fx-black)!important;
+  border-radius:11px!important;
+  box-shadow:3px 3px 0 var(--fx-black)!important;
+}
+.summary-card.pendapatan{border-color:var(--fx-black)!important}
+.table-wrap{
+  border:3px solid var(--fx-black)!important;
+  border-radius:12px!important;
+  box-shadow:5px 5px 0 var(--fx-black)!important;
+}
+th{background:var(--fx-black)!important;color:#fff!important;border-color:#374151!important}
+td{border-bottom:1px solid #d1d5db!important}
+tr:hover td{background:#fffbeb!important}
+.badge{border:2px solid var(--fx-black)!important;font-weight:900!important}
+.popup-box{
+  background:#fff!important;
+  border:3px solid var(--fx-black)!important;
+  border-radius:16px!important;
+  box-shadow:8px 8px 0 var(--fx-black)!important;
+}
+.popup-box h3{
+  background:var(--fx-black);
+  color:#fff;
+  margin:-17px -17px 14px;
+  padding:13px 15px;
+  border-radius:12px 12px 0 0;
+}
+.popup-actions{margin-top:15px!important}
+.scan-box{
+  border:2px solid var(--fx-black)!important;
+  box-shadow:3px 3px 0 var(--fx-black)!important;
+}
+.detail b{font-weight:900!important}
+.searchLabel,.status-filter-card label{color:#111827!important;font-weight:900!important}
+.info{color:#667085}
+@media(max-width:520px){
+  header{padding:8px 10px!important}
+  .header-logo{width:40px!important;height:40px!important;flex-basis:40px!important}
+  .header-title h1{font-size:16px!important}
+  .header-title small{font-size:9px!important}
+  .refresh,.close-btn{padding:7px 9px!important}
+  main{padding:11px!important}
+}
+</style>
+
+
+<style id="search-one-panel-style">
+.search-panel-3d{
+  padding:15px!important;
+  margin-bottom:14px!important;
+}
+.search-panel-title{
+  font-size:16px;
+  font-weight:900;
+  margin-bottom:12px;
+  padding-bottom:9px;
+  border-bottom:2px solid #111827;
+  letter-spacing:.2px;
+}
+.search-panel-grid{
+  display:grid;
+  grid-template-columns:minmax(0,1.4fr) minmax(150px,.8fr) minmax(170px,.9fr);
+  gap:10px;
+  align-items:end;
+}
+.search-name-box,.scan-action-box,.status-box{min-width:0}
+.search-panel-3d .searchLabel,
+.search-panel-3d .status-box>label{
+  display:block;
+  font-size:11px;
+  font-weight:900;
+  color:#111827;
+  margin-bottom:5px;
+}
+.scan-main-btn{
+  width:100%;
+  min-height:46px;
+  justify-content:center;
+}
+.search-panel-3d #statusFilter{
+  height:46px;
+  font-weight:800;
+}
+.input-servis-main-btn{
+  width:100%;
+  margin-top:10px;
+  min-height:46px;
+  justify-content:center;
+}
+@media(max-width:760px){
+  .search-panel-grid{
+    grid-template-columns:1fr 1fr;
+  }
+  .search-name-box{
+    grid-column:1/-1;
+  }
+}
+@media(max-width:430px){
+  .search-panel-grid{
+    grid-template-columns:1fr;
+  }
+  .search-name-box{
+    grid-column:auto;
+  }
+}
+</style>
+
+
+<style id="top-summary-3d">
+.dataStats{
+  background:#fff!important;
+  border:2px solid #111827!important;
+  border-radius:12px!important;
+  padding:12px 14px!important;
+  margin:0 0 14px!important;
+  box-shadow:4px 4px 0 #111827!important;
+  font-size:13px!important;
+}
+.dataStats b{font-weight:900!important;color:#111827!important}
+.dataStats .incomeText{color:#047857!important}
+.search-panel-3d{
+  margin-top:0!important;
+}
+.input-servis-main-btn{display:none!important}
+</style>
+
+
+<style id="data-penjualan-header-style">
+.penjualan-style-header{
+  margin:0!important;
+  padding:10px 14px!important;
+  background:#111827!important;
+  color:#fff!important;
+  display:flex!important;
+  align-items:center!important;
+  gap:12px!important;
+  position:sticky!important;
+  top:0!important;
+  z-index:100!important;
+  border-bottom:1px solid #1e293b!important;
+  box-shadow:none!important;
+}
+.penjualan-style-header .logo{
+  width:52px!important;
+  height:52px!important;
+  background:#000!important;
+  border-radius:14px!important;
+  display:flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  border:1px solid #ffffff20!important;
+  overflow:hidden!important;
+  flex:0 0 52px!important;
+  box-shadow:none!important;
+}
+.penjualan-style-header .logo img{
+  width:100%!important;
+  height:100%!important;
+  object-fit:contain!important;
+  padding:4px!important;
+  background:#000!important;
+  display:block!important;
+}
+.penjualan-style-header .brand{
+  line-height:1.2!important;
+  min-width:0!important;
+}
+.penjualan-style-header .brand b{
+  color:#fff!important;
+  font-weight:900!important;
+  font-size:18px!important;
+  letter-spacing:.5px!important;
+}
+.penjualan-style-header .brand small{
+  display:block!important;
+  margin-top:2px!important;
+  color:#9ca3af!important;
+  font-size:11px!important;
+  font-weight:700!important;
+  letter-spacing:.3px!important;
+}
+.penjualan-style-header .header-right{
+  margin-left:auto!important;
+  display:flex!important;
+  gap:8px!important;
+  align-items:center!important;
+}
+.penjualan-style-header .btn{
+  padding:9px 14px!important;
+  border-radius:12px!important;
+  font-weight:800!important;
+  font-size:12px!important;
+  border:2px solid #111827!important;
+  cursor:pointer!important;
+  display:inline-flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  gap:6px!important;
+  transition:all .2s!important;
+  box-shadow:none!important;
+}
+.penjualan-style-header .btn-refresh{
+  background:#1e293b!important;
+  color:#fff!important;
+  border-color:#334155!important;
+}
+.penjualan-style-header .btn-refresh:hover{
+  background:#facc15!important;
+  color:#000!important;
+}
+.penjualan-style-header .btn-moon{
+  background:#1e293b!important;
+  color:#fff!important;
+  border-color:#334155!important;
+  width:44px!important;
+  height:44px!important;
+  padding:0!important;
+  justify-content:center!important;
+  font-size:18px!important;
+}
+.penjualan-style-header .btn-moon:hover{
+  background:#facc15!important;
+  color:#000!important;
+}
+@media(max-width:520px){
+  .penjualan-style-header{
+    padding:8px 10px!important;
+    gap:8px!important;
+  }
+  .penjualan-style-header .logo{
+    width:48px!important;
+    height:48px!important;
+    flex-basis:48px!important;
+    border-radius:12px!important;
+  }
+  .penjualan-style-header .brand b{font-size:16px!important}
+  .penjualan-style-header .brand small{font-size:10px!important}
+  .penjualan-style-header .btn-refresh{padding:8px 10px!important}
+  .penjualan-style-header .btn-moon{
+    width:42px!important;
+    height:42px!important;
+  }
+}
+</style>
+
+
+<style id="data-penjualan-dark-mode">
+body.dark{
+  background:#0f172a!important;
+  color:#e5e7eb!important;
+}
+body.dark .card,
+body.dark .dataStats,
+body.dark .status-filter-card,
+body.dark .summary-card,
+body.dark .stat,
+body.dark .popup-box{
+  background:#1e293b!important;
+  color:#e5e7eb!important;
+}
+body.dark input,
+body.dark select,
+body.dark textarea{
+  background:#1e293b!important;
+  color:#e5e7eb!important;
+  border-color:#334155!important;
+}
+body.dark .table-wrap{
+  background:#1e293b!important;
+  border-color:#334155!important;
+}
+</style>
+
+
+<style id="logo-yellow-line">
+.penjualan-style-header .logo{
+  border:3px solid #facc15!important;
+  box-shadow:2px 2px 0 #000!important;
+}
+.penjualan-style-header .logo img{
+  border-radius:10px!important;
+}
+</style>
+
+
+<style id="logo-yellow-thick">
+.penjualan-style-header .logo{
+  border:4px solid #facc15!important;
+  border-radius:15px!important;
+  box-shadow:3px 3px 0 #000!important;
+}
+.penjualan-style-header .logo img{
+  border-radius:10px!important;
+}
+</style>
+
+
+<style id="logo-yellow-line-final">
+.penjualan-style-header .logo{
+  border:2px solid #facc15!important;
+  border-radius:14px!important;
+  box-shadow:none!important;
+}
+.penjualan-style-header .logo img{
+  border-radius:10px!important;
+}
+</style>
+
 </head>
 <body>
-<header>
-  <div class="head">
-    <div class="header-brand">
-      <img src="logo.png" alt="FIXZY" class="header-logo">
-      <div class="header-title">
-        <h1>Data Servis</h1>
-        <small>FIXZY • Pembukuan Servis</small>
-      </div>
-    </div>
-    <div class="header-actions">
-      <button class="refresh" type="button" onclick="refreshHalaman()">↻ Refresh</button>
-      <button class="close-btn" type="button" onclick="tutupHalaman()">✕ Tutup</button>
-    </div>
+<header class="penjualan-style-header">
+  <div class="logo">
+    <img src="logo.png" alt="Fixzy Logo">
+  </div>
+  <div class="brand">
+    <b id="konterNameHeader">Nama Konter</b><br>
+    <small>Data servis</small>
+  </div>
+  <div class="header-right">
+    <button class="btn btn-refresh" type="button" onclick="refreshHalaman()">
+      <i class="ri-refresh-line"></i> Refresh
+    </button>
+    <button class="btn btn-moon" type="button" onclick="toggleDarkMode()" aria-label="Mode gelap">
+      <i id="moonIcon" class="ri-moon-fill"></i>
+    </button>
   </div>
 </header>
 
 <main>
-<section class="card">
-<div class="title">Data Servis</div>
-<div class="toolbar">
-<label class="searchLabel" for="pencarian">Pencarian Nama</label><input id="pencarian" placeholder="Cari nama pelanggan...">
-<button class="action secondary" onclick="bukaScanner()">📷 Scan Barcode</button>
-<button class="action primary" onclick="location.href='input-servis.html'">＋ Input Servis</button>
-</div>
-<div class="scan-box" id="scanBox">
-<div id="reader"></div>
-<div style="text-align:center;margin-top:7px"><button class="action danger" onclick="tutupScanner()">Tutup Scanner</button></div>
-</div>
-<div class="info">Pencarian manual dan barcode mencari data servis milik usaha yang sedang login. <b>Pendapatan hanya dihitung saat status Diambil.</b></div>
-</section>
-
 <div class="dataStats">
   ☁️ Data <b>servis</b> • Total: <b id="ringkasanJumlah">0</b>
   • Penghasilan: <b id="ringkasanPendapatan" class="incomeText">Rp 0</b>
 </div>
 
-<section class="status-filter-card">
-<label for="statusFilter">Pencarian Status</label>
-<select id="statusFilter">
-<option value="semua">Semua Status</option>
-<option value="masuk">Masuk Antrian</option>
-<option value="nunggu">Nunggu Part</option>
-<option value="proses">Proses</option>
-<option value="selesai">Selesai</option>
-<option value="diambil">Diambil</option>
-<option value="batal">Batal</option>
-</select>
+<section class="status-filter-card search-panel-3d">
+  <div class="search-panel-title">PENCARIAN</div>
+  <div class="search-panel-grid">
+    <div class="search-name-box">
+      <label class="searchLabel" for="pencarian">Pencarian Nama</label>
+      <input id="pencarian" placeholder="Cari nama pelanggan...">
+    </div>
+
+    <div class="scan-action-box">
+      <label class="searchLabel">Scan Barcode</label>
+      <button class="action secondary scan-main-btn" type="button" onclick="bukaScanner()">📷 Scan Barcode</button>
+    </div>
+
+    <div class="status-box">
+      <label for="statusFilter">Pencarian Status</label>
+      <select id="statusFilter">
+        <option value="semua">Semua Status</option>
+        <option value="masuk">Masuk Antrian</option>
+        <option value="nunggu">Nunggu Part</option>
+        <option value="proses">Proses</option>
+        <option value="selesai">Selesai</option>
+        <option value="diambil">Diambil</option>
+        <option value="batal">Batal</option>
+      </select>
+    </div>
+  </div>
+
+  <div class="scan-box" id="scanBox">
+    <div id="reader"></div>
+    <div style="text-align:center;margin-top:7px">
+      <button class="action danger" onclick="tutupScanner()">Tutup Scanner</button>
+    </div>
+  </div>
 </section>
+
+
+
 
 <section class="card">
 <div class="table-wrap">
@@ -249,6 +607,26 @@ textarea{width:100%;padding:10px;border:1px solid #d1d5db;border-radius:8px;font
 </select></div>
 <div class="popup-actions"><button class="action secondary" onclick="batalGaransi()">Kembali</button><button class="action primary" onclick="konfirmasiGaransi()">Simpan sebagai Diambil</button></div>
 </div></div>
+
+
+<script>
+window.toggleDarkMode=function(){
+  document.body.classList.toggle('dark');
+  const isDark=document.body.classList.contains('dark');
+  try{localStorage.setItem('fixzy-dark',isDark?'1':'0');}catch(e){}
+  const icon=document.getElementById('moonIcon');
+  if(icon) icon.className=isDark?'ri-sun-fill':'ri-moon-fill';
+};
+(function(){
+  let saved='';
+  try{saved=localStorage.getItem('fixzy-dark')||'';}catch(e){}
+  if(saved==='1'){
+    document.body.classList.add('dark');
+    const icon=document.getElementById('moonIcon');
+    if(icon) icon.className='ri-sun-fill';
+  }
+})();
+</script>
 
 <script>
 function refreshHalaman(){
@@ -586,65 +964,40 @@ window.kirimWhatsAppDanSimpan=async()=>{
  }
 
  /*
-  * FIX LAPTOP:
-  * Buka URL HTTPS wa.me langsung dari klik tombol pengguna.
-  * Jangan menunggu Firebase dan jangan memakai whatsapp://.
-  * Laptop akan diarahkan ke WhatsApp Web, HP tetap dapat membuka WhatsApp.
+  * Jangan memakai window.location.href untuk whatsapp:// karena itu
+  * mengganti halaman FIXZY menjadi halaman navigasi browser kosong.
+  *
+  * Buat link sementara dengan target=_blank. Chrome akan menyerahkan
+  * whatsapp:// kepada aplikasi WhatsApp, sementara halaman FIXZY tetap
+  * berada di tab asal.
   */
- const waUrl="https://wa.me/"+wa+"?text="+encodeURIComponent(pesan);
+ const waAppUrl="whatsapp://send?phone="+wa+"&text="+encodeURIComponent(pesan);
+
  try{
-   window.open(waUrl,"_blank","noopener,noreferrer");
+   const a=document.createElement("a");
+   a.href=waAppUrl;
+   a.target="_blank";
+   a.rel="noopener noreferrer";
+   a.style.display="none";
+   document.body.appendChild(a);
+
+   /*
+    * Klik masih terjadi di dalam event tombol pengguna.
+    * Setelah handoff ke WhatsApp, tab asal FIXZY tidak dinavigasikan.
+    */
+   a.click();
+
+   setTimeout(()=>a.remove(),1500);
  }catch(e){
    console.warn("Buka WhatsApp gagal:",e);
  }
 
  /*
-  * Popup konfirmasi ditutup langsung.
-  * Ini dilakukan sebelum Firebase supaya popup FIXZY tidak menghalangi
-  * proses pembukaan WhatsApp.
+  * Status tetap disimpan ke Firebase.
   */
- pendingStatusConfirm=null;
- $("statusConfirmPopup").classList.remove("show");
-
- /*
-  * Simpan status ke Firebase tanpa membuka popup sukses lagi.
-  * Update langsung di sini supaya tidak memanggil tampilNotice().
-  */
- try{
-   const statusCanonical=statusKey(p.status);
-   let garansi={aktif:false,durasi:0,satuan:"hari",mulai:null,berakhir:null};
-
-   if(statusCanonical==="diambil" && Number(p.durasi)>0){
-     const mulai=new Date();
-     const akhir=new Date(mulai.getTime()+Number(p.durasi)*86400000);
-     garansi={aktif:true,durasi:Number(p.durasi),satuan:"hari",mulai:mulai.toISOString(),berakhir:akhir.toISOString()};
-   }
-
-   const patch={
-     status:statusCanonical,
-     catatanStatus:p.catatan||"",
-     pesanStatusPelanggan:pesan||"",
-     statusDiperbaruiAt:serverTimestamp(),
-     garansi,
-     pendapatan:statusCanonical==="diambil"?money(x):0,
-     updatedAt:serverTimestamp()
-   };
-
-   await updateDoc(doc(db,"servis",p.id),patch);
-   Object.assign(x,patch);
-   render();
-
-   /*
-    * Pastikan SEMUA popup FIXZY ditutup setelah berhasil.
-    */
-   document.querySelectorAll(".popup").forEach(el=>el.classList.remove("show"));
-   $("statusLoad").textContent=`Status ${x.nomorNota||""} berhasil diubah menjadi ${statusLabel(statusCanonical)}.`;
- }catch(e){
-   console.error(e);
-   document.querySelectorAll(".popup").forEach(el=>el.classList.remove("show"));
-   $("statusLoad").textContent="Gagal menyimpan status: "+e.message;
- }
+ await simpanStatusDariPopup();
 };
+
 function normalisasiWA(value){
  let s=String(value||"").replace(/\D/g,"");
  if(!s)return"";
@@ -793,15 +1146,62 @@ onAuthStateChanged(auth,async u=>{
   ownerUid=ownerOf(p,u)||p.ownerUid||p.ownerId||u.uid;
   if(!ownerUid) ownerUid=u.uid;
 
-  // Ambil nama usaha dari profil Owner agar selalu masuk ke pesan pelanggan.
-  if(p.role==="owner"){
-    namaKonter=p.namaKonter||p.namaToko||p.namaUsaha||p.nama||"FIXZY";
-  }else if(p.ownerUid){
-    const ownerSnap=await getDoc(doc(db,"users",p.ownerUid));
-    if(ownerSnap.exists()){
-      const ownerData=ownerSnap.data()||{};
-      namaKonter=ownerData.namaKonter||ownerData.namaToko||ownerData.namaUsaha||"FIXZY";
+  // NAMA KONTER WAJIB DIAMBIL DARI DATA REGISTER FIREBASE.
+  // Register menyimpan nama konter pada users/{uid}.namaKonter.
+  // Untuk akun karyawan/reseller, ambil dari ownerUid jika tersedia.
+  namaKonter="";
+
+  try{
+    // 1. Prioritas utama: profil akun yang sedang login.
+    const ownData=p||{};
+    namaKonter=String(
+      ownData.namaKonter ||
+      ownData.konterName ||
+      ownData.namaToko ||
+      ownData.namaUsaha ||
+      ""
+    ).trim();
+
+    // 2. Jika akun bukan owner dan punya ownerUid, ambil nama konter owner.
+    if(!namaKonter && p.ownerUid){
+      const ownerSnap=await getDoc(doc(db,"users",p.ownerUid));
+      if(ownerSnap.exists()){
+        const ownerData=ownerSnap.data()||{};
+        namaKonter=String(
+          ownerData.namaKonter ||
+          ownerData.konterName ||
+          ownerData.namaToko ||
+          ownerData.namaUsaha ||
+          ""
+        ).trim();
+      }
     }
+
+    // 3. Fallback berdasarkan email akun bila profil uid belum lengkap.
+    if(!namaKonter && u.email){
+      const emailSnap=await getDocs(
+        query(collection(db,"users"),where("email","==",u.email))
+      );
+      if(!emailSnap.empty){
+        const emailData=emailSnap.docs[0].data()||{};
+        namaKonter=String(
+          emailData.namaKonter ||
+          emailData.konterName ||
+          emailData.namaToko ||
+          emailData.namaUsaha ||
+          ""
+        ).trim();
+      }
+    }
+  }catch(err){
+    console.warn("Nama konter register tidak dapat dibaca:",err);
+  }
+
+  // Jangan tampilkan FIXZY jika register belum terbaca.
+  // FIXZY hanya placeholder awal, bukan nama konter.
+  const headerEl=document.getElementById('konterNameHeader');
+  if(headerEl){
+    headerEl.textContent=namaKonter || "Nama Konter";
   }
 
   await loadData();
