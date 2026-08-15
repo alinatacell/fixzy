@@ -324,13 +324,13 @@ button.action{border:2px solid #111827;border-radius:9px;padding:12px;font-weigh
 
 <main>
   <div class="card">
-    <div class="title">Informasi Transaksi</div>
+    <div class="title">1. Informasi Transaksi</div>
     <input type="hidden" id="nomorNota">
     <input type="hidden" id="barcode">
     <input type="hidden" id="tanggalNota">
     <div class="info">
       <div class="info-row"><span>Akun</span><b id="infoAkun">Memuat...</b></div>
-      <div class="info-row"><span>Petugas</span><b id="infoUsaha">Memuat...</b></div>
+      <div class="info-row"><span>Usaha</span><b id="infoUsaha">Memuat...</b></div>
       <div class="info-row"><span>Nomor Nota</span><b id="infoNota">Memuat...</b></div>
       <div class="info-row"><span>Tanggal</span><b id="infoTanggal">Memuat...</b></div>
       <div class="info-row"><span>Barcode</span><b id="infoBarcode">Memuat...</b></div>
@@ -338,7 +338,7 @@ button.action{border:2px solid #111827;border-radius:9px;padding:12px;font-weigh
   </div>
 
   <div class="card">
-    <div class="title">Data Pelanggan</div>
+    <div class="title">2. Pelanggan</div>
     <div class="grid">
       <div><label>NAMA PELANGGAN *</label><input id="namaPelanggan" autocomplete="name"></div>
       <div><label>NO. WA *</label><input id="waPelanggan" inputmode="tel" autocomplete="tel"></div>
@@ -347,7 +347,7 @@ button.action{border:2px solid #111827;border-radius:9px;padding:12px;font-weigh
   </div>
 
   <div class="card">
-    <div class="title">Data Servisan</div>
+    <div class="title">3. Data Servisan</div>
     <div class="grid">
       <div><label>BRAND / TIPE HP *</label><input id="brandTipe"></div>
       <div><label>IMEI</label><input id="imei"></div>
@@ -366,7 +366,7 @@ button.action{border:2px solid #111827;border-radius:9px;padding:12px;font-weigh
   </div>
 
   <div class="card">
-    <div class="title">Sparepart / Produk yang Digunakan</div>
+    <div class="title">4. Sparepart / Produk yang Digunakan</div>
     <div class="grid">
       <div class="full">
         <label>CARI PRODUK STOK</label>
@@ -387,9 +387,9 @@ button.action{border:2px solid #111827;border-radius:9px;padding:12px;font-weigh
   </div>
 
   <div class="card">
-    <div class="title">Pembayaran Servis</div>
+    <div class="title">5. Pembayaran Servis</div>
     <div class="grid">
-      <div><label>BIAYA ESTIMASI SERVIS *</label><input id="biayaService" inputmode="numeric" placeholder="0"></div>
+      <div><label>BIAYA SERVIS *</label><input id="biayaService" inputmode="numeric" placeholder="0"></div>
       <div><label>DISKON</label><input id="diskon" inputmode="numeric" value="0"></div>
       <div><label>DP</label><input id="dp" inputmode="numeric" value="0"></div>
       <div><label>METODE PEMBAYARAN</label>
@@ -413,7 +413,7 @@ button.action{border:2px solid #111827;border-radius:9px;padding:12px;font-weigh
   </div>
 
   <div class="card">
-    <div class="title">Status Pengerjaan</div>
+    <div class="title">6. Status Servis</div>
     <div class="grid">
       <div>
         <label>STATUS AWAL *</label>
@@ -479,7 +479,7 @@ button.action{border:2px solid #111827;border-radius:9px;padding:12px;font-weigh
     <h3 id="fixzyErrorTitle">⚠️ Pemberitahuan</h3>
     <p id="fixzyErrorText"></p>
     <div class="popup-actions">
-      <button type="button" id="fixzyPopupOkBtn" onclick="tutupErrorPopup()" style="background:#111827;color:#fff">OK</button>
+      <button type="button" onclick="tutupErrorPopup()" style="background:#111827;color:#fff">OK</button>
     </div>
   </div>
 </div>
@@ -589,85 +589,35 @@ async function loadEmployees(){
 }
 
 async function loadProducts(){
-  try{
-    let allDocs=[];
-    try{
-      const snapAll=await getDocs(collection(db,"stok"));
-      allDocs=snapAll.docs.map(d=>({id:d.id,...d.data()}));
-      console.log("[NOTA] Total stok tanpa filter:", allDocs.length);
-    }catch(e){ console.warn(e); }
-    
-    // Gabung dengan filter businessUid kalau ada
-    try{
-      const snapF=await getDocs(query(collection(db,"stok"),where("uid","==",businessUid)));
-      const map=new Map();
-      allDocs.forEach(p=>map.set(p.id,p));
-      snapF.forEach(d=>{ if(!map.has(d.id)) map.set(d.id,{id:d.id,...d.data()}); });
-      allDocs=Array.from(map.values());
-    }catch(e){}
-    
-    try{
-      const snap2=await getDocs(query(collection(db,"stok"),where("ownerUid","==",businessUid)));
-      const map=new Map();
-      allDocs.forEach(p=>map.set(p.id,p));
-      snap2.forEach(d=>{ if(!map.has(d.id)) map.set(d.id,{id:d.id,...d.data()}); });
-      allDocs=Array.from(map.values());
-    }catch(e){}
-    
-    products=allDocs.map(p=>{
-      if(p.hargaModal==null && p.hargaBeli!=null) p.hargaModal=p.hargaBeli;
-      if(p.sisa==null && p.stok!=null) p.sisa=p.stok;
-      return p;
-    });
-    console.log("[NOTA] Total produk untuk pencarian:", products.length);
-  }catch(e){
-    console.error(e);
-    products=[];
-  }
+  const snap=await getDocs(query(collection(db,"stok"),where("uid","==",businessUid)));
+  products=snap.docs.map(d=>({id:d.id,...d.data()}));
 }
-window.loadProducts=loadProducts;
-
 
 function filterProduk(q=""){
   const box=$("hasilProduk"),key=String(q).trim().toLowerCase();
-  // IZINKAN SEMUA: cari di nama, kode, merk, kategori, tampilkan semua termasuk stok habis
-  const list=products.filter(p=>{
-    if(!key) return true;
-    const nama=namaProduk(p).toLowerCase();
-    const kode=kodeProduk(p).toLowerCase();
-    const merk=String(p.merk||p.brand||"").toLowerCase();
-    const kat=String(p.kategori||"").toLowerCase();
-    return nama.includes(key) || kode.includes(key) || merk.includes(key) || kat.includes(key);
-  }).slice(0,100);
+  const list=products.filter(p=>namaProduk(p).toLowerCase().includes(key)||kodeProduk(p).toLowerCase().includes(key)).slice(0,50);
   box.innerHTML=list.length?list.map(p=>{
     const stok=stokProduk(p);
-    const habis=stok<=0;
-    return `<button type="button" class="result" data-id="${esc(p.id)}" style="${habis?'background:#fffbeb;border-left:3px solid #f59e0b':''}">
-      <div class="pname">${esc(namaProduk(p))} <span style="font-size:10px;color:#888">[${esc(kodeProduk(p)||'')}]</span></div>
-      <div class="pmeta">${p.kategori?esc(p.kategori)+' • ':''}Stok: <b style="color:${habis?'#f59e0b':'#16a34a'}">${stok}${habis?' • Habis tapi bisa dipakai':''}</b></div>
+    return `<button type="button" class="result" data-id="${esc(p.id)}" ${stok<=0?"disabled":""}>
+      <div class="pname">${esc(namaProduk(p))}</div>
+      <div class="pmeta">${kodeProduk(p)?`Kode: ${esc(kodeProduk(p))} • `:""}Stok: <b>${stok}</b>${stok<=0?" • Stok kosong":""}</div>
     </button>`;
   }).join(""):'<div class="result">Produk tidak ditemukan.</div>';
   box.classList.add("show");
 }
-window.filterProduk=filterProduk;
-
 $("cariProduk").addEventListener("input",e=>filterProduk(e.target.value));
 $("cariProduk").addEventListener("focus",e=>filterProduk(e.target.value));
 $("hasilProduk").addEventListener("click",e=>{
   const b=e.target.closest(".result[data-id]");if(!b)return;
   const p=products.find(x=>x.id===b.dataset.id);if(!p)return;
-  const stok=stokProduk(p);
-  if(stok<=0){
-    if(!confirm(`Stok ${namaProduk(p)} habis (sisa ${stok}). Tetap pakai?`)) return;
-  }
+  if(stokProduk(p)<=0)return;
   selectedProduct=p;
   $("cariProduk").value=namaProduk(p);
   $("produkManual").value="";
   $("produkTerpilih").className="selected";
-  $("produkTerpilih").innerHTML=`<b>${esc(namaProduk(p))}</b> • Stok: <b>${stokProduk(p)}</b> ${stok<=0?'<span style="color:#f59e0b">(habis tapi diizinkan)</span>':''}`;
+  $("produkTerpilih").innerHTML=`<b>${esc(namaProduk(p))}</b> • Stok tersedia: <b>${stokProduk(p)}</b>`;
   $("hasilProduk").classList.remove("show");
 });
-
 $("produkManual").addEventListener("input",()=>{
   if($("produkManual").value.trim()){
     selectedProduct=null;
@@ -694,12 +644,8 @@ function buildData(){
   const q=Math.max(1,num("qtyProduk")||1);
   const manual=$("produkManual").value.trim();
   if(!selectedProduct&&!manual)throw new Error("Pilih sparepart dari stok atau isi produk manual.");
-  if(selectedProduct){
-    const tersedia=stokProduk(selectedProduct);
-    if(tersedia<q){
-      console.warn(`Stok kurang: butuh ${q}, tersedia ${tersedia}. Tetap diizinkan (mode izinkan semua).`);
-    }
-  }
+  if(selectedProduct&&stokProduk(selectedProduct)<q)
+    throw new Error(`Stok ${namaProduk(selectedProduct)} tidak cukup. Tersedia ${stokProduk(selectedProduct)}.`);
 
   const pay=hitung();
   if(pay.diskon>pay.biaya)throw new Error("Diskon tidak boleh lebih besar dari biaya servis.");
@@ -892,62 +838,15 @@ function makePrint(d){
 
 function printNow(){setTimeout(()=>window.print(),200)}
 
-function kosongkanFormSetelahSimpan(){
-  const ids=[
-    "namaPelanggan","waPelanggan","alamatPelanggan",
-    "brandTipe","imei","kerusakan","sandiPola",
-    "cariProduk","produkManual","biayaService","diskon","dp","catatan",
-    "catatanStatus"
-  ];
-  ids.forEach(id=>{const el=$(id);if(el)el.value="";});
-
-  $("qtyProduk").value="1";
-  $("diskon").value="0";
-  $("dp").value="0";
-  $("metodePembayaran").value="tunai";
-  $("status").value="masuk";
-  $("garansiDurasi").value="0";
-
-  document.querySelectorAll(".kelengkapan").forEach(cb=>cb.checked=false);
-
-  selectedProduct=null;
-  $("produkTerpilih").className="selected empty";
-  $("produkTerpilih").textContent="Belum memilih produk.";
-  $("hasilProduk").classList.remove("show");
-  $("garansiWrap").style.display="none";
-
-  $("nomorNota").value=notaBaru();
-  $("barcode").value=makeBarcode($("nomorNota").value);
-  $("tanggalNota").value=dateOnly();
-  setInfo();
-  hitung();
-  $("saveStatus").textContent="Siap untuk input transaksi baru.";
-}
-
-
 function tampilError(judul,pesan){
   $("fixzyErrorTitle").textContent=judul||"⚠️ Pemberitahuan";
   $("fixzyErrorText").textContent=String(pesan||"Terjadi kesalahan.");
   $("fixzyErrorPopup").classList.add("show");
 }
-function tutupErrorPopup(keTagihan=false){
+function tutupErrorPopup(){
   $("fixzyErrorPopup").classList.remove("show");
-  if(keTagihan){
-    window.location.href="data-servis.html";
-  }
 }
 window.tutupErrorPopup=tutupErrorPopup;
-function tampilBerhasilSimpan(nomorNota){
-  $("fixzyErrorTitle").textContent="✅ Berhasil Disimpan";
-  $("fixzyErrorText").textContent=`Transaksi ${nomorNota} berhasil disimpan. Klik OK untuk masuk ke Data Servis.`;
-  const btn=$("fixzyPopupOkBtn");
-  if(btn){
-    btn.textContent="OK • Data Servis";
-    btn.onclick=()=>tutupErrorPopup(true);
-  }
-  $("fixzyErrorPopup").classList.add("show");
-}
-
 
 async function executeSave(printAfter){
   let d;
@@ -964,16 +863,12 @@ async function executeSave(printAfter){
     await saveData(d);
 
     $("saveStatus").textContent=`Berhasil disimpan • ${d.nomorNota}`;
+    tampilError("✅ Berhasil Disimpan",`Transaksi ${d.nomorNota} berhasil disimpan ke Firebase.`);
 
     if(printAfter){
       makePrint(d);
-      kosongkanFormSetelahSimpan();
       printNow();
-    }else{
-      kosongkanFormSetelahSimpan();
     }
-
-    tampilBerhasilSimpan(d.nomorNota);
     return true;
 
   }catch(e){

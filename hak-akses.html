@@ -1,0 +1,263 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
+<meta name="theme-color" content="#111827">
+<title>FIXZY | Hak Akses</title>
+<style>
+*{box-sizing:border-box}
+:root{--bg:#eef2f6;--card:#fff;--navy:#111827;--line:#dfe5ec;--muted:#64748b;--yellow:#ffc107;--green:#16a34a;--red:#dc2626}
+body{margin:0;background:var(--bg);color:#111827;font-family:Arial,Helvetica,sans-serif}
+header{background:#111827;color:#fff;padding:10px 14px;position:sticky;top:0;z-index:20;box-shadow:0 3px 0 #000}
+.head{max-width:900px;margin:auto;display:flex;align-items:center;gap:10px}
+.logo{width:52px;height:52px;flex:0 0 52px;border-radius:14px;background:#000;border:2px solid var(--yellow);padding:3px;object-fit:contain}
+.brand{min-width:0}
+.brand b{display:block;font-size:18px}
+.brand small{display:block;color:#cbd5e1;font-size:11px;margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.actions{margin-left:auto;display:flex;gap:7px}
+button,select,input{font:inherit}
+button{border:0;border-radius:10px;padding:10px 13px;font-weight:900;cursor:pointer}
+.btn-dark{background:#0f172a;color:#fff;border:1px solid #334155}
+.btn-yellow{background:#ffc107;color:#111827}
+.btn-light{background:#e5e7eb;color:#111827}
+main{max-width:900px;margin:auto;padding:14px}
+.card{background:#fff;border:2px solid #111827;border-radius:15px;padding:15px;margin-bottom:14px;box-shadow:4px 4px 0 #111827}
+.title{font-size:18px;font-weight:900;border-bottom:2px solid #111827;padding-bottom:9px;margin-bottom:12px}
+.muted{color:var(--muted);font-size:12px;line-height:1.5}
+.row{display:grid;grid-template-columns:1fr auto;gap:10px;align-items:end}
+select,input{width:100%;padding:11px;border:2px solid #111827;border-radius:9px;background:#fff;color:#111827;box-shadow:2px 2px 0 #111827}
+label{display:block;font-size:11px;font-weight:900;margin-bottom:5px;color:#475467}
+.toolbar{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-top:12px}
+.search{margin-bottom:10px}
+.stats{font-size:11px;color:#64748b;margin:10px 0}
+.list{display:grid;gap:8px;max-height:58vh;overflow:auto;padding:2px}
+.item{display:flex;align-items:center;gap:10px;padding:11px;border:1px solid #dbe2ea;border-radius:11px;background:#fff;cursor:pointer;transition:.12s}
+.item:hover{background:#f8fafc;border-color:#fbbf24}
+.item.on{background:#fff8d8;border:1px solid #fbbf24}
+.item input{width:24px;height:24px;flex:0 0 24px;margin:0;accent-color:#111827;box-shadow:none}
+.item-main{min-width:0;flex:1}
+.item-name{font-weight:900;font-size:14px}
+.item-file{font-size:10px;color:#64748b;margin-top:3px;word-break:break-all}
+.badge{font-size:9px;font-weight:900;padding:4px 6px;border-radius:6px;background:#e5e7eb;color:#475569;white-space:nowrap}
+.footer-actions{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:14px}
+.notice{display:none;position:fixed;inset:0;background:#0008;z-index:100;align-items:center;justify-content:center;padding:16px}
+.notice.show{display:flex}
+.notice-box{width:min(420px,100%);background:#fff;border:2px solid #111827;border-radius:15px;padding:18px;text-align:center;box-shadow:6px 6px 0 #111827}
+.notice-icon{font-size:35px}
+.notice h3{margin:6px 0;font-size:17px}
+.notice p{font-size:13px;color:#475569;line-height:1.5}
+.dark{background:#0b0f14!important;color:#f3f4f6!important}
+body.dark{background:#0b0f14;color:#f3f4f6}
+body.dark .card,body.dark .item,body.dark .notice-box{background:#151b23;color:#f3f4f6;border-color:#2b3440;box-shadow:4px 4px 0 #000}
+body.dark .title{border-color:#334155}
+body.dark label{color:#aeb7c4}
+body.dark input,body.dark select{background:#0f141b;color:#f3f4f6;border-color:#2b3440}
+body.dark .item.on{background:#3a3005;border-color:#fbbf24}
+@media(max-width:650px){
+ .row{grid-template-columns:1fr}
+ .toolbar{grid-template-columns:1fr 1fr}
+ .toolbar button:last-child{grid-column:1/-1}
+ .footer-actions{grid-template-columns:1fr}
+ .card{padding:13px}
+}
+</style>
+</head>
+<body>
+<header>
+ <div class="head">
+  <img class="logo" src="logo.png" onerror="this.style.display='none'">
+  <div class="brand"><b>Hak Akses</b><small id="ownerText">Memuat akun...</small></div>
+  <div class="actions"><button id="refreshBtn" class="btn-dark" type="button">↻</button><button id="darkBtn" class="btn-yellow" type="button">🌙</button></div>
+ </div>
+</header>
+
+<main>
+ <div class="card">
+  <div class="title">IZIN MENU</div>
+  <div class="muted">Pilih akun karyawan/reseller, lalu tentukan halaman HTML yang boleh dibuka. Daftar halaman dibaca otomatis dari folder GitHub saat halaman ini dibuka.</div>
+  <div style="margin-top:12px">
+   <label>AKUN YANG AKAN DIBERI IZIN</label>
+   <select id="accountSelect"><option value="">Memuat akun...</option></select>
+  </div>
+  <div class="toolbar">
+   <button id="allBtn" class="btn-dark" type="button">☑ Pilih Semua</button>
+   <button id="noneBtn" class="btn-light" type="button">☐ Hapus Semua</button>
+   <button id="reloadPagesBtn" class="btn-yellow" type="button">↻ Muat Halaman</button>
+  </div>
+ </div>
+
+ <div class="card">
+  <div class="row">
+   <div>
+    <div class="title" style="margin:0">DAFTAR SEMUA HTML</div>
+    <div class="stats" id="stats">Memuat...</div>
+   </div>
+   <div style="min-width:160px"><input id="search" class="search" placeholder="Cari halaman..."></div>
+  </div>
+  <div id="pageList" class="list"></div>
+  <div class="muted" style="margin-top:10px">Catatan: halaman sistem seperti login/register ikut ditampilkan karena A Yudi meminta semua HTML. Centang hanya halaman yang memang boleh dipakai akun tersebut.</div>
+  <div class="footer-actions">
+   <button id="cancelBtn" class="btn-light" type="button">Batal / Reset</button>
+   <button id="saveBtn" class="btn-dark" type="button">💾 Simpan Hak Akses</button>
+  </div>
+ </div>
+</main>
+
+<div id="notice" class="notice">
+ <div class="notice-box">
+  <div id="noticeIcon" class="notice-icon">ℹ️</div>
+  <h3 id="noticeTitle">Info</h3>
+  <p id="noticeText"></p>
+  <button id="noticeOk" class="btn-dark" style="width:100%">OK</button>
+ </div>
+</div>
+
+<script type="module">
+import {initializeApp,getApps,getApp} from "https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js";
+import {getAuth,onAuthStateChanged} from "https://www.gstatic.com/firebasejs/11.10.0/firebase-auth.js";
+import {getFirestore,collection,query,where,getDocs,doc,getDoc,updateDoc,serverTimestamp} from "https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js";
+
+const cfg={apiKey:"AIzaSyC_PcarMTT5Un7qfSLzf92o5OGn5rginsI",authDomain:"fixzy-update.firebaseapp.com",projectId:"fixzy-update",storageBucket:"fixzy-update.firebasestorage.app",messagingSenderId:"995892519622",appId:"1:995892519622:web:fa41047944d8e5b35d6dc7"};
+const app=getApps().length?getApp():initializeApp(cfg);
+const auth=getAuth(app),db=getFirestore(app);
+const FALLBACK_PAGES=["cek-aktivasi.html", "dashboard-admin.html", "data-karyawan.html", "data-penjualan.html", "data-penjualan2.html", "data-servis.html", "data-servis2-3d-layout-sesuai-permintaan.html", "data-servis2-logo-line-kuning-1786749190.html", "data-servis2-nama-konter-register-1786748941.html", "data-servis2.html", "ifrem.html", "index.html", "index1.html", "kelola-karyawan-reseller.html", "kendali2.html", "login.html", "nota.html", "nota2.html", "pengaturan.html", "pengeluaran.html", "penjualan.html", "penjualan2-panel-seperti-input-servis-3d.html", "penjualan2.html", "register.html", "ringkasan-pendapatan.html", "stock.html", "stock2.html", "upah-kerja.html"];
+const LABELS={"nota.html": "🧾 Input Servis", "penjualan.html": "🛒 Input Penjualan", "data-servis.html": "🔧 Data Servis", "data-penjualan.html": "🛒 Data Penjualan", "rekap-teknisi.html": "🧰 Rekap Teknisi", "laporan-pendapatan-servis.html": "💻 Laporan Pendapatan", "monitoring-garansi.html": "🛡️ Monitoring Garansi", "stock.html": "📦 Stock", "upah-kerja.html": "💰 Upah Karyawan", "pengeluaran.html": "💸 Pengeluaran", "dashboard-admin.html": "📊 Dashboard Admin", "kelola-karyawan-reseller.html": "👥 Kelola Karyawan & Reseller", "hak-akses.html": "🔐 Hak Akses", "data-karyawan.html": "👤 Data Karyawan", "cek-aktivasi.html": "🔐 Cek Aktivasi", "pengaturan.html": "⚙️ Pengaturan", "ifrem.html": "ℹ️ About", "ringkasan-pendapatan.html": "📊 Ringkasan Pendapatan", "kendali2.html": "🎛️ Kendali Admin", "stock2.html": "📦 Stock 2", "nota2.html": "🧾 Nota 2", "penjualan2.html": "🛒 Penjualan 2", "penjualan2-panel-seperti-input-servis-3d.html": "🛒 Penjualan 2 Panel 3D", "data-penjualan2.html": "🛒 Data Penjualan 2", "data-servis2.html": "🔧 Data Servis 2", "data-servis2-3d-layout-sesuai-permintaan.html": "🔧 Data Servis 2 • 3D", "data-servis2-logo-line-kuning-1786749190.html": "🔧 Data Servis 2 • Logo", "data-servis2-nama-konter-register-1786748941.html": "🔧 Data Servis 2 • Nama Konter", "login.html": "🔑 Login", "register.html": "📝 Register", "index.html": "🏠 Index", "index1.html": "🏠 Index 1"};
+
+let ownerUid="",currentUser=null,accounts=[],pages=[],selectedUid="",savedPermissions=[];
+const $=id=>document.getElementById(id);
+
+function esc(v){return String(v??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]))}
+function labelFor(file){
+ if(LABELS[file]) return LABELS[file];
+ let s=file.replace(/\.html$/i,"").replace(/[-_]+/g," ").trim();
+ s=s.replace(/\b\w/g,c=>c.toUpperCase());
+ return "📄 "+s;
+}
+function showNotice(title,text,type="info"){
+ $("noticeIcon").textContent=type==="success"?"✅":type==="error"?"❌":"ℹ️";
+ $("noticeTitle").textContent=title;$("noticeText").textContent=text;$("notice").classList.add("show");
+}
+$("noticeOk").onclick=()=>$("notice").classList.remove("show");
+
+async function loadAccounts(){
+ const s=await getDocs(query(collection(db,"users"),where("ownerUid","==",ownerUid)));
+ accounts=s.docs.map(d=>({id:d.id,...d.data()})).filter(a=>["employee","reseller"].includes(String(a.role||"").toLowerCase()));
+ const sel=$("accountSelect");
+ sel.innerHTML='<option value="">-- Pilih karyawan / reseller --</option>'+accounts.map(a=>`<option value="${esc(a.id)}">${esc(a.nama||a.namaKaryawan||a.email||a.id)} — ${esc(a.role||"")}</option>`).join("");
+}
+
+function getRepoInfo(){
+ const host=location.hostname.toLowerCase();
+ const owner=host.endsWith(".github.io")?host.split(".")[0]:"alinatacell";
+ const parts=location.pathname.split("/").filter(Boolean);
+ const repo=parts[0]||"fixzy";
+ return {owner,repo};
+}
+
+async function loadPages(){
+ try{
+  const {owner,repo}=getRepoInfo();
+  const url=`https://api.github.com/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/contents/`;
+  const res=await fetch(url,{headers:{Accept:"application/vnd.github+json"}});
+  if(!res.ok) throw new Error("GitHub API "+res.status);
+  const data=await res.json();
+  const list=data.filter(x=>x.type==="file" && /\.html$/i.test(x.name)).map(x=>x.name);
+  if(!list.length) throw new Error("Tidak ada HTML");
+  pages=[...new Set(list)].sort((a,b)=>a.localeCompare(b,"id"));
+ }catch(e){
+  pages=[...FALLBACK_PAGES].sort((a,b)=>a.localeCompare(b,"id"));
+  console.warn("Daftar GitHub tidak dapat dibaca, memakai daftar ZIP:",e);
+ }
+ renderPages();
+}
+
+function renderPages(){
+ const q=$("search").value.trim().toLowerCase();
+ const list=$("pageList");
+ const visible=pages.filter(f=>(f+" "+labelFor(f)).toLowerCase().includes(q));
+ const set=new Set(savedPermissions);
+ list.innerHTML=visible.map(file=>{
+  const on=set.has(file);
+  return `<label class="item ${on?"on":""}" data-file="${esc(file)}">
+    <input type="checkbox" class="pageCheck" value="${esc(file)}" ${on?"checked":""}>
+    <span class="item-main"><span class="item-name">${esc(labelFor(file))}</span><span class="item-file">${esc(file)}</span></span>
+    <span class="badge">${on?"DIIZINKAN":"BELUM DIIZINKAN"}</span>
+  </label>`;
+ }).join("") || '<div class="muted" style="padding:20px;text-align:center">Tidak ada halaman yang cocok.</div>';
+ $("stats").textContent=`${pages.length} halaman HTML terdeteksi • ${set.size} diizinkan`;
+ list.querySelectorAll(".item").forEach(el=>{
+   const cb=el.querySelector("input");
+   el.addEventListener("click",e=>{
+     if(e.target!==cb) cb.checked=!cb.checked;
+     el.classList.toggle("on",cb.checked);
+     el.querySelector(".badge").textContent=cb.checked?"DIIZINKAN":"BELUM DIIZINKAN";
+   });
+ });
+}
+
+function readChecks(){
+ return [...document.querySelectorAll(".pageCheck:checked")].map(x=>x.value);
+}
+
+async function loadSelected(){
+ selectedUid=$("accountSelect").value;
+ savedPermissions=[];
+ if(!selectedUid){ renderPages(); return; }
+ const s=await getDoc(doc(db,"users",selectedUid));
+ if(s.exists()){
+   const d=s.data()||{};
+   savedPermissions=Array.isArray(d.izin)?d.izin:(Array.isArray(d.permissions)?d.permissions:[]);
+ }
+ renderPages();
+}
+
+$("accountSelect").addEventListener("change",async()=>{
+ try{await loadSelected();}catch(e){showNotice("Gagal Memuat",e.message||String(e),"error");}
+});
+$("allBtn").onclick=()=>{savedPermissions=[...pages];renderPages()};
+$("noneBtn").onclick=()=>{savedPermissions=[];renderPages()};
+$("reloadPagesBtn").onclick=async()=>{await loadPages();showNotice("Daftar Diperbarui",`${pages.length} file HTML ditemukan.`,"success")};
+$("search").addEventListener("input",renderPages);
+$("cancelBtn").onclick=loadSelected;
+
+$("saveBtn").onclick=async()=>{
+ if(!selectedUid){showNotice("Pilih Akun","Pilih karyawan/reseller terlebih dahulu.","error");return;}
+ const izin=readChecks();
+ const btn=$("saveBtn");btn.disabled=true;btn.textContent="Menyimpan...";
+ try{
+  await updateDoc(doc(db,"users",selectedUid),{izin,permissions:izin,updatedAt:serverTimestamp()});
+  savedPermissions=izin;
+  renderPages();
+  showNotice("Berhasil Disimpan",`Hak akses berhasil disimpan. ${izin.length} halaman diizinkan untuk akun tersebut.`,"success");
+ }catch(e){
+  console.error(e);showNotice("Gagal Menyimpan",e.message||String(e),"error");
+ }finally{btn.disabled=false;btn.textContent="💾 Simpan Hak Akses";}
+};
+
+$("refreshBtn").onclick=()=>location.reload();
+const dark=localStorage.getItem("fixzy-dark")==="1";
+if(dark) document.body.classList.add("dark");
+$("darkBtn").onclick=()=>{
+ document.body.classList.toggle("dark");
+ localStorage.setItem("fixzy-dark",document.body.classList.contains("dark")?"1":"0");
+};
+
+onAuthStateChanged(auth,async user=>{
+ if(!user){location.replace("login.html");return;}
+ currentUser=user;
+ try{
+  const s=await getDoc(doc(db,"users",user.uid));
+  if(!s.exists()){location.replace("login.html");return;}
+  const d=s.data()||{};
+  const role=String(d.role||"").toLowerCase();
+  if(!["owner","superadmin"].includes(role)){showNotice("Akses Ditolak","Halaman Hak Akses hanya untuk Owner/Admin.","error");return;}
+  ownerUid=role==="owner"?user.uid:(d.ownerUid||user.uid);
+  $("ownerText").textContent=d.namaKonter||d.namaPemilik||d.nama||user.email||"Owner";
+  await loadAccounts();
+  await loadPages();
+ }catch(e){console.error(e);showNotice("Gagal Memuat",e.message||String(e),"error");}
+});
+</script>
+</body>
+</html>

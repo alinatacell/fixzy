@@ -781,21 +781,20 @@ window.fixStokSinkron=async()=>{
 async function loadProduk(){
   try{
     let docs=[];
+    // FIX FINAL: baca langsung dari koleksi 'stok' di Firebase (sesuai screenshot console.firebase.google.com)
+    // karena data stock A53 3pcs ada di sana
     const stokCols = ["stok"];
     for(let col of stokCols){
       try{
         let snaps=[];
-        // Coba filter owner dulu
-        try{ const s=await getDocs(query(collection(db,col), where("ownerUid","==", ownerUid))); if(s.size>0) snaps.push(s); }catch(e){}
-        try{ const s=await getDocs(query(collection(db,col), where("uid","==", ownerUid))); if(s.size>0) snaps.push(s); }catch(e){}
-        try{ const s=await getDocs(query(collection(db,col), where("ownerId","==", ownerUid))); if(s.size>0) snaps.push(s); }catch(e){}
-        // IZINKAN SEMUA: kalau hasil filter kosong atau untuk karyawan, ambil semua
-        try{
-          const allSnap=await getDocs(collection(db,col));
-          console.log(`[PENJUALAN] Total ${col}: ${allSnap.size}, filtered: ${snaps.reduce((a,s)=>a+s.size,0)}`);
-          if(allSnap.size>0) snaps.push(allSnap);
-        }catch(e){}
-        
+        try{ snaps.push(await getDocs(query(collection(db,col), where("ownerUid","==", ownerUid)))); }catch(e){}
+        try{ snaps.push(await getDocs(query(collection(db,col), where("uid","==", ownerUid)))); }catch(e){}
+        try{ snaps.push(await getDocs(query(collection(db,col), where("ownerId","==", ownerUid)))); }catch(e){}
+        try{ snaps.push(await getDocs(query(collection(db,col), where("owner","==", ownerUid)))); }catch(e){}
+        // Fallback kalau tidak ada owner field
+        if(snaps.every(s=>s.empty)){
+          try{ snaps = [await getDocs(collection(db,col))]; }catch(e){}
+        }
         const mapId = new Map();
         snaps.forEach(snap=>{
           snap.forEach(d=>{
@@ -847,23 +846,15 @@ async function loadProduk(){
 }
 
 function filterProduk(keyword){
-  const kw=(keyword||'').toString().trim().toLowerCase();
-  if(!kw){
-    showProdukDropdown(allProduk);
-    return;
-  }
+  if(!keyword){ hideProdukDropdown(); return; }
+  const kw=keyword.toLowerCase();
   const filtered=allProduk.filter(p=>{
-    const nama=(p.nama||p.namaProduk||p.name||'').toString().toLowerCase();
-    const kode=(p.kode||p.sku||p.code||'').toString().toLowerCase();
-    const barcode=(p.barcode||'').toString().toLowerCase();
-    const merk=(p.merk||p.brand||'').toString().toLowerCase();
-    const kategori=(p.kategori||p.category||'').toString().toLowerCase();
-    return nama.includes(kw) || kode.includes(kw) || barcode.includes(kw) || merk.includes(kw) || kategori.includes(kw);
+    const nama=(p.nama||p.namaProduk||p.name||'').toLowerCase();
+    const barcode=(p.barcode||'').toLowerCase();
+    return nama.includes(kw) || barcode.includes(kw);
   });
   showProdukDropdown(filtered);
 }
-window.filterProduk=filterProduk;
-
 
 function showProdukDropdown(list){
   const wrap=document.getElementById('produkSearch').parentElement;
@@ -873,34 +864,30 @@ function showProdukDropdown(list){
   else{
     dd.innerHTML=list.map(p=>{
       const nama=p.nama||p.namaProduk||p.name||'-';
-      const kode=p.kode||p.sku||p.barcode||'';
-      const harga=p.harga||p.hargaJual||p.price||p.hargaModal||0;
-      const stok=Number(p._stok ?? p.sisa ?? p.stok ?? p.qty ?? p.jumlah ?? 0);
+      const harga=p.harga||p.hargaJual||p.price||0;
+      const stok=Number(p._stok ?? p.stok ?? p.qty ?? p.jumlah ?? 0);
       const isHabis = stok<=0;
       const stockText = isHabis ? 'STOK HABIS' : `Stok: ${stok}`;
-      const stockColor = isHabis ? '#f59e0b' : '#16a34a';
-      const bg = isHabis ? '#fffbeb' : '#fff';
-      // IZINKAN SEMUA: tetap bisa diklik walau habis
-      return `<div class="produk-item" data-id="${p.id}" data-habis="${isHabis}" style="background:${bg};cursor:pointer;border-left:3px solid ${stockColor}"><div><b>${nama}</b> <span style="font-size:10px;color:#888">[${kode}]</span><br><span style="font-size:10px;color:#64748b">${p.kategori||''} • <span style="color:${stockColor};font-weight:900">${stockText}</span></span></div><div style="text-align:right"><div>Rp ${Number(harga).toLocaleString('id-ID')}</div><div style="font-size:10px;color:${stockColor}">${isHabis?'⚠️ Habis tapi bisa jual':'✅ Tersedia'}</div></div></div>`;
+      const stockColor = isHabis ? '#ef4444' : '#16a34a';
+      const opacity = isHabis ? '0.4' : '1';
+      const bg = isHabis ? '#fef2f2' : '#fff';
+      return `<div class="produk-item" data-id="${p.id}" data-habis="${isHabis}" style="opacity:${opacity};background:${bg}"><div><b>${nama}</b><br><span style="font-size:10px;color:#64748b">${p.barcode||''} • <span style="color:${stockColor};font-weight:900">${stockText}</span></span></div><div style="text-align:right"><div>Rp ${Number(harga).toLocaleString('id-ID')}</div><div style="font-size:10px;color:${stockColor}">${isHabis?'❌ Habis':'✅ Tersedia'}</div></div></div>`;
     }).join('');
   }
   dd.classList.add('show');
   dd.querySelectorAll('.produk-item').forEach(el=>{
     el.addEventListener('click', ()=>{
-      const prod=allProduk.find(x=>x.id===el.getAttribute('data-id'));
-      if(!prod) return;
-      const stok=Number(prod._stok ?? prod.sisa ?? prod.stok ?? 0);
-      if(stok<=0){
-        // Tetap izinkan, cuma konfirmasi native (biar gak crash)
-        if(!confirm(`Stok ${prod.nama||prod.kode} habis (sisa ${stok}). Tetap jual?`)) return;
+      const isHabis = el.getAttribute('data-habis')==='true';
+      if(isHabis){
+        showKonterPopup('Stok habis! Produk ini disamarkan - tidak bisa dijual. | Konter: ' + konterName, 'error');
+        return;
       }
+      const prod=allProduk.find(x=>x.id===el.getAttribute('data-id'));
       selectProdukAuto(prod);
       dd.classList.remove('show');
     });
   });
 }
-window.showProdukDropdown=showProdukDropdown;
-
 
 function hideProdukDropdown(){
   const dd=document.getElementById('produkSearch').parentElement.querySelector('.produk-dropdown');
@@ -1223,19 +1210,7 @@ window.alert = function(msg){ showKonterPopup(msg, 'info'); };
 window.regenerate=()=>{ autoGenerateNotaBarcode(); showKonterPopup('Nota & Barcode baru: ' + document.getElementById('notaField').value + ' | Konter: ' + konterName, 'success'); }
 
 document.addEventListener('DOMContentLoaded', ()=>{
-  const produkSearch=document.getElementById('produkSearch');
-
-  // Klik/fokus kolom pencarian langsung menampilkan seluruh produk yang tersedia.
-  produkSearch.addEventListener('focus', ()=>{
-    filterProduk(produkSearch.value);
-  });
-
-  produkSearch.addEventListener('click', ()=>{
-    filterProduk(produkSearch.value);
-  });
-
-  produkSearch.addEventListener('input', (e)=>filterProduk(e.target.value));
-
+  document.getElementById('produkSearch').addEventListener('input', (e)=>filterProduk(e.target.value));
   document.getElementById('hargaAuto').addEventListener('input', hitungSubtotalAuto);
   document.getElementById('qtyAuto').addEventListener('input', hitungSubtotalAuto);
   document.getElementById('hargaManual').addEventListener('input', hitungSubtotalManual);
@@ -1524,7 +1499,7 @@ body.dark #manualToggle + label{
 
 <div class="card info-transaksi-card">
   <div class="card-header info-title">
-    <span>Informasi Transaksi</span>
+    <span>1. Informasi Transaksi</span>
   </div>
 
   <div class="info-transaksi-box">
@@ -1537,7 +1512,7 @@ body.dark #manualToggle + label{
     </div>
 
     <div class="info-row">
-      <span class="info-label">Pemilik Usaha</span>
+      <span class="info-label">Usaha</span>
       <div class="info-value">
         <input id="konterField" readonly>
       </div>
@@ -1577,16 +1552,16 @@ body.dark #manualToggle + label{
 </div>
 
 <div class="card">
-  <div class="card-header"><span>Data Pelanggan</span></div>
+  <div class="card-header"><span>HEADER 2 - Pelanggan</span></div>
   <div><label style="font-size:11px;font-weight:800">Nama Pelanggan *</label><input id="namaPelangganField" placeholder="Wajib" required></div>
   <div class="grid2" style="margin-top:10px">
-    <div><label style="font-size:11px;font-weight:800">No Whatsapp</label><input id="waField" placeholder="no whastapp"></div>
+    <div><label style="font-size:11px;font-weight:800">No Whatsapp</label><input id="waField" placeholder="62..."></div>
     <div><label style="font-size:11px;font-weight:800">Alamat</label><textarea id="alamatField" placeholder="Alamat pelanggan" style="min-height:60px"></textarea></div>
   </div>
 </div>
 
 <div class="card">
-  <div class="card-header"><span>Data Produk (Stok) + Manual</span><div style="display:flex;gap:6px;align-items:center"><span id="produkInfo" style="font-size:10px;color:#64748b">Memuat...</span><button type="button" onclick="fixStokSinkron()" style="background:#f59e0b;color:#111827;padding:4px 8px;border-radius:6px;font-size:10px;font-weight:900">🔧 Fix Sinkron Stok</button></div></div>
+  <div class="card-header"><span>HEADER 3 - Data Produk (Stok) + Manual</span><div style="display:flex;gap:6px;align-items:center"><span id="produkInfo" style="font-size:10px;color:#64748b">Memuat...</span><button type="button" onclick="fixStokSinkron()" style="background:#f59e0b;color:#111827;padding:4px 8px;border-radius:6px;font-size:10px;font-weight:900">🔧 Fix Sinkron Stok</button></div></div>
   <div id="autoProdukWrap">
     <div id="produkStockInfo" style="font-size:11px;color:#16a34a;font-weight:800;margin-bottom:6px;display:none"></div>
     <label style="font-size:11px;font-weight:800">Cari Produk Auto (Dropdown dari stock produk)</label>
@@ -1609,20 +1584,20 @@ body.dark #manualToggle + label{
     <div><label style="font-size:10px">Qty Manual</label><input id="qtyManual" type="number" value="1" min="1"></div>
     <div><label style="font-size:10px">Subtotal Manual</label><input id="subtotalManual" readonly style="background:#f8fafc"></div>
   </div>
-  <div style="margin-top:12px"><button type="button" onclick="tambahProduk()" style="width:100%;background:#111827;color:#fff;padding:12px;border-radius:10px">Tambah ke Rincian blanja</button></div>
+  <div style="margin-top:12px"><button type="button" onclick="tambahProduk()" style="width:100%;background:#111827;color:#fff;padding:12px;border-radius:10px">+ Tambah ke Rincian (Header 4)</button></div>
 </div>
 
 <div class="card">
-  <div class="card-header"><span>Rincian Produk Yang Dipilih</span><span style="font-size:10px;color:#64748b">Hasil dari Header 3</span></div>
+  <div class="card-header"><span>HEADER 4 - Rincian Produk Yang Dipilih</span><span style="font-size:10px;color:#64748b">Hasil dari Header 3</span></div>
   <table class="rincian-table">
     <thead><tr><th>No</th><th>Produk + Barcode + Type</th><th>Harga</th><th>Qty</th><th>Subtotal</th><th>Aksi</th></tr></thead>
-    <tbody id="rincianBody"><tr><td colspan="6" style="text-align:center;color:#94a3b8;padding:16px">Belum ada produk yang di pilih</td></tr></tbody>
+    <tbody id="rincianBody"><tr><td colspan="6" style="text-align:center;color:#94a3b8;padding:16px">Belum ada produk - tambah di Header 3</td></tr></tbody>
   </table>
   <div style="margin-top:10px;display:flex;justify-content:space-between;font-weight:900"><span>Total Rincian:</span><span id="totalDisplay">Rp 0</span></div>
 </div>
 
 <div class="card">
-  <div class="card-header"><span>Rincian Pembayaran</span></div>
+  <div class="card-header"><span>HEADER 5 - Total, Diskon, DP, Sisa, Status, Tombol</span></div>
   <div class="grid2">
     <div><label style="font-size:11px;font-weight:800">Total</label><input id="totalField" type="number" readonly style="background:#f8fafc;font-weight:900"></div>
     <div><label style="font-size:11px;font-weight:800">Diskon</label><input id="diskonField" type="number" value="0"></div>

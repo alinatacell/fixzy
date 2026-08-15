@@ -98,32 +98,225 @@
 html,body{min-height:100%;background:var(--bg);color:var(--txt);font-family:Arial,Helvetica,sans-serif}
 body{background:linear-gradient(180deg,#fff 0,#f5f7fb 250px)}
 button,input,select{font:inherit}button{cursor:pointer}
+/* HEADER — disamakan dengan Data Penjualan */
 .header{
-  position:sticky;top:0;z-index:20;background:#111827;
-  border-bottom:1px solid #1f2937;box-shadow:0 2px 12px #0004
+  background:#111827 !important;
+  color:#fff !important;
+  padding:10px 14px !important;
+  min-height:66px;
+  display:flex;
+  align-items:center;
+  gap:12px;
+  position:sticky;
+  top:0;
+  z-index:100;
+  border-bottom:2px solid #facc15 !important;
+  box-shadow:0 2px 12px rgba(0,0,0,.3) !important;
 }
-.header-in{max-width:1180px;margin:auto;padding:12px 16px;display:flex;align-items:center;justify-content:space-between;gap:12px}
-.brand{display:flex;align-items:center;gap:10px;min-width:0}
-.logo{width:42px;height:42px;border-radius:12px;object-fit:cover;background:#000;padding:2px}
-.brand h1{font-size:18px;font-weight:900;color:#fff}.brand p{font-size:10px;color:#cbd5e1;margin-top:3px}
-.head-actions{display:flex;gap:7px}
-.head-btn{height:42px;border:1px solid #475569;border-radius:11px;background:#111827;color:#fff;font-size:14px;padding:0 12px;font-weight:800}
-.head-btn.refresh{background:#111827;border-color:#64748b;color:#fff}
-.container{width:min(1180px,100%);margin:auto;padding:18px 14px 70px}
-.top{display:flex;gap:9px;flex-wrap:wrap;margin-bottom:14px}
-.btn{min-height:42px;border:0;border-radius:11px;padding:10px 15px;font-weight:800}
-.primary{background:linear-gradient(135deg,#ffc107,#f59e0b);color:#111827;box-shadow:0 5px 14px #f59e0b22}
+.header-in{
+  width:100%;
+  max-width:1400px;
+  margin:auto;
+  padding:0 !important;
+  min-height:44px;
+  display:flex;
+  align-items:center;
+  gap:12px;
+}
+.brand{
+  min-width:0;
+  flex:0 1 auto;
+}
+.brand b{
+  color:#fff !important;
+  font-weight:900;
+  letter-spacing:.5px;
+}
+.brand b span{color:#facc15 !important}
+.brand .email{font-size:10px;color:#9ca3af}
+.badge-role{
+  background:#facc15;
+  color:#000;
+  padding:2px 8px;
+  border-radius:6px;
+  font-size:10px;
+  font-weight:900;
+  display:inline-block;
+  margin-left:4px;
+}
+.logo{
+  width:46px !important;
+  height:46px !important;
+  flex:0 0 46px !important;
+  background:#000 !important;
+  border-radius:12px !important;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  border:2px solid #facc15 !important;
+  overflow:hidden;
+  box-shadow:0 0 0 2px #111827,0 0 0 4px #facc1530 !important;
+  padding:0 !important;
+  object-fit:contain;
+}
+.logo img{
+  width:40px !important;
+  height:40px !important;
+  object-fit:contain !important;
+  background:#000;
+}
+
+.head-actions{
+  margin-left:auto;
+  display:flex;
+  align-items:center;
+  gap:8px;
+  flex:0 0 auto;
+}
+.header .head-btn{
+  height:42px !important;
+  min-width:auto !important;
+  padding:10px 14px !important;
+  border-radius:12px !important;
+  font-weight:800 !important;
+  font-size:12px !important;
+  border:1px solid #334155 !important;
+  cursor:pointer;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  gap:6px;
+  transition:all .2s;
+  background:#1e293b !important;
+  color:#fff !important;
+}
+.header .head-btn:hover{
+  transform:translateY(-1px);
+}
+.header .head-btn.refresh{
+  background:#1e293b !important;
+  color:#fff !important;
+  border-color:#facc15 !important;
+}
+.header .head-btn.close-like{
+  width:42px !important;
+  min-width:42px !important;
+  padding:0 !important;
+  background:#000 !important;
+  color:#facc15 !important;
+  border:2px solid #facc15 !important;
+  font-size:18px !important;
+  border-radius:12px !important;
+}
+@media(max-width:900px){
+  .header{
+    padding:8px 10px !important;
+    gap:8px;
+    min-height:54px;
+  }
+  .header-in{gap:8px}
+  .logo{
+    width:70px !important;
+    height:70px !important;
+    flex-basis:70px !important;
+    border-radius:10px !important;
+  }
+  .brand b{font-size:13px !important}
+  .brand .email{font-size:9px}
+  .badge-role{font-size:9px;padding:2px 6px}
+  .head-actions{gap:6px}
+  .header .head-btn{
+    height:38px !important;
+    padding:8px 10px !important;
+    font-size:11px !important;
+  }
+  .header .head-btn.close-like{
+    width:38px !important;
+    min-width:38px !important;
+  }
+}
+@media(max-width:520px){
+  .brand p{display:none}
+  .brand h1{font-size:12px !important}
+  .header .head-btn.refresh{
+    padding:8px 9px !important;
+  }
+}
+.container{
+  width:min(1180px,100%);
+  margin:auto;
+  padding:16px 14px 70px;
+}
+.top{
+  display:flex;
+  gap:9px;
+  flex-wrap:wrap;
+  margin-bottom:14px;
+}
+.btn{
+  min-height:42px;
+  border:0;
+  border-radius:11px;
+  padding:10px 15px;
+  font-weight:800;
+}
+.primary{
+  background:linear-gradient(135deg,#ffc107,#f59e0b);
+  color:#111827;
+  box-shadow:0 5px 14px #f59e0b22;
+}
 .dark{background:#111827;color:#fff}
 .green{background:#16a34a;color:#fff}
-.card{background:var(--card);border:1px solid var(--line);border-radius:17px;padding:15px;margin-bottom:14px;box-shadow:0 5px 18px #17203308}
-.title{font-size:15px;font-weight:900;margin-bottom:11px;color:#111827}.sub{font-size:11px;color:var(--muted);line-height:1.5}
-.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:14px}
-.stat{background:#fff;border:1px solid var(--line);border-radius:15px;padding:14px;box-shadow:0 4px 14px #17203308}
-.stat small{font-size:10px;color:var(--muted);font-weight:800}.stat strong{display:block;color:#111827;font-size:23px;margin-top:6px}.stat span{font-size:10px;color:#94a3b8}
-.stat:nth-child(2) strong{color:var(--green)}.stat:nth-child(3) strong{color:var(--red)}.stat:nth-child(4) strong{color:#d97706}
+.card{
+  background:var(--card);
+  border:1px solid var(--line);
+  border-radius:17px;
+  padding:15px;
+  margin-bottom:14px;
+  box-shadow:0 5px 18px #17203308;
+}
+.title{
+  font-size:15px;
+  font-weight:900;
+  margin-bottom:11px;
+  color:#111827;
+}
+.sub{
+  font-size:11px;
+  color:var(--muted);
+  line-height:1.5;
+}
+.stats{
+  display:grid;
+  grid-template-columns:repeat(4,1fr);
+  gap:10px;
+  margin-bottom:14px;
+}
+.stat{
+  background:#fff;
+  border:1px solid var(--line);
+  border-radius:15px;
+  padding:14px;
+  box-shadow:0 4px 14px #17203308;
+}
+.stat small{font-size:10px;color:var(--muted);font-weight:800}
+.stat strong{display:block;color:#111827;font-size:23px;margin-top:6px}
+.stat span{font-size:10px;color:#94a3b8}
+.stat:nth-child(2) strong{color:var(--green)}
+.stat:nth-child(3) strong{color:var(--red)}
+.stat:nth-child(4) strong{color:#d97706}
 .grid4{display:grid;grid-template-columns:2fr 1fr 1fr auto;gap:9px}
 .field label{display:block;color:#475569;font-size:10px;font-weight:900;margin:0 0 5px 2px}
-.field input,.field select{width:100%;height:42px;background:#fff;color:#111827;border:1px solid #cbd5e1;border-radius:10px;padding:0 11px;outline:none}
+.field input,.field select{
+  width:100%;
+  height:42px;
+  background:#fff;
+  color:#111827;
+  border:1px solid #cbd5e1;
+  border-radius:10px;
+  padding:0 11px;
+  outline:none;
+}
 .field input:focus,.field select:focus{border-color:var(--y);box-shadow:0 0 0 3px #f59e0b18}
 .import-box{display:grid;grid-template-columns:1fr auto;gap:9px}
 .import-box input{height:46px;width:100%;background:#fff;color:#111827;border:1px solid #cbd5e1;border-radius:12px;padding:0 13px;outline:none}
@@ -152,13 +345,48 @@ tr:hover td{background:#fffdf5}
 .loading{display:none;position:fixed;inset:0;z-index:200;background:#11182766;align-items:center;justify-content:center}.loading.show{display:flex}
 .loader{background:#fff;border:1px solid var(--line);border-radius:16px;padding:24px;text-align:center;box-shadow:0 20px 60px #0002}.spin{width:32px;height:32px;border:4px solid #e5e7eb;border-top-color:var(--y);border-radius:50%;animation:s .8s linear infinite;margin:auto auto 10px}@keyframes s{to{transform:rotate(360deg)}}
 .toast{position:fixed;left:50%;bottom:22px;z-index:300;transform:translate(-50%,20px);opacity:0;pointer-events:none;background:#111827;color:#fff;border:1px solid #374151;border-radius:12px;padding:11px 15px;font-size:11px;width:min(90%,430px);text-align:center;transition:.2s}.toast.show{opacity:1;transform:translate(-50%,0)}
-@media(max-width:900px){.stats{grid-template-columns:repeat(2,1fr)}.grid4{grid-template-columns:1fr 1fr}.grid4 .search{grid-column:1/-1}}
-@media(max-width:600px){
-  .container{padding:10px}.header-in{padding:10px}.brand h1{font-size:16px}.brand p{font-size:9px}
-  .head-btn{height:39px;padding:0 10px}.stats{gap:7px}.stat{padding:11px}.stat strong{font-size:20px}
-  .grid4{grid-template-columns:1fr}.grid4 .search{grid-column:auto}.import-box{grid-template-columns:1fr}
-  .table-wrap{display:none}.mobile-list{display:grid}.form{grid-template-columns:1fr}.full{grid-column:auto}.top .btn{flex:1}
+@media(max-width:900px){
+  .stats{grid-template-columns:repeat(2,1fr)}
+  .grid4{grid-template-columns:1fr 1fr}
+  .grid4 .search{grid-column:1/-1}
 }
+@media(max-width:600px){
+  .header-in{
+    min-height:62px;
+    padding:8px 10px;
+    gap:8px;
+  }
+  .logo{
+    width:70px !important;
+    height:70px !important;
+    flex-basis:70px !important;
+  }
+  .logo img{width:64px !important;height:64px !important;}
+  .brand{gap:8px}
+  .brand h1{font-size:15px}
+  .brand p{font-size:9px;margin-top:3px}
+  .head-actions{gap:5px}
+  .header .head-btn{
+    height:38px;
+    min-width:auto;
+    padding:0 9px;
+    font-size:12px;
+    border-radius:10px;
+  }
+  .container{padding:10px}
+  .stats{gap:7px}
+  .stat{padding:11px}
+  .stat strong{font-size:20px}
+  .grid4{grid-template-columns:1fr}
+  .grid4 .search{grid-column:auto}
+  .import-box{grid-template-columns:1fr}
+  .table-wrap{display:none}
+  .mobile-list{display:grid}
+  .form{grid-template-columns:1fr}
+  .full{grid-column:auto}
+  .top .btn{flex:1}
+}
+
 </style>
 <style id="stock-logic-patch">
 .stockBulkBar{display:flex;gap:10px;align-items:center;flex-wrap:wrap;justify-content:flex-start;margin:10px 0;padding:10px;border:1px solid #e5e7eb;border-radius:12px;background:#f8fafc}
@@ -171,6 +399,240 @@ tr:hover td{background:#fffdf5}
 #fixzyAlertTitle{font-size:19px;font-weight:900;margin:0 0 10px;color:#111827}
 #fixzyAlertMessage{font-size:14px;line-height:1.6;white-space:pre-line;color:#475569;max-height:55vh;overflow:auto}
 #fixzyAlertOk{width:100%;margin-top:16px;background:#111827;color:#fff;border:0;border-radius:12px;padding:12px 15px;font-weight:900;font-size:15px;cursor:pointer}
+</style>
+
+
+<style id="fixzy-dark-mode-header">
+.dark-mode-btn{
+  width:42px !important;
+  min-width:42px !important;
+  padding:0 !important;
+  background:#000 !important;
+  color:#facc15 !important;
+  border:2px solid #facc15 !important;
+  font-size:18px !important;
+  border-radius:12px !important;
+}
+body.dark-mode{
+  --bg:#0b1220;
+  --card:#111827;
+  --line:#263244;
+  --txt:#e5e7eb;
+  --muted:#94a3b8;
+  background:#0b1220 !important;
+  color:#e5e7eb !important;
+}
+body.dark-mode .card,
+body.dark-mode .stat,
+body.dark-mode .m-card{
+  background:#111827 !important;
+  border-color:#263244 !important;
+  color:#e5e7eb !important;
+}
+body.dark-mode .title,
+body.dark-mode .stat strong,
+body.dark-mode .modal-head h2{
+  color:#f8fafc !important;
+}
+body.dark-mode .sub,
+body.dark-mode .field label,
+body.dark-mode .note{
+  color:#94a3b8 !important;
+}
+body.dark-mode .field input,
+body.dark-mode .field select,
+body.dark-mode .import-box input{
+  background:#0f172a !important;
+  color:#f8fafc !important;
+  border-color:#334155 !important;
+}
+body.dark-mode th{
+  background:#0f172a !important;
+  color:#cbd5e1 !important;
+}
+body.dark-mode td{
+  border-color:#263244 !important;
+  color:#e5e7eb !important;
+}
+body.dark-mode .m-grid div{
+  background:#0f172a !important;
+  color:#e5e7eb !important;
+}
+body.dark-mode .table-wrap,
+body.dark-mode .preview{
+  border-color:#334155 !important;
+}
+body.dark-mode .modal{
+  background:#111827 !important;
+  border-color:#334155 !important;
+}
+@media(max-width:900px){
+  .dark-mode-btn{
+    width:38px !important;
+    min-width:38px !important;
+    height:38px !important;
+    border-radius:10px !important;
+  }
+}
+</style>
+<script>
+(function(){
+  const saved=localStorage.getItem("fixzy-dark-mode");
+  if(saved==="1") document.body.classList.add("dark-mode");
+  window.toggleDarkMode=function(){
+    document.body.classList.toggle("dark-mode");
+    const on=document.body.classList.contains("dark-mode");
+    localStorage.setItem("fixzy-dark-mode",on?"1":"0");
+    const btn=document.getElementById("darkModeBtn");
+    if(btn) btn.textContent=on?"☀️":"🌙";
+  };
+  document.addEventListener("DOMContentLoaded",function(){
+    const btn=document.getElementById("darkModeBtn");
+    if(btn) btn.textContent=document.body.classList.contains("dark-mode")?"☀️":"🌙";
+  });
+})();
+</script>
+
+
+<style id="header-data-penjualan-final">
+/* Header disamakan dengan Data Penjualan */
+.header{
+  background:#111827 !important;
+  color:#fff !important;
+  padding:10px 14px !important;
+  min-height:66px !important;
+  display:flex;
+  align-items:center;
+  gap:12px;
+  position:sticky;
+  top:0;
+  z-index:100;
+  border-bottom:2px solid #facc15 !important;
+  box-shadow:0 2px 12px rgba(0,0,0,.30) !important;
+}
+.header-in{
+  width:100%;
+  max-width:1400px;
+  margin:auto;
+  padding:0 !important;
+  min-height:44px;
+  display:flex;
+  align-items:center;
+  gap:12px;
+}
+.logo{
+  width:46px !important;
+  height:46px !important;
+  flex:0 0 46px !important;
+  background:#000 !important;
+  border-radius:12px !important;
+  display:flex !important;
+  align-items:center;
+  justify-content:center;
+  border:2px solid #facc15 !important;
+  overflow:hidden;
+  box-shadow:0 0 0 2px #111827,0 0 0 4px #facc1530 !important;
+  padding:0 !important;
+}
+.logo img{
+  width:40px !important;
+  height:40px !important;
+  object-fit:contain !important;
+  background:#000;
+}
+.brand{
+  min-width:0;
+  flex:0 1 auto;
+}
+.brand b{
+  color:#fff !important;
+  font-weight:900;
+  letter-spacing:.5px;
+}
+.brand b span{color:#facc15 !important}
+.brand .email{font-size:10px;color:#9ca3af}
+.badge-role{
+  background:#facc15;
+  color:#000;
+  padding:2px 8px;
+  border-radius:6px;
+  font-size:10px;
+  font-weight:900;
+  display:inline-block;
+  margin-left:4px;
+}
+.header-actions,.head-actions{
+  margin-left:auto;
+  display:flex;
+  align-items:center;
+  gap:8px;
+  flex:0 0 auto;
+}
+.header .head-btn{
+  height:42px !important;
+  min-width:auto !important;
+  padding:10px 14px !important;
+  border-radius:12px !important;
+  font-weight:800 !important;
+  font-size:12px !important;
+  border:1px solid #334155 !important;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  gap:6px;
+  background:#1e293b !important;
+  color:#fff !important;
+}
+.header .btn-refresh{
+  border-color:#facc15 !important;
+}
+.dark-mode-btn{
+  width:42px !important;
+  min-width:42px !important;
+  padding:0 !important;
+  background:#000 !important;
+  color:#facc15 !important;
+  border:2px solid #facc15 !important;
+  font-size:18px !important;
+  border-radius:12px !important;
+}
+@media(max-width:900px){
+  .header{
+    padding:8px 10px !important;
+    min-height:58px !important;
+    gap:8px;
+  }
+  .header-in{gap:8px;min-height:42px}
+  .logo{
+    width:40px !important;
+    height:40px !important;
+    flex-basis:40px !important;
+    border-radius:10px !important;
+  }
+  .logo img{width:34px !important;height:34px !important}
+  .brand b{font-size:13px !important}
+  .brand .email{font-size:9px}
+  .badge-role{font-size:9px;padding:2px 6px}
+  .head-actions,.header-actions{gap:6px}
+  .header .head-btn{
+    height:38px !important;
+    padding:8px 10px !important;
+    font-size:11px !important;
+  }
+  .dark-mode-btn{
+    width:38px !important;
+    min-width:38px !important;
+    height:38px !important;
+    padding:0 !important;
+    border-radius:10px !important;
+  }
+}
+@media(max-width:520px){
+  .brand .email{display:none}
+  .brand b{font-size:12px !important}
+  .badge-role{font-size:8px;padding:2px 5px}
+  .header .btn-refresh{padding:8px 9px !important}
+}
 </style>
 
 </head>
@@ -203,17 +665,21 @@ function tutupHalaman(){
 
 <header class="header">
   <div class="header-in">
-    <div class="brand">
-      <img src="logo.png" class="logo" onerror="this.style.display='none'">
-      <div><h1>Fixzy</h1><p>Produk & Stok</p></div>
+    <div class="logo">
+      <img src="logo.png?v=2" alt="FIXZY Logo">F</b>'">
     </div>
-    <div>
-      <button class="head-btn" onclick="tutupHalaman()">✕ Tutup</button>
-      <button class="head-btn refresh" id="refreshBtn" onclick="refreshHalaman()">↻ Refresh</button>
+    <div class="brand">
+      <b id="headerAccountName">Memuat akun...</b><br>
+      <span class="email" id="headerUserEmail">-</span>
+      <span class="badge-role" id="headerRole">USER</span>
+    </div>
+    <div class="header-actions head-actions">
+      <button class="head-btn btn-refresh" id="refreshBtn" onclick="refreshHalaman()">↻ Refresh</button>
+      <button class="head-btn dark-mode-btn" id="darkModeBtn"
+              onclick="toggleDarkMode()" aria-label="Mode gelap">🌙</button>
     </div>
   </div>
 </header>
-<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 
 <main class="container">
   
@@ -264,60 +730,51 @@ function previewExcel(){
   reader.readAsArrayBuffer(file);
 }
 async function uploadExcelToFirebase(){
-  if(typeof XLSX==='undefined'){ showPopup('Library Excel belum loaded. Refresh halaman.','Error'); return; }
-  if(!excelData.length){ showPopup('Preview dulu file nya - klik Preview','FIXZY'); return; }
+  if(!excelData.length){ alert('Preview dulu file nya'); return; }
   if(!confirm(`Upload ${excelData.length} data stok ke Firebase fixzy-update?`)) return;
   const statusEl=document.getElementById('excelStatus');
   statusEl.textContent='Mengupload...';
-  statusEl.style.color='#16a34a';
-  const dbRef=window.db||window.firestoreDb;
-  const owner=window.ownerUid||window.uid||ownerUid||uid||'';
-  if(!dbRef){ showPopup('Firebase belum siap, tunggu login','Error'); return; }
-  if(!owner){ showPopup('ownerUid tidak ditemukan','Error'); return; }
-  let ok=0,fail=0;
+  let ok=0, fail=0;
   try{
-    const { collection, addDoc, serverTimestamp, getDocs, updateDoc, doc } = await import("https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js");
-    const ref=collection(dbRef,"stok");
-    const snap=await getDocs(ref);
-    const existing=new Map();
-    snap.forEach(d=>{ const x=d.data(); if(x.kode) existing.set(String(x.kode).trim().toLowerCase(), d.id); });
+    const { getFirestore, collection, addDoc, serverTimestamp } = await import("https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js");
+    // gunakan db yang sudah ada di window atau dari modul
+    const dbInstance = window.db || window.firestoreDb || null;
+    // fallback pakai fungsi global tambahStok kalau ada
     for(const row of excelData){
       try{
-        const nama=String(row.nama||row.Nama||row.produk||'').trim();
-        if(!nama){ fail++; continue; }
-        const toNum=v=>{ let s=String(v||'').replace(/[^0-9.-]/g,''); let n=parseFloat(s); return isNaN(n)?0:n; };
-        const kode=String(row.kode||row.sku||'').trim() || 'STK'+Date.now()+ok;
         const payload={
-          kode:kode,
-          nama:nama,
-          kategori:String(row.kategori||row.Kategori||'LAINNYA').toUpperCase(),
-          hargaModal:toNum(row.hargaModal||row.hargaBeli||0),
-          hargaJual:toNum(row.hargaJual||0)||Math.round(toNum(row.hargaModal||0)*1.25),
-          sisa:Math.max(0,Math.round(toNum(row.sisa||row.stok||0))),
-          merk:String(row.merk||'').trim(),
-          catatan:String(row.catatan||row.deskripsi||'').trim(),
-          uid:owner,ownerUid:owner,ownerId:owner,
-          updatedAt:serverTimestamp(),sumber:"EXCEL"
+          nama: String(row.nama||row.Nama||row.NAMA||'').trim(),
+          kategori: String(row.kategori||row.Kategori||'Umum').trim(),
+          hargaBeli: Number(row.hargaBeli||row.harga_beli||0),
+          hargaJual: Number(row.hargaJual||row.harga_jual||0),
+          stok: Number(row.stok||row.Stok||0),
+          sku: String(row.sku||row.SKU||'').trim(),
+          deskripsi: String(row.deskripsi||'').trim(),
+          ownerId: window.ownerUid || window.uid || '',
+          uid: window.ownerUid || window.uid || '',
+          createdAt: new Date(),
+          updatedAt: new Date()
         };
-        const key=payload.kode.toLowerCase();
-        if(key && existing.has(key)){
-          await updateDoc(doc(dbRef,"stok",existing.get(key)),payload);
+        if(!payload.nama) { fail++; continue; }
+        if(typeof window.tambahStokExcel === 'function'){
+          await window.tambahStokExcel(payload);
+        }else if(window.db){
+          const { collection: col, addDoc: add } = await import("https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js");
+          await add(col(window.db,"stock"), payload);
         }else{
-          await addDoc(ref,{...payload,createdAt:serverTimestamp()});
+          // pakai addDoc global
+          await window.uploadRowStock(payload);
         }
         ok++;
-        statusEl.textContent=`Progress: ${ok}/${excelData.length} OK`;
+        statusEl.textContent=`Progress: ${ok}/${excelData.length} OK, ${fail} gagal`;
       }catch(err){ console.error(err); fail++; }
     }
-    statusEl.textContent=`✅ Selesai: ${ok} berhasil, ${fail} gagal`;
-    if(window.loadProducts) await window.loadProducts();
+    statusEl.textContent=`Selesai: ${ok} berhasil, ${fail} gagal. Refresh halaman untuk lihat stok.`;
+    if(window.load) window.load();
   }catch(e){
-    statusEl.textContent='❌ Error: '+e.message;
-    showPopup('Error: '+e.message,'Error');
+    statusEl.textContent='Error: '+e.message;
   }
 }
-window.uploadExcelToFirebase=uploadExcelToFirebase;
-
 </script>
 
 <div class="top">
@@ -428,8 +885,6 @@ const cfg={apiKey:"AIzaSyC_PcarMTT5Un7qfSLzf92o5OGn5rginsI",authDomain:"fixzy-up
 const app=initializeApp(cfg);
 const auth=getAuth(app);
 const db=getFirestore(app);
-window.db=db;
-window.firestoreDb=db;
 
 let uid=null;
 let ownerUid="",currentRole="",permissions=[];
@@ -718,6 +1173,8 @@ async function saveCSVToFirebase(){
     msg(`Berhasil disimpan ke Firebase.\\nProduk baru: ${baru}\\nProduk diperbarui: ${update}`,"ok");
     csvRows=[];$("saveCsvBtn").style.display="none";$("preview").style.display="none";
     await loadProducts();
+  const headerRoleEl=document.getElementById("headerRole");
+  if(headerRoleEl) headerRoleEl.textContent=(currentRole||"USER").toUpperCase();
   }catch(e){
     console.error(e);
     msg("Gagal menyimpan ke Firebase:\\n"+e.message+"\\n\\nJika muncul 'Missing or insufficient permissions', periksa Firestore Rules agar user login boleh membaca/menulis koleksi stok.","err");
@@ -725,53 +1182,34 @@ async function saveCSVToFirebase(){
 }
 
 function punyaIzinStock(){
-  if(["owner","superadmin","admin"].includes(String(currentRole).toLowerCase())) return true;
-  const izinList=(permissions||[]).map(x=>String(x).toLowerCase());
-  if(izinList.includes("stok")||izinList.includes("stock")||izinList.includes("produk")) return true;
-  if(["employee","karyawan","staff","admin"].includes(String(currentRole).toLowerCase())) return true;
-  return true;
+  return currentRole==="owner" || currentRole==="superadmin" || true /* FIX stock auto allow */;
 }
-window.punyaIzinStock=punyaIzinStock;
 
 async function loadProducts(){
   if(!uid){$("listMsg").textContent="Menunggu login Firebase...";return}
   if(!punyaIzinStock()){
-    $("listMsg").textContent="🔒 Akses Stock tidak diberikan. Cek pengaturan izin.";
+    $("listMsg").textContent="🔒 Akses Stock tidak diberikan oleh Owner.";
     products=[];
     render();
     return;
   }
   $("listMsg").textContent="Memuat data stok...";
   try{
-    const ref=collection(db,"stok");
-    const snapAll=await getDocs(ref);
-    console.log("[STOK] Total tanpa filter:", snapAll.size, "ownerUid:", ownerUid, "role:", currentRole);
-    let all=[];
-    snapAll.forEach(d=>{ all.push({id:d.id,...d.data()}); });
-    // Untuk karyawan/admin, filter client-side tapi tampilkan semua kalau ownerUid cocok atau kosong (data lama)
-    let filtered=all;
-    if(["employee","karyawan","staff","admin"].includes(String(currentRole).toLowerCase())){
-      filtered=all.filter(p=>{
-        const o=p.ownerUid||p.uid||p.ownerId||"";
-        return o===ownerUid || o===uid || o==="" || !p.ownerUid;
-      });
-      console.log(`[STOK] Karyawan filter: ${filtered.length} dari ${all.length}`);
-    }
-    products=filtered.map(p=>{
-      if(p.hargaModal==null && p.hargaBeli!=null) p.hargaModal=p.hargaBeli;
-      if(p.sisa==null && p.stok!=null) p.sisa=p.stok;
-      if(!p.kode && p.sku) p.kode=p.sku;
-      return p;
-    });
-    $("listMsg").textContent=products.length?`${products.length} produk dari ${snapAll.size} dokumen (role: ${currentRole})`:"Belum ada data stok.";
+    // Ambil dari 3 kemungkinan field biar data lama & baru kebaca semua
+    let snaps=[];
+    try{ snaps.push(await getDocs(query(collection(db,"stok"),where("ownerUid","==",ownerUid)))); }catch(e){}
+    try{ snaps.push(await getDocs(query(collection(db,"stok"),where("uid","==",ownerUid)))); }catch(e){}
+    try{ snaps.push(await getDocs(query(collection(db,"stok"),where("ownerId","==",ownerUid)))); }catch(e){}
+    const map=new Map();
+    snaps.forEach(snap=>{ snap.forEach(d=>{ if(!map.has(d.id)) map.set(d.id,{id:d.id,...d.data()}); }); });
+    products=Array.from(map.values());
+    $("listMsg").textContent=products.length?`${products.length} produk tersimpan di Firebase.`:"Belum ada data stok. Klik Tambah Stok Manual.";
     fillCategories();render();
   }catch(e){
     console.error(e);
     $("listMsg").textContent="Gagal membaca stok: "+e.message;
   }
 }
-window.loadProducts=loadProducts;
-
 
 function fillCategories(){
   const sel=$("cat"),old=sel.value;
@@ -976,38 +1414,43 @@ window.hapusStockTerpilih=async function(){
   }
 };
 
-
 onAuthStateChanged(auth,async u=>{
+  const he=document.getElementById("headerUserEmail");
+  const hr=document.getElementById("headerRole");
+  if(he) he.style.display="none";
+  if(hr) hr.textContent=(currentRole||"USER").toUpperCase();
   if(!u){location.replace("login.html");return;}
   uid=u.uid;
-  window.uid=u.uid;
   try{
     const snap=await getDoc(doc(db,"users",uid));
     if(!snap.exists())throw new Error("Profil akun tidak ditemukan.");
     const p=snap.data()||{};
-    currentRole=(p.role||"").toLowerCase();
+    currentRole=p.role||"";
     permissions=Array.isArray(p.izin)?p.izin:(Array.isArray(p.permissions)?p.permissions:[]);
-    if(["owner","superadmin"].includes(currentRole)){
-      ownerUid=uid;
-    }else{
-      ownerUid=p.ownerUid||p.ownerId||uid;
+    if(!["owner","employee","reseller","superadmin"].includes(currentRole)){
+      throw new Error("Akun tidak memiliki akses Stock.");
     }
-    window.ownerUid=ownerUid;
-    window.currentRole=currentRole;
-    window.permissions=permissions;
-    console.log("[AUTH] uid:",uid,"role:",currentRole,"ownerUid:",ownerUid,"izin:",permissions);
-    if(!punyaIzinStock()){
-      throw new Error("Akses Stock tidak diberikan. Cek pengaturan izin karyawan.");
+    if(currentRole!=="owner" && currentRole!=="superadmin" && !true /* FIX stock auto allow */){
+      throw new Error("Owner belum memberikan izin Stock untuk akun ini.");
     }
+    ownerUid=currentRole==="owner"?uid:(p.ownerUid||"");
+    const headerRoleEl=document.getElementById("headerRole");
+    if(headerRoleEl) headerRoleEl.textContent=(currentRole||"USER").toUpperCase();
+    const headerAccountName=document.getElementById("headerAccountName");
+    if(headerAccountName){
+      const isStaff = ["employee","reseller"].includes(currentRole);
+      headerAccountName.textContent = isStaff
+        ? (p.username || p.namaAkun || p.nama || p.name || p.displayName || "Akun")
+        : (p.namaKonter || p.namaToko || p.nama || p.name || p.displayName || p.username || "Akun");
+    }
+    if(!ownerUid)throw new Error("ownerUid akun tidak ditemukan.");
     await loadProducts();
   }catch(e){
     console.error(e);
     const msg=document.getElementById("listMsg");
     if(msg)msg.textContent="🔒 "+e.message;
-    if(typeof showPopup==="function") showPopup(e.message, "Akses");
   }
 });
-
 </script>
 <script>document.addEventListener("DOMContentLoaded",()=>{if(document.getElementById("fKode"))setNextStockCode();});</script>
 <div id="fixzyAlertOverlay" aria-hidden="true"><div id="fixzyAlertBox" role="alertdialog" aria-modal="true" aria-labelledby="fixzyAlertTitle"><h3 id="fixzyAlertTitle">FIXZY</h3><div id="fixzyAlertMessage"></div><button id="fixzyAlertOk" type="button">Oke</button></div></div>
@@ -1016,17 +1459,5 @@ onAuthStateChanged(auth,async u=>{
 (function(){function showPopup(message,title){const o=document.getElementById('fixzyAlertOverlay'),m=document.getElementById('fixzyAlertMessage'),t=document.getElementById('fixzyAlertTitle'),b=document.getElementById('fixzyAlertOk');if(!o||!m||!t||!b){console.error(message);return;}t.textContent=title||'FIXZY';m.textContent=String(message??'');o.classList.add('show');o.setAttribute('aria-hidden','false');setTimeout(()=>b.focus(),30);}function closePopup(){const o=document.getElementById('fixzyAlertOverlay');if(o){o.classList.remove('show');o.setAttribute('aria-hidden','true');}}window.showPopup=showPopup;window.closePopup=closePopup;document.addEventListener('click',e=>{if(e.target?.id==='fixzyAlertOk'||e.target?.id==='fixzyAlertOverlay')closePopup();});document.addEventListener('keydown',e=>{if(e.key==='Escape')closePopup();});})();
 </script>
 
-<script>(function(){var loc=location.href.replace(/#.*$/,"");var ATTR_NAMES=["data-product-id","data-productid","data-product_id","product-id","productid","product_id","data-source-entity-id","source-entity-id","source_entity_id","data-product","data-metadata","data-meta"];var DATASET_KEYS=["productId","productid","product_id","sourceEntityId","sourceentityid","source_entity_id","product","metadata","meta"];function readProductId(value){if(typeof value!=="string"||value.length===0)return null;if(/^[0-9]{6,}$/.test(value))return value;var match=value.match(/(?:product(?:_|-)?id|source(?:_|-)?entity(?:_|-)?id)["'=:\s]+([0-9]{6,})/i);return match?match[1]:null}function extractProductId(start){for(var node=start;node&&node!==document.body;node=node.parentElement){for(var i=0;i<ATTR_NAMES.length;i++){var attrValue=node.getAttribute&&node.getAttribute(ATTR_NAMES[i]);var attrProductId=readProductId(attrValue);if(attrProductId)return attrProductId}var dataset=node.dataset||null;if(dataset){for(var j=0;j<DATASET_KEYS.length;j++){var dataValue=dataset[DATASET_KEYS[j]];var dataProductId=readProductId(dataValue);if(dataProductId)return dataProductId}}}return null}function isInlineMediaSlotElement(node){return !!(node&&node.getAttribute&&node.getAttribute("data-clippy-inline-media-slot")!==null)}function findInlineMediaSlot(start){for(var node=start;node&&node!==document.body;node=node.parentElement){if(isInlineMediaSlotElement(node))return node}return null}function readInlineMediaUrl(node){if(!node)return null;return node.getAttribute&&((node.getAttribute("data-clippy-inline-media-url")||node.getAttribute("data-url")||node.getAttribute("data_url")))||node.href||null}function stripHash(url){return String(url).replace(/#.*$/,"")}function urlsMatch(a,b){if(!a||!b)return false;try{return stripHash(new URL(a,loc).href)===stripHash(new URL(b,loc).href)}catch(_){return stripHash(a)===stripHash(b)}}function isFirstPartyReelUrl(value){try{var url=new URL(value,loc);if(url.protocol!=="https:")return false;var host=url.hostname.toLowerCase();var supported=host==="instagram.com"||host.endsWith(".instagram.com")||host==="facebook.com"||host.endsWith(".facebook.com");return supported&&/\/reels?\//i.test(url.pathname)}catch(_){return false}}function isInlineMediaUrlClick(node,href){var slot=findInlineMediaSlot(node);if(!slot)return false;var slotUrl=readInlineMediaUrl(slot);if(slotUrl)return urlsMatch(href,slotUrl);return isFirstPartyReelUrl(href)}function findDataHref(start){for(var node=start;node&&node!==document.body;node=node.parentElement){if(node.getAttribute){var href=node.getAttribute("data-href")||node.getAttribute("data-url");if(href)return{href:href,node:node}}}return null}var nativeOpen=window.open;window.open=function(url){if(parent!==window&&typeof url==="string"&&/^https?:\/\//.test(url)){parent.postMessage({type:"ecto:usercontent-link-click",href:url},"*");return null}return nativeOpen?nativeOpen.apply(window,arguments):null};document.addEventListener("click",function(e){var target=e.target instanceof Element?e.target:null;if(!target)return;if(parent===window)return;var a=target.closest?target.closest("a[href]"):null;if(a&&a.href&&/^https?:\/\//.test(a.href)&&a.href.replace(/#.*$/,"")!==loc){if(isInlineMediaUrlClick(a,a.href))return;var productId=extractProductId(target)||extractProductId(a);if(productId){e.preventDefault();parent.postMessage({type:"ecto-artifact-link-click",productId:productId},"*");return}e.preventDefault();parent.postMessage({type:"ecto:usercontent-link-click",href:a.href},"*");return}var dataHref=findDataHref(target);if(dataHref&&/^https?:\/\//.test(dataHref.href)&&dataHref.href.replace(/#.*$/,"")!==loc){if(isInlineMediaUrlClick(dataHref.node,dataHref.href))return;e.preventDefault();parent.postMessage({type:"ecto:usercontent-link-click",href:dataHref.href},"*")}},true)})();</script><script>(function(){var FOCUS_TYPE="ecto:artifact-focus-request";var CLOSE_TYPE="ecto:artifact-close-request";function focusArtifactDocument(){var body=document.body;if(!body)return;try{window.focus();}catch(e){}if(!body.hasAttribute("tabindex"))body.setAttribute("tabindex","-1");try{body.focus({preventScroll:true});}catch(e){try{body.focus();}catch(e2){}}}window.addEventListener("message",function(event){if(event.source!==window.parent)return;var data=event.data;if(!data||typeof data!=="object"||data.type!==FOCUS_TYPE)return;if(document.readyState==="loading"){document.addEventListener("DOMContentLoaded",focusArtifactDocument,{once:true});return;}focusArtifactDocument();});window.addEventListener("keydown",function(event){if(event.key!=="Escape")return;window.setTimeout(function(){if(event.defaultPrevented)return;window.parent.postMessage({type:CLOSE_TYPE},"*");},0);});})();</script><script>window.uploadRowStock=async (payload)=>{ const {collection, addDoc}=await import("https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js"); return addDoc(collection(window.db,"stock"), payload); }; window.tambahStokExcel=window.uploadRowStock; </script><script>(function(){var loc=location.href.replace(/#.*$/,"");var ATTR_NAMES=["data-product-id","data-productid","data-product_id","product-id","productid","product_id","data-source-entity-id","source-entity-id","source_entity_id","data-product","data-metadata","data-meta"];var DATASET_KEYS=["productId","productid","product_id","sourceEntityId","sourceentityid","source_entity_id","product","metadata","meta"];function readProductId(value){if(typeof value!=="string"||value.length===0)return null;if(/^[0-9]{6,}$/.test(value))return value;var match=value.match(/(?:product(?:_|-)?id|source(?:_|-)?entity(?:_|-)?id)["'=:\s]+([0-9]{6,})/i);return match?match[1]:null}function extractProductId(start){for(var node=start;node&&node!==document.body;node=node.parentElement){for(var i=0;i<ATTR_NAMES.length;i++){var attrValue=node.getAttribute&&node.getAttribute(ATTR_NAMES[i]);var attrProductId=readProductId(attrValue);if(attrProductId)return attrProductId}var dataset=node.dataset||null;if(dataset){for(var j=0;j<DATASET_KEYS.length;j++){var dataValue=dataset[DATASET_KEYS[j]];var dataProductId=readProductId(dataValue);if(dataProductId)return dataProductId}}}return null}function isInlineMediaSlotElement(node){return !!(node&&node.getAttribute&&node.getAttribute("data-clippy-inline-media-slot")!==null)}function findInlineMediaSlot(start){for(var node=start;node&&node!==document.body;node=node.parentElement){if(isInlineMediaSlotElement(node))return node}return null}function readInlineMediaUrl(node){if(!node)return null;return node.getAttribute&&((node.getAttribute("data-clippy-inline-media-url")||node.getAttribute("data-url")||node.getAttribute("data_url")))||node.href||null}function stripHash(url){return String(url).replace(/#.*$/,"")}function urlsMatch(a,b){if(!a||!b)return false;try{return stripHash(new URL(a,loc).href)===stripHash(new URL(b,loc).href)}catch(_){return stripHash(a)===stripHash(b)}}function isFirstPartyReelUrl(value){try{var url=new URL(value,loc);if(url.protocol!=="https:")return false;var host=url.hostname.toLowerCase();var supported=host==="instagram.com"||host.endsWith(".instagram.com")||host==="facebook.com"||host.endsWith(".facebook.com");return supported&&/\/reels?\//i.test(url.pathname)}catch(_){return false}}function isInlineMediaUrlClick(node,href){var slot=findInlineMediaSlot(node);if(!slot)return false;var slotUrl=readInlineMediaUrl(slot);if(slotUrl)return urlsMatch(href,slotUrl);return isFirstPartyReelUrl(href)}function findDataHref(start){for(var node=start;node&&node!==document.body;node=node.parentElement){if(node.getAttribute){var href=node.getAttribute("data-href")||node.getAttribute("data-url");if(href)return{href:href,node:node}}}return null}var nativeOpen=window.open;window.open=function(url){if(parent!==window&&typeof url==="string"&&/^https?:\/\//.test(url)){parent.postMessage({type:"ecto:usercontent-link-click",href:url},"*");return null}return nativeOpen?nativeOpen.apply(window,arguments):null};document.addEventListener("click",function(e){var target=e.target instanceof Element?e.target:null;if(!target)return;if(parent===window)return;var a=target.closest?target.closest("a[href]"):null;if(a&&a.href&&/^https?:\/\//.test(a.href)&&a.href.replace(/#.*$/,"")!==loc){if(isInlineMediaUrlClick(a,a.href))return;var productId=extractProductId(target)||extractProductId(a);if(productId){e.preventDefault();parent.postMessage({type:"ecto-artifact-link-click",productId:productId},"*");return}e.preventDefault();parent.postMessage({type:"ecto:usercontent-link-click",href:a.href},"*");return}var dataHref=findDataHref(target);if(dataHref&&/^https?:\/\//.test(dataHref.href)&&dataHref.href.replace(/#.*$/,"")!==loc){if(isInlineMediaUrlClick(dataHref.node,dataHref.href))return;e.preventDefault();parent.postMessage({type:"ecto:usercontent-link-click",href:dataHref.href},"*")}},true)})();</script><script>(function(){var FOCUS_TYPE="ecto:artifact-focus-request";var CLOSE_TYPE="ecto:artifact-close-request";function focusArtifactDocument(){var body=document.body;if(!body)return;try{window.focus();}catch(e){}if(!body.hasAttribute("tabindex"))body.setAttribute("tabindex","-1");try{body.focus({preventScroll:true});}catch(e){try{body.focus();}catch(e2){}}}window.addEventListener("message",function(event){if(event.source!==window.parent)return;var data=event.data;if(!data||typeof data!=="object"||data.type!==FOCUS_TYPE)return;if(document.readyState==="loading"){document.addEventListener("DOMContentLoaded",focusArtifactDocument,{once:true});return;}focusArtifactDocument();});window.addEventListener("keydown",function(event){if(event.key!=="Escape")return;window.setTimeout(function(){if(event.defaultPrevented)return;window.parent.postMessage({type:CLOSE_TYPE},"*");},0);});})();</script><script>(function(){var loc=location.href.replace(/#.*$/,"");var ATTR_NAMES=["data-product-id","data-productid","data-product_id","product-id","productid","product_id","data-source-entity-id","source-entity-id","source_entity_id","data-product","data-metadata","data-meta"];var DATASET_KEYS=["productId","productid","product_id","sourceEntityId","sourceentityid","source_entity_id","product","metadata","meta"];function readProductId(value){if(typeof value!=="string"||value.length===0)return null;if(/^[0-9]{6,}$/.test(value))return value;var match=value.match(/(?:product(?:_|-)?id|source(?:_|-)?entity(?:_|-)?id)["'=:\s]+([0-9]{6,})/i);return match?match[1]:null}function extractProductId(start){for(var node=start;node&&node!==document.body;node=node.parentElement){for(var i=0;i<ATTR_NAMES.length;i++){var attrValue=node.getAttribute&&node.getAttribute(ATTR_NAMES[i]);var attrProductId=readProductId(attrValue);if(attrProductId)return attrProductId}var dataset=node.dataset||null;if(dataset){for(var j=0;j<DATASET_KEYS.length;j++){var dataValue=dataset[DATASET_KEYS[j]];var dataProductId=readProductId(dataValue);if(dataProductId)return dataProductId}}}return null}function isInlineMediaSlotElement(node){return !!(node&&node.getAttribute&&node.getAttribute("data-clippy-inline-media-slot")!==null)}function findInlineMediaSlot(start){for(var node=start;node&&node!==document.body;node=node.parentElement){if(isInlineMediaSlotElement(node))return node}return null}function readInlineMediaUrl(node){if(!node)return null;return node.getAttribute&&((node.getAttribute("data-clippy-inline-media-url")||node.getAttribute("data-url")||node.getAttribute("data_url")))||node.href||null}function stripHash(url){return String(url).replace(/#.*$/,"")}function urlsMatch(a,b){if(!a||!b)return false;try{return stripHash(new URL(a,loc).href)===stripHash(new URL(b,loc).href)}catch(_){return stripHash(a)===stripHash(b)}}function isFirstPartyReelUrl(value){try{var url=new URL(value,loc);if(url.protocol!=="https:")return false;var host=url.hostname.toLowerCase();var supported=host==="instagram.com"||host.endsWith(".instagram.com")||host==="facebook.com"||host.endsWith(".facebook.com");return supported&&/\/reels?\//i.test(url.pathname)}catch(_){return false}}function isInlineMediaUrlClick(node,href){var slot=findInlineMediaSlot(node);if(!slot)return false;var slotUrl=readInlineMediaUrl(slot);if(slotUrl)return urlsMatch(href,slotUrl);return isFirstPartyReelUrl(href)}function findDataHref(start){for(var node=start;node&&node!==document.body;node=node.parentElement){if(node.getAttribute){var href=node.getAttribute("data-href")||node.getAttribute("data-url");if(href)return{href:href,node:node}}}return null}var nativeOpen=window.open;window.open=function(url){if(parent!==window&&typeof url==="string"&&/^https?:\/\//.test(url)){parent.postMessage({type:"ecto:usercontent-link-click",href:url},"*");return null}return nativeOpen?nativeOpen.apply(window,arguments):null};document.addEventListener("click",function(e){var target=e.target instanceof Element?e.target:null;if(!target)return;if(parent===window)return;var a=target.closest?target.closest("a[href]"):null;if(a&&a.href&&/^https?:\/\//.test(a.href)&&a.href.replace(/#.*$/,"")!==loc){if(isInlineMediaUrlClick(a,a.href))return;var productId=extractProductId(target)||extractProductId(a);if(productId){e.preventDefault();parent.postMessage({type:"ecto-artifact-link-click",productId:productId},"*");return}e.preventDefault();parent.postMessage({type:"ecto:usercontent-link-click",href:a.href},"*");return}var dataHref=findDataHref(target);if(dataHref&&/^https?:\/\//.test(dataHref.href)&&dataHref.href.replace(/#.*$/,"")!==loc){if(isInlineMediaUrlClick(dataHref.node,dataHref.href))return;e.preventDefault();parent.postMessage({type:"ecto:usercontent-link-click",href:dataHref.href},"*")}},true)})();</script><script>(function(){var FOCUS_TYPE="ecto:artifact-focus-request";var CLOSE_TYPE="ecto:artifact-close-request";function focusArtifactDocument(){var body=document.body;if(!body)return;try{window.focus();}catch(e){}if(!body.hasAttribute("tabindex"))body.setAttribute("tabindex","-1");try{body.focus({preventScroll:true});}catch(e){try{body.focus();}catch(e2){}}}window.addEventListener("message",function(event){if(event.source!==window.parent)return;var data=event.data;if(!data||typeof data!=="object"||data.type!==FOCUS_TYPE)return;if(document.readyState==="loading"){document.addEventListener("DOMContentLoaded",focusArtifactDocument,{once:true});return;}focusArtifactDocument();});window.addEventListener("keydown",function(event){if(event.key!=="Escape")return;window.setTimeout(function(){if(event.defaultPrevented)return;window.parent.postMessage({type:CLOSE_TYPE},"*");},0);});})();</script><script>(function(){var loc=location.href.replace(/#.*$/,"");var ATTR_NAMES=["data-product-id","data-productid","data-product_id","product-id","productid","product_id","data-source-entity-id","source-entity-id","source_entity_id","data-product","data-metadata","data-meta"];var DATASET_KEYS=["productId","productid","product_id","sourceEntityId","sourceentityid","source_entity_id","product","metadata","meta"];function readProductId(value){if(typeof value!=="string"||value.length===0)return null;if(/^[0-9]{6,}$/.test(value))return value;var match=value.match(/(?:product(?:_|-)?id|source(?:_|-)?entity(?:_|-)?id)["'=:\s]+([0-9]{6,})/i);return match?match[1]:null}function extractProductId(start){for(var node=start;node&&node!==document.body;node=node.parentElement){for(var i=0;i<ATTR_NAMES.length;i++){var attrValue=node.getAttribute&&node.getAttribute(ATTR_NAMES[i]);var attrProductId=readProductId(attrValue);if(attrProductId)return attrProductId}var dataset=node.dataset||null;if(dataset){for(var j=0;j<DATASET_KEYS.length;j++){var dataValue=dataset[DATASET_KEYS[j]];var dataProductId=readProductId(dataValue);if(dataProductId)return dataProductId}}}return null}function isInlineMediaSlotElement(node){return !!(node&&node.getAttribute&&node.getAttribute("data-clippy-inline-media-slot")!==null)}function findInlineMediaSlot(start){for(var node=start;node&&node!==document.body;node=node.parentElement){if(isInlineMediaSlotElement(node))return node}return null}function readInlineMediaUrl(node){if(!node)return null;return node.getAttribute&&((node.getAttribute("data-clippy-inline-media-url")||node.getAttribute("data-url")||node.getAttribute("data_url")))||node.href||null}function stripHash(url){return String(url).replace(/#.*$/,"")}function urlsMatch(a,b){if(!a||!b)return false;try{return stripHash(new URL(a,loc).href)===stripHash(new URL(b,loc).href)}catch(_){return stripHash(a)===stripHash(b)}}function isFirstPartyReelUrl(value){try{var url=new URL(value,loc);if(url.protocol!=="https:")return false;var host=url.hostname.toLowerCase();var supported=host==="instagram.com"||host.endsWith(".instagram.com")||host==="facebook.com"||host.endsWith(".facebook.com");return supported&&/\/reels?\//i.test(url.pathname)}catch(_){return false}}function isInlineMediaUrlClick(node,href){var slot=findInlineMediaSlot(node);if(!slot)return false;var slotUrl=readInlineMediaUrl(slot);if(slotUrl)return urlsMatch(href,slotUrl);return isFirstPartyReelUrl(href)}function findDataHref(start){for(var node=start;node&&node!==document.body;node=node.parentElement){if(node.getAttribute){var href=node.getAttribute("data-href")||node.getAttribute("data-url");if(href)return{href:href,node:node}}}return null}var nativeOpen=window.open;window.open=function(url){if(parent!==window&&typeof url==="string"&&/^https?:\/\//.test(url)){parent.postMessage({type:"ecto:usercontent-link-click",href:url},"*");return null}return nativeOpen?nativeOpen.apply(window,arguments):null};document.addEventListener("click",function(e){var target=e.target instanceof Element?e.target:null;if(!target)return;if(parent===window)return;var a=target.closest?target.closest("a[href]"):null;if(a&&a.href&&/^https?:\/\//.test(a.href)&&a.href.replace(/#.*$/,"")!==loc){if(isInlineMediaUrlClick(a,a.href))return;var productId=extractProductId(target)||extractProductId(a);if(productId){e.preventDefault();parent.postMessage({type:"ecto-artifact-link-click",productId:productId},"*");return}e.preventDefault();parent.postMessage({type:"ecto:usercontent-link-click",href:a.href},"*");return}var dataHref=findDataHref(target);if(dataHref&&/^https?:\/\//.test(dataHref.href)&&dataHref.href.replace(/#.*$/,"")!==loc){if(isInlineMediaUrlClick(dataHref.node,dataHref.href))return;e.preventDefault();parent.postMessage({type:"ecto:usercontent-link-click",href:dataHref.href},"*")}},true)})();</script><script>(function(){var FOCUS_TYPE="ecto:artifact-focus-request";var CLOSE_TYPE="ecto:artifact-close-request";function focusArtifactDocument(){var body=document.body;if(!body)return;try{window.focus();}catch(e){}if(!body.hasAttribute("tabindex"))body.setAttribute("tabindex","-1");try{body.focus({preventScroll:true});}catch(e){try{body.focus();}catch(e2){}}}window.addEventListener("message",function(event){if(event.source!==window.parent)return;var data=event.data;if(!data||typeof data!=="object"||data.type!==FOCUS_TYPE)return;if(document.readyState==="loading"){document.addEventListener("DOMContentLoaded",focusArtifactDocument,{once:true});return;}focusArtifactDocument();});window.addEventListener("keydown",function(event){if(event.key!=="Escape")return;window.setTimeout(function(){if(event.defaultPrevented)return;window.parent.postMessage({type:CLOSE_TYPE},"*");},0);});})();</script>
-<script>
-(function(){
-  // Override alert jadi popup FIXZY, tapi confirm tetap native biar tidak crash
-  const oldAlert=window.alert;
-  window.alert=function(msg){
-    if(typeof showPopup==='function'){ showPopup(msg, 'FIXZY'); }
-    else { oldAlert(msg); }
-  };
-})();
-</script>
-</body>
-
+<script>(function(){var loc=location.href.replace(/#.*$/,"");var ATTR_NAMES=["data-product-id","data-productid","data-product_id","product-id","productid","product_id","data-source-entity-id","source-entity-id","source_entity_id","data-product","data-metadata","data-meta"];var DATASET_KEYS=["productId","productid","product_id","sourceEntityId","sourceentityid","source_entity_id","product","metadata","meta"];function readProductId(value){if(typeof value!=="string"||value.length===0)return null;if(/^[0-9]{6,}$/.test(value))return value;var match=value.match(/(?:product(?:_|-)?id|source(?:_|-)?entity(?:_|-)?id)["'=:\s]+([0-9]{6,})/i);return match?match[1]:null}function extractProductId(start){for(var node=start;node&&node!==document.body;node=node.parentElement){for(var i=0;i<ATTR_NAMES.length;i++){var attrValue=node.getAttribute&&node.getAttribute(ATTR_NAMES[i]);var attrProductId=readProductId(attrValue);if(attrProductId)return attrProductId}var dataset=node.dataset||null;if(dataset){for(var j=0;j<DATASET_KEYS.length;j++){var dataValue=dataset[DATASET_KEYS[j]];var dataProductId=readProductId(dataValue);if(dataProductId)return dataProductId}}}return null}function isInlineMediaSlotElement(node){return !!(node&&node.getAttribute&&node.getAttribute("data-clippy-inline-media-slot")!==null)}function findInlineMediaSlot(start){for(var node=start;node&&node!==document.body;node=node.parentElement){if(isInlineMediaSlotElement(node))return node}return null}function readInlineMediaUrl(node){if(!node)return null;return node.getAttribute&&((node.getAttribute("data-clippy-inline-media-url")||node.getAttribute("data-url")||node.getAttribute("data_url")))||node.href||null}function stripHash(url){return String(url).replace(/#.*$/,"")}function urlsMatch(a,b){if(!a||!b)return false;try{return stripHash(new URL(a,loc).href)===stripHash(new URL(b,loc).href)}catch(_){return stripHash(a)===stripHash(b)}}function isFirstPartyReelUrl(value){try{var url=new URL(value,loc);if(url.protocol!=="https:")return false;var host=url.hostname.toLowerCase();var supported=host==="instagram.com"||host.endsWith(".instagram.com")||host==="facebook.com"||host.endsWith(".facebook.com");return supported&&/\/reels?\//i.test(url.pathname)}catch(_){return false}}function isInlineMediaUrlClick(node,href){var slot=findInlineMediaSlot(node);if(!slot)return false;var slotUrl=readInlineMediaUrl(slot);if(slotUrl)return urlsMatch(href,slotUrl);return isFirstPartyReelUrl(href)}function findDataHref(start){for(var node=start;node&&node!==document.body;node=node.parentElement){if(node.getAttribute){var href=node.getAttribute("data-href")||node.getAttribute("data-url");if(href)return{href:href,node:node}}}return null}var nativeOpen=window.open;window.open=function(url){if(parent!==window&&typeof url==="string"&&/^https?:\/\//.test(url)){parent.postMessage({type:"ecto:usercontent-link-click",href:url},"*");return null}return nativeOpen?nativeOpen.apply(window,arguments):null};document.addEventListener("click",function(e){var target=e.target instanceof Element?e.target:null;if(!target)return;if(parent===window)return;var a=target.closest?target.closest("a[href]"):null;if(a&&a.href&&/^https?:\/\//.test(a.href)&&a.href.replace(/#.*$/,"")!==loc){if(isInlineMediaUrlClick(a,a.href))return;var productId=extractProductId(target)||extractProductId(a);if(productId){e.preventDefault();parent.postMessage({type:"ecto-artifact-link-click",productId:productId},"*");return}e.preventDefault();parent.postMessage({type:"ecto:usercontent-link-click",href:a.href},"*");return}var dataHref=findDataHref(target);if(dataHref&&/^https?:\/\//.test(dataHref.href)&&dataHref.href.replace(/#.*$/,"")!==loc){if(isInlineMediaUrlClick(dataHref.node,dataHref.href))return;e.preventDefault();parent.postMessage({type:"ecto:usercontent-link-click",href:dataHref.href},"*")}},true)})();</script><script>(function(){var FOCUS_TYPE="ecto:artifact-focus-request";var CLOSE_TYPE="ecto:artifact-close-request";function focusArtifactDocument(){var body=document.body;if(!body)return;try{window.focus();}catch(e){}if(!body.hasAttribute("tabindex"))body.setAttribute("tabindex","-1");try{body.focus({preventScroll:true});}catch(e){try{body.focus();}catch(e2){}}}window.addEventListener("message",function(event){if(event.source!==window.parent)return;var data=event.data;if(!data||typeof data!=="object"||data.type!==FOCUS_TYPE)return;if(document.readyState==="loading"){document.addEventListener("DOMContentLoaded",focusArtifactDocument,{once:true});return;}focusArtifactDocument();});window.addEventListener("keydown",function(event){if(event.key!=="Escape")return;window.setTimeout(function(){if(event.defaultPrevented)return;window.parent.postMessage({type:CLOSE_TYPE},"*");},0);});})();</script><script>window.uploadRowStock=async (payload)=>{ const {collection, addDoc}=await import("https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js"); return addDoc(collection(window.db,"stock"), payload); }; window.tambahStokExcel=window.uploadRowStock; </script><script>(function(){var loc=location.href.replace(/#.*$/,"");var ATTR_NAMES=["data-product-id","data-productid","data-product_id","product-id","productid","product_id","data-source-entity-id","source-entity-id","source_entity_id","data-product","data-metadata","data-meta"];var DATASET_KEYS=["productId","productid","product_id","sourceEntityId","sourceentityid","source_entity_id","product","metadata","meta"];function readProductId(value){if(typeof value!=="string"||value.length===0)return null;if(/^[0-9]{6,}$/.test(value))return value;var match=value.match(/(?:product(?:_|-)?id|source(?:_|-)?entity(?:_|-)?id)["'=:\s]+([0-9]{6,})/i);return match?match[1]:null}function extractProductId(start){for(var node=start;node&&node!==document.body;node=node.parentElement){for(var i=0;i<ATTR_NAMES.length;i++){var attrValue=node.getAttribute&&node.getAttribute(ATTR_NAMES[i]);var attrProductId=readProductId(attrValue);if(attrProductId)return attrProductId}var dataset=node.dataset||null;if(dataset){for(var j=0;j<DATASET_KEYS.length;j++){var dataValue=dataset[DATASET_KEYS[j]];var dataProductId=readProductId(dataValue);if(dataProductId)return dataProductId}}}return null}function isInlineMediaSlotElement(node){return !!(node&&node.getAttribute&&node.getAttribute("data-clippy-inline-media-slot")!==null)}function findInlineMediaSlot(start){for(var node=start;node&&node!==document.body;node=node.parentElement){if(isInlineMediaSlotElement(node))return node}return null}function readInlineMediaUrl(node){if(!node)return null;return node.getAttribute&&((node.getAttribute("data-clippy-inline-media-url")||node.getAttribute("data-url")||node.getAttribute("data_url")))||node.href||null}function stripHash(url){return String(url).replace(/#.*$/,"")}function urlsMatch(a,b){if(!a||!b)return false;try{return stripHash(new URL(a,loc).href)===stripHash(new URL(b,loc).href)}catch(_){return stripHash(a)===stripHash(b)}}function isFirstPartyReelUrl(value){try{var url=new URL(value,loc);if(url.protocol!=="https:")return false;var host=url.hostname.toLowerCase();var supported=host==="instagram.com"||host.endsWith(".instagram.com")||host==="facebook.com"||host.endsWith(".facebook.com");return supported&&/\/reels?\//i.test(url.pathname)}catch(_){return false}}function isInlineMediaUrlClick(node,href){var slot=findInlineMediaSlot(node);if(!slot)return false;var slotUrl=readInlineMediaUrl(slot);if(slotUrl)return urlsMatch(href,slotUrl);return isFirstPartyReelUrl(href)}function findDataHref(start){for(var node=start;node&&node!==document.body;node=node.parentElement){if(node.getAttribute){var href=node.getAttribute("data-href")||node.getAttribute("data-url");if(href)return{href:href,node:node}}}return null}var nativeOpen=window.open;window.open=function(url){if(parent!==window&&typeof url==="string"&&/^https?:\/\//.test(url)){parent.postMessage({type:"ecto:usercontent-link-click",href:url},"*");return null}return nativeOpen?nativeOpen.apply(window,arguments):null};document.addEventListener("click",function(e){var target=e.target instanceof Element?e.target:null;if(!target)return;if(parent===window)return;var a=target.closest?target.closest("a[href]"):null;if(a&&a.href&&/^https?:\/\//.test(a.href)&&a.href.replace(/#.*$/,"")!==loc){if(isInlineMediaUrlClick(a,a.href))return;var productId=extractProductId(target)||extractProductId(a);if(productId){e.preventDefault();parent.postMessage({type:"ecto-artifact-link-click",productId:productId},"*");return}e.preventDefault();parent.postMessage({type:"ecto:usercontent-link-click",href:a.href},"*");return}var dataHref=findDataHref(target);if(dataHref&&/^https?:\/\//.test(dataHref.href)&&dataHref.href.replace(/#.*$/,"")!==loc){if(isInlineMediaUrlClick(dataHref.node,dataHref.href))return;e.preventDefault();parent.postMessage({type:"ecto:usercontent-link-click",href:dataHref.href},"*")}},true)})();</script><script>(function(){var FOCUS_TYPE="ecto:artifact-focus-request";var CLOSE_TYPE="ecto:artifact-close-request";function focusArtifactDocument(){var body=document.body;if(!body)return;try{window.focus();}catch(e){}if(!body.hasAttribute("tabindex"))body.setAttribute("tabindex","-1");try{body.focus({preventScroll:true});}catch(e){try{body.focus();}catch(e2){}}}window.addEventListener("message",function(event){if(event.source!==window.parent)return;var data=event.data;if(!data||typeof data!=="object"||data.type!==FOCUS_TYPE)return;if(document.readyState==="loading"){document.addEventListener("DOMContentLoaded",focusArtifactDocument,{once:true});return;}focusArtifactDocument();});window.addEventListener("keydown",function(event){if(event.key!=="Escape")return;window.setTimeout(function(){if(event.defaultPrevented)return;window.parent.postMessage({type:CLOSE_TYPE},"*");},0);});})();</script><script>(function(){var loc=location.href.replace(/#.*$/,"");var ATTR_NAMES=["data-product-id","data-productid","data-product_id","product-id","productid","product_id","data-source-entity-id","source-entity-id","source_entity_id","data-product","data-metadata","data-meta"];var DATASET_KEYS=["productId","productid","product_id","sourceEntityId","sourceentityid","source_entity_id","product","metadata","meta"];function readProductId(value){if(typeof value!=="string"||value.length===0)return null;if(/^[0-9]{6,}$/.test(value))return value;var match=value.match(/(?:product(?:_|-)?id|source(?:_|-)?entity(?:_|-)?id)["'=:\s]+([0-9]{6,})/i);return match?match[1]:null}function extractProductId(start){for(var node=start;node&&node!==document.body;node=node.parentElement){for(var i=0;i<ATTR_NAMES.length;i++){var attrValue=node.getAttribute&&node.getAttribute(ATTR_NAMES[i]);var attrProductId=readProductId(attrValue);if(attrProductId)return attrProductId}var dataset=node.dataset||null;if(dataset){for(var j=0;j<DATASET_KEYS.length;j++){var dataValue=dataset[DATASET_KEYS[j]];var dataProductId=readProductId(dataValue);if(dataProductId)return dataProductId}}}return null}function isInlineMediaSlotElement(node){return !!(node&&node.getAttribute&&node.getAttribute("data-clippy-inline-media-slot")!==null)}function findInlineMediaSlot(start){for(var node=start;node&&node!==document.body;node=node.parentElement){if(isInlineMediaSlotElement(node))return node}return null}function readInlineMediaUrl(node){if(!node)return null;return node.getAttribute&&((node.getAttribute("data-clippy-inline-media-url")||node.getAttribute("data-url")||node.getAttribute("data_url")))||node.href||null}function stripHash(url){return String(url).replace(/#.*$/,"")}function urlsMatch(a,b){if(!a||!b)return false;try{return stripHash(new URL(a,loc).href)===stripHash(new URL(b,loc).href)}catch(_){return stripHash(a)===stripHash(b)}}function isFirstPartyReelUrl(value){try{var url=new URL(value,loc);if(url.protocol!=="https:")return false;var host=url.hostname.toLowerCase();var supported=host==="instagram.com"||host.endsWith(".instagram.com")||host==="facebook.com"||host.endsWith(".facebook.com");return supported&&/\/reels?\//i.test(url.pathname)}catch(_){return false}}function isInlineMediaUrlClick(node,href){var slot=findInlineMediaSlot(node);if(!slot)return false;var slotUrl=readInlineMediaUrl(slot);if(slotUrl)return urlsMatch(href,slotUrl);return isFirstPartyReelUrl(href)}function findDataHref(start){for(var node=start;node&&node!==document.body;node=node.parentElement){if(node.getAttribute){var href=node.getAttribute("data-href")||node.getAttribute("data-url");if(href)return{href:href,node:node}}}return null}var nativeOpen=window.open;window.open=function(url){if(parent!==window&&typeof url==="string"&&/^https?:\/\//.test(url)){parent.postMessage({type:"ecto:usercontent-link-click",href:url},"*");return null}return nativeOpen?nativeOpen.apply(window,arguments):null};document.addEventListener("click",function(e){var target=e.target instanceof Element?e.target:null;if(!target)return;if(parent===window)return;var a=target.closest?target.closest("a[href]"):null;if(a&&a.href&&/^https?:\/\//.test(a.href)&&a.href.replace(/#.*$/,"")!==loc){if(isInlineMediaUrlClick(a,a.href))return;var productId=extractProductId(target)||extractProductId(a);if(productId){e.preventDefault();parent.postMessage({type:"ecto-artifact-link-click",productId:productId},"*");return}e.preventDefault();parent.postMessage({type:"ecto:usercontent-link-click",href:a.href},"*");return}var dataHref=findDataHref(target);if(dataHref&&/^https?:\/\//.test(dataHref.href)&&dataHref.href.replace(/#.*$/,"")!==loc){if(isInlineMediaUrlClick(dataHref.node,dataHref.href))return;e.preventDefault();parent.postMessage({type:"ecto:usercontent-link-click",href:dataHref.href},"*")}},true)})();</script><script>(function(){var FOCUS_TYPE="ecto:artifact-focus-request";var CLOSE_TYPE="ecto:artifact-close-request";function focusArtifactDocument(){var body=document.body;if(!body)return;try{window.focus();}catch(e){}if(!body.hasAttribute("tabindex"))body.setAttribute("tabindex","-1");try{body.focus({preventScroll:true});}catch(e){try{body.focus();}catch(e2){}}}window.addEventListener("message",function(event){if(event.source!==window.parent)return;var data=event.data;if(!data||typeof data!=="object"||data.type!==FOCUS_TYPE)return;if(document.readyState==="loading"){document.addEventListener("DOMContentLoaded",focusArtifactDocument,{once:true});return;}focusArtifactDocument();});window.addEventListener("keydown",function(event){if(event.key!=="Escape")return;window.setTimeout(function(){if(event.defaultPrevented)return;window.parent.postMessage({type:CLOSE_TYPE},"*");},0);});})();</script><script>(function(){var loc=location.href.replace(/#.*$/,"");var ATTR_NAMES=["data-product-id","data-productid","data-product_id","product-id","productid","product_id","data-source-entity-id","source-entity-id","source_entity_id","data-product","data-metadata","data-meta"];var DATASET_KEYS=["productId","productid","product_id","sourceEntityId","sourceentityid","source_entity_id","product","metadata","meta"];function readProductId(value){if(typeof value!=="string"||value.length===0)return null;if(/^[0-9]{6,}$/.test(value))return value;var match=value.match(/(?:product(?:_|-)?id|source(?:_|-)?entity(?:_|-)?id)["'=:\s]+([0-9]{6,})/i);return match?match[1]:null}function extractProductId(start){for(var node=start;node&&node!==document.body;node=node.parentElement){for(var i=0;i<ATTR_NAMES.length;i++){var attrValue=node.getAttribute&&node.getAttribute(ATTR_NAMES[i]);var attrProductId=readProductId(attrValue);if(attrProductId)return attrProductId}var dataset=node.dataset||null;if(dataset){for(var j=0;j<DATASET_KEYS.length;j++){var dataValue=dataset[DATASET_KEYS[j]];var dataProductId=readProductId(dataValue);if(dataProductId)return dataProductId}}}return null}function isInlineMediaSlotElement(node){return !!(node&&node.getAttribute&&node.getAttribute("data-clippy-inline-media-slot")!==null)}function findInlineMediaSlot(start){for(var node=start;node&&node!==document.body;node=node.parentElement){if(isInlineMediaSlotElement(node))return node}return null}function readInlineMediaUrl(node){if(!node)return null;return node.getAttribute&&((node.getAttribute("data-clippy-inline-media-url")||node.getAttribute("data-url")||node.getAttribute("data_url")))||node.href||null}function stripHash(url){return String(url).replace(/#.*$/,"")}function urlsMatch(a,b){if(!a||!b)return false;try{return stripHash(new URL(a,loc).href)===stripHash(new URL(b,loc).href)}catch(_){return stripHash(a)===stripHash(b)}}function isFirstPartyReelUrl(value){try{var url=new URL(value,loc);if(url.protocol!=="https:")return false;var host=url.hostname.toLowerCase();var supported=host==="instagram.com"||host.endsWith(".instagram.com")||host==="facebook.com"||host.endsWith(".facebook.com");return supported&&/\/reels?\//i.test(url.pathname)}catch(_){return false}}function isInlineMediaUrlClick(node,href){var slot=findInlineMediaSlot(node);if(!slot)return false;var slotUrl=readInlineMediaUrl(slot);if(slotUrl)return urlsMatch(href,slotUrl);return isFirstPartyReelUrl(href)}function findDataHref(start){for(var node=start;node&&node!==document.body;node=node.parentElement){if(node.getAttribute){var href=node.getAttribute("data-href")||node.getAttribute("data-url");if(href)return{href:href,node:node}}}return null}var nativeOpen=window.open;window.open=function(url){if(parent!==window&&typeof url==="string"&&/^https?:\/\//.test(url)){parent.postMessage({type:"ecto:usercontent-link-click",href:url},"*");return null}return nativeOpen?nativeOpen.apply(window,arguments):null};document.addEventListener("click",function(e){var target=e.target instanceof Element?e.target:null;if(!target)return;if(parent===window)return;var a=target.closest?target.closest("a[href]"):null;if(a&&a.href&&/^https?:\/\//.test(a.href)&&a.href.replace(/#.*$/,"")!==loc){if(isInlineMediaUrlClick(a,a.href))return;var productId=extractProductId(target)||extractProductId(a);if(productId){e.preventDefault();parent.postMessage({type:"ecto-artifact-link-click",productId:productId},"*");return}e.preventDefault();parent.postMessage({type:"ecto:usercontent-link-click",href:a.href},"*");return}var dataHref=findDataHref(target);if(dataHref&&/^https?:\/\//.test(dataHref.href)&&dataHref.href.replace(/#.*$/,"")!==loc){if(isInlineMediaUrlClick(dataHref.node,dataHref.href))return;e.preventDefault();parent.postMessage({type:"ecto:usercontent-link-click",href:dataHref.href},"*")}},true)})();</script><script>(function(){var FOCUS_TYPE="ecto:artifact-focus-request";var CLOSE_TYPE="ecto:artifact-close-request";function focusArtifactDocument(){var body=document.body;if(!body)return;try{window.focus();}catch(e){}if(!body.hasAttribute("tabindex"))body.setAttribute("tabindex","-1");try{body.focus({preventScroll:true});}catch(e){try{body.focus();}catch(e2){}}}window.addEventListener("message",function(event){if(event.source!==window.parent)return;var data=event.data;if(!data||typeof data!=="object"||data.type!==FOCUS_TYPE)return;if(document.readyState==="loading"){document.addEventListener("DOMContentLoaded",focusArtifactDocument,{once:true});return;}focusArtifactDocument();});window.addEventListener("keydown",function(event){if(event.key!=="Escape")return;window.setTimeout(function(){if(event.defaultPrevented)return;window.parent.postMessage({type:CLOSE_TYPE},"*");},0);});})();</script></body>
 </html>
