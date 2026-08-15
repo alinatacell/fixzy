@@ -361,7 +361,8 @@ async function muatSemua(){
     $("statusApp").textContent="Gagal membaca Firebase";
     $("systemSummary").innerHTML=`❌ <b>Gagal membaca data Firebase.</b><br>${esc(e.code||"")} ${esc(e.message||e)}`;
     $("systemLog").textContent=String(e.stack||e);
-    alert("Gagal membaca Dashboard Firebase:\n\n"+(e.code||"")+" \n"+(e.message||e));
+    // Error ditampilkan di UI; jangan gunakan alert browser.
+    $("systemSummary").innerHTML=`❌ <b>Gagal membaca data Firebase.</b><br>${esc(e.code||"")} ${esc(e.message||e)}`;
   }
 }
 window.muatSemua=muatSemua;
@@ -643,13 +644,17 @@ document.querySelectorAll(".tab").forEach(btn=>{
 
 onAuthStateChanged(auth,async user=>{
   if(!user){
-    $("statusApp").textContent="Sesi login tidak ditemukan.";
+    // Jangan paksa halaman laporan lari ke login.html.
+    // Login dikendalikan oleh index/login FIXZY.
+    uid=null;
+    $("statusApp").textContent="Menunggu sesi login...";
     $("userInfo").textContent="Belum login";
-    $("systemSummary").innerHTML='❌ Belum login Firebase. Dashboard tidak membaca data.';
-    setTimeout(()=>location.href="login.html",400);
+    $("systemSummary").innerHTML='ℹ️ Silakan login melalui halaman utama FIXZY. Halaman laporan tidak akan mengalihkan ke login otomatis.';
     return;
   }
+
   uid=user.uid;
+  $("statusApp").textContent="Sesi login ditemukan...";
   await loadProfile(user);
   await muatSemua();
 });
