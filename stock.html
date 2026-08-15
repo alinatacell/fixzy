@@ -228,6 +228,7 @@ function tutupHalaman(){
   <div id="excelStatus" class="sub" style="margin-top:8px;color:#16a34a;font-weight:800"></div>
   <div id="excelPreview" class="excel-preview" style="display:none"></div>
 </div>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <script>
 let excelData=[];
 function downloadTemplate(){
@@ -237,7 +238,7 @@ function downloadTemplate(){
 }
 function previewExcel(){
   const file=document.getElementById('excelFile').files[0];
-  if(!file){ alert('Pilih file Excel dulu'); return; }
+  if(!file){ if(typeof showPopup==='function') showPopup('Pilih file Excel dulu.','Import Excel'); return; }
   const reader=new FileReader();
   reader.onload=function(e){
     const data=new Uint8Array(e.target.result);
@@ -263,52 +264,100 @@ function previewExcel(){
   reader.readAsArrayBuffer(file);
 }
 async function uploadExcelToFirebase(){
-  if(!excelData.length){ alert('Preview dulu file nya'); return; }
-  if(!confirm(`Upload ${excelData.length} data stok ke Firebase fixzy-update?`)) return;
-  const statusEl=document.getElementById('excelStatus');
-  statusEl.textContent='Mengupload...';
-  let ok=0, fail=0;
-  try{
-    const { getFirestore, collection, addDoc, serverTimestamp } = await import("https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js");
-    // gunakan db yang sudah ada di window atau dari modul
-    const dbInstance = window.db || window.firestoreDb || null;
-    // fallback pakai fungsi global tambahStok kalau ada
-    for(const row of excelData){
-      try{
-        const payload={
-          nama: String(row.nama||row.Nama||row.NAMA||'').trim(),
-          kategori: String(row.kategori||row.Kategori||'Umum').trim(),
-          hargaBeli: Number(row.hargaBeli||row.harga_beli||0),
-          hargaJual: Number(row.hargaJual||row.harga_jual||0),
-          stok: Number(row.stok||row.Stok||0),
-          sku: String(row.sku||row.SKU||'').trim(),
-          deskripsi: String(row.deskripsi||'').trim(),
-          ownerId: window.ownerUid || window.uid || '',
-          uid: window.ownerUid || window.uid || '',
-          createdAt: new Date(),
-          updatedAt: new Date()
-        };
-        if(!payload.nama) { fail++; continue; }
-        if(typeof window.tambahStokExcel === 'function'){
-          await window.tambahStokExcel(payload);
-        }else if(window.db){
-          const { collection: col, addDoc: add } = await import("https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js");
-          await add(col(window.db,"stock"), payload);
-        }else{
-          // pakai addDoc global
-          await window.uploadRowStock(payload);
-        }
-        ok++;
-        statusEl.textContent=`Progress: ${ok}/${excelData.length} OK, ${fail} gagal`;
-      }catch(err){ console.error(err); fail++; }
-    }
-    statusEl.textContent=`Selesai: ${ok} berhasil, ${fail} gagal. Refresh halaman untuk lihat stok.`;
-    if(window.load) window.load();
-  }catch(e){
-    statusEl.textContent='Error: '+e.message;
+  if(!excelData.length){
+    if(typeof showPopup==="function") showPopup("Preview dulu file Excel yang akan diupload.","Import Excel");
+    else console.error("Preview dulu file Excel yang akan diupload.");
+    return;
   }
-}
-</script>
+  if(!window.uid || !window.ownerUid){
+    if(typeof showPopup==="function") showPopup("Akun Firebase belum siap. Tunggu sampai data stok selesai dimuat, lalu coba lagi.","Import Excel");
+    return;
+  }
+
+  const statusEl=document.getElementById("excelStatus");
+  statusEl.textContent="Menyiapkan upload...";
+  showLoading(true,"Mengupload Excel ke Firebase...");
+
+  let ok=0,fail=0,skipped=0;
+  const errors=[];
+
+  try{
+    // Pakai Firestore db yang benar dari module utama.
+    const ref=collection(db,"stok");
+
+    // Ambil data milik owner yang sedang aktif.
+    const snap=await getDocs(query(ref,where("uid","==",ownerUid)));
+    const existing=new Map();
+    snap.forEach(d=>{
+      const x=d.data()||{};
+      const kode=String(x.kode||"").trim().toLowerCase();
+      if(kode) existing.set(kode,d.id);
+    });
+
+    for(let i=0;i<excelData.length;i++){
+      const row=excelData[i]||{};
+      try{
+        const nama=String(row.nama??row.Nama??row.NAMA??row["Nama Produk"]??row.produk??"").trim();
+        const kategori=String(row.kategori??row.Kategori??row.KATEGORI??"LAINNYA").trim().toUpperCase();
+        const kode=String(row.sku??row.SKU??row.kode??row.Kode??"").trim();
+        const hargaModal=num(row.hargaBeli??row.harga_beli??row.hargaModal??row.modal??0);
+        const hargaJual=num(row.hargaJual??row.harga_jual??row.jual??0);
+        const sisa=Math.max(0,num(row.stok??row.Stok??row.sisa??row["sisa stok"]??0));
+        const merk=String(row.merk??row.Merk??row.brand??row.supplier??"").trim();
+        const catatan=String(row.deskripsi??row.Deskripsi??row.catatan??row.keterangan??"").trim();
+
+        if(!nama){
+          skipped++;
+          continue;
+        }
+
+        const data={
+          uid:ownerUid,
+          ownerUid:ownerUid,
+          ownerId:ownerUid,
+          kode:kode,
+          nama:nama,
+          kategori:kategori||"LAINNYA",
+          hargaModal:hargaModal,
+          hargaJual:hargaJual||Math.round(hargaModal*1.25),
+          sisa:sisa,
+          merk:merk,
+          catatan:catatan,
+          sumber:"Excel",
+          updatedAt:serverTimestamp()
+        };
+
+        const key=kode.toLowerCase();
+        if(key && existing.has(key)){
+          await updateDoc(doc(db,"stok",existing.get(key)),data);
+        }else{
+          const added=await addDoc(ref,{...data,createdAt:serverTimestamp()});
+          if(key) existing.set(key,added.id);
+        }
+
+        ok++;
+        statusEl.textContent=`Progress: ${ok}/${excelData.length} berhasil, ${skipped} dilewati, ${fail} gagal`;
+      }catch(err){
+        fail++;
+        errors.push(`Baris ${i+2}: ${err.message||err}`);
+      }
+    }
+
+    await loadProducts();
+
+    let hasil=`Upload Excel selesai.\n\nBerhasil: ${ok}\nDilewati: ${skipped}\nGagal: ${fail}`;
+    if(errors.length) hasil+=`\n\n${errors.slice(0,5).join("\n")}`;
+
+    statusEl.textContent=`Selesai: ${ok} berhasil, ${skipped} dilewati, ${fail} gagal.`;
+    if(typeof showPopup==="function") showPopup(hasil,"Import Excel");
+  }catch(e){
+    console.error("EXCEL UPLOAD ERROR:",e);
+    statusEl.textContent="Gagal upload Excel: "+e.message;
+    if(typeof showPopup==="function") showPopup("Gagal upload Excel ke Firebase.\n\n"+e.message,"Import Excel");
+  }finally{
+    showLoading(false);
+  }
+}</script>
 
 <div class="top">
     <button class="btn primary" onclick="openManual()">Tambah Stok Manual</button>
@@ -860,6 +909,9 @@ $("search").addEventListener("input",render);$("cat").addEventListener("change",
 
 // Fungsi yang dipanggil oleh onclick HTML harus diekspos ke window
 // karena script utama menggunakan type="module".
+window.previewExcel = previewExcel;
+window.uploadExcelToFirebase = uploadExcelToFirebase;
+window.downloadTemplate = downloadTemplate;
 window.previewCSV = previewCSV;
 window.saveCSVToFirebase = saveCSVToFirebase;
 window.loadProducts = loadProducts;
