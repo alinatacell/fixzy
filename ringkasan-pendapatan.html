@@ -644,12 +644,17 @@ document.querySelectorAll(".tab").forEach(btn=>{
 
 onAuthStateChanged(auth,async user=>{
   if(!user){
-    // Jangan paksa halaman laporan lari ke login.html.
-    // Login dikendalikan oleh index/login FIXZY.
     uid=null;
-    $("statusApp").textContent="Menunggu sesi login...";
+    $("statusApp").textContent="Login diperlukan";
     $("userInfo").textContent="Belum login";
-    $("systemSummary").innerHTML='ℹ️ Silakan login melalui halaman utama FIXZY. Halaman laporan tidak akan mengalihkan ke login otomatis.';
+    $("systemSummary").innerHTML=`
+      <div style="padding:8px 0">
+        <b>🔐 Login diperlukan</b><br>
+        <span style="color:#64748b">Silakan login terlebih dahulu untuk membuka laporan keuangan.</span>
+        <div style="margin-top:12px">
+          <button class="btn btn-blue" type="button" onclick="mintaLogin()">🔐 Login FIXZY</button>
+        </div>
+      </div>`;
     return;
   }
 
@@ -658,6 +663,13 @@ onAuthStateChanged(auth,async user=>{
   await loadProfile(user);
   await muatSemua();
 });
+
+window.mintaLogin=function(){
+  try{
+    sessionStorage.setItem("FIXZY_KEMBALI_SETELAH_LOGIN","laporan-keuangan");
+  }catch(e){}
+  location.href="login.html";
+};
 </script>
 </body>
 </html>
