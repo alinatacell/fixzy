@@ -964,49 +964,49 @@ window.kirimWhatsAppDanSimpan=async()=>{
  }
 
  /*
-  * Jangan memakai window.location.href untuk whatsapp:// karena itu
-  * mengganti halaman FIXZY menjadi halaman navigasi browser kosong.
+  * VERSI WA BARU:
+  * Jangan memakai whatsapp:// karena pada sebagian Chrome/Windows
+  * protokol tersebut membuat tab berkedip/menutup atau kembali ke FIXZY.
   *
-  * Buat link sementara dengan target=_blank. Chrome akan menyerahkan
-  * whatsapp:// kepada aplikasi WhatsApp, sementara halaman FIXZY tetap
-  * berada di tab asal.
-  */
- /*
-  * Gunakan URL HTTPS resmi WhatsApp.
-  * whatsapp:// sering gagal dari browser desktop.
+  * wa.me adalah URL resmi WhatsApp dan lebih stabil:
+  * - HP: biasanya diteruskan ke aplikasi WhatsApp
+  * - Desktop: membuka WhatsApp Web
+  * - Pesan langsung sudah diisi pada kolom chat
+  *
+  * Tidak mengubah data servis atau Firebase.
   */
  const waUrl="https://wa.me/"+wa+"?text="+encodeURIComponent(pesan);
 
+ let waWindow=null;
+
  try{
-   const a=document.createElement("a");
-   a.href=waUrl;
-   a.target="_blank";
-   a.rel="noopener noreferrer";
-   a.style.position="fixed";
-   a.style.left="-9999px";
-   a.style.top="-9999px";
-   a.style.width="1px";
-   a.style.height="1px";
-   document.body.appendChild(a);
-
-   // Dipicu langsung dari klik tombol pengguna.
-   a.click();
-
-   setTimeout(()=>{try{a.remove()}catch(e){}},1500);
+   // Dipanggil langsung dari klik tombol agar tidak dianggap popup otomatis.
+   waWindow=window.open(waUrl,"_blank");
  }catch(e){
-   console.warn("Buka WhatsApp gagal:",e);
-   tampilNotice("⚠️ WhatsApp","WhatsApp tidak dapat dibuka. Silakan coba lagi.");
+   console.warn("window.open WhatsApp gagal:",e);
  }
 
- // Fallback jika browser memblokir anchor tersembunyi.
- try{
-   const opened=window.open(waUrl,"_blank","noopener,noreferrer");
-   if(opened) opened.opener=null;
- }catch(e){
-   console.warn("Fallback WhatsApp gagal:",e);
+ // Fallback jika browser memblokir window.open.
+ if(!waWindow){
+   try{
+     const a=document.createElement("a");
+     a.href=waUrl;
+     a.target="_blank";
+     a.rel="noopener noreferrer";
+     a.style.display="none";
+     document.body.appendChild(a);
+     a.click();
+     setTimeout(()=>a.remove(),2000);
+   }catch(e){
+     tampilNotice("⚠️ WhatsApp","WhatsApp tidak dapat dibuka oleh browser. Izinkan popup untuk halaman FIXZY lalu coba lagi.");
+     return;
+   }
  }
 
- // Status tetap disimpan ke Firebase.
+ /*
+  * Jangan menunggu WhatsApp selesai.
+  * Status tetap disimpan seperti fungsi sebelumnya.
+  */
  await simpanStatusDariPopup();
 };
 
