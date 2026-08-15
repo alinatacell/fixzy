@@ -944,60 +944,58 @@ window.simpanTanpaKirim=async()=>{
 };
 
 window.kirimWhatsAppDanSimpan=async()=>{
-  if(!pendingStatusConfirm)return;
+ if(!pendingStatusConfirm)return;
 
-  const p=pendingStatusConfirm;
-  const x=data.find(y=>y.id===p.id);
-  const pesan=$("statusConfirmMessage").value.trim();
+ const p=pendingStatusConfirm;
+ const x=data.find(y=>y.id===p.id);
+ const pesan=$("statusConfirmMessage").value.trim();
 
-  if(!x){
-    tampilNotice("⚠️ WhatsApp","Data servis tidak ditemukan.");
-    return;
-  }
+ if(!x){
+   tampilNotice("⚠️ WhatsApp","Data servis tidak ditemukan.");
+   return;
+ }
 
-  const waRaw=x.pelanggan?.wa||x.pelanggan?.whatsapp||"";
-  const wa=normalisasiWA(waRaw);
+ const waRaw=x.pelanggan?.wa||x.pelanggan?.whatsapp||"";
+ const wa=normalisasiWA(waRaw);
 
-  if(!wa){
-    tampilNotice("⚠️ WhatsApp","Nomor WhatsApp pelanggan belum tersedia.");
-    return;
-  }
+ if(!wa){
+   tampilNotice("⚠️ WhatsApp","Nomor WhatsApp pelanggan belum tersedia.");
+   return;
+ }
 
-  /*
-   * WhatsApp:
-   * - Desktop/laptop: gunakan https://wa.me agar diarahkan ke WhatsApp Web/Desktop.
-   * - HP: link yang sama akan diteruskan ke aplikasi/browser WhatsApp.
-   * Jangan memakai whatsapp:// karena di beberapa browser desktop bisa
-   * membuat halaman berkedip/menutup atau tidak melakukan handoff dengan benar.
-   */
-  const waUrl="https://wa.me/"+wa+"?text="+encodeURIComponent(pesan);
+ /*
+  * Jangan memakai window.location.href untuk whatsapp:// karena itu
+  * mengganti halaman FIXZY menjadi halaman navigasi browser kosong.
+  *
+  * Buat link sementara dengan target=_blank. Chrome akan menyerahkan
+  * whatsapp:// kepada aplikasi WhatsApp, sementara halaman FIXZY tetap
+  * berada di tab asal.
+  */
+ const waAppUrl="whatsapp://send?phone="+wa+"&text="+encodeURIComponent(pesan);
 
-  /*
-   * Buka WhatsApp di tab baru agar halaman Data Servis tetap aman.
-   * Popup konfirmasi ditutup setelah tombol Kirim ditekan.
-   */
-  try{
-    const waWindow=window.open(waUrl,"_blank","noopener,noreferrer");
-    if(!waWindow){
-      // Jika browser memblokir tab baru, tetap coba navigasi melalui anchor
-      // tanpa mengganti halaman FIXZY.
-      const a=document.createElement("a");
-      a.href=waUrl;
-      a.target="_blank";
-      a.rel="noopener noreferrer";
-      a.style.display="none";
-      document.body.appendChild(a);
-      a.click();
-      setTimeout(()=>a.remove(),1500);
-    }
-  }catch(e){
-    console.warn("Buka WhatsApp gagal:",e);
-  }
+ try{
+   const a=document.createElement("a");
+   a.href=waAppUrl;
+   a.target="_blank";
+   a.rel="noopener noreferrer";
+   a.style.display="none";
+   document.body.appendChild(a);
 
-  /*
-   * Popup ditutup dan status tetap disimpan ke Firebase.
-   */
-  await simpanStatusDariPopup();
+   /*
+    * Klik masih terjadi di dalam event tombol pengguna.
+    * Setelah handoff ke WhatsApp, tab asal FIXZY tidak dinavigasikan.
+    */
+   a.click();
+
+   setTimeout(()=>a.remove(),1500);
+ }catch(e){
+   console.warn("Buka WhatsApp gagal:",e);
+ }
+
+ /*
+  * Status tetap disimpan ke Firebase.
+  */
+ await simpanStatusDariPopup();
 };
 
 function normalisasiWA(value){
