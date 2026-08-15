@@ -219,7 +219,7 @@ onAuthStateChanged(auth, async u=>{
     konterName = konterName || 'A Yudi Thea';
   }
   document.getElementById('konterField').value=konterName;
-  document.getElementById('tanggalField').valueAsDate=new Date();
+  document.getElementById('tanggalField').value=new Date().toISOString().slice(0,10);
   autoGenerateNotaBarcode();
   syncInfoTransaksiHeader();
   await loadKaryawan();
@@ -592,7 +592,7 @@ function syncInfoTransaksiHeader(){
 
   if(akun && currentUser) akun.value=currentUser.email || '';
   if(usaha && konterName) usaha.value=konterName;
-  if(tanggal && !tanggal.value) tanggal.valueAsDate=new Date();
+  if(tanggal && !tanggal.value) tanggal.value=new Date().toISOString().slice(0,10);
   if(nota && !nota.value) autoGenerateNotaBarcode();
   if(barcode && !barcode.value) autoGenerateNotaBarcode();
 
@@ -628,7 +628,7 @@ window.batalInput=()=>{
     rincianItems=[];
     renderRincian();
     document.getElementById('inputForm').reset();
-    document.getElementById('tanggalField').valueAsDate=new Date();
+    document.getElementById('tanggalField').value=new Date().toISOString().slice(0,10);
     autoGenerateNotaBarcode();
   }
 }
