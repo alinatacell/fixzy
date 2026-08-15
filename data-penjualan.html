@@ -504,7 +504,15 @@ Terima kasih 🙏
   pendingWA.konterReal=konterReal;
 }
 
-window.closeWAModal=()=>{ document.getElementById('waModal').classList.remove('show'); pendingWA=null; }
+window.closeWAModal=()=>{
+  // Tutup popup WA sekaligus popup/detail penjualan di belakangnya.
+  const waModal=document.getElementById('waModal');
+  const detailModal=document.getElementById('modal');
+  if(waModal) waModal.classList.remove('show');
+  if(detailModal) detailModal.classList.remove('show');
+  pendingWA=null;
+  currentDetail=null;
+}
 
 window.sendWA=()=>{
   try{
@@ -558,6 +566,7 @@ window.sendWA=()=>{
       try{ a.remove(); }catch(e){}
     },1000);
 
+    // Setelah WA dibuka, tutup SEMUA popup FIXZY.
     closeWAModal();
 
   }catch(err){
