@@ -479,7 +479,7 @@ button.action{border:2px solid #111827;border-radius:9px;padding:12px;font-weigh
     <h3 id="fixzyErrorTitle">⚠️ Pemberitahuan</h3>
     <p id="fixzyErrorText"></p>
     <div class="popup-actions">
-      <button type="button" onclick="tutupErrorPopup()" style="background:#111827;color:#fff">OK</button>
+      <button type="button" id="fixzyPopupOkBtn" onclick="tutupErrorPopup()" style="background:#111827;color:#fff">OK</button>
     </div>
   </div>
 </div>
@@ -876,10 +876,24 @@ function tampilError(judul,pesan){
   $("fixzyErrorText").textContent=String(pesan||"Terjadi kesalahan.");
   $("fixzyErrorPopup").classList.add("show");
 }
-function tutupErrorPopup(){
+function tutupErrorPopup(keTagihan=false){
   $("fixzyErrorPopup").classList.remove("show");
+  if(keTagihan){
+    window.location.href="data-servis.html";
+  }
 }
 window.tutupErrorPopup=tutupErrorPopup;
+function tampilBerhasilSimpan(nomorNota){
+  $("fixzyErrorTitle").textContent="✅ Berhasil Disimpan";
+  $("fixzyErrorText").textContent=`Transaksi ${nomorNota} berhasil disimpan. Klik OK untuk masuk ke Data Servis.`;
+  const btn=$("fixzyPopupOkBtn");
+  if(btn){
+    btn.textContent="OK • Data Servis";
+    btn.onclick=()=>tutupErrorPopup(true);
+  }
+  $("fixzyErrorPopup").classList.add("show");
+}
+
 
 async function executeSave(printAfter){
   let d;
@@ -896,7 +910,6 @@ async function executeSave(printAfter){
     await saveData(d);
 
     $("saveStatus").textContent=`Berhasil disimpan • ${d.nomorNota}`;
-    tampilError("✅ Berhasil Disimpan",`Transaksi ${d.nomorNota} berhasil disimpan ke Firebase.`);
 
     if(printAfter){
       makePrint(d);
@@ -905,6 +918,8 @@ async function executeSave(printAfter){
     }else{
       kosongkanFormSetelahSimpan();
     }
+
+    tampilBerhasilSimpan(d.nomorNota);
     return true;
 
   }catch(e){
