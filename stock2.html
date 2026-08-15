@@ -216,9 +216,9 @@ button,input,select{font:inherit}button{cursor:pointer}
   }
   .header-in{gap:8px}
   .logo{
-    width:38px !important;
-    height:38px !important;
-    flex-basis:38px !important;
+    width:70px !important;
+    height:70px !important;
+    flex-basis:70px !important;
     border-radius:10px !important;
   }
   .brand b{font-size:13px !important}
@@ -357,10 +357,11 @@ tr:hover td{background:#fffdf5}
     gap:8px;
   }
   .logo{
-    width:40px;
-    height:40px;
-    flex-basis:40px;
+    width:70px !important;
+    height:70px !important;
+    flex-basis:70px !important;
   }
+  .logo img{width:64px !important;height:64px !important;}
   .brand{gap:8px}
   .brand h1{font-size:15px}
   .brand p{font-size:9px;margin-top:3px}
@@ -525,7 +526,7 @@ function tutupHalaman(){
     <div class="logo"><img src="logo.png" alt="FIXZY"></div>
     <div class="brand">
       <b id="headerAccountName">Memuat akun...</b><br>
-      <span class="email" id="headerUserEmail">-</span>
+      <span class="email" id="headerUserEmail" style="display:none">-</span>
       <span class="badge-role" id="headerRole">USER</span>
     </div>
     <div class="user-box head-actions">
@@ -1271,7 +1272,7 @@ window.hapusStockTerpilih=async function(){
 onAuthStateChanged(auth,async u=>{
   const he=document.getElementById("headerUserEmail");
   const hr=document.getElementById("headerRole");
-  if(he) he.firstChild ? he.firstChild.nodeValue=(u?.email||"-")+" " : null;
+  if(he) he.style.display="none";
   if(hr) hr.textContent=(currentRole||"USER").toUpperCase();
   if(!u){location.replace("login.html");return;}
   uid=u.uid;
@@ -1292,9 +1293,10 @@ onAuthStateChanged(auth,async u=>{
     if(headerRoleEl) headerRoleEl.textContent=(currentRole||"USER").toUpperCase();
     const headerAccountName=document.getElementById("headerAccountName");
     if(headerAccountName){
-      headerAccountName.textContent =
-        p.namaKonter || p.namaToko || p.nama || p.name || p.displayName ||
-        p.username || p.email || auth.currentUser?.email || "Akun";
+      const isStaff = ["employee","reseller"].includes(currentRole);
+      headerAccountName.textContent = isStaff
+        ? (p.username || p.namaAkun || p.nama || p.name || p.displayName || "Akun")
+        : (p.namaKonter || p.namaToko || p.nama || p.name || p.displayName || p.username || "Akun");
     }
     if(!ownerUid)throw new Error("ownerUid akun tidak ditemukan.");
     await loadProducts();
