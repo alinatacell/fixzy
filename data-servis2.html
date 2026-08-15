@@ -971,25 +971,37 @@ window.kirimWhatsAppDanSimpan=async()=>{
   * whatsapp:// kepada aplikasi WhatsApp, sementara halaman FIXZY tetap
   * berada di tab asal.
   */
- const waAppUrl="whatsapp://send?phone="+wa+"&text="+encodeURIComponent(pesan);
+ const textEncoded=encodeURIComponent(pesan);
+ const waAppUrl="whatsapp://send?phone="+wa+"&text="+textEncoded;
+ const waWebUrl="https://wa.me/"+wa+"?text="+textEncoded;
+ // Fallback untuk laptop: https://web.whatsapp.com juga bisa, tapi wa.me lebih universal
+ const waWebFallback="https://web.whatsapp.com/send?phone="+wa+"&text="+textEncoded;
 
  try{
+   // 1. Coba buka via protokol aplikasi (kalau ada WhatsApp Desktop)
    const a=document.createElement("a");
    a.href=waAppUrl;
    a.target="_blank";
    a.rel="noopener noreferrer";
    a.style.display="none";
    document.body.appendChild(a);
-
-   /*
-    * Klik masih terjadi di dalam event tombol pengguna.
-    * Setelah handoff ke WhatsApp, tab asal FIXZY tidak dinavigasikan.
-    */
    a.click();
-
    setTimeout(()=>a.remove(),1500);
+
+   // 2. Fallback: buka wa.me di tab baru setelah 800ms - ini yang PASTI jalan di laptop
+   // window.open harus dipanggil langsung dalam event click agar tidak ke-block popup blocker
+   setTimeout(()=>{
+     const win=window.open(waWebUrl,"_blank","noopener");
+     // Jika popup blocker memblokir wa.me, coba web.whatsapp.com
+     if(!win){
+       window.open(waWebFallback,"_blank","noopener");
+     }
+   },800);
+
  }catch(e){
    console.warn("Buka WhatsApp gagal:",e);
+   // Langsung fallback kalau error
+   window.open(waWebUrl,"_blank","noopener");
  }
 
  /*
