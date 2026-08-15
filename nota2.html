@@ -590,97 +590,63 @@ async function loadEmployees(){
 
 async function loadProducts(){
   try{
-    // IZINKAN SEMUA: coba ambil semua dokumen, tidak hanya punya businessUid
-    // Untuk karyawan & admin, ownerUid mungkin beda, jadi ambil semua dulu
     let allDocs=[];
     try{
-      const snapAll = await getDocs(collection(db,"stok"));
-      console.log("[NOTA] Total dokumen stok tanpa filter:", snapAll.size);
-      allDocs = snapAll.docs.map(d=>({id:d.id,...d.data()}));
-    }catch(e){
-      console.warn("Gagal ambil all stok", e);
-    }
+      const snapAll=await getDocs(collection(db,"stok"));
+      allDocs=snapAll.docs.map(d=>({id:d.id,...d.data()}));
+      console.log("[NOTA] Total stok tanpa filter:", allDocs.length);
+    }catch(e){ console.warn(e); }
     
-    // Jika ada businessUid, coba filter juga tapi gabung dengan all
+    // Gabung dengan filter businessUid kalau ada
     try{
-      const snapFiltered = await getDocs(query(collection(db,"stok"),where("uid","==",businessUid)));
-      console.log("[NOTA] Filter uid=="+businessUid+":", snapFiltered.size);
+      const snapF=await getDocs(query(collection(db,"stok"),where("uid","==",businessUid)));
       const map=new Map();
       allDocs.forEach(p=>map.set(p.id,p));
-      snapFiltered.forEach(d=>{
-        if(!map.has(d.id)) map.set(d.id,{id:d.id,...d.data()});
-      });
-      allDocs = Array.from(map.values());
+      snapF.forEach(d=>{ if(!map.has(d.id)) map.set(d.id,{id:d.id,...d.data()}); });
+      allDocs=Array.from(map.values());
     }catch(e){}
     
-    // Juga coba ownerUid dan ownerId
     try{
-      const snap2 = await getDocs(query(collection(db,"stok"),where("ownerUid","==",businessUid)));
+      const snap2=await getDocs(query(collection(db,"stok"),where("ownerUid","==",businessUid)));
       const map=new Map();
       allDocs.forEach(p=>map.set(p.id,p));
       snap2.forEach(d=>{ if(!map.has(d.id)) map.set(d.id,{id:d.id,...d.data()}); });
-      allDocs = Array.from(map.values());
+      allDocs=Array.from(map.values());
     }catch(e){}
     
-    // Normalisasi
-    products = allDocs.map(p=>{
+    products=allDocs.map(p=>{
       if(p.hargaModal==null && p.hargaBeli!=null) p.hargaModal=p.hargaBeli;
       if(p.sisa==null && p.stok!=null) p.sisa=p.stok;
       return p;
     });
-    
     console.log("[NOTA] Total produk untuk pencarian:", products.length);
   }catch(e){
-    console.error("loadProducts error", e);
+    console.error(e);
     products=[];
   }
 }
 window.loadProducts=loadProducts;
 
-function showNotaConfirm(message, title='Konfirmasi'){
-  return new Promise(resolve=>{
-    // Pakai alert bawaan FIXZY kalau ada, kalau tidak pakai confirm native
-    if(typeof showPopup==='function'){
-      // Buat confirm sederhana pakai popup yang ada
-      const ok = confirm(message);
-      resolve(ok);
-    }else{
-      resolve(confirm(message));
-    }
-  });
-}
-window.showNotaConfirm=showNotaConfirm;
-window.alert=function(msg){
-  if(typeof showPopup==='function'){ showPopup(msg); }
-  else if(typeof showKonterPopup==='function'){ showKonterPopup(msg); }
-  else { console.log(msg); const el=document.createElement('div'); el.textContent=msg; el.style.cssText='position:fixed;top:20px;left:50%;transform:translateX(-50%);background:#111827;color:#fff;padding:12px 18px;border-radius:12px;z-index:99999'; document.body.appendChild(el); setTimeout(()=>el.remove(),3000); }
-};
-
-
 
 function filterProduk(q=""){
   const box=$("hasilProduk"),key=String(q).trim().toLowerCase();
-  // IZINKAN SEMUA: cari di nama, kode, sku, merk, kategori, bukan cuma nama & kode
-  // Jika kosong, tampilkan semua (max 50)
+  // IZINKAN SEMUA: cari di nama, kode, merk, kategori, tampilkan semua termasuk stok habis
   const list=products.filter(p=>{
     if(!key) return true;
     const nama=namaProduk(p).toLowerCase();
     const kode=kodeProduk(p).toLowerCase();
     const merk=String(p.merk||p.brand||"").toLowerCase();
     const kat=String(p.kategori||"").toLowerCase();
-    const sku=String(p.sku||"").toLowerCase();
-    return nama.includes(key) || kode.includes(key) || merk.includes(key) || kat.includes(key) || sku.includes(key);
+    return nama.includes(key) || kode.includes(key) || merk.includes(key) || kat.includes(key);
   }).slice(0,100);
-  
   box.innerHTML=list.length?list.map(p=>{
     const stok=stokProduk(p);
-    // IZINKAN SEMUA: jangan disabled kalau stok habis, tetap bisa dipilih
-    const habis = stok<=0;
+    const habis=stok<=0;
     return `<button type="button" class="result" data-id="${esc(p.id)}" style="${habis?'background:#fffbeb;border-left:3px solid #f59e0b':''}">
-      <div class="pname">${esc(namaProduk(p))} <span style="font-size:10px;color:#64748b">[${esc(kodeProduk(p)||'')}]</span></div>
-      <div class="pmeta">${p.kategori?esc(p.kategori)+' • ':''}${p.merk?esc(p.merk)+' • ':''}Stok: <b style="color:${habis?'#f59e0b':'#16a34a'}">${stok}${habis?' • Habis tapi tetap bisa pakai':''}</b></div>
+      <div class="pname">${esc(namaProduk(p))} <span style="font-size:10px;color:#888">[${esc(kodeProduk(p)||'')}]</span></div>
+      <div class="pmeta">${p.kategori?esc(p.kategori)+' • ':''}Stok: <b style="color:${habis?'#f59e0b':'#16a34a'}">${stok}${habis?' • Habis tapi bisa dipakai':''}</b></div>
     </button>`;
-  }).join(""):'<div class="result">Produk tidak ditemukan. Coba kata kunci lain.</div>';
+  }).join(""):'<div class="result">Produk tidak ditemukan.</div>';
   box.classList.add("show");
 }
 window.filterProduk=filterProduk;
@@ -690,12 +656,9 @@ $("cariProduk").addEventListener("focus",e=>filterProduk(e.target.value));
 $("hasilProduk").addEventListener("click",e=>{
   const b=e.target.closest(".result[data-id]");if(!b)return;
   const p=products.find(x=>x.id===b.dataset.id);if(!p)return;
-  // IZINKAN SEMUA: karyawan, admin, owner semua boleh pilih, bahkan stok habis
   const stok=stokProduk(p);
   if(stok<=0){
-    if(!(await showNotaConfirm(`Stok ${namaProduk(p)} habis (sisa ${stok}). Tetap pakai produk ini?`, 'Stok Habis'))){
-      return;
-    }
+    if(!confirm(`Stok ${namaProduk(p)} habis (sisa ${stok}). Tetap pakai?`)) return;
   }
   selectedProduct=p;
   $("cariProduk").value=namaProduk(p);
@@ -734,10 +697,7 @@ function buildData(){
   if(selectedProduct){
     const tersedia=stokProduk(selectedProduct);
     if(tersedia<q){
-      // IZINKAN SEMUA: jangan blokir, cuma warning. Owner/admin/karyawan semua boleh jual meski stok minus
-      console.warn(`Stok ${namaProduk(selectedProduct)} kurang: butuh ${q}, tersedia ${tersedia}. Tetap diizinkan.`);
-      // Jika mau ketat, uncomment baris throw di bawah
-      // throw new Error(`Stok ${namaProduk(selectedProduct)} tidak cukup. Tersedia ${tersedia}.`);
+      console.warn(`Stok kurang: butuh ${q}, tersedia ${tersedia}. Tetap diizinkan (mode izinkan semua).`);
     }
   }
 
