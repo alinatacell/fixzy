@@ -2,404 +2,271 @@
 <html lang="id">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0">
-<meta name="theme-color" content="#ffc107">
-<title>FIXZY | Index</title>
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<meta name="theme-color" content="#FFC107">
+<meta name="fixzy-version" content="index-firebase-session-v2">
+<title>FIXZY</title>
 <style>
 *{box-sizing:border-box}
-html,body{margin:0;width:100%;height:100%;font-family:Arial,Helvetica,sans-serif;background:#f3f4f6;color:#172235}
+html,body{margin:0;width:100%;height:100%;font-family:Arial,Helvetica,sans-serif;background:#f3f4f6;color:#111827}
 body{overflow:hidden}
-.header{height:76px;background:#fff;border-bottom:1px solid #e5e7eb;display:flex;align-items:center;position:fixed;top:0;left:0;right:0;z-index:50;box-shadow:0 2px 12px #0001}
-.menu-btn{width:52px;height:52px;margin-left:12px;border:0;border-radius:15px;background:#111827;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;cursor:pointer;flex:none}
-.menu-btn span{width:25px;height:3px;background:#ffc107;border-radius:5px}
-.header-center{flex:1;min-width:0;padding:0 12px}
-.header-title{font-weight:900;font-size:19px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.header-sub{font-size:12px;color:#64748b;margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.account{text-align:right;padding:0 14px 0 6px;max-width:260px;min-width:120px}
-.account-name{font-weight:800;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.account-exp{font-size:11px;color:#64748b;margin-top:4px;white-space:nowrap}
-#contentArea{position:fixed;top:76px;left:0;right:0;bottom:0;background:#f3f4f6;overflow:hidden}
-iframe.page-frame{width:100%;height:100%;border:0;display:block;background:#fff}
-#menuOverlay{position:fixed;inset:0;background:#0006;z-index:80;display:none}
-#menuOverlay.show{display:block}
-#sideMenu{position:fixed;z-index:90;top:0;bottom:0;left:-330px;width:min(330px,88vw);background:#fff;box-shadow:8px 0 30px #0003;transition:left .22s ease;overflow-y:auto}
-#sideMenu.show{left:0}
-.menu-head{padding:18px 16px 14px;background:#111827;color:#fff;position:sticky;top:0;z-index:2}
-.menu-brand{display:flex;align-items:center;gap:12px}
-.logo{width:48px;height:48px;border-radius:13px;background:#fff;object-fit:contain;padding:5px}
-.menu-brand b{font-size:18px}.menu-brand small{display:block;color:#cbd5e1;margin-top:3px}
-.menu-close{position:absolute;right:12px;top:12px;width:38px;height:38px;border:0;border-radius:11px;background:#263247;color:#fff;font-size:22px}
-.menu-section{padding:10px 12px 5px;color:#94a3b8;font-size:11px;font-weight:900;text-transform:uppercase}
-.menu-link{width:calc(100% - 20px);margin:4px 10px;padding:12px 13px;border:0;border-radius:12px;background:#fff;text-align:left;display:flex;align-items:center;gap:11px;font-size:14px;font-weight:800;color:#172235;cursor:pointer}
-.menu-link:hover,.menu-link.active{background:#eef2f7}
-.menu-link .ico{width:27px;text-align:center;font-size:20px}
-.menu-divider{height:1px;background:#e5e7eb;margin:10px 12px}
-#loading{position:fixed;inset:0;background:#f3f4f6;z-index:100;display:flex;align-items:center;justify-content:center}
-.loading-card{width:min(390px,90vw);background:#fff;border-radius:20px;padding:28px;text-align:center;box-shadow:0 8px 35px #0001}
-.spinner{width:40px;height:40px;border:4px solid #e5e7eb;border-top-color:#ffc107;border-radius:50%;margin:0 auto 15px;animation:spin .8s linear infinite}
-@keyframes spin{to{transform:rotate(360deg)}}
-.hidden{display:none!important}
-#notice{position:fixed;inset:0;background:#0006;z-index:120;display:none;align-items:center;justify-content:center;padding:20px}
-#notice.show{display:flex}
-.notice-box{width:min(430px,100%);background:#fff;border-radius:18px;padding:22px;box-shadow:0 15px 50px #0004}
-.notice-box h3{margin:0 0 8px}.notice-box p{margin:0;color:#475569;line-height:1.5}
-.notice-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:18px}
-.btn{border:0;border-radius:11px;padding:10px 15px;font-weight:800;cursor:pointer}
-.btn-primary{background:#111827;color:#fff}.btn-yellow{background:#ffc107;color:#111}.btn-light{background:#e2e8f0;color:#111}
-@media(max-width:650px){
-  .header{height:70px}.menu-btn{width:48px;height:48px;margin-left:9px}.header-title{font-size:17px}.account{max-width:125px;padding-right:9px}.account-name{font-size:12px}.account-exp{font-size:10px}
-  #contentArea{top:70px}
-}
+.header{height:62px;background:#fff;border-bottom:1px solid #e5e7eb;display:flex;align-items:center;position:fixed;top:0;left:0;right:0;z-index:20;box-shadow:0 2px 12px rgba(0,0,0,.06)}
+.menu-btn{width:44px;height:44px;margin-left:9px;border:0;border-radius:11px;background:#111827;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;cursor:pointer;flex:none}
+.menu-btn span{width:21px;height:2px;background:#fff;border-radius:4px}
+.header-running{flex:1;min-width:0;height:42px;margin-left:12px;margin-right:8px;overflow:hidden;display:flex;align-items:center;position:relative;border-radius:10px;background:#fff}
+.running-track{display:flex;align-items:center;width:max-content;white-space:nowrap;animation:fixzyRunning 28s linear infinite;font-size:12px;font-weight:800;color:#374151}
+.running-track span{display:inline-flex;align-items:center;margin-right:42px}
+@keyframes fixzyRunning{from{transform:translateX(100%)}to{transform:translateX(-100%)}}
+.header-account{margin-left:auto;margin-right:13px;text-align:right;line-height:1.15;flex:none}
+.account-name{font-size:12px;font-weight:900;max-width:190px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.account-exp{font-size:9px;color:#6b7280;margin-top:3px}
+.content{position:fixed;top:62px;left:0;right:0;bottom:0;background:#f3f4f6;overflow:hidden}
+.content iframe{width:100%;height:100%;border:0;display:block;background:#fff}
+.loading{height:100%;display:flex;align-items:center;justify-content:center;padding:20px;text-align:center}
+.loading-card{width:min(420px,100%);background:#fff;border:1px solid #e5e7eb;border-radius:18px;padding:28px;box-shadow:0 8px 30px rgba(0,0,0,.07)}
+.loading-icon{font-size:42px}.loading-title{font-size:20px;font-weight:900;margin:10px 0 6px}
+.loading-text{font-size:13px;color:#667085;line-height:1.6}
+.overlay{position:fixed;inset:0;z-index:40;background:rgba(0,0,0,.28);opacity:0;visibility:hidden;transition:.2s}
+.overlay.show{opacity:1;visibility:visible}
+.menu{position:fixed;z-index:50;top:0;left:0;height:100dvh;width:min(330px,88vw);background:#fff;transform:translateX(-105%);transition:.25s ease;box-shadow:8px 0 30px rgba(0,0,0,.15);overflow:auto}
+.menu.show{transform:translateX(0)}
+.menu-head{min-height:62px;padding:10px 13px;background:#111827;color:#fff;display:flex;align-items:center;gap:10px}
+.menu-head img{width:78px;height:40px;object-fit:contain;background:#000;border-radius:7px}
+.menu-title{font-weight:900;font-size:15px}.menu-sub{font-size:9px;color:#d1d5db;margin-top:3px}
+.close{margin-left:auto;border:0;background:rgba(255,255,255,.12);color:#fff;width:34px;height:34px;border-radius:9px;font-size:20px;cursor:pointer}
+.menu-list{padding:9px}.menu-section{font-size:10px;font-weight:900;color:#9ca3af;padding:10px 11px 5px;text-transform:uppercase;letter-spacing:.5px}
+.menu-link{width:100%;display:flex;align-items:center;gap:10px;border:0;background:transparent;color:#111827;padding:12px 11px;border-radius:10px;font-size:13px;font-weight:800;text-align:left;cursor:pointer}
+.menu-link:hover,.menu-link.active{background:#f3f4f6}.menu-link .ico{width:25px;text-align:center;font-size:16px}
+.logout-link{color:#dc2626;font-weight:900}.menu-divider{height:1px;background:#e5e7eb;margin:7px 5px}
+.denied{height:100%;display:flex;align-items:center;justify-content:center;padding:20px;background:#f3f4f6}
+.denied-card{width:min(460px,100%);background:#fff;border:1px solid #e5e7eb;border-radius:16px;padding:24px;text-align:center;box-shadow:0 5px 20px rgba(0,0,0,.08)}
+.denied-card .ico{font-size:42px}.denied-card h2{margin:10px 0 7px;font-size:20px}.denied-card p{margin:0;color:#667085;font-size:13px;line-height:1.6}
+.action{margin-top:15px;border:0;border-radius:10px;padding:11px 15px;background:#111827;color:#fff;font-weight:900;cursor:pointer}
+@media(max-width:480px){.header-running{margin-left:8px;margin-right:5px;height:38px}.running-track{font-size:10px;animation-duration:24s}.header-account{margin-right:9px}.account-name{font-size:11px;max-width:150px}}
 </style>
 </head>
 <body>
-
 <header class="header">
-  <button class="menu-btn" type="button" onclick="bukaMenu()" aria-label="Menu">
-    <span></span><span></span><span></span>
-  </button>
-  <div class="header-center">
-    <div class="header-title" id="headerTitle">FIXZY</div>
-    <div class="header-sub" id="headerSub">Memeriksa sesi Firebase...</div>
-  </div>
-  <div class="account">
-    <div class="account-name" id="accountName">Akun</div>
-    <div class="account-exp" id="accountExp">Exp: -</div>
-  </div>
+  <button class="menu-btn" onclick="bukaMenu()" aria-label="Menu"><span></span><span></span><span></span></button>
+  <div class="header-running"><div class="running-track">
+    <span>🌟 Selamat Datang di FIXZY</span><span>🤲 Semoga usaha hari ini lancar</span>
+    <span>💰 Semoga rezeki bertambah dan berkah</span><span>🙏 Semoga semua urusan dimudahkan</span>
+  </div></div>
+  <div class="header-account"><div class="account-name" id="accountName">Memuat...</div><div class="account-exp">Exp: <span id="accountExp">-</span></div></div>
 </header>
 
-<main id="contentArea"></main>
-
-<div id="loading">
-  <div class="loading-card">
-    <div class="spinner"></div>
-    <b>Memuat FIXZY...</b>
-    <div style="font-size:12px;color:#64748b;margin-top:7px">Memeriksa sesi login Firebase</div>
-  </div>
+<div class="content" id="contentArea">
+  <div class="loading"><div class="loading-card">
+    <div class="loading-icon">🔐</div><div class="loading-title">Memeriksa sesi FIXZY</div>
+    <div class="loading-text">Index sedang membaca login dan profil dari Firebase.</div>
+  </div></div>
 </div>
+<div class="overlay" id="overlay" onclick="tutupMenu()"></div>
 
-<div id="menuOverlay" onclick="tutupMenu()"></div>
-
-<aside id="sideMenu">
+<aside class="menu" id="menu">
   <div class="menu-head">
-    <button class="menu-close" type="button" onclick="tutupMenu()">×</button>
-    <div class="menu-brand">
-      <img class="logo" src="logo.png" alt="FIXZY" onerror="this.style.display='none'">
-      <div><b>FIXZY</b><small id="menuUser">Akun aktif</small></div>
-    </div>
+    <img src="logo.png?v=3" alt="FIXZY">
+    <div><div class="menu-title">Menu FIXZY</div><div class="menu-sub">Pilih halaman</div></div>
+    <button class="close" onclick="tutupMenu()">×</button>
   </div>
-
-  <div class="menu-section">Transaksi</div>
-  <button class="menu-link" data-page="nota.html" data-roles="owner,employee" onclick="bukaHalaman(this)"><span class="ico">🧾</span>Input Servisan</button>
-  <button class="menu-link" data-page="nota2.html" data-roles="owner,employee" onclick="bukaHalaman(this)"><span class="ico">🧾</span>Input Servisan 2</button>
-  <button class="menu-link" data-page="penjualan.html" data-roles="owner,employee,reseller" onclick="bukaHalaman(this)"><span class="ico">🛒</span>Input Penjualan</button>
-  <button class="menu-link" data-page="penjualan2.html" data-roles="owner,employee,reseller" onclick="bukaHalaman(this)"><span class="ico">🛒</span>Input Penjualan 2</button>
-
-  <div class="menu-section">Data & Laporan</div>
-  <button class="menu-link" data-page="data-servis.html" data-roles="owner,employee,superadmin" onclick="bukaHalaman(this)"><span class="ico">🔧</span>Data Servis</button>
-  <button class="menu-link" data-page="data-servis2.html" data-roles="owner,employee,superadmin" onclick="bukaHalaman(this)"><span class="ico">🔧</span>Data Servis 2</button>
-  <button class="menu-link" data-page="data-penjualan.html" data-roles="owner,employee,reseller,superadmin" onclick="bukaHalaman(this)"><span class="ico">🛒</span>Data Penjualan</button>
-  <button class="menu-link" data-page="ringkasan-pendapatan.html" data-roles="owner,superadmin" onclick="bukaHalaman(this)"><span class="ico">📊</span>Ringkasan Pendapatan</button>
-
-  <div class="menu-section">Stok & Karyawan</div>
-  <button class="menu-link" data-page="stock.html" data-roles="owner,employee,reseller,superadmin" onclick="bukaHalaman(this)"><span class="ico">📦</span>Stock</button>
-  <button class="menu-link" data-page="stock2.html" data-roles="owner,employee,reseller,superadmin" onclick="bukaHalaman(this)"><span class="ico">📦</span>Stock 2</button>
-  <button class="menu-link" data-page="data-karyawan.html" data-roles="owner,superadmin" onclick="bukaHalaman(this)"><span class="ico">👥</span>Data Karyawan</button>
-  <button class="menu-link" data-page="upah-kerja.html" data-roles="owner,superadmin" onclick="bukaHalaman(this)"><span class="ico">💰</span>Upah Kerja</button>
-
-  <div class="menu-section">Keuangan & Admin</div>
-  <button class="menu-link" data-page="pengeluaran.html" data-roles="owner,superadmin" onclick="bukaHalaman(this)"><span class="ico">💸</span>Pengeluaran</button>
-  <button class="menu-link" data-page="dashboard-admin.html" data-roles="owner,superadmin" onclick="bukaHalaman(this)"><span class="ico">📊</span>Dashboard Admin</button>
-  <button class="menu-link" data-page="kendali2.html" data-roles="owner,superadmin" onclick="bukaHalaman(this)"><span class="ico">🎛️</span>Kendali Admin</button>
-  <button class="menu-link" data-page="hak-akses.html" data-roles="owner,superadmin" onclick="bukaHalaman(this)"><span class="ico">🔐</span>Hak Akses</button>
-  <button class="menu-link" data-page="izin-akses.html" data-roles="owner,superadmin" onclick="bukaHalaman(this)"><span class="ico">🔑</span>Izin Akses</button>
-  <button class="menu-link" data-page="pengaturan.html" data-roles="owner" onclick="bukaHalaman(this)"><span class="ico">⚙️</span>Pengaturan</button>
-  <button class="menu-link" data-page="cek-aktivasi.html" data-roles="owner,employee,reseller,superadmin" onclick="bukaHalaman(this)"><span class="ico">🛡️</span>Cek Aktivasi</button>
-
-  <div class="menu-section">Lainnya</div>
-  <button class="menu-link" data-page="ifrem.html" data-roles="owner,employee,reseller,superadmin" onclick="bukaHalaman(this)"><span class="ico">🖥️</span>IFREM</button>
-
-  <div class="menu-divider"></div>
-  <button class="menu-link" type="button" onclick="logoutFixzy()"><span class="ico">🚪</span>Logout</button>
+  <nav class="menu-list" id="menuList"></nav>
 </aside>
 
-<div id="notice">
-  <div class="notice-box">
-    <h3 id="noticeTitle">FIXZY</h3>
-    <p id="noticeText"></p>
-    <div class="notice-actions">
-      <button class="btn btn-light" type="button" onclick="tutupNotice()">Tutup</button>
-      <button class="btn btn-primary" id="noticeOk" type="button" onclick="tutupNotice()">OK</button>
-    </div>
-  </div>
-</div>
-
 <script type="module">
-import { initializeApp, getApps, getApp } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js";
-import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-auth.js";
-import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js";
+import {initializeApp,getApps,getApp} from "https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js";
+import {getAuth,onAuthStateChanged,signOut} from "https://www.gstatic.com/firebasejs/11.10.0/firebase-auth.js";
+import {getFirestore,doc,getDoc} from "https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js";
 
-const firebaseConfig={
-  apiKey:"AIzaSyCwMbJsuORIq4QCmp4c1r6OsjAUlfxU5Y",
-  authDomain:"fixzy-f056f.firebaseapp.com",
-  projectId:"fixzy-f056f",
-  storageBucket:"fixzy-f056f.firebasestorage.app",
-  messagingSenderId:"838081521031",
-  appId:"1:838081521031:web:50fdee909b56460b055f22"
-};
-
-const app=getApps().length?getApp():initializeApp(firebaseConfig);
+const cfg={apiKey:"AIzaSyC_PcarMTT5Un7qfSLzf92o5OGn5rginsI",authDomain:"fixzy-update.firebaseapp.com",projectId:"fixzy-update",storageBucket:"fixzy-update.firebasestorage.app",messagingSenderId:"995892519622",appId:"1:995892519622:web:fa41047944d8e5b35d6dc7"};
+const app=getApps().length?getApp():initializeApp(cfg);
 const auth=getAuth(app);
 const db=getFirestore(app);
 
-let authReady=false;
-let currentUser=null;
-let currentProfile={};
-let activeFrame=null;
+/*
+  DAFTAR MENU TERPUSAT.
+  Kalau nanti membuat HTML baru, cukup tambah 1 object di sini.
+  Hak akses employee/reseller tetap ditentukan oleh field izin di Firebase.
+*/
+const MENU=[
+ {section:"Transaksi"},
+ {page:"nota.html",icon:"🧾",label:"Input Servisan",permission:"servis",roles:["owner","employee","reseller"]},
+ {page:"penjualan.html",icon:"🛒",label:"Input Penjualan",permission:"penjualan",roles:["owner","employee","reseller"]},
 
-const $=id=>document.getElementById(id);
+ {section:"Data"},
+ {page:"data-servis.html",icon:"🔧",label:"Data Servis",permission:"dataServis",roles:["owner","employee","reseller"]},
+ {page:"data-penjualan.html",icon:"🛒",label:"Data Penjualan",permission:"dataPenjualan",roles:["owner","employee","reseller"]},
+ {page:"stock.html",icon:"📦",label:"Stock",permission:"stock",roles:["owner","employee","reseller"]},
+ {page:"monitoring-garansi.html",icon:"🛡️",label:"Monitoring Garansi",permission:"garansi",roles:["owner","employee"]},
 
-function showNotice(title,text,action){
-  $("noticeTitle").textContent=title||"FIXZY";
-  $("noticeText").textContent=text||"";
-  $("notice").classList.add("show");
-  $("noticeOk").onclick=()=>{
-    $("notice").classList.remove("show");
-    if(typeof action==="function") action();
-  };
-}
-window.tutupNotice=()=>$("notice").classList.remove("show");
+ {section:"Laporan"},
+ {page:"ringkasan-pendapatan.html",icon:"📊",label:"Ringkasan Pendapatan",permission:"ringkasanPendapatan",roles:["owner","employee"]},
+ {page:"laporan-keuangan.html",icon:"💰",label:"Laporan Keuangan",permission:"laporanKeuangan",roles:["owner","employee"]},
+ {page:"rekap-teknisi.html",icon:"🧰",label:"Rekap Teknisi",permission:"rekapTeknisi",roles:["owner","employee"]},
+
+ {section:"Administrasi"},
+ {page:"upah-kerja.html",icon:"💵",label:"Upah Karyawan",permission:"ownerOnly",roles:["owner"]},
+ {page:"pengeluaran.html",icon:"💸",label:"Pengeluaran",permission:"ownerOnly",roles:["owner"]},
+ {page:"dashboard-admin.html",icon:"📊",label:"Dashboard Admin",permission:"ownerOnly",roles:["owner"]},
+ {page:"data-karyawan.html",icon:"👤",label:"Data Karyawan",permission:"ownerOnly",roles:["owner"]},
+ {page:"kelola-karyawan-reseller.html",icon:"👥",label:"Kelola Karyawan & Reseller",permission:"ownerOnly",roles:["owner"]},
+ {page:"hak-akses.html",icon:"🔐",label:"Hak Akses",permission:"ownerOnly",roles:["owner"]},
+ {page:"cek-aktivasi.html",icon:"🔐",label:"Cek Aktivasi",permission:"ownerOnly",roles:["owner"]},
+ {page:"pengaturan.html",icon:"⚙️",label:"Pengaturan",permission:"ownerOnly",roles:["owner"]},
+
+ {section:"Sistem"},
+ {page:"page.html",icon:"ℹ️",label:"About",permission:null,roles:["owner","employee","reseller","superadmin"]}
+];
+
+let authReady=false,currentUser=null;
 
 function formatExp(v){
-  if(v===undefined||v===null||String(v).trim()==="") return "-";
-  if(typeof v==="object" && typeof v.toDate==="function"){
-    try{return v.toDate().toLocaleDateString("id-ID",{day:"2-digit",month:"long",year:"numeric"});}catch(e){}
-  }
-  if(typeof v==="object" && v.seconds!==undefined){
-    try{return new Date(Number(v.seconds)*1000).toLocaleDateString("id-ID",{day:"2-digit",month:"long",year:"numeric"});}catch(e){}
-  }
-  const s=String(v).trim();
-  const m=s.match(/^(\d{4})-(\d{2})-(\d{2})(?:[T\s].*)?$/);
-  if(m){
-    const d=new Date(+m[1],+m[2]-1,+m[3]);
-    if(!Number.isNaN(d.getTime())) return d.toLocaleDateString("id-ID",{day:"2-digit",month:"long",year:"numeric"});
-  }
-  const d=new Date(s);
-  return Number.isNaN(d.getTime())?s:d.toLocaleDateString("id-ID",{day:"2-digit",month:"long",year:"numeric"});
+ if(v===undefined||v===null||String(v).trim()==="")return "-";
+ try{
+  if(typeof v==="object"&&typeof v.toDate==="function")return v.toDate().toLocaleDateString("id-ID",{day:"2-digit",month:"long",year:"numeric"});
+  if(typeof v==="object"&&v.seconds!==undefined)return new Date(Number(v.seconds)*1000).toLocaleDateString("id-ID",{day:"2-digit",month:"long",year:"numeric"});
+  const d=new Date(String(v));if(!Number.isNaN(d.getTime()))return d.toLocaleDateString("id-ID",{day:"2-digit",month:"long",year:"numeric"});
+ }catch(e){}
+ return String(v);
 }
 
-function getRole(data){
-  return String(
-    data?.role ||
-    data?.peran ||
-    data?.jabatan ||
-    data?.userRole ||
-    data?.tipeAkun ||
-    data?.jenisAkun ||
-    "owner"
-  ).toLowerCase().trim();
+function izinAda(permission){
+ const s=window.fixzySession||{};
+ if(s.role==="owner"||s.role==="superadmin")return true;
+ if(permission==="ownerOnly")return false;
+ if(!permission)return true;
+ const izin=Array.isArray(s.permissions)?s.permissions:[];
+ const alias={
+  servis:["servis","nota","inputServis"],
+  penjualan:["penjualan","inputPenjualan"],
+  dataServis:["dataServis","data-servis"],
+  dataPenjualan:["dataPenjualan","data-penjualan"],
+  stock:["stock","stok"],
+  garansi:["garansi","monitoring-garansi"],
+  ringkasanPendapatan:["ringkasanPendapatan","ringkasan-pendapatan","laporanPendapatan"],
+  laporanKeuangan:["laporanKeuangan","laporan-keuangan","keuangan"],
+  rekapTeknisi:["rekapTeknisi","rekap-teknisi"]
+ };
+ return(alias[permission]||[permission]).some(x=>izin.includes(x));
 }
 
-function getPermissions(data){
-  const p=data?.permissions ?? data?.izin ?? data?.hakAkses ?? data?.akses ?? [];
-  if(Array.isArray(p)) return p.map(x=>String(x));
-  if(p && typeof p==="object") return Object.keys(p).filter(k=>p[k]);
-  if(typeof p==="string") return p.split(",").map(x=>x.trim()).filter(Boolean);
-  return [];
+function boleh(item){
+ const s=window.fixzySession||{};
+ if(s.role==="owner"||s.role==="superadmin")return true;
+ if(!item.roles.includes(s.role))return false;
+ return izinAda(item.permission);
 }
 
-async function bacaProfilFirebase(user){
-  let data={};
-  try{
-    const snap=await getDoc(doc(db,"users",user.uid));
-    if(snap.exists()) data=snap.data()||{};
-  }catch(e){
-    console.warn("Firestore profile:",e);
-  }
-
-  const nama=data.namaKonter||data.namaPemilik||data.namaToko||data.namaUsaha||data.toko||data.nama||user.displayName||user.email||"Akun";
-  const exp=data.tanggalBerakhir ?? data.tanggalExpired ?? data.tanggalExp ?? data.masaAktif ?? data.expired ?? data.expiry ?? data.exp ?? "-";
-
-  return {
-    ...data,
-    uid:user.uid,
-    email:user.email||"",
-    nama,
-    role:getRole(data),
-    permissions:getPermissions(data),
-    exp
-  };
+function renderMenu(){
+ const list=document.getElementById("menuList");list.innerHTML="";
+ MENU.forEach(item=>{
+  if(item.section){const h=document.createElement("div");h.className="menu-section";h.textContent=item.section;list.appendChild(h);return;}
+  if(!boleh(item))return;
+  const b=document.createElement("button");b.className="menu-link";b.type="button";
+  b.innerHTML=`<span class="ico">${item.icon}</span><span>${item.label}</span>`;
+  b.onclick=()=>bukaHalaman(item,b);list.appendChild(b);
+ });
+ const div=document.createElement("div");div.className="menu-divider";list.appendChild(div);
+ const refresh=document.createElement("button");refresh.className="menu-link";refresh.type="button";
+ refresh.innerHTML='<span class="ico">🔄</span><span>Refresh Halaman</span>';refresh.onclick=refreshIndex;list.appendChild(refresh);
+ const logout=document.createElement("button");logout.className="menu-link logout-link";logout.type="button";
+ logout.innerHTML='<span class="ico">🚪</span><span>Logout</span>';logout.onclick=logoutFixzy;list.appendChild(logout);
 }
 
-function roleAllowed(btn){
-  const roles=String(btn.dataset.roles||"owner").split(",").map(x=>x.trim().toLowerCase()).filter(Boolean);
-  return roles.includes(String(currentProfile.role||"").toLowerCase());
+function setStatus(title,text,icon="🔐"){
+ document.getElementById("contentArea").innerHTML=`<div class="loading"><div class="loading-card">
+ <div class="loading-icon">${icon}</div><div class="loading-title">${title}</div><div class="loading-text">${text}</div>
+ </div></div>`;
 }
 
-function tampilkanMenuSesuaiRole(){
-  document.querySelectorAll(".menu-link[data-roles]").forEach(btn=>{
-    btn.style.display=roleAllowed(btn)?"":"none";
-  });
+function tampilkanBeranda(){
+ document.getElementById("contentArea").innerHTML='<iframe src="page.html" title="FIXZY"></iframe>';
+ document.querySelectorAll(".menu-link").forEach(x=>x.classList.remove("active"));
 }
 
-function bukaMenu(){
-  if(!authReady||!currentUser) return;
-  $("sideMenu").classList.add("show");
-  $("menuOverlay").classList.add("show");
-}
-window.bukaMenu=bukaMenu;
-
-function tutupMenu(){
-  $("sideMenu").classList.remove("show");
-  $("menuOverlay").classList.remove("show");
-}
-window.tutupMenu=tutupMenu;
-
-function kirimSesiKeFrame(frame){
-  if(!frame || !currentUser) return;
-  const payload={
-    type:"FIXZY_AUTH_SESSION",
-    uid:currentUser.uid,
-    email:currentUser.email||"",
-    role:currentProfile.role||"",
-    profile:currentProfile,
-    permissions:Array.isArray(currentProfile.permissions)?currentProfile.permissions:[]
-  };
-  try{
-    frame.contentWindow.postMessage(payload,location.origin);
-  }catch(e){
-    console.warn("FIXZY session postMessage:",e);
-  }
+function tampilkanAksesDitolak(){
+ document.getElementById("contentArea").innerHTML=`<div class="denied"><div class="denied-card">
+ <div class="ico">🔒</div><h2>Akses Terbatas</h2>
+ <p>Akun ini belum diberi izin untuk membuka halaman tersebut.</p>
+ <button class="action" onclick="tampilkanBeranda()">Kembali ke Beranda</button>
+ </div></div>`;
 }
 
-function bukaHalaman(btn){
-  if(!authReady||!currentUser){
-    window.location.replace("login.html");
-    return;
-  }
-
-  if(btn.style.display==="none"){
-    showNotice("Akses Ditolak","Akun ini tidak memiliki izin untuk membuka halaman tersebut.");
-    tutupMenu();
-    return;
-  }
-
-  const page=btn.dataset.page;
-  if(!page) return;
-
-  const area=$("contentArea");
-  area.innerHTML="";
-
-  const frame=document.createElement("iframe");
-  frame.className="page-frame";
-  frame.title="Halaman FIXZY";
-  frame.src=page+"?v="+Date.now();
-  frame.onload=()=>kirimSesiKeFrame(frame);
-  activeFrame=frame;
-  area.appendChild(frame);
-
-  document.querySelectorAll(".menu-link").forEach(x=>x.classList.remove("active"));
-  btn.classList.add("active");
-  $("headerTitle").textContent=btn.textContent.trim();
-  $("headerSub").textContent="Firebase • UID akun aktif";
-  tutupMenu();
+function bukaHalaman(item,btn){
+ if(!authReady||!currentUser||!window.fixzySession){
+  setStatus("Sesi Belum Siap","Index masih menyiapkan sesi Firebase. Tunggu sebentar lalu coba lagi.");
+  return;
+ }
+ if(!boleh(item)){tampilkanAksesDitolak();tutupMenu();return;}
+ const area=document.getElementById("contentArea");area.innerHTML="";
+ const frame=document.createElement("iframe");frame.title=item.label;frame.src=item.page;
+ frame.style.cssText="width:100%;height:100%;border:0;display:block;background:#fff";
+ area.appendChild(frame);
+ document.querySelectorAll(".menu-link").forEach(x=>x.classList.remove("active"));
+ if(btn)btn.classList.add("active");tutupMenu();
 }
 window.bukaHalaman=bukaHalaman;
 
-function tampilkanBeranda(){
-  const area=$("contentArea");
-  area.innerHTML="";
-  const frame=document.createElement("iframe");
-  frame.className="page-frame";
-  frame.title="FIXZY";
-  frame.src="ifrem.html?v="+Date.now();
-  frame.onload=()=>kirimSesiKeFrame(frame);
-  activeFrame=frame;
-  area.appendChild(frame);
+function bukaMenu(){document.getElementById("menu").classList.add("show");document.getElementById("overlay").classList.add("show")}
+function tutupMenu(){document.getElementById("menu").classList.remove("show");document.getElementById("overlay").classList.remove("show")}
+window.bukaMenu=bukaMenu;window.tutupMenu=tutupMenu;
 
-  document.querySelectorAll(".menu-link").forEach(x=>x.classList.remove("active"));
-  $("headerTitle").textContent="FIXZY";
-  $("headerSub").textContent="Akun aktif • Firebase";
-}
+function refreshIndex(){const u=new URL(location.href);u.searchParams.set("v",Date.now());location.replace(u.toString())}
+window.refreshIndex=refreshIndex;
 
-async function logoutFixzy(){
-  tutupMenu();
-  showNotice("Logout FIXZY","Anda akan keluar dari akun FIXZY.",async()=>{
-    try{
-      await signOut(auth);
-    }catch(e){
-      console.error(e);
-    }
-    try{
-      sessionStorage.removeItem("fixzy_logged_in");
-      sessionStorage.removeItem("fixzy_uid");
-      localStorage.removeItem("fixzy_logged_in");
-      localStorage.removeItem("fixzy_uid");
-      localStorage.removeItem("fixzy_role");
-      localStorage.removeItem("fixzy_user_profile");
-    }catch(e){}
-    window.location.replace("login.html");
-  });
+function logoutFixzy(){
+ const old=document.getElementById("logoutPopup");if(old)old.remove();
+ const wrap=document.createElement("div");wrap.id="logoutPopup";
+ wrap.style.cssText="position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.55);display:flex;align-items:center;justify-content:center;padding:18px";
+ wrap.innerHTML=`<div style="width:min(420px,100%);background:#fff;border-radius:16px;padding:20px;box-shadow:0 15px 40px #0004">
+ <h3 style="margin:0 0 8px">🚪 Keluar dari FIXZY?</h3>
+ <p style="font-size:13px;line-height:1.6;color:#667085">Sesi akun akan ditutup dan kembali ke login.</p>
+ <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:15px">
+ <button id="logoutCancel" style="border:0;border-radius:9px;padding:10px 14px;background:#e5e7eb;font-weight:900">Batal</button>
+ <button id="logoutOk" style="border:0;border-radius:9px;padding:10px 14px;background:#dc2626;color:#fff;font-weight:900">Logout</button>
+ </div></div>`;
+ document.body.appendChild(wrap);
+ document.getElementById("logoutCancel").onclick=()=>wrap.remove();
+ document.getElementById("logoutOk").onclick=async()=>{try{await signOut(auth)}catch(e){console.error(e)}location.replace("login.html")};
 }
 window.logoutFixzy=logoutFixzy;
 
-/* Anak iframe boleh meminta sesi kapan saja. */
-window.addEventListener("message",event=>{
-  if(event.origin!==location.origin) return;
-  const d=event.data||{};
-  if(d.type!=="FIXZY_REQUEST_AUTH_SESSION") return;
-  if(currentUser && event.source){
-    try{
-      event.source.postMessage({
-        type:"FIXZY_AUTH_SESSION",
-        uid:currentUser.uid,
-        email:currentUser.email||"",
-        role:currentProfile.role||"",
-        profile:currentProfile,
-        permissions:Array.isArray(currentProfile.permissions)?currentProfile.permissions:[]
-      },location.origin);
-    }catch(e){}
-  }
-});
+async function siapkanSession(user){
+ if(!user){authReady=true;location.replace("login.html");return}
+ setStatus("Memuat akun FIXZY","Sedang membaca profil dan hak akses dari Firebase...");
+ try{
+  const snap=await getDoc(doc(db,"users",user.uid));
+  if(!snap.exists()){await signOut(auth).catch(()=>{});location.replace("login.html");return}
+  const data=snap.data()||{};
+  const role=String(data.role||"").toLowerCase();
+  const status=String(data.status||"").toLowerCase();
+  if(!["owner","employee","reseller","superadmin"].includes(role)){await signOut(auth).catch(()=>{});location.replace("login.html");return}
+  if(status&& !["aktif","active"].includes(status)){await signOut(auth).catch(()=>{});location.replace("login.html");return}
 
-async function prosesUser(user){
-  if(!user){
-    currentUser=null;
-    authReady=false;
-    $("loading").classList.remove("hidden");
-    $("headerSub").textContent="Sesi tidak ditemukan";
-    window.location.replace("login.html");
-    return;
-  }
+  const exp=data.tanggalBerakhir;let expDate=null;
+  try{if(exp&&typeof exp.toDate==="function")expDate=exp.toDate();else if(exp)expDate=new Date(exp)}catch(e){}
+  if(expDate&&!Number.isNaN(expDate.getTime())&&new Date()>expDate){await signOut(auth).catch(()=>{});location.replace("login.html");return}
 
-  currentUser=user;
+  const ownerUid=role==="owner"?user.uid:(data.ownerUid||"");
+  window.fixzySession={
+   uid:user.uid,role,ownerUid:ownerUid||user.uid,email:user.email||"",profile:data,
+   permissions:Array.isArray(data.izin)?data.izin:(Array.isArray(data.permissions)?data.permissions:[])
+  };
+  currentUser=user;authReady=true;
+  document.getElementById("accountName").textContent=data.namaKonter||data.namaPemilik||data.nama||user.email||"Akun";
+  document.getElementById("accountExp").textContent=formatExp(exp);
+  renderMenu();tampilkanBeranda();
 
-  try{
-    currentProfile=await bacaProfilFirebase(user);
-  }catch(e){
-    console.error(e);
-    currentProfile={uid:user.uid,email:user.email||"",nama:user.email||"Akun",role:"owner",permissions:[],exp:"-"};
-  }
-
-  $("accountName").textContent=currentProfile.nama||user.email||"Akun";
-  $("accountExp").textContent="Exp: "+formatExp(currentProfile.exp);
-  $("menuUser").textContent=(currentProfile.nama||user.email||"Akun")+" • "+(currentProfile.role||"owner");
-
-  authReady=true;
-  tampilkanMenuSesuaiRole();
-  $("loading").classList.add("hidden");
-  tampilkanBeranda();
+  // Session tersedia di parent window; tidak memakai localStorage.
+  window.dispatchEvent(new CustomEvent("fixzy-session-ready",{detail:window.fixzySession}));
+ }catch(err){
+  console.error("FIXZY Firebase/Auth:",err);
+  setStatus("Firebase belum dapat dibaca","Koneksi atau Firebase sedang bermasalah. Sesi tidak dihapus dan Anda tidak dipaksa kembali ke login.","⚠️");
+  authReady=false;
+ }
 }
 
-onAuthStateChanged(auth,async user=>{
-  try{
-    await prosesUser(user);
-  }catch(e){
-    console.error("FIXZY AUTH:",e);
-    $("loading").classList.add("hidden");
-    showNotice("Firebase","Sesi Firebase tidak dapat diproses. Silakan login kembali.",()=>window.location.replace("login.html"));
-  }
-});
+onAuthStateChanged(auth,user=>{currentUser=user||null;siapkanSession(user)});
+window.getFixzySession=()=>window.fixzySession||null;
 </script>
 </body>
 </html>
