@@ -400,6 +400,98 @@ tr:hover td{background:#fffdf5}
 #fixzyAlertOk{width:100%;margin-top:16px;background:#111827;color:#fff;border:0;border-radius:12px;padding:12px 15px;font-weight:900;font-size:15px;cursor:pointer}
 </style>
 
+
+<style id="fixzy-dark-mode-header">
+.dark-mode-btn{
+  width:42px !important;
+  min-width:42px !important;
+  padding:0 !important;
+  background:#000 !important;
+  color:#facc15 !important;
+  border:2px solid #facc15 !important;
+  font-size:18px !important;
+  border-radius:12px !important;
+}
+body.dark-mode{
+  --bg:#0b1220;
+  --card:#111827;
+  --line:#263244;
+  --txt:#e5e7eb;
+  --muted:#94a3b8;
+  background:#0b1220 !important;
+  color:#e5e7eb !important;
+}
+body.dark-mode .card,
+body.dark-mode .stat,
+body.dark-mode .m-card{
+  background:#111827 !important;
+  border-color:#263244 !important;
+  color:#e5e7eb !important;
+}
+body.dark-mode .title,
+body.dark-mode .stat strong,
+body.dark-mode .modal-head h2{
+  color:#f8fafc !important;
+}
+body.dark-mode .sub,
+body.dark-mode .field label,
+body.dark-mode .note{
+  color:#94a3b8 !important;
+}
+body.dark-mode .field input,
+body.dark-mode .field select,
+body.dark-mode .import-box input{
+  background:#0f172a !important;
+  color:#f8fafc !important;
+  border-color:#334155 !important;
+}
+body.dark-mode th{
+  background:#0f172a !important;
+  color:#cbd5e1 !important;
+}
+body.dark-mode td{
+  border-color:#263244 !important;
+  color:#e5e7eb !important;
+}
+body.dark-mode .m-grid div{
+  background:#0f172a !important;
+  color:#e5e7eb !important;
+}
+body.dark-mode .table-wrap,
+body.dark-mode .preview{
+  border-color:#334155 !important;
+}
+body.dark-mode .modal{
+  background:#111827 !important;
+  border-color:#334155 !important;
+}
+@media(max-width:900px){
+  .dark-mode-btn{
+    width:38px !important;
+    min-width:38px !important;
+    height:38px !important;
+    border-radius:10px !important;
+  }
+}
+</style>
+<script>
+(function(){
+  const saved=localStorage.getItem("fixzy-dark-mode");
+  if(saved==="1") document.body.classList.add("dark-mode");
+  window.toggleDarkMode=function(){
+    document.body.classList.toggle("dark-mode");
+    const on=document.body.classList.contains("dark-mode");
+    localStorage.setItem("fixzy-dark-mode",on?"1":"0");
+    const btn=document.getElementById("darkModeBtn");
+    if(btn) btn.textContent=on?"☀️":"🌙";
+  };
+  document.addEventListener("DOMContentLoaded",function(){
+    const btn=document.getElementById("darkModeBtn");
+    if(btn) btn.textContent=document.body.classList.contains("dark-mode")?"☀️":"🌙";
+  });
+})();
+</script>
+
 </head>
 <body><script>
 /* FIX TUTUP: hapus iframe yang sedang menampilkan halaman ini. */
@@ -430,8 +522,7 @@ function tutupHalaman(){
 
 <header class="header">
   <div class="header-in">
-    <div class="logo"><img src="logo.png" alt="FIXZY">F</b>'">
-    </div>
+    <div class="logo"><img src="logo.png" alt="FIXZY"></div>
     <div class="brand">
       <b id="headerAccountName">Memuat akun...</b><br>
       <span class="email" id="headerUserEmail">-</span>
@@ -439,7 +530,7 @@ function tutupHalaman(){
     </div>
     <div class="user-box head-actions">
       <button class="head-btn btn-refresh" id="refreshBtn" onclick="refreshHalaman()">↻ Refresh</button>
-      <button class="head-btn close-like" onclick="tutupHalaman()" aria-label="Tutup">✕</button>
+      <button class="head-btn dark-mode-btn" id="darkModeBtn" onclick="toggleDarkMode()" aria-label="Mode gelap">🌙</button>
     </div>
   </div>
 </header>
