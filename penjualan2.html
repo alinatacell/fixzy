@@ -728,7 +728,7 @@ async function loadKaryawan(){
 
 
 window.fixStokSinkron=async()=>{
-  if(!(await showKonterConfirm('Fix sinkron stok? Akan set 0 untuk produk yang sudah habis terjual di Input Penjualan tapi masih ada sisa di Produk & Stok (Y20, Y22). Lanjut?', 'Fix Sinkron'))) return;
+  if(!confirm('Fix sinkron stok? Akan set 0 untuk produk yang sudah habis terjual di Input Penjualan tapi masih ada sisa di Produk & Stok (Y20, Y22). Lanjut?')) return;
   showKonterPopup('Mulai fix sinkron...', 'info');
   let fixed=0;
   for(let prod of allProduk){
@@ -781,35 +781,20 @@ window.fixStokSinkron=async()=>{
 async function loadProduk(){
   try{
     let docs=[];
-    // IZINKAN SEMUA: baca langsung dari koleksi 'stok' - owner, admin, karyawan semua dapat lihat semua stok
     const stokCols = ["stok"];
     for(let col of stokCols){
       try{
-        // Coba ambil SEMUA tanpa filter dulu (untuk karyawan & admin)
         let snaps=[];
-        try{ 
-          // Untuk owner: coba filter owner dulu
-          const s1 = await getDocs(query(collection(db,col), where("ownerUid","==", ownerUid)));
-          if(s1.size>0) snaps.push(s1);
-        }catch(e){}
-        try{ 
-          const s2 = await getDocs(query(collection(db,col), where("uid","==", ownerUid)));
-          if(s2.size>0) snaps.push(s2);
-        }catch(e){}
-        try{ 
-          const s3 = await getDocs(query(collection(db,col), where("ownerId","==", ownerUid)));
-          if(s3.size>0) snaps.push(s3);
-        }catch(e){}
-        // IZINKAN SEMUA: kalau hasil filter sedikit atau kosong, ambil SEMUA dokumen
-        // Ini untuk karyawan yang ownerUid-nya mungkin beda, dan untuk stok lama yang uid-nya kosong
+        // Coba filter owner dulu
+        try{ const s=await getDocs(query(collection(db,col), where("ownerUid","==", ownerUid))); if(s.size>0) snaps.push(s); }catch(e){}
+        try{ const s=await getDocs(query(collection(db,col), where("uid","==", ownerUid))); if(s.size>0) snaps.push(s); }catch(e){}
+        try{ const s=await getDocs(query(collection(db,col), where("ownerId","==", ownerUid))); if(s.size>0) snaps.push(s); }catch(e){}
+        // IZINKAN SEMUA: kalau hasil filter kosong atau untuk karyawan, ambil semua
         try{
-          const allSnap = await getDocs(collection(db,col));
-          console.log(`[PENJUALAN] Total dokumen di ${col}: ${allSnap.size}, filter owner: ${snaps.reduce((a,s)=>a+s.size,0)}`);
-          // Jika allSnap lebih banyak dari hasil filter, pakai allSnap (izinkan semua)
-          if(allSnap.size > 0){
-            snaps.push(allSnap);
-          }
-        }catch(e){ console.warn("Gagal ambil all", e); }
+          const allSnap=await getDocs(collection(db,col));
+          console.log(`[PENJUALAN] Total ${col}: ${allSnap.size}, filtered: ${snaps.reduce((a,s)=>a+s.size,0)}`);
+          if(allSnap.size>0) snaps.push(allSnap);
+        }catch(e){}
         
         const mapId = new Map();
         snaps.forEach(snap=>{
@@ -863,15 +848,10 @@ async function loadProduk(){
 
 function filterProduk(keyword){
   const kw=(keyword||'').toString().trim().toLowerCase();
-
-  // IZINKAN SEMUA: Jika kosong, tampilkan SEMUA produk tanpa filter role/izin
   if(!kw){
-    // Tampilkan semua produk termasuk yang stok habis
     showProdukDropdown(allProduk);
     return;
   }
-
-  // Cari di: nama, kode, sku, barcode, merk, kategori
   const filtered=allProduk.filter(p=>{
     const nama=(p.nama||p.namaProduk||p.name||'').toString().toLowerCase();
     const kode=(p.kode||p.sku||p.code||'').toString().toLowerCase();
@@ -880,7 +860,6 @@ function filterProduk(keyword){
     const kategori=(p.kategori||p.category||'').toString().toLowerCase();
     return nama.includes(kw) || kode.includes(kw) || barcode.includes(kw) || merk.includes(kw) || kategori.includes(kw);
   });
-
   showProdukDropdown(filtered);
 }
 window.filterProduk=filterProduk;
@@ -890,9 +869,7 @@ function showProdukDropdown(list){
   const wrap=document.getElementById('produkSearch').parentElement;
   let dd=wrap.querySelector('.produk-dropdown');
   if(!dd){ dd=document.createElement('div'); dd.className='produk-dropdown'; wrap.style.position='relative'; wrap.appendChild(dd); }
-  if(list.length===0){ 
-    dd.innerHTML=`<div class="produk-item" style="color:#94a3b8">Tidak ada produk - coba kata kunci lain atau cek stok</div>`; 
-  }
+  if(list.length===0){ dd.innerHTML=`<div class="produk-item" style="color:#94a3b8">Tidak ada produk</div>`; }
   else{
     dd.innerHTML=list.map(p=>{
       const nama=p.nama||p.namaProduk||p.name||'-';
@@ -900,28 +877,22 @@ function showProdukDropdown(list){
       const harga=p.harga||p.hargaJual||p.price||p.hargaModal||0;
       const stok=Number(p._stok ?? p.sisa ?? p.stok ?? p.qty ?? p.jumlah ?? 0);
       const isHabis = stok<=0;
-      // IZINKAN SEMUA: tetap tampilkan walau habis, jangan di-opacity 0.4 dan jangan blokir
-      const stockText = isHabis ? `STOK HABIS (${stok})` : `Stok: ${stok}`;
+      const stockText = isHabis ? 'STOK HABIS' : `Stok: ${stok}`;
       const stockColor = isHabis ? '#f59e0b' : '#16a34a';
       const bg = isHabis ? '#fffbeb' : '#fff';
-      return `<div class="produk-item" data-id="${p.id}" data-habis="${isHabis}" style="background:${bg};cursor:pointer;border-left:3px solid ${stockColor}"><div><b>${nama}</b> <span style="font-size:10px;color:#64748b">[${kode}]</span><br><span style="font-size:10px;color:#64748b">${p.kategori||''} ${p.merk||''} • <span style="color:${stockColor};font-weight:900">${stockText}</span></span></div><div style="text-align:right"><div>Rp ${Number(harga).toLocaleString('id-ID')}</div><div style="font-size:10px;color:${stockColor}">${isHabis?'⚠️ Habis tapi tetap bisa jual':'✅ Tersedia'}</div></div></div>`;
+      // IZINKAN SEMUA: tetap bisa diklik walau habis
+      return `<div class="produk-item" data-id="${p.id}" data-habis="${isHabis}" style="background:${bg};cursor:pointer;border-left:3px solid ${stockColor}"><div><b>${nama}</b> <span style="font-size:10px;color:#888">[${kode}]</span><br><span style="font-size:10px;color:#64748b">${p.kategori||''} • <span style="color:${stockColor};font-weight:900">${stockText}</span></span></div><div style="text-align:right"><div>Rp ${Number(harga).toLocaleString('id-ID')}</div><div style="font-size:10px;color:${stockColor}">${isHabis?'⚠️ Habis tapi bisa jual':'✅ Tersedia'}</div></div></div>`;
     }).join('');
   }
   dd.classList.add('show');
   dd.querySelectorAll('.produk-item').forEach(el=>{
     el.addEventListener('click', ()=>{
       const prod=allProduk.find(x=>x.id===el.getAttribute('data-id'));
-      // IZINKAN SEMUA: karyawan, admin, owner semua boleh pilih, bahkan kalau stok habis
-      if(!prod){
-        showKonterPopup('Produk tidak ditemukan', 'error');
-        return;
-      }
+      if(!prod) return;
       const stok=Number(prod._stok ?? prod.sisa ?? prod.stok ?? 0);
       if(stok<=0){
-        // Tetap izinkan, cuma kasih warning
-        if(!(await showKonterConfirm(`Stok ${prod.nama||prod.kode} habis (sisa ${stok}). Tetap jual?`, 'Stok Habis'))){
-          return;
-        }
+        // Tetap izinkan, cuma konfirmasi native (biar gak crash)
+        if(!confirm(`Stok ${prod.nama||prod.kode} habis (sisa ${stok}). Tetap jual?`)) return;
       }
       selectProdukAuto(prod);
       dd.classList.remove('show');
@@ -930,9 +901,6 @@ function showProdukDropdown(list){
 }
 window.showProdukDropdown=showProdukDropdown;
 
-
-document.getElementById('produkSearch')?.addEventListener('input', e=>{ filterProduk(e.target.value); });
-document.getElementById('produkSearch')?.addEventListener('focus', e=>{ if(!e.target.value) filterProduk(''); });
 
 function hideProdukDropdown(){
   const dd=document.getElementById('produkSearch').parentElement.querySelector('.produk-dropdown');
@@ -1248,53 +1216,6 @@ function showKonterPopup(message, type='info'){
     setTimeout(()=>{ if(modal) modal.classList.remove('show'); }, 4000);
   }
 }
-
-// Confirm popup versi cantik untuk ganti confirm()
-function showKonterConfirm(message, title='Konfirmasi'){
-  return new Promise(resolve=>{
-    const modal=document.getElementById('konterAlert');
-    const msgEl=document.getElementById('konterAlertMessage');
-    const titleEl=document.getElementById('konterAlertTitle');
-    const okBtn=document.getElementById('konterAlertOk');
-    if(!modal||!msgEl||!okBtn){ resolve(confirm(message)); return; }
-    
-    let cancelBtn=document.getElementById('konterAlertCancel');
-    if(!cancelBtn){
-      cancelBtn=document.createElement('button');
-      cancelBtn.id='konterAlertCancel';
-      cancelBtn.textContent='Batal';
-      cancelBtn.className='btn dark';
-      cancelBtn.style.marginTop='8px';
-      cancelBtn.style.width='100%';
-      okBtn.parentNode.insertBefore(cancelBtn, okBtn.nextSibling);
-    }
-    cancelBtn.style.display='block';
-    okBtn.textContent='Ya';
-    
-    titleEl.textContent=title;
-    msgEl.textContent=message;
-    modal.classList.add('show');
-    
-    function cleanup(res){
-      modal.classList.remove('show');
-      okBtn.textContent='Oke';
-      cancelBtn.style.display='none';
-      okBtn.removeEventListener('click', onOk);
-      cancelBtn.removeEventListener('click', onCancel);
-      resolve(res);
-    }
-    function onOk(){ cleanup(true); }
-    function onCancel(){ cleanup(false); }
-    okBtn.addEventListener('click', onOk);
-    cancelBtn.addEventListener('click', onCancel);
-  });
-}
-window.showKonterConfirm=showKonterConfirm;
-// Override confirm
-window._nativeConfirm=window.confirm;
-window.confirm=function(msg){ return window._nativeConfirm(msg); };
-window.alert=function(msg){ showKonterPopup(msg, 'info'); };
-
 window.closeKonterPopup=()=>{
   document.getElementById('konterAlertModal')?.classList.remove('show');
 }
