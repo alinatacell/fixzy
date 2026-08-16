@@ -251,6 +251,7 @@ button,input,select{font:inherit}
     <button class="tab" data-tab="pengeluaranTab">💸 Pengeluaran</button>
     <button class="tab" data-tab="karyawan">👥 Karyawan</button>
     <button class="tab" data-tab="upah">💰 Upah Karyawan</button>
+    <button class="tab" data-tab="akunAbsensi">👤 Akun & Absensi</button>
   </div>
 
   <section id="ringkasan" class="panel active">
@@ -353,6 +354,38 @@ button,input,select{font:inherit}
     </div>
   </section>
 
+  <section id="akunAbsensi" class="panel">
+    <div class="grid2">
+      <div class="card">
+        <div class="section-head"><h2>👤 Akun Firebase</h2></div>
+        <div class="grid3" style="margin-bottom:14px">
+          <div class="kpiMini"><small>Total Akun</small><b id="akunTotal">0</b></div>
+          <div class="kpiMini"><small>Akun Aktif</small><b id="akunAktif" class="green">0</b></div>
+          <div class="kpiMini"><small>Owner</small><b id="akunOwner">0</b></div>
+          <div class="kpiMini"><small>Karyawan/Kasir</small><b id="akunStaff">0</b></div>
+          <div class="kpiMini"><small>Reseller/Kurir</small><b id="akunReseller">0</b></div>
+          <div class="kpiMini"><small>Nonaktif</small><b id="akunNonaktif" class="red">0</b></div>
+        </div>
+        <div class="table-wrap"><table>
+          <thead><tr><th>Nama</th><th>Email</th><th>Role</th><th>Status</th><th>Exp</th></tr></thead>
+          <tbody id="akunBody"></tbody>
+        </table></div>
+      </div>
+      <div class="card">
+        <div class="section-head"><h2>🕘 Absensi Firebase</h2></div>
+        <div class="grid3" style="margin-bottom:14px">
+          <div class="kpiMini"><small>Hadir</small><b id="absHadir" class="green">0</b></div>
+          <div class="kpiMini"><small>Izin</small><b id="absIzin">0</b></div>
+          <div class="kpiMini"><small>Sakit</small><b id="absSakit">0</b></div>
+          <div class="kpiMini"><small>Alpa</small><b id="absAlpa" class="red">0</b></div>
+          <div class="kpiMini"><small>Belum Absen</small><b id="absBelum">0</b></div>
+          <div class="kpiMini"><small>Data Bulan</small><b id="absTotalBulan">0</b></div>
+        </div>
+        <div id="absensiSummary" class="status">Memuat data absensi...</div>
+      </div>
+    </div>
+  </section>
+
   <section class="section">
     <div class="card">
       <div class="section-head"><h2>🔎 Status Sistem</h2><button class="btn btn-light" onclick="toggleLog()">Tampilkan detail</button></div>
@@ -394,7 +427,7 @@ const db=getFirestore(app);
 let uid=null;
 let ownerUid=null;
 let fixzySession=null;
-let servis=[],penjualan=[],stok=[],pengeluaran=[],karyawan=[];
+let servis=[],penjualan=[],stok=[],pengeluaran=[],karyawan=[],akun=[],absensi=[];
 let upahRows=[];
 let profile={};
 
@@ -469,12 +502,165 @@ async function own(name){
   const targetUid=ownerUid||uid;
   if(!targetUid) throw new Error("UID pemilik data FIXZY belum ditemukan.");
 
-  // Struktur data FIXZY menyimpan uid sebagai businessUid/pemilik.
-  // Jadi karyawan/reseller harus membaca berdasarkan ownerUid, bukan UID login pribadi.
-  const snap=await getDocs(
-    query(collection(db,name),where("uid","==",targetUid))
-  );
-  return snap.docs.map(d=>({id:d.id,...d.data()}));
+  // ZIP 6 menyimpan kepemilikan data dengan beberapa pola:
+  // servis: uid=businessUid
+  // penjualan: uid + ownerUid + ownerId
+  // stok: uid/ownerUid/ownerId
+  // pengeluaran: uid + ownerUid
+  // Karena itu dashboard mencoba ketiga field dan menggabungkan hasilnya.
+  const fields=["uid","ownerUid","ownerId"];
+  const byId=new Map();
+
+  for(const field of fields){
+    try{
+      const snap=await getDocs(
+        query(collection(db,name),where(field,"==",targetUid))
+      );
+      snap.docs.forEach(d=>byId.set(d.id,{id:d.id,...d.data()}));
+    }catch(e){
+      console.warn(`Query ${name}.${field} gagal:`,e.code||"",e.message||e);
+    }
+  }
+
+  return [...byId.values()];
+}
+
+async function loadAccounts(){
+  const target=ownerUid||uid;
+  if(!target){akun=[];return;}
+
+  const byId=new Map();
+
+  // Owner sendiri berasal dari users/{uid} pada index/absensi ZIP 6.
+  try{
+    const ownerSnap=await getDoc(doc(db,"users",target));
+    if(ownerSnap.exists()){
+      byId.set(ownerSnap.id,{id:ownerSnap.id,...ownerSnap.data()});
+    }
+  }catch(e){
+    console.warn("Profil owner dashboard:",e);
+  }
+
+  // Karyawan/reseller/role lain disimpan pada users dengan ownerUid.
+  try{
+    const q=await getDocs(
+      query(collection(db,"users"),where("ownerUid","==",target))
+    );
+    q.docs.forEach(d=>byId.set(d.id,{id:d.id,...d.data()}));
+  }catch(e){
+    console.warn("Query users.ownerUid gagal:",e.code||"",e.message||e);
+  }
+
+  // Fallback untuk data lama: jika dokumen memiliki uid/ownerId.
+  for(const field of ["uid","ownerId"]){
+    try{
+      const q=await getDocs(
+        query(collection(db,"users"),where(field,"==",target))
+      );
+      q.docs.forEach(d=>byId.set(d.id,{id:d.id,...d.data()}));
+    }catch(e){
+      console.warn(`Query users.${field} gagal:`,e.code||"",e.message||e);
+    }
+  }
+
+  akun=[...byId.values()];
+}
+
+async function loadAbsensi(){
+  const target=ownerUid||uid;
+  if(!target){absensi=[];return;}
+
+  const byId=new Map();
+
+  // Struktur absensi ZIP 6 memakai ownerUid.
+  try{
+    const q=await getDocs(
+      query(collection(db,"absensi"),where("ownerUid","==",target))
+    );
+    q.docs.forEach(d=>byId.set(d.id,{id:d.id,...d.data()}));
+  }catch(e){
+    console.warn("Query absensi.ownerUid gagal:",e.code||"",e.message||e);
+  }
+
+  // Fallback data lama yang hanya mempunyai uid.
+  try{
+    const q=await getDocs(
+      query(collection(db,"absensi"),where("uid","==",target))
+    );
+    q.docs.forEach(d=>byId.set(d.id,{id:d.id,...d.data()}));
+  }catch(e){
+    console.warn("Query absensi.uid gagal:",e.code||"",e.message||e);
+  }
+
+  absensi=[...byId.values()];
+}
+
+function formatExpDashboard(v){
+  if(v===undefined||v===null||String(v).trim()==="")return "-";
+  try{
+    if(typeof v==="object"&&typeof v.toDate==="function"){
+      return v.toDate().toLocaleDateString("id-ID",{day:"2-digit",month:"long",year:"numeric"});
+    }
+    if(typeof v==="object"&&v.seconds!==undefined){
+      return new Date(Number(v.seconds)*1000).toLocaleDateString("id-ID",{day:"2-digit",month:"long",year:"numeric"});
+    }
+    const d=new Date(v);
+    if(!isNaN(d.getTime())){
+      return d.toLocaleDateString("id-ID",{day:"2-digit",month:"long",year:"numeric"});
+    }
+  }catch(e){}
+  return String(v);
+}
+
+function renderAkunAbsensi(){
+  const activeStatus=["aktif","active"];
+  const activeAccounts=akun.filter(x=>activeStatus.includes(String(x.status??"aktif").toLowerCase()));
+  const ownerAccounts=akun.filter(x=>String(x.role||"").toLowerCase()==="owner");
+  const staffAccounts=akun.filter(x=>["employee","karyawan","kasir"].includes(String(x.role||"").toLowerCase()));
+  const resellerAccounts=akun.filter(x=>["reseller","kurir"].includes(String(x.role||"").toLowerCase()));
+  const nonactive=akun.filter(x=>!activeStatus.includes(String(x.status??"aktif").toLowerCase()));
+
+  $("akunTotal").textContent=akun.length;
+  $("akunAktif").textContent=activeAccounts.length;
+  $("akunOwner").textContent=ownerAccounts.length;
+  $("akunStaff").textContent=staffAccounts.length;
+  $("akunReseller").textContent=resellerAccounts.length;
+  $("akunNonaktif").textContent=nonactive.length;
+
+  $("akunBody").innerHTML=akun
+    .sort((a,b)=>String(a.nama||a.namaPemilik||a.namaKonter||a.email||"").localeCompare(String(b.nama||b.namaPemilik||b.namaKonter||b.email||"")))
+    .map(a=>{
+      const name=a.nama||a.namaPemilik||a.namaKonter||a.namaUsaha||"-";
+      const role=a.role||"-";
+      const status=a.status||"aktif";
+      return `<tr>
+        <td><b>${esc(name)}</b></td>
+        <td>${esc(a.email||"-")}</td>
+        <td>${esc(role)}</td>
+        <td>${badge(status)}</td>
+        <td>${esc(formatExpDashboard(a.exp||a.expAt||a.expiredAt||a.tanggalBerakhir))}</td>
+      </tr>`;
+    }).join("")||'<tr><td colspan="5" class="empty">Belum ada akun.</td></tr>';
+
+  const today=localToday();
+  const month=today.slice(0,7);
+  const monthRows=absensi.filter(x=>String(x.tanggal||"").slice(0,7)===month);
+  const todayRows=absensi.filter(x=>dateOf(x)===today);
+
+  const count=s=>monthRows.filter(x=>String(x.status||"").toLowerCase()===s).length;
+  $("absHadir").textContent=count("hadir");
+  $("absIzin").textContent=count("izin");
+  $("absSakit").textContent=count("sakit");
+  $("absAlpa").textContent=count("alpa");
+  $("absTotalBulan").textContent=monthRows.length;
+
+  const known=todayRows.length;
+  const activeStaff=akun.filter(x=>["employee","karyawan","kasir","kurir","reseller"].includes(String(x.role||"").toLowerCase()) && String(x.status||"aktif").toLowerCase()!=="nonaktif");
+  $("absBelum").textContent=Math.max(0,activeStaff.length-known);
+
+  $("absensiSummary").innerHTML=
+    `Periode absensi: <b>${month}</b> • Hari ini tercatat <b>${todayRows.length}</b> data.<br>`+
+    `Total akun yang dibaca dari Firebase: <b>${akun.length}</b>.`;
 }
 
 function ambilSessionFIXZY(){
@@ -523,28 +709,54 @@ async function muatSemua(){
   }
   $("statusApp").textContent="Membaca Firebase...";
   try{
-    const [s,p,st,e,k]=await Promise.all([
+    const [s,p,st,e,k,a,ab]=await Promise.all([
       own("servis"),
       own("penjualan"),
       own("stok"),
       own("pengeluaran"),
-      own("karyawan")
+      own("karyawan"),
+      loadAccounts(),
+      loadAbsensi()
     ]);
-    servis=s;penjualan=p;stok=st;pengeluaran=e;karyawan=k;
+    servis=s;penjualan=p;stok=st;pengeluaran=e;
+
+    // Sumber karyawan utama pada ZIP 6 adalah users dengan role employee/karyawan/kasir/kurir/reseller.
+    // Koleksi karyawan tetap dibaca bila memang ada data lama.
+    const staffFromUsers=akun.filter(x=>{
+      const r=String(x.role||"").toLowerCase();
+      return ["employee","karyawan","kasir","kurir","reseller"].includes(r);
+    });
+    karyawan=k.length?[
+      ...k,
+      ...staffFromUsers.filter(u=>!k.some(x=>
+        String(x.uid||x.userId||x.id||"")===String(u.uid||u.id||"")
+      ))
+    ]:staffFromUsers;
+
     upahRows=buildUpahRows();
     renderAll();
-    $("statusApp").textContent=`Terhubung • Servis ${servis.length} • Penjualan ${penjualan.length} • Pengeluaran ${pengeluaran.length} • Karyawan ${karyawan.length}`;
-    $("systemSummary").innerHTML=`✅ Firebase normal. Data dashboard dibaca berdasarkan <b>UID pemilik/bisnis FIXZY</b>.<br>Akun aktif: <b>${esc(uid||"-")}</b><br>UID pemilik data: <b>${esc(ownerUid||"-")}</b>.`;
+    renderAkunAbsensi();
+
+    $("statusApp").textContent=
+      `Terhubung • Servis ${servis.length} • Penjualan ${penjualan.length} • Stok ${stok.length} • Pengeluaran ${pengeluaran.length} • Karyawan ${karyawan.length} • Akun ${akun.length} • Absensi ${absensi.length}`;
+
+    $("systemSummary").innerHTML=
+      `✅ Firebase normal. Dashboard membaca data berdasarkan <b>UID pemilik/bisnis FIXZY</b>.<br>`+
+      `Akun aktif: <b>${esc(uid||"-")}</b><br>`+
+      `UID pemilik data: <b>${esc(ownerUid||"-")}</b>.<br>`+
+      `Sumber: <b>servis, penjualan, stok, pengeluaran, karyawan, users, absensi</b>.`;
+
     $("systemLog").textContent=JSON.stringify({
       uid,
       ownerUid,
       session:fixzySession?"tersedia":"tidak tersedia",
-      users:"terbaca",
+      users:akun.length,
       servis:servis.length,
       penjualan:penjualan.length,
       stok:stok.length,
       pengeluaran:pengeluaran.length,
-      karyawan:karyawan.length
+      karyawan:karyawan.length,
+      absensi:absensi.length
     },null,2);
   }catch(e){
     console.error(e);
