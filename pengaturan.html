@@ -101,21 +101,21 @@ textarea{min-height:82px;resize:vertical}input:focus,textarea:focus,select:focus
 </main>
 
 <script type="module">
-import {initializeApp} from "https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js";
+import {initializeApp,getApps,getApp} from "https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js";
 import {getAuth,onAuthStateChanged,setPersistence,browserLocalPersistence} from "https://www.gstatic.com/firebasejs/11.10.0/firebase-auth.js";
 import {getFirestore,doc,getDoc,setDoc} from "https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js";
 
 const firebaseConfig={
   apiKey:"AIzaSyCwMbJsuORhIq4QCmp4c1r6OsjAUlfxU5Y",
-  authDomain:"fixzy-f056f.firebaseapp.com",
-  projectId:"fixzy-f056f",
-  storageBucket:"fixzy-f056f.firebasestorage.app",
-  messagingSenderId:"838081521031",
-  appId:"1:838081521031:web:50fdee909b56460b055f22"
+  authDomain:"fixzy-update.firebaseapp.com",
+  projectId:"fixzy-update",
+  storageBucket:"fixzy-update.firebasestorage.app",
+  messagingSenderId:"995892519622",
+  appId:"1:995892519622:web:fa41047944d8e5b35d6dc7"
 };
-const app=initializeApp(firebaseConfig),auth=getAuth(app),db=getFirestore(app);
+const app=getApps().length?getApp():initializeApp(firebaseConfig),auth=getAuth(app),db=getFirestore(app);
 
-let uid=null,profile={},jenis="servis",parentSession=false;
+let uid=null,profile={},jenis="servis";
 let settings={
   namaKonter:"",waKonter:"",
   kebijakan:"Barang yang sudah dibeli tidak dapat dikembalikan. Garansi servis mengikuti ketentuan perusahaan.",
@@ -219,7 +219,7 @@ async function loadProfile(){
   $("ownerEmail").textContent=auth.currentUser?.email||"Firebase";
 }
 async function muatSemua(){
-  if(!uid){$("status").textContent="⏳ Menunggu sesi akun dari index FIXZY...";requestParentSession();return}
+  if(!uid){$("status").textContent="⏳ Menunggu sesi Firebase...";return}
   $("status").textContent="⏳ Membaca pengaturan nota dari Firebase...";
   try{await loadProfile();await loadSettings();syncForm();renderPresets();renderPreview();$("status").innerHTML='✅ Pengaturan nota siap • UID akun aktif terdeteksi • Tidak ada redirect login';}
   catch(e){$("status").innerHTML=`⚠️ Firebase terhubung tetapi pengaturan belum dapat dibaca.<br><small>${esc(e.code||"")} ${esc(e.message||e)}</small>`}
@@ -227,7 +227,7 @@ async function muatSemua(){
 window.muatSemua=muatSemua;
 
 window.simpanPengaturan=async()=>{
-  if(!uid){$("saveStatus").innerHTML='<span style="color:#dc2626">Sesi akun belum diterima dari FIXZY.</span>';requestParentSession();return}
+  if(!uid){$("saveStatus").innerHTML='<span style="color:#dc2626">Sesi Firebase belum tersedia.</span>';return}
   readForm();
   try{
     await setDoc(doc(db,"pengaturanNota",uid),{...settings,uid,diperbaruiPada:new Date().toISOString()},{merge:true});
@@ -239,45 +239,22 @@ window.simpanPengaturan=async()=>{
 window.pilihJenis=j=>{jenis=j;$("tabServis").classList.toggle("active",j==="servis");$("tabPenjualan").classList.toggle("active",j==="penjualan");renderPreview()};
 window.cetakPreview=()=>{renderPreview();window.print()};
 
-/* Komunikasi dengan index FIXZY:
-   - Child meminta sesi/identitas dari parent.
-   - Ini tidak menggantikan Firebase Auth; Firestore tetap memakai auth.currentUser.
-   - Tidak ada redirect ke login dari halaman ini. */
-function requestParentSession(){
-  try{
-    if(window.parent&&window.parent!==window){
-      window.parent.postMessage({type:"FIXZY_REQUEST_SESSION",source:"pengaturan-nota"},"*");
-    }
-  }catch(e){}
-}
-window.addEventListener("message",async ev=>{
-  const d=ev.data||{};
-  if(d.type!=="FIXZY_SESSION")return;
-  parentSession=true;
-  if(d.uid && !uid){uid=d.uid}
-  if(d.profile && typeof d.profile==="object")profile={...profile,...d.profile};
-  if(uid){
-    $("ownerName").textContent=profile.namaPemilik||profile.nama||profile.namaKonter||"Akun FIXZY";
-    $("ownerEmail").textContent=profile.email||auth.currentUser?.email||"Firebase";
-    await muatSemua();
-  }
-});
-
 async function mulai(){
   try{await setPersistence(auth,browserLocalPersistence)}catch(e){console.warn("Firebase persistence:",e)}
   onAuthStateChanged(auth,async user=>{
     if(user){
       uid=user.uid;
       await muatSemua();
-    }else{
-      $("status").innerHTML="⏳ Menunggu sesi akun dari <b>index FIXZY</b>... halaman ini tidak membuat login sendiri dan tidak mengarahkan ke login.";
-      $("ownerName").textContent="Menunggu akun FIXZY";
-      $("ownerEmail").textContent="";
-      requestParentSession();
+      return;
     }
+    // Index FIXZY sudah menangani login dan hak akses menu.
+    // Halaman ini TIDAK melakukan pemeriksaan role/permission tambahan
+    // dan TIDAK pernah mengarahkan pengguna ke login.html.
+    uid=null;
+    $("status").innerHTML="⚠️ <b>Sesi Firebase belum terbaca.</b><br>Pastikan halaman dibuka dari index FIXZY yang sudah login.";
+    $("ownerName").textContent="Akun FIXZY";
+    $("ownerEmail").textContent="Menunggu sesi Firebase";
   });
-  setTimeout(requestParentSession,250);
-  setTimeout(()=>{if(!uid)$("status").innerHTML="⚠️ Sesi belum diterima. Pastikan halaman ini dibuka melalui <b>index FIXZY</b> sebagai halaman internal/iframe agar sesi Firebase yang sudah login dapat dipakai.";},4000);
 }
 mulai();
 renderPresets();renderPreview();
