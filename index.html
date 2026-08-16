@@ -604,6 +604,14 @@ const app = getApps().length ? getApp() : initializeApp(cfg);
 const auth = getAuth(app);
 const db = getFirestore(app);
 
+// ================= FIREBASE BRIDGE =================
+window.fixzyFirebase = {
+  app,
+  auth,
+  db
+};
+
+let authReady=false;
 let authReady=false;
 
 function formatExpFIXZY(v){
