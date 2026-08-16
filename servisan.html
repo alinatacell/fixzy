@@ -1,27 +1,243 @@
 <!DOCTYPE html>
 <html lang="id">
-<head>
+<head><style>
+@font-face {
+  font-family: "Optimistic";
+  font-style: normal;
+  font-weight: 400 600;
+  font-display: swap;
+  src: url("/fonts/OptimisticAI_VF_Optimized.woff2") format("woff2");
+}
+@font-face {
+  font-family: "Optimistic Mono";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("/fonts/OptimisticMono_W_TextRegular.woff2") format("woff2");
+}
+:where(html) {
+  font-family: "Optimistic", system-ui, sans-serif;
+}
+:where(code, pre, kbd, samp) {
+  font-family: "Optimistic Mono", ui-monospace, monospace;
+}
+</style><style>
+@font-face {
+  font-family: "Optimistic";
+  font-style: normal;
+  font-weight: 400 600;
+  font-display: swap;
+  src: url("/fonts/OptimisticAI_VF_Optimized.woff2") format("woff2");
+}
+@font-face {
+  font-family: "Optimistic Mono";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("/fonts/OptimisticMono_W_TextRegular.woff2") format("woff2");
+}
+:where(html) {
+  font-family: "Optimistic", system-ui, sans-serif;
+}
+:where(code, pre, kbd, samp) {
+  font-family: "Optimistic Mono", ui-monospace, monospace;
+}
+</style>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>FIXZY | Input Servis</title>
 <style>
 *{box-sizing:border-box}
 body{margin:0;background:#eef2f6;color:#111827;font-family:Arial,Helvetica,sans-serif}
-header{background:#111827;color:#fff;padding:11px 14px;position:sticky;top:0;z-index:50}
-.head{max-width:920px;margin:auto;display:flex;align-items:center;gap:10px}
-.head h1{font-size:18px;margin:0;flex:1}
-.head button{border:0;border-radius:8px;padding:8px 11px;font-weight:800;cursor:pointer}
-.back{background:#374151;color:#fff}.refresh{background:#fff;color:#111827}
+header{
+  background:#111827;
+  color:#fff;
+  padding:10px 14px;
+  position:sticky;
+  top:0;
+  z-index:50;
+  border-bottom:2px solid #000;box-shadow:0 3px 0 #000;
+}
+.head{
+  width:100%;
+  max-width:920px;
+  margin:auto;
+  display:flex;
+  align-items:center;
+  gap:12px;
+  min-height:52px;
+}
+.head-logo{
+  width:52px;
+  height:52px;
+  border-radius:14px;
+  object-fit:contain;
+  background:#000;
+  padding:4px;
+  border:1px solid #ffffff20;
+  flex:0 0 52px;
+}
+.head-info{
+  min-width:0;
+  flex:1;
+  line-height:1.2;
+}
+.head-title-row{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  min-width:0;
+}
+.head h1{
+  font-size:18px;
+  margin:0;
+  font-weight:900;
+  white-space:nowrap;
+}
+.head-email{
+  display:block;
+  margin-top:2px;
+  font-size:11px;
+  color:#9ca3af;
+  font-weight:700;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  max-width:480px;
+}
+.role-badge{
+  display:inline-flex;
+  align-items:center;
+  padding:5px 9px;
+  border-radius:999px;
+  background:#16c75b;
+  color:#fff;
+  font-size:11px;
+  font-weight:900;
+  white-space:nowrap;
+}
+.head-actions{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  flex:none;
+}
+.head button{
+  border-radius:12px;
+  font-weight:800;
+  cursor:pointer;
+}
+.refresh{
+  background:#1e293b;
+  color:#fff;
+  border:2px solid #334155;
+  height:44px;
+  padding:9px 14px;
+  font-size:12px;
+}
+.refresh:hover{
+  background:#facc15;
+  color:#000;
+}
+.theme-btn{
+  width:44px;
+  height:44px;
+  padding:0;
+  border:2px solid #334155;
+  background:#1e293b;
+  color:#fff;
+  font-size:18px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}
+.theme-btn:hover{
+  background:#facc15;
+  color:#000;
+}
+body.dark{
+  background:#0b0f14;
+  color:#f3f4f6;
+}
+body.dark header{
+  background:#0b0f14;
+  color:#f3f4f6;
+  border-bottom-color:#263241;
+}
+body.dark .card{
+  background:#151b23;
+  color:#f3f4f6;
+  border-color:#000;
+  box-shadow:4px 4px 0 #000;
+}
+body.dark .title{
+  border-bottom-color:#2b3440;
+}
+body.dark label,
+body.dark .check,
+body.dark .status-msg,
+body.dark .money,
+body.dark .pmeta{
+  color:#aeb7c4;
+}
+body.dark input,
+body.dark select,
+body.dark textarea{
+  background:#0f141b;
+  color:#f3f4f6;
+  border-color:#2b3440;
+}
+body.dark .readonly{
+  background:#10161e;
+  color:#cbd5e1;
+}
+body.dark .info{
+  border-color:#2b3440;
+}
+body.dark .info-row{
+  border-bottom-color:#2b3440;
+}
+body.dark .info-row span{
+  color:#aeb7c4;
+}
+body.dark .results{
+  background:#151b23;
+  border-color:#2b3440;
+}
+body.dark .result{
+  background:#151b23;
+  color:#f3f4f6;
+  border-bottom-color:#2b3440;
+}
+body.dark .result:hover{
+  background:#1d2631;
+}
+body.dark .selected.empty{
+  background:#10161e;
+  color:#aeb7c4;
+  border-color:#3b4654;
+}
+body.dark .secondary{
+  background:#2b3440;
+  color:#f3f4f6;
+}
+body.dark .popup-box{
+  background:#151b23;
+  color:#f3f4f6;
+}
+body.dark .popup-box p{
+  color:#aeb7c4;
+}
 main{max-width:920px;margin:auto;padding:12px}
-.card{background:#fff;border-radius:12px;padding:15px;margin-bottom:12px;box-shadow:0 2px 10px #0001}
-.title{font-size:16px;font-weight:900;border-bottom:1px solid #e5e7eb;padding-bottom:9px;margin-bottom:12px}
+.card{background:#fff;border:2px solid #111827;border-radius:12px;padding:15px;margin-bottom:14px;box-shadow:4px 4px 0 #111827;transition:transform .15s ease,box-shadow .15s ease}.card:active{transform:translate(2px,2px);box-shadow:2px 2px 0 #111827}
+.title{font-size:16px;font-weight:900;border-bottom:2px solid #111827;padding-bottom:9px;margin-bottom:12px}
 .grid{display:grid;grid-template-columns:1fr 1fr;gap:11px}
 .full{grid-column:1/-1}
 label{display:block;font-size:12px;font-weight:800;color:#4b5563;margin-bottom:5px}
-input,select,textarea{width:100%;padding:11px;border:1px solid #d1d5db;border-radius:8px;background:#fff;font:inherit}
+input,select,textarea{width:100%;padding:11px;border:2px solid #111827;border-radius:8px;background:#fff;font:inherit;box-shadow:2px 2px 0 #111827}
 textarea{min-height:78px;resize:vertical}
 .readonly{background:#f8fafc;color:#475467}
-.info{border:1px solid #e5e7eb;border-radius:9px;overflow:hidden}
+.info{border:2px solid #111827;border-radius:9px;overflow:hidden;box-shadow:3px 3px 0 #111827}
 .info-row{display:flex;justify-content:space-between;gap:12px;padding:9px 11px;border-bottom:1px solid #eee;font-size:12px}
 .info-row:last-child{border-bottom:0}.info-row span{color:#667085;font-weight:700}.info-row b{text-align:right}
 .checks{display:flex;flex-wrap:wrap;gap:10px}
@@ -38,17 +254,30 @@ textarea{min-height:78px;resize:vertical}
 .money{font-size:12px;color:#667085;margin-top:7px}
 .money strong{color:#111827}
 .actions{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
-button.action{border:0;border-radius:9px;padding:12px;font-weight:900;cursor:pointer}
+button.action{border:2px solid #111827;border-radius:9px;padding:12px;font-weight:900;cursor:pointer;box-shadow:3px 3px 0 #111827}
 .danger{background:#fee2e2;color:#991b1b}.secondary{background:#e5e7eb}.primary{background:#111827;color:#fff}
 .status-msg{font-size:12px;color:#667085;margin-top:8px}
 .popup{position:fixed;inset:0;background:#0008;display:none;align-items:center;justify-content:center;z-index:100}
 .popup.show{display:flex}
-.popup-box{width:min(420px,calc(100% - 30px));background:#fff;border-radius:14px;padding:18px;box-shadow:0 15px 45px #0004}
+.popup-box{width:min(420px,calc(100% - 30px));background:#fff;border:2px solid #111827;border-radius:14px;padding:18px;box-shadow:6px 6px 0 #111827}
 .popup-box h3{margin:0 0 8px}.popup-box p{font-size:13px;color:#475467;line-height:1.5}
 .popup-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:13px}.popup-actions button{border:0;border-radius:8px;padding:10px 14px;font-weight:800}
 #garansiWrap{display:none}
 #printArea{display:none}
-@media(max-width:650px){.grid{grid-template-columns:1fr}.full{grid-column:auto}.actions{grid-template-columns:1fr 1fr}.head h1{font-size:16px}}
+@media(max-width:650px){
+  .grid{grid-template-columns:1fr}
+  .full{grid-column:auto}
+  .actions{grid-template-columns:1fr 1fr}
+  header{padding:10px 14px}
+  .head{gap:8px;min-height:52px}
+  .head-logo{width:52px;height:52px;flex-basis:52px}
+  .head h1{font-size:16px}
+  .head-email{font-size:10px;max-width:240px}
+  .role-badge{font-size:10px;padding:4px 7px}
+  .head-actions{gap:6px}
+  .refresh{height:44px;padding:9px 12px;font-size:12px}
+  .theme-btn{width:44px;height:44px;font-size:18px}
+}
 @media print{
  body{background:#fff}
  header,main,.popup{display:none!important}
@@ -76,9 +305,20 @@ button.action{border:0;border-radius:9px;padding:12px;font-weight:900;cursor:poi
 
 <header>
   <div class="head">
-    <button class="back" onclick="history.back()">‹ Kembali</button>
-    <h1>🔧 Input Servis HP</h1>
-    <button class="refresh" onclick="location.reload()">↻ Refresh</button>
+    <img class="head-logo" src="logo.png" alt="FIXZY">
+
+    <div class="head-info">
+      <div class="head-title-row">
+        <h1>Input Servis</h1>
+        <span id="headerRole" class="role-badge">USER</span>
+      </div>
+      <span id="headerEmail" class="head-email">-</span>
+    </div>
+
+    <div class="head-actions">
+      <button class="refresh" type="button" onclick="location.reload()">Refresh</button>
+      <button class="theme-btn" id="themeBtn" type="button" onclick="toggleDarkMode()" aria-label="Mode gelap">🌙</button>
+    </div>
   </div>
 </header>
 
@@ -253,15 +493,8 @@ import {
   setDoc,runTransaction,serverTimestamp
 } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js";
 
-const firebaseConfig={
-  apiKey:"AIzaSyCwMbJsuORhIq4QCmp4c1r6OsjAUlfxU5Y",
-  authDomain:"fixzy-f056f.firebaseapp.com",
-  projectId:"fixzy-f056f",
-  storageBucket:"fixzy-f056f.firebasestorage.app",
-  messagingSenderId:"838081521031",
-  appId:"1:838081521031:web:50fdee909b56460b055f22"
-};
-const app=initializeApp(firebaseConfig);
+const cfg={apiKey:"AIzaSyC_PcarMTT5Un7qfSLzf92o5OGn5rginsI",authDomain:"fixzy-update.firebaseapp.com",projectId:"fixzy-update",storageBucket:"fixzy-update.firebasestorage.app",messagingSenderId:"995892519622",appId:"1:995892519622:web:fa41047944d8e5b35d6dc7"};
+const app=initializeApp(cfg);
 const auth=getAuth(app);
 const db=getFirestore(app);
 
@@ -489,40 +722,68 @@ function buildData(){
 }
 
 async function saveData(d){
+  if(!authUser){
+    throw new Error("Sesi login Firebase tidak ditemukan. Silakan login kembali.");
+  }
+
   const notaRef=doc(db,"servis",d.nomorNota);
 
-  if(d.penggunaanProduk.sumber==="firebase"){
-    const stockRef=doc(db,"stok",d.penggunaanProduk.produkId);
-    await runTransaction(db,async tx=>{
-      const stockSnap=await tx.get(stockRef);
-      const notaSnap=await tx.get(notaRef);
-      if(!stockSnap.exists())throw new Error("Produk stok tidak ditemukan.");
-      if(notaSnap.exists())throw new Error("Nomor nota sudah digunakan. Silakan refresh untuk nomor nota baru.");
-
-      const stock=stockSnap.data()||{};
-      const lama=stokProduk(stock);
-      if(lama<d.penggunaanProduk.qty)
-        throw new Error(`Stok ${namaProduk(stock)} tidak cukup. Tersedia ${lama}.`);
-      const baru=lama-d.penggunaanProduk.qty;
-
-      tx.update(stockRef,{
-        sisa:baru,
-        stok:baru,
-        status:baru>0?"tersedia":"kosong",
-        updatedAt:serverTimestamp()
-      });
-
-      tx.set(notaRef,{
-        ...d,
-        stokDikurangi:true,
-        stokProdukId:stockSnap.id,
-        stokSebelum:lama,
-        stokSesudah:baru
-      });
-    });
-  }else{
-    await setDoc(notaRef,{...d,stokDikurangi:false});
+  // Pastikan nomor nota belum dipakai.
+  const existing=await getDoc(notaRef);
+  if(existing.exists()){
+    throw new Error("Nomor nota sudah digunakan. Silakan Refresh untuk membuat nomor nota baru.");
   }
+
+  // Simpan servis terlebih dahulu jika produk manual.
+  if(d.penggunaanProduk.sumber!=="firebase"){
+    await setDoc(notaRef,{
+      ...d,
+      stokDikurangi:false
+    });
+    return;
+  }
+
+  // Produk dari stok:
+  // Semua baca + ubah stok + simpan nota dilakukan dalam SATU transaction.
+  const stockRef=doc(db,"stok",d.penggunaanProduk.produkId);
+
+  await runTransaction(db,async tx=>{
+    const stockSnap=await tx.get(stockRef);
+
+    if(!stockSnap.exists()){
+      throw new Error("Produk stok tidak ditemukan di Firebase.");
+    }
+
+    const notaSnap=await tx.get(notaRef);
+    if(notaSnap.exists()){
+      throw new Error("Nomor nota sudah digunakan. Silakan Refresh untuk nomor nota baru.");
+    }
+
+    const stock=stockSnap.data()||{};
+    const lama=stokProduk(stock);
+    const qty=Number(d.penggunaanProduk.qty)||1;
+
+    if(lama<qty){
+      throw new Error(`Stok ${namaProduk(stock)} tidak cukup. Tersedia ${lama}.`);
+    }
+
+    const baru=lama-qty;
+
+    tx.update(stockRef,{
+      sisa:baru,
+      stok:baru,
+      status:baru>0?"tersedia":"kosong",
+      updatedAt:serverTimestamp()
+    });
+
+    tx.set(notaRef,{
+      ...d,
+      stokDikurangi:true,
+      stokProdukId:stockSnap.id,
+      stokSebelum:lama,
+      stokSesudah:baru
+    });
+  });
 }
 
 function makePrint(d){
@@ -589,17 +850,38 @@ window.tutupErrorPopup=tutupErrorPopup;
 
 async function executeSave(printAfter){
   let d;
-  try{d=buildData()}catch(e){$("saveStatus").textContent=e.message;tampilError("⚠️ Data Belum Lengkap",e.message);return false}
+  try{
+    d=buildData();
+  }catch(e){
+    $("saveStatus").textContent=e.message;
+    tampilError("⚠️ Data Belum Lengkap",e.message);
+    return false;
+  }
+
   try{
     $("saveStatus").textContent="Menyimpan transaksi dan stok...";
     await saveData(d);
+
     $("saveStatus").textContent=`Berhasil disimpan • ${d.nomorNota}`;
-    if(printAfter){makePrint(d);printNow()}
+    tampilError("✅ Berhasil Disimpan",`Transaksi ${d.nomorNota} berhasil disimpan ke Firebase.`);
+
+    if(printAfter){
+      makePrint(d);
+      printNow();
+    }
     return true;
+
   }catch(e){
-    console.error(e);
-    $("saveStatus").textContent="Gagal menyimpan.";
-    tampilError("❌ Gagal Menyimpan","Gagal menyimpan ke Firebase: "+(e.message||e));
+    console.error("FIREBASE SAVE ERROR:",e);
+
+    const code=e?.code ? ` (${e.code})` : "";
+    const detail=e?.message || String(e);
+
+    $("saveStatus").textContent="Gagal menyimpan ke Firebase.";
+    tampilError(
+      "❌ Gagal Menyimpan",
+      `Firebase${code}: ${detail}`
+    );
     return false;
   }
 }
@@ -646,6 +928,19 @@ function batalForm(){
 }
 window.batalForm=batalForm;
 
+function applyDarkMode(on){
+  document.body.classList.toggle("dark",!!on);
+  const btn=document.getElementById("themeBtn");
+  if(btn){
+    btn.textContent=on?"☀️":"🌙";
+    btn.setAttribute("aria-label",on?"Mode terang":"Mode gelap");
+  }
+}
+function toggleDarkMode(){
+  applyDarkMode(!document.body.classList.contains("dark"));
+}
+window.toggleDarkMode=toggleDarkMode;
+
 onAuthStateChanged(auth,async user=>{
   authUser=user;
   if(!user){
@@ -658,16 +953,21 @@ onAuthStateChanged(auth,async user=>{
     if(!userSnap.exists())throw new Error("Profil pengguna tidak ditemukan.");
     const data=userSnap.data()||{};
     const izin=Array.isArray(data.izin)?data.izin:(Array.isArray(data.permissions)?data.permissions:[]);
-    const punyaServis=izin.includes("servis");
-
-    // Akses halaman ditentukan oleh izin HTML/menu dari Owner.
-    // Role hanya identitas akun, bukan penentu hak akses.
-    if(data.role!=="superadmin" && !punyaServis)
-      throw new Error("Akun ini tidak memiliki izin untuk Input Servis.");
+    const izinLower=izin.map(x=>String(x).toLowerCase());
+    const punyaServis=izinLower.includes("servis") || izinLower.includes("input-servis") || izinLower.includes("nota");
+    // FIX: owner auto lolos semua izin, karyawan cek izin tapi kalau izin kosong tetap izinkan (untuk akun lama)
+    if(data.role!=="owner" && data.role!=="superadmin"){
+      if(izin.length>0 && !punyaServis){
+        throw new Error("Akun ini tidak memiliki izin untuk Input Servis. Minta Owner aktifkan di Kelola Karyawan.");
+      }
+    }
 
     uid=user.uid;
     businessUid=businessOwner(data,user);
     profile={...data};
+
+    $("headerRole").textContent=(data.role||"USER").toUpperCase();
+    $("headerEmail").textContent=user.email||data.email||"-";
 
     $("nomorNota").value=notaBaru();
     $("barcode").value=makeBarcode($("nomorNota").value);
