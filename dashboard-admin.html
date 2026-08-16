@@ -84,6 +84,17 @@ button,select{font:inherit}button{cursor:pointer}
 </div>
 
 <section class="card">
+<h2 class="section-title">💵 Sumber Dana</h2>
+<div class="finance">
+<div class="fin"><small>🛒 Penjualan</small><b class="blue" id="sPenjualan">Rp 0</b></div>
+<div class="fin"><small>🔧 Servis</small><b class="blue" id="sServis">Rp 0</b></div>
+<div class="fin"><small>💼 Pendapatan Luar</small><b class="green" id="sLuar">Rp 0</b></div>
+<div class="fin"><small>💰 Total Sumber Dana</small><b class="green" id="sTotal">Rp 0</b></div>
+</div>
+<div class="list" id="sourceList" style="margin-top:10px"></div>
+</section>
+
+<section class="card">
 <h2 class="section-title">📈 Tren Omzet Bulanan</h2>
 <div id="chart" class="chart"></div>
 <div class="chart-note">Grafik berdasarkan tanggal transaksi/nota yang berhasil dibaca dari Firebase.</div>
@@ -105,7 +116,7 @@ import{getFirestore,collection,getDocs,doc,getDoc}from"https://www.gstatic.com/f
 const cfg={apiKey:"AIzaSyC_PcarMTT5Un7qfSLzf92o5OGn5rginsI",authDomain:"fixzy-update.firebaseapp.com",projectId:"fixzy-update",storageBucket:"fixzy-update.firebasestorage.app",messagingSenderId:"995892519622",appId:"1:995892519622:web:fa41047944d8e5b35d6dc7"};
 const app=getApps().length?getApp():initializeApp(cfg),auth=getAuth(app),db=getFirestore(app);
 const $=id=>document.getElementById(id);
-let user=null,users=[],servis=[],penjualan=[],pengeluaran=[],stok=[],absensi=[];
+let user=null,users=[],servis=[],penjualan=[],pengeluaran=[],stok=[],absensi=[],pendapatanLuar=[];
 const num=v=>{if(typeof v==="number")return v;return Number(String(v??"").replace(/[^\d.-]/g,""))||0};
 const money=v=>"Rp "+num(v).toLocaleString("id-ID");
 const esc=v=>String(v??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]));
@@ -120,6 +131,17 @@ function dateOf(r){
 }
 function amount(r){
  return num(r?.total??r?.totalHarga??r?.grandTotal??r?.jumlah??r?.nominal??r?.hargaTotal??r?.totalBayar??r?.harga??r?.nilai??r?.amount)
+}
+
+function externalAmount(r){
+  return num(r?.total??r?.nominal??r?.jumlah??r?.amount??r?.nilai??r?.pendapatan);
+}
+function activeRevenue(r,type){
+  const s=String(r?.status??"").toLowerCase().trim();
+  if(s==="batal"||s==="cancel"||r?.omzetEligible===false)return false;
+  if(type==="Servis")return !s||["diambil","selesai","dibayar","lunas","tunai"].includes(s);
+  return !s||["dibayar","tunai","lunas","selesai"].includes(s)||
+    ["tunai","cash","lunas"].includes(String(r?.pembayaran??r?.metode??"").toLowerCase());
 }
 function cost(r){
  return num(r?.modal??r?.hargaModal??r?.totalModal??r?.modalTotal??r?.hpp??r?.HPP??r?.hargaBeli??r?.modalBarang)
@@ -143,41 +165,102 @@ function receivable(r){
 }
 async function read(name){try{const s=await getDocs(collection(db,name));return s.docs.map(d=>({id:d.id,...d.data()}))}catch(e){console.warn(name,e);return[]}}
 async function load(){
- [users,servis,penjualan,pengeluaran,stok,absensi]=await Promise.all([
-  read("users"),read("servis"),read("penjualan"),read("pengeluaran"),read("stok"),read("absensi")
- ]);
- try{
-  if(user){const s=await getDoc(doc(db,"users",user.uid));if(s.exists())user={...user,...s.data()}}
- }catch{}
+  [users,servis,penjualan,pengeluaran,stok,absensi,pendapatanLuar]=await Promise.all([
+    read("users"),read("servis"),read("penjualan"),read("pengeluaran"),read("stok"),read("absensi"),read("pendapatanLuar")
+  ]);
+  try{
+    if(user){const s=await getDoc(doc(db,"users",user.uid));if(s.exists())user={...user,...s.data()}}
+  }catch{}
 }
 function name(a){return String(a?.nama||a?.namaKaryawan||a?.namaLengkap||a?.name||a?.displayName||a?.email||"").trim()}
 function activeWorker(a){const r=String(a?.role||"").toLowerCase(),j=String(a?.jabatan||a?.posisi||"").toLowerCase();return ["employee","karyawan","kasir","kurir","teknisi"].includes(r)||/karyawan|kasir|kurir|teknisi|staff/.test(j)}
 function render(){
- const ss=servis.filter(r=>periodMatch(r)&&!isBatal(r)), ps=penjualan.filter(r=>periodMatch(r)&&!isBatal(r));
- const omzetS=ss.reduce((s,r)=>s+amount(r),0),omzetP=ps.reduce((s,r)=>s+amount(r),0),omzet=omzetS+omzetP;
- const modal=ss.reduce((s,r)=>s+cost(r),0)+ps.reduce((s,r)=>s+cost(r),0);
- const exp=pengeluaran.filter(r=>periodMatch(r)&&isExpense(r)).reduce((s,r)=>s+amount(r),0);
- const kasbon=pengeluaran.filter(r=>isKasbon(r)&&dateOf(r).startsWith(month())).reduce((s,r)=>s+amount(r),0);
- const upah=users.filter(activeWorker).reduce((s,a)=>s+num(a?.upahHarian??a?.upah??a?.gajiHarian??a?.gaji??a?.nominalUpah??a?.upahPerHari),0);
- const labaKotor=omzet-modal,labaBersih=labaKotor-exp;
- const piutang=[...ss,...ps].filter(r=>!paid(r)).reduce((s,r)=>s+receivable(r),0);
- const stockValue=stok.reduce((s,r)=>s+num(r?.stok??r?.qty??r?.jumlah??r?.jumlahStok)*num(r?.hargaModal??r?.modal??r?.hargaBeli??0),0);
- const hadir=absensi.filter(r=>dateOf(r)===today()).filter(r=>{const st=String(r?.status||r?.kehadiran||"").toLowerCase();return !st||["hadir","masuk","present"].includes(st)}).length;
- const active=users.filter(activeWorker).length;
- $("omzet").textContent=money(omzet);$("laba").textContent=money(labaBersih);$("piutang").textContent=money(piutang);
- $("pengeluaran").textContent=money(exp);$("upah").textContent=money(kasbon+upah);$("stok").textContent=money(stockValue);$("transaksi").textContent=ss.length+ps.length;
- $("kas").textContent=money(omzet-exp);$("fPenjualan").textContent=money(omzetP);$("fServis").textContent=money(omzetS);$("fModal").textContent=money(modal);
- $("fLabaKotor").textContent=money(labaKotor);$("fPengeluaran").textContent=money(exp);$("fUpah").textContent=money(upah);$("fLabaBersih").textContent=money(labaBersih);$("fPiutang").textContent=money(piutang);
- $("jServis").textContent=ss.length;$("jPenjualan").textContent=ps.length;$("jKaryawan").textContent=active;$("jHadir").textContent=hadir;$("jKasbon").textContent=money(kasbon);
- const low=stok.filter(r=>num(r?.stok??r?.qty??r?.jumlah??r?.jumlahStok)<=num(r?.stokMinimum??r?.minimumStok??r?.minStok??5)).length;$("jStokMenipis").textContent=low;
- const days=monthDays(),vals=days.map(d=>[...servis,...penjualan].filter(r=>dateOf(r)===d&&!isBatal(r)).reduce((s,r)=>s+amount(r),0)),mx=Math.max(...vals,1);
- $("chart").innerHTML=vals.map((v,i)=>`<div class="barbox"><div class="bar" style="height:${Math.max(2,v/mx*90)}%"><span>${i+1}</span></div></div>`).join("");
- const warns=[];if(piutang>0)warns.push(`<div class="row"><span>💳 Piutang belum lunas</span><b class="red">${money(piutang)}</b></div>`);if(low)warns.push(`<div class="row"><span>📦 Stok menipis</span><b class="orange">${low} item</b></div>`);if(exp>labaKotor&&labaKotor>=0)warns.push(`<div class="row"><span>⚠️ Pengeluaran tinggi</span><b class="red">${money(exp)}</b></div>`);$("warning").innerHTML=warns.join("")||`<div class="row"><span>✓ Tidak ada peringatan utama</span><b class="green">Aman</b></div>`;
- $("quick").innerHTML=`<div class="row"><span>Omzet</span><b>${money(omzet)}</b></div><div class="row"><span>Laba bersih perkiraan</span><b class="green">${money(labaBersih)}</b></div><div class="row"><span>Piutang</span><b class="red">${money(piutang)}</b></div><div class="row"><span>Kasbon bulan ini</span><b>${money(kasbon)}</b></div>`;
- $("status").innerHTML=`<span class="ok">✓ Firebase aktif</span> • Servis ${ss.length} • Penjualan ${ps.length} • Karyawan ${active} • Periode ${$("periode").value}`;
+  const ss=servis.filter(r=>periodMatch(r)&&activeRevenue(r,"Servis"));
+  const ps=penjualan.filter(r=>periodMatch(r)&&activeRevenue(r,"Penjualan"));
+  const lr=pendapatanLuar.filter(r=>periodMatch(r));
+
+  const omzetS=ss.reduce((s,r)=>s+amount(r),0);
+  const omzetP=ps.reduce((s,r)=>s+amount(r),0);
+  const luar=lr.reduce((s,r)=>s+externalAmount(r),0);
+  const totalDana=omzetS+omzetP+luar;
+
+  const modal=ss.reduce((s,r)=>s+cost(r),0)+ps.reduce((s,r)=>s+cost(r),0);
+  const exp=pengeluaran.filter(r=>periodMatch(r)&&isExpense(r)).reduce((s,r)=>s+amount(r),0);
+  const kasbon=pengeluaran.filter(r=>isKasbon(r)&&dateOf(r).startsWith(month())).reduce((s,r)=>s+amount(r),0);
+  const upah=users.filter(activeWorker).reduce((s,a)=>s+num(a?.upahHarian??a?.upah??a?.gajiHarian??a?.gaji??a?.nominalUpah??a?.upahPerHari),0);
+
+  const labaKotor=totalDana-modal;
+  const labaBersih=labaKotor-exp;
+  const piutang=[...ss,...ps].reduce((s,r)=>s+receivable(r),0);
+  const stockValue=stok.reduce((s,r)=>s+num(r?.stok??r?.qty??r?.jumlah??r?.jumlahStok)*num(r?.hargaModal??r?.modal??r?.hargaBeli??0),0);
+  const hadir=absensi.filter(r=>dateOf(r)===today()).filter(r=>{
+    const st=String(r?.status||r?.kehadiran||"").toLowerCase();
+    return !st||["hadir","masuk","present"].includes(st);
+  }).length;
+  const active=users.filter(activeWorker).length;
+
+  $("omzet").textContent=money(totalDana);
+  $("laba").textContent=money(labaBersih);
+  $("piutang").textContent=money(piutang);
+  $("pengeluaran").textContent=money(exp);
+  $("upah").textContent=money(kasbon+upah);
+  $("stok").textContent=money(stockValue);
+  $("transaksi").textContent=ss.length+ps.length+lr.length;
+  $("kas").textContent=money(totalDana-exp);
+
+  $("fPenjualan").textContent=money(omzetP);
+  $("fServis").textContent=money(omzetS);
+  $("fModal").textContent=money(modal);
+  $("fLabaKotor").textContent=money(labaKotor);
+  $("fPengeluaran").textContent=money(exp);
+  $("fUpah").textContent=money(upah);
+  $("fLabaBersih").textContent=money(labaBersih);
+  $("fPiutang").textContent=money(piutang);
+
+  $("sPenjualan").textContent=money(omzetP);
+  $("sServis").textContent=money(omzetS);
+  $("sLuar").textContent=money(luar);
+  $("sTotal").textContent=money(totalDana);
+  $("sourceList").innerHTML=
+    `<div class="row"><span>🛒 Penjualan</span><b class="blue">${money(omzetP)}</b></div>`+
+    `<div class="row"><span>🔧 Servis</span><b class="blue">${money(omzetS)}</b></div>`+
+    `<div class="row"><span>💼 Pendapatan Luar</span><b class="green">${money(luar)}</b></div>`+
+    `<div class="row"><span><b>Total Sumber Dana</b></span><b class="green">${money(totalDana)}</b></div>`;
+
+  $("jServis").textContent=ss.length;
+  $("jPenjualan").textContent=ps.length;
+  $("jKaryawan").textContent=active;
+  $("jHadir").textContent=hadir;
+  $("jKasbon").textContent=money(kasbon);
+
+  const low=stok.filter(r=>num(r?.stok??r?.qty??r?.jumlah??r?.jumlahStok)<=num(r?.stokMinimum??r?.minimumStok??r?.minStok??5)).length;
+  $("jStokMenipis").textContent=low;
+
+  const days=monthDays();
+  const vals=days.map(d=>
+    servis.filter(r=>dateOf(r)===d&&activeRevenue(r,"Servis")).reduce((s,r)=>s+amount(r),0)+
+    penjualan.filter(r=>dateOf(r)===d&&activeRevenue(r,"Penjualan")).reduce((s,r)=>s+amount(r),0)+
+    pendapatanLuar.filter(r=>dateOf(r)===d).reduce((s,r)=>s+externalAmount(r),0)
+  );
+  const mx=Math.max(...vals,1);
+  $("chart").innerHTML=vals.map((v,i)=>`<div class="barbox"><div class="bar" style="height:${Math.max(2,v/mx*90)}%"><span>${i+1}</span></div></div>`).join("");
+
+  const warns=[];
+  if(piutang>0)warns.push(`<div class="row"><span>💳 Piutang belum lunas</span><b class="red">${money(piutang)}</b></div>`);
+  if(low)warns.push(`<div class="row"><span>📦 Stok menipis</span><b class="orange">${low} item</b></div>`);
+  if(exp>labaKotor&&labaKotor>=0)warns.push(`<div class="row"><span>⚠️ Pengeluaran tinggi</span><b class="red">${money(exp)}</b></div>`);
+  $("warning").innerHTML=warns.join("")||`<div class="row"><span>✓ Tidak ada peringatan utama</span><b class="green">Aman</b></div>`;
+
+  $("quick").innerHTML=
+    `<div class="row"><span>Total sumber dana</span><b>${money(totalDana)}</b></div>`+
+    `<div class="row"><span>Laba bersih perkiraan</span><b class="green">${money(labaBersih)}</b></div>`+
+    `<div class="row"><span>Piutang</span><b class="red">${money(piutang)}</b></div>`+
+    `<div class="row"><span>Kasbon bulan ini</span><b>${money(kasbon)}</b></div>`;
+
+  $("status").innerHTML=`<span class="ok">✓ Firebase aktif</span> • Servis ${ss.length} • Penjualan ${ps.length} • Pendapatan Luar ${lr.length} • Karyawan ${active} • Periode ${$("periode").value}`;
 }
 function monthDays(){const [y,m]=month().split("-").map(Number),n=new Date(y,m,0).getDate();return Array.from({length:n},(_,i)=>`${y}-${String(m).padStart(2,"0")}-${String(i+1).padStart(2,"0")}`)}
-async function muatSemua(){ $("status").textContent="⏳ Membaca Firebase...";try{await load();render()}catch(e){$("status").innerHTML=`<span class="err">❌ ${esc(e.message||e)}</span>`;showPopup("Gagal membaca Firebase",e.message||String(e))}}
+async function muatSemua(){ $("status").textContent="⏳ Membaca Firebase: penjualan, servis, pendapatan luar, pengeluaran, stok, absensi...";try{await load();render()}catch(e){$("status").innerHTML=`<span class="err">❌ ${esc(e.message||e)}</span>`;showPopup("Gagal membaca Firebase",e.message||String(e))}}
 function showPopup(t,x){$("popupTitle").textContent=t;$("popupText").textContent=x;$("popup").classList.add("show")}function tutupPopup(){$("popup").classList.remove("show")}window.muatSemua=muatSemua;window.tutupPopup=tutupPopup;
 onAuthStateChanged(auth,async u=>{user=u;if(u){$("ownerName").textContent=u.displayName||"Akun FIXZY";$("ownerEmail").textContent=u.email||"Firebase";await muatSemua()}else{$("ownerName").textContent="Menunggu sesi FIXZY...";$("status").innerHTML='<span class="err">⚠️ Sesi Firebase belum terbaca.</span>'}});
 </script>
