@@ -25,19 +25,20 @@ button,input,select,textarea{font:inherit}button{cursor:pointer}
 .body{padding:14px 16px}
 .status{font-size:11px;color:var(--muted);line-height:1.5}
 .ok{color:#15803d;font-weight:800}.err{color:#b91c1c;font-weight:800}
-.toolbar{display:grid;grid-template-columns:1fr 1fr auto;gap:9px}
+.toolbar{display:grid;grid-template-columns:1fr 1fr 1fr auto;gap:9px}
 .field{display:flex;flex-direction:column;gap:5px}
 label{font-size:11px;font-weight:900;color:#475569}
 input,select,textarea{width:100%;height:42px;border:1px solid #cbd5e1;border-radius:10px;padding:0 11px;background:#fff;outline:none}
 textarea{height:70px;padding-top:10px;resize:vertical}
 input:focus,select:focus,textarea:focus{border-color:var(--orange);box-shadow:0 0 0 3px #f59e0b18}
-.summary{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:12px}
+.summary{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-bottom:12px}
 .sum{background:#fff;border:1px solid var(--line);border-radius:11px;padding:12px}
 .sum small{display:block;font-size:10px;color:#64748b;font-weight:900}
 .sum b{display:block;font-size:20px;margin-top:4px}
 .sum.green{background:#ecfdf5;border-color:#a7f3d0}.sum.green b{color:#047857}
 .sum.blue{background:#eff6ff;border-color:#bfdbfe}.sum.blue b{color:#1d4ed8}
 .sum.red{background:#fef2f2;border-color:#fecaca}.sum.red b{color:#b91c1c}
+.sum.orange{background:#fff7ed;border-color:#fed7aa}.sum.orange b{color:#c2410c}
 .table-wrap{overflow:auto;border:1px solid var(--line);border-radius:12px}
 table{width:100%;min-width:980px;border-collapse:collapse}
 th,td{padding:9px 10px;border-bottom:1px solid var(--line);font-size:11px;text-align:left;vertical-align:middle}
@@ -97,6 +98,7 @@ th{background:#f8fafc;color:#475569;font-size:10px;position:sticky;top:0}
   <div class="sum green"><small>HADIR</small><b id="hadir">0</b></div>
   <div class="sum blue"><small>SUDAH PULANG</small><b id="pulang">0</b></div>
   <div class="sum red"><small>BELUM ABSEN</small><b id="belum">0</b></div>
+  <div class="sum orange"><small>TOTAL UPAH BULAN</small><b id="totalUpahBulan">Rp 0</b></div>
 </section>
 
 <section class="card">
@@ -107,8 +109,12 @@ th{background:#f8fafc;color:#475569;font-size:10px;position:sticky;top:0}
   <div class="body">
     <div class="toolbar">
       <div class="field">
-        <label>TANGGAL</label>
+        <label>TANGGAL ABSENSI</label>
         <input id="tanggal" type="date" onchange="muatAbsensi()">
+      </div>
+      <div class="field">
+        <label>BULAN PERHITUNGAN UPAH</label>
+        <input id="bulan" type="month" onchange="muatAbsensiBulan()">
       </div>
       <div class="field">
         <label>CARI KARYAWAN</label>
@@ -126,7 +132,7 @@ th{background:#f8fafc;color:#475569;font-size:10px;position:sticky;top:0}
         </select>
       </div>
     </div>
-    <div class="note">Identitas diambil dari akun yang dibuat melalui menu Kelola Karyawan/Reseller. Data absensi disimpan di Firebase, bukan localStorage.</div>
+    <div class="note">Identitas diambil dari akun yang dibuat melalui menu Kelola Karyawan/Reseller. Data absensi disimpan di Firebase, bukan localStorage. Rumus upah bulanan: jumlah hari berstatus <b>Hadir</b> pada bulan terpilih × nominal upah harian dari akun karyawan.</div>
   </div>
 </section>
 
@@ -142,12 +148,14 @@ th{background:#f8fafc;color:#475569;font-size:10px;position:sticky;top:0}
           <th>Masuk</th>
           <th>Pulang</th>
           <th>Status</th>
+          <th>Hadir / Bulan</th>
+          <th>Upah / Bulan</th>
           <th>Catatan</th>
           <th>Aksi</th>
         </tr>
       </thead>
       <tbody id="tbody">
-        <tr><td colspan="9" class="empty">Memuat Firebase...</td></tr>
+        <tr><td colspan="11" class="empty">Memuat Firebase...</td></tr>
       </tbody>
     </table>
   </div>
@@ -195,18 +203,18 @@ import{getAuth,onAuthStateChanged}from"https://www.gstatic.com/firebasejs/11.10.
 import{getFirestore,collection,query,where,getDocs,doc,getDoc,setDoc,serverTimestamp}from"https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js";
 
 const cfg={
- apiKey:"AIzaSyCwMbJsuORHIq4QCmp4c1r6OsjAUlfxU5Y",
- authDomain:"fixzy-f056f.firebaseapp.com",
- projectId:"fixzy-f056f",
- storageBucket:"fixzy-f056f.firebasestorage.app",
- messagingSenderId:"838081521031",
- appId:"1:838081521031:web:50fdee909b56460b055f22"
+ apiKey:"AIzaSyC_PcarMTT5Un7qfSLzf92o5OGn5rginsI",
+ authDomain:"fixzy-update.firebaseapp.com",
+ projectId:"fixzy-update",
+ storageBucket:"fixzy-update.firebasestorage.app",
+ messagingSenderId:"995892519622",
+ appId:"1:995892519622:web:fa41047944d8e5b35d6dc7"
 };
 
 const app=initializeApp(cfg),auth=getAuth(app),db=getFirestore(app);
 const $=id=>document.getElementById(id);
 const esc=v=>String(v??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]));
-let uid="",ownerUid="",profile={},accounts=[],absensi={},selected=null;
+let uid="",ownerUid="",profile={},accounts=[],absensi={},monthlyAbsensi={},selected=null;
 
 function today(){
  const d=new Date(),p=n=>String(n).padStart(2,"0");
@@ -255,28 +263,65 @@ async function loadAccounts(){
 
 async function loadAbsensi(){
  const date=getDateKey();
+ const month=$("bulan").value || date.slice(0,7);
  $("tanggalLabel").textContent=date;
  absensi={};
+ monthlyAbsensi={};
+
  try{
-   const q=await getDocs(query(collection(db,"absensi"),where("ownerUid","==",ownerUid),where("tanggal","==",date)));
-   q.forEach(d=>absensi[d.data().userId||d.id]=({id:d.id,...d.data()}));
+   const q=await getDocs(query(collection(db,"absensi"),where("ownerUid","==",ownerUid)));
+   q.forEach(d=>{
+     const x={id:d.id,...d.data()};
+     if(x.tanggal===date) absensi[x.userId||x.uid||d.id]=x;
+     if(String(x.tanggal||"").slice(0,7)===month){
+       const key=x.userId||x.uid||d.id;
+       if(!monthlyAbsensi[key])monthlyAbsensi[key]=[];
+       monthlyAbsensi[key].push(x);
+     }
+   });
  }catch(e){
    console.warn("Query absensi gagal",e);
-   // Fallback membaca dokumen per akun; berguna bila index query belum tersedia.
+   // Fallback untuk tanggal aktif jika query koleksi tidak tersedia.
    for(const a of accounts){
      try{
        const s=await getDoc(doc(db,"absensi",makeId(a.id,date)));
-       if(s.exists())absensi[a.id]={id:s.id,...s.data()};
+       if(s.exists()){
+         const x={id:s.id,...s.data()};
+         absensi[a.id]=x;
+         if(String(x.tanggal||"").slice(0,7)===month){
+           monthlyAbsensi[a.id]=[x];
+         }
+       }
      }catch{}
    }
  }
  render();
 }
-
 function getRowStatus(a){
  const x=absensi[a.id];
  if(!x)return "belum";
  return x.status||((x.jamMasuk||x.jamPulang)?"hadir":"belum");
+}
+
+
+function upahHarian(a){
+ const n=Number(a.upahHarian??a.upah??a.gajiHarian??a.gaji??0);
+ return Number.isFinite(n)?n:0;
+}
+function dataBulan(a){
+ return monthlyAbsensi[a.id]||[];
+}
+function jumlahHadirBulan(a){
+ return dataBulan(a).filter(x=>String(x.status||"").toLowerCase()==="hadir").length;
+}
+function upahBulan(a){
+ return jumlahHadirBulan(a)*upahHarian(a);
+}
+function rupiah(n){
+ return "Rp "+(Number(n)||0).toLocaleString("id-ID");
+}
+function totalUpahSemuaBulan(){
+ return accounts.reduce((sum,a)=>sum+upahBulan(a),0);
 }
 
 function render(){
@@ -291,24 +336,27 @@ function render(){
  $("hadir").textContent=accounts.filter(a=>getRowStatus(a)==="hadir").length;
  $("pulang").textContent=accounts.filter(a=>!!(absensi[a.id]?.jamPulang)).length;
  $("belum").textContent=accounts.filter(a=>getRowStatus(a)==="belum").length;
+ $("totalUpahBulan").textContent=rupiah(totalUpahSemuaBulan());
 
  if(!data.length){
-   $("tbody").innerHTML='<tr><td colspan="9" class="empty">Belum ada data untuk ditampilkan.</td></tr>';
+   $("tbody").innerHTML='<tr><td colspan="10" class="empty">Belum ada data untuk ditampilkan.</td></tr>';
    return;
  }
  $("tbody").innerHTML=data.map(a=>{
    const x=absensi[a.id]||{};
    const st=getRowStatus(a);
-   const label=nama(a);
+   const hadirBulan=jumlahHadirBulan(a);
+   const upah=upahBulan(a);
    return `<tr>
-    <td><b>${esc(label)}</b><div style="font-size:9px;color:#94a3b8">${esc(a.email||"")}</div></td>
+    <td><b>${esc(nama(a))}</b><div style="font-size:9px;color:#94a3b8">${esc(a.email||"")}</div></td>
     <td>${esc(a.jabatan||a.posisi||"-")}</td>
     <td><span class="badge role">${esc(roleLabel(a.role))}</span></td>
     <td>${esc(phone(a))}</td>
     <td><b>${esc(x.jamMasuk||"-")}</b></td>
     <td><b>${esc(x.jamPulang||"-")}</b></td>
     <td><span class="badge ${statusClass(st)}">${statusLabel(st)}</span></td>
-    <td>${esc(x.catatan||"-")}</td>
+    <td><b>${hadirBulan}</b> hari</td>
+    <td><b>${rupiah(upah)}</b><div style="font-size:9px;color:#94a3b8">${rupiah(upahHarian(a))}/hari</div></td>
     <td><div class="row-actions">
       <button class="mini masuk" onclick="aksiMasuk('${a.id}')">Masuk</button>
       <button class="mini pulang" onclick="aksiPulang('${a.id}')">Pulang</button>
@@ -373,6 +421,18 @@ async function simpanAbsensi(){
 }
 window.simpanAbsensi=simpanAbsensi;
 
+window.muatAbsensiBulan=async()=>{
+ try{
+   $("status").textContent="Menghitung upah berdasarkan absensi bulan yang dipilih...";
+   await loadAccounts();
+   await loadAbsensi();
+   $("status").innerHTML=`<span class="ok">✓ Perhitungan upah ${esc($("bulan").value)} aktif • Hadir × upah harian.</span>`;
+ }catch(e){
+   console.error(e);
+   $("status").innerHTML=`<span class="err">Gagal menghitung upah: ${esc(e.message||e)}</span>`;
+ }
+};
+
 window.muatAbsensi=async()=>{
  try{
    $("status").textContent="Memuat data absensi...";
@@ -390,6 +450,7 @@ window.muatSemua=async()=>{
 };
 
 $("tanggal").value=today();
+$("bulan").value=today().slice(0,7);
 
 onAuthStateChanged(auth,async u=>{
  if(!u){location.replace("login.html");return}
