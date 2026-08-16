@@ -514,7 +514,7 @@ function notaBaru(){
 function makeBarcode(nota){return "FX-"+nota.replace(/^SRV-/,"");}
 function namaProduk(p){return String(p.nama||p.namaProduk||p.produk||p.name||p.kode||"-")}
 function kodeProduk(p){return String(p.kode||p.kodeProduk||p.sku||p.code||"").trim()}
-function stokProduk(p){return Number(p.sisa??p.stok??p.stock??0)||0}
+function stokProduk(p){return Number(p._stok ?? p.sisa ?? p.sisaStok ?? p.stokTersedia ?? p.stokAkhir ?? p.pcs ?? p.ready ?? p.stok ?? p.qty ?? p.jumlah ?? p.stock ?? 0)||0}
 function modalProduk(p){return Number(p.hargaModal??p.hargaBeli??p.modal??p.hargaPokok??p.harga??0)||0}
 
 function businessOwner(data,user){
@@ -590,150 +590,131 @@ async function loadEmployees(){
 
 async function loadProducts(){
   /*
-    REFERENSI LOAD PRODUK FIXZY:
-    - koleksi utama: stok
-    - coba ownerUid / uid / ownerId
-    - bila hasil filter kosong, coba baca seluruh koleksi
-    - gabungkan tanpa duplikat
-    - normalisasi semua kemungkinan field stok
+    LOAD PRODUK FIX:
+    Referensi Data Penjualan membaca koleksi `stok` secara langsung.
+    Jangan membatasi pembacaan dengan uid/ownerUid terlebih dahulu,
+    karena struktur produk lama bisa tidak mempunyai field tersebut.
   */
+  products=[];
+
   try{
-    let docs=[];
-    const stokCols=["stok"];
+    // 1. BACA SEMUA DOKUMEN DARI KOLEKSI STOK — INI SUMBER UTAMA.
+    const snap=await getDocs(collection(db,"stok"));
 
-    for(const col of stokCols){
+    const map=new Map();
+
+    snap.forEach(d=>{
+      const data=d.data()||{};
+      const stokVal=Number(
+        data.sisa ??
+        data.sisaStok ??
+        data.stokTersedia ??
+        data.stokAkhir ??
+        data.pcs ??
+        data.ready ??
+        data.stok ??
+        data.qty ??
+        data.jumlah ??
+        data.stock ??
+        0
+      )||0;
+
+      const produk={
+        id:d.id,
+        _col:"stok",
+        _stok:stokVal,
+        _rawSisa:data.sisa,
+        _rawStok:data.stok,
+        ...data
+      };
+
+      // Produk yang sama jangan dibuat dobel.
+      const key=String(
+        data.barcode ||
+        data.kode ||
+        data.kodeProduk ||
+        data.sku ||
+        data.nama ||
+        data.namaProduk ||
+        d.id
+      ).trim().toLowerCase();
+
+      const old=map.get(key);
+      if(!old || produk._stok>old._stok){
+        map.set(key,produk);
+      }
+    });
+
+    products=Array.from(map.values());
+
+    console.log("[NOTA] Firebase koleksi stok:",snap.size);
+    console.log("[NOTA] Produk berhasil dimuat:",products.length);
+
+    if(products.length){
+      $("saveStatus").textContent=
+        `Firebase aktif • ${products.length} produk stok terbaca • ${employees.length} teknisi aktif`;
+    }else{
+      $("saveStatus").textContent=
+        "Firebase aktif • koleksi stok terbaca tetapi belum ada produk.";
+    }
+
+    return;
+  }catch(e){
+    console.error("[NOTA] Gagal membaca koleksi stok:",e);
+
+    // 2. Fallback hanya jika koleksi stok gagal dibaca.
+    // Dipakai untuk struktur database lama yang mungkin menyimpan produk
+    // di koleksi lain.
+    const fallbackCols=["produk","products","product","stock"];
+
+    for(const col of fallbackCols){
       try{
-        const snaps=[];
+        const snap=await getDocs(collection(db,col));
+        if(!snap.size) continue;
 
-        try{
-          const snap=await getDocs(
-            query(collection(db,col),where("ownerUid","==",businessUid))
-          );
-          if(snap.size>0) snaps.push(snap);
-        }catch(e){}
+        snap.forEach(d=>{
+          const data=d.data()||{};
+          const stokVal=Number(
+            data.sisa ??
+            data.sisaStok ??
+            data.stokTersedia ??
+            data.stokAkhir ??
+            data.pcs ??
+            data.ready ??
+            data.stok ??
+            data.qty ??
+            data.jumlah ??
+            data.stock ??
+            0
+          )||0;
 
-        try{
-          const snap=await getDocs(
-            query(collection(db,col),where("uid","==",businessUid))
-          );
-          if(snap.size>0) snaps.push(snap);
-        }catch(e){}
-
-        try{
-          const snap=await getDocs(
-            query(collection(db,col),where("ownerId","==",businessUid))
-          );
-          if(snap.size>0) snaps.push(snap);
-        }catch(e){}
-
-        /*
-          Fallback mengikuti referensi penjualan:
-          bila query owner tidak menemukan data, baca koleksi stok.
-          Jika Rules menolak pembacaan seluruh koleksi, hasil filter
-          yang berhasil tetap dipakai.
-        */
-        if(snaps.length===0){
-          try{
-            const allSnap=await getDocs(collection(db,col));
-            if(allSnap.size>0) snaps.push(allSnap);
-          }catch(e){}
-        }
-
-        const mapId=new Map();
-
-        snaps.forEach(snap=>{
-          snap.forEach(d=>{
-            if(mapId.has(d.id)) return;
-
-            const data=d.data()||{};
-            const stokVal=Number(
-              data.sisa ??
-              data.sisaStok ??
-              data.stokTersedia ??
-              data.stokAkhir ??
-              data.pcs ??
-              data.ready ??
-              data.stok ??
-              data.qty ??
-              data.jumlah ??
-              data.stock ??
-              0
-            )||0;
-
-            mapId.set(d.id,{
-              id:d.id,
-              _col:col,
-              _stok:stokVal,
-              _rawSisa:data.sisa,
-              _rawStok:data.stok,
-              ...data
-            });
+          products.push({
+            id:d.id,
+            _col:col,
+            _stok:stokVal,
+            ...data
           });
         });
 
-        docs=[...docs,...Array.from(mapId.values())];
-      }catch(e){
-        console.warn("load stok:",e);
+        if(products.length) break;
+      }catch(err){
+        console.warn("[NOTA] Fallback koleksi",col,err);
       }
     }
 
-    /*
-      Deduplicate berdasarkan barcode atau nama produk.
-      Jika duplikat, ambil stok terbesar / data terbaru.
-    */
-    const mapProduk=new Map();
-
-    for(const p of docs){
-      const key=String(
-        p.barcode ||
-        p.kode ||
-        p.sku ||
-        p.nama ||
-        p.namaProduk ||
-        p.name ||
-        p.id ||
-        ""
-      ).trim().toLowerCase();
-
-      if(!key) continue;
-
-      const existing=mapProduk.get(key);
-
-      if(!existing){
-        mapProduk.set(key,p);
-      }else{
-        const pTime=parseInt(p.updatedAt?.seconds||0)*1000 ||
-          new Date(p.updatedAt||p.createdAt||0).getTime()||0;
-        const eTime=parseInt(existing.updatedAt?.seconds||0)*1000 ||
-          new Date(existing.updatedAt||existing.createdAt||0).getTime()||0;
-
-        if(
-          Number(p._stok)>Number(existing._stok) ||
-          pTime>eTime
-        ){
-          mapProduk.set(key,p);
-        }
-      }
+    if(!products.length){
+      throw new Error(
+        "Produk Firebase tidak dapat dibaca. Pastikan data produk memang berada di koleksi 'stok' dan Rules Firebase mengizinkan akun ini membaca koleksi tersebut."
+      );
     }
-
-    products=Array.from(mapProduk.values());
-
-    console.log(
-      "[FIXZY NOTA] Produk stok dimuat:",
-      products.length
-    );
-  }catch(e){
-    console.error("[FIXZY NOTA] loadProducts:",e);
-    products=[];
   }
 }
-
 function filterProduk(q=""){
   const box=$("hasilProduk");
   const key=String(q).trim().toLowerCase();
 
   const list=products.filter(p=>{
-    const nama=String(p.nama||p.namaProduk||p.name||p.produk||p.kode||"").toLowerCase();
+    const nama=String(p.nama||p.namaProduk||p.produk||p.name||"").toLowerCase();
     const kode=String(p.kode||p.kodeProduk||p.sku||p.code||"").toLowerCase();
     const barcode=String(p.barcode||"").toLowerCase();
     const merk=String(p.merk||p.brand||"").toLowerCase();
@@ -745,23 +726,26 @@ function filterProduk(q=""){
       barcode.includes(key) ||
       merk.includes(key) ||
       kategori.includes(key);
-  }).slice(0,50);
+  }).slice(0,100);
 
-  box.innerHTML=list.length
-    ? list.map(p=>{
-        const stok=stokProduk(p);
-        const nama=namaProduk(p);
-        const kode=kodeProduk(p);
+  if(!list.length){
+    box.innerHTML='<div class="result">Produk tidak ditemukan.</div>';
+  }else{
+    box.innerHTML=list.map(p=>{
+      const stok=Number(p._stok ?? stokProduk(p))||0;
+      const nama=namaProduk(p);
+      const kode=kodeProduk(p);
+      const habis=stok<=0;
 
-        return `<button type="button" class="result" data-id="${esc(p.id)}" ${stok<=0?"disabled":""}>
-          <div class="pname">${esc(nama)}</div>
-          <div class="pmeta">
-            ${kode?`Kode: ${esc(kode)} • `:""}
-            Stok: <b>${stok}</b>${stok<=0?" • Stok kosong":""}
-          </div>
-        </button>`;
-      }).join("")
-    : '<div class="result">Produk tidak ditemukan.</div>';
+      return `<button type="button" class="result" data-id="${esc(p.id)}">
+        <div class="pname">${esc(nama)}</div>
+        <div class="pmeta">
+          ${kode?`Kode: ${esc(kode)} • `:""}
+          Stok: <b>${stok}</b>${habis?" • Stok kosong":""}
+        </div>
+      </button>`;
+    }).join("");
+  }
 
   box.classList.add("show");
 }
