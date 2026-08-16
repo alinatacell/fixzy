@@ -110,16 +110,25 @@ window.tutupModal=()=>{$("modal").classList.remove("show")};
 
 async function muatNamaPemilik(){
   const el=$("ownerName");
-  el.textContent="Data Karyawan";
+  try{
+    const snap=await getDocs(collection(db,"users"));
+    const all=snap.docs.map(d=>({id:d.id,...d.data()}));
+    const owner=all.find(r=>String(r.role||r.peran||"").toLowerCase()==="owner" || String(r.role||r.peran||"").toLowerCase()==="admin");
+    el.textContent=owner ? (owner.namaKonter||owner.namaPemilik||owner.nama||owner.email||"Pemilik") : "Data Karyawan";
+  }catch(e){ el.textContent="Data Karyawan"; }
 }
 
 async function muatKaryawan(){
- $("status").textContent="Mengambil data karyawan dari Firebase...";
+ $("status").textContent="Mengambil data karyawan dari users Firebase...";
  try{
-  const snap=await getDocs(collection(db,"karyawan"));
-  rows=snap.docs.map(d=>({id:d.id,...d.data()}));
+  const snap=await getDocs(collection(db,"users"));
+  const all=snap.docs.map(d=>({id:d.id,...d.data()}));
+  // Data karyawan disimpan di koleksi users dengan role = employee.
+  rows=all.filter(r=>String(r.role||r.peran||"").toLowerCase()==="employee");
+  // Kompatibel dengan struktur lama jika role memakai "karyawan".
+  if(!rows.length) rows=all.filter(r=>String(r.role||r.peran||"").toLowerCase()==="karyawan");
   render();
-  $("status").textContent=`Firebase aktif • ${rows.length} karyawan dimuat.`;
+  $("status").textContent=`Firebase aktif • ${rows.length} karyawan dimuat dari users.`;
  }catch(e){
   console.error(e);
   $("status").textContent="Gagal membaca Firebase: "+e.message;
@@ -132,18 +141,18 @@ muatKaryawan();
 
 function render(){
   const q=$("cari").value.toLowerCase().trim();
-  const data=rows.filter(r=>[r.nama,r.jabatan,r.hp,r.upah,r.status].join(" ").toLowerCase().includes(q));
+  const data=rows.filter(r=>[r.nama,r.namaKaryawan,r.jabatan,r.hp,r.noHp,r.noHP,r.phone,r.upah,r.gaji,r.status].join(" ").toLowerCase().includes(q));
   $("count").textContent=`${data.length} karyawan`;
   if(!data.length){
     $("tbody").innerHTML='<tr><td colspan="5" style="padding:22px;text-align:center;color:#64748b">Belum ada data karyawan.</td></tr>';
     return;
   }
   $("tbody").innerHTML=data.map(r=>`<tr>
-    <td><b>${esc(r.nama||"-")}</b></td>
+    <td><b>${esc(r.namaKaryawan||r.nama||"-")}</b></td>
     <td>${esc(r.jabatan||"-")}</td>
-    <td>${esc(r.hp||"-")}</td>
-    <td><b>Rp ${Number(r.upah||0).toLocaleString("id-ID")}</b></td>
-    <td><span class="badge ${r.status==="Aktif"?"active":"inactive"}">${esc(r.status||"Nonaktif")}</span></td>
+    <td>${esc(r.hp||r.noHp||r.noHP||r.phone||"-")}</td>
+    <td><b>Rp ${Number(r.upah ?? r.gaji ?? 0).toLocaleString("id-ID")}</b></td>
+    <td><span class="badge ${String(r.status||"Aktif").toLowerCase()==="aktif"?"active":"inactive"}">${esc(r.status||"Aktif")}</span></td>
   </tr>`).join("");
 }
 window.render=render;
