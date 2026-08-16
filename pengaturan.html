@@ -35,11 +35,11 @@ textarea{min-height:82px;resize:vertical}input:focus,textarea:focus,select:focus
 .preset-list{display:grid;grid-template-columns:1fr 1fr;gap:8px}.preset{border:2px solid #e2e8f0;border-radius:12px;padding:10px;cursor:pointer;background:#fff}.preset.active{border-color:var(--yellow);background:#fffaf0}
 .preset b{display:block;font-size:13px}.preset span{font-size:10px;color:var(--muted)}
 .mini{height:92px;border:1px solid #cbd5e1;border-radius:8px;margin-top:7px;padding:7px;background:#fff;overflow:hidden}.mini .bar{height:9px;background:#172235;margin-bottom:5px}.mini .line{height:4px;background:#cbd5e1;margin:4px 0}.mini .tbl{height:35px;border:1px solid #777;margin-top:5px;background:repeating-linear-gradient(0deg,transparent 0 6px,#bbb 6px 7px)}
-.mini.blue .bar{background:#2563eb}.mini.green .bar{background:#16a34a}.mini.yellow .bar{background:#ffc107}.mini.simple .tbl{display:none}
+.mini.blue .bar{background:#2563eb}.mini.green .bar{background:#16a34a}.mini.yellow .bar{background:#ffc107}.mini.red .bar{background:#dc2626}.mini.simple .tbl{display:none}
 .saved{display:inline-block;padding:4px 8px;border-radius:99px;background:#dcfce7;color:#166534;font-size:10px;font-weight:900}
 .warn{color:#92400e;background:#fef3c7;border:1px solid #fde68a;padding:9px;border-radius:10px;font-size:11px}
 .hint{background:#eff6ff;border:1px solid #bfdbfe;color:#1e40af;border-radius:10px;padding:9px;font-size:11px;line-height:1.45;margin-top:9px}
-.error{color:#b91c1c;background:#fef2f2;border:1px solid #fecaca;border-radius:10px;padding:9px;font-size:11px;line-height:1.45;margin-top:9px}
+.error{color:#991b1b;background:#fee2e2;border:1px solid #fecaca;border-radius:10px;padding:9px;font-size:11px;margin-top:9px;line-height:1.45}
 .hidden{display:none!important}
 @media(max-width:900px){.grid{grid-template-columns:1fr}.preview-wrap{min-height:0}.paper{width:390px}}
 @media(max-width:520px){.header{padding:9px 10px}.logo{width:48px;height:48px}.user{display:none}.wrap{padding:9px}.card{padding:12px;border-radius:14px}.row{grid-template-columns:1fr}.preset-list{grid-template-columns:1fr 1fr}.preview-wrap{padding:9px}}
@@ -55,7 +55,7 @@ textarea{min-height:82px;resize:vertical}input:focus,textarea:focus,select:focus
 </header>
 
 <main class="wrap">
-  <div class="notice" id="status">⏳ Menyiapkan sesi Firebase...</div>
+  <div class="notice" id="status">Menunggu sesi FIXZY...</div>
   <div class="grid">
     <div class="left">
       <section class="card">
@@ -73,17 +73,16 @@ textarea{min-height:82px;resize:vertical}input:focus,textarea:focus,select:focus
         <label>Tanda Tangan</label>
         <div class="row">
           <select id="ttPemilik"><option value="tampil">Tampilkan Pemilik</option><option value="tanpa">Tanpa Pemilik</option></select>
-          <select id="ttKonsumen"><option value="tampil">Tampilkan Konsumen</option><option value="tanpa">Tanpa Konsumen</option>
-          </select>
+          <select id="ttKonsumen"><option value="tampil">Tampilkan Konsumen</option><option value="tanpa">Tanpa Konsumen</option></select>
         </div>
         <button class="btn btn-save" onclick="simpanPengaturan()">💾 Simpan Pengaturan ke Firebase</button>
         <div class="status" id="saveStatus"></div>
-        <div class="hint">Data disimpan ke <b>pengaturanNota/{UID Firebase Auth}</b>. Halaman tidak melakukan redirect atau pemeriksaan role.</div>
+        <div class="hint">Data utama disimpan di <b>pengaturanNota/{UID Firebase Auth}</b>. Halaman ini menggunakan sesi Firebase dari index FIXZY jika tersedia, sehingga UID tidak lagi bergantung pada variabel sesi buatan.</div>
       </section>
 
       <section class="card"><h2 class="title">🧾 Template Servis</h2><div class="preset-list" id="presetServis"></div></section>
       <section class="card"><h2 class="title">🛒 Template Penjualan</h2><div class="preset-list" id="presetPenjualan"></div></section>
-      <section class="card print-hide"><h2 class="title">💡 Penggunaan di Halaman Lain</h2><div class="status">`nota.html`, `data-servis.html`, dan `data-penjualan.html` membaca dokumen Firebase yang sama. Pilihan template, ukuran, warna, barcode, kebijakan, ucapan, dan tanda tangan mengikuti data tersimpan.</div></section>
+      <section class="card print-hide"><h2 class="title">💡 Penggunaan di Halaman Lain</h2><div class="status">`nota.html`, `data-servis.html`, dan `data-penjualan.html` dapat membaca pengaturan Firebase yang sama berdasarkan UID akun.</div></section>
     </div>
 
     <div class="right">
@@ -104,14 +103,11 @@ textarea{min-height:82px;resize:vertical}input:focus,textarea:focus,select:focus
 
 <script type="module">
 import {initializeApp,getApps,getApp} from "https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js";
-import {
-  getAuth,onAuthStateChanged,setPersistence,
-  indexedDBLocalPersistence,browserLocalPersistence
-} from "https://www.gstatic.com/firebasejs/11.10.0/firebase-auth.js";
+import {getAuth,onAuthStateChanged,setPersistence,browserLocalPersistence} from "https://www.gstatic.com/firebasejs/11.10.0/firebase-auth.js";
 import {getFirestore,doc,getDoc,setDoc} from "https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js";
 
 const firebaseConfig={
-  apiKey:"AIzaSyCwMbJsuORhIq4QCmp4c1r6OsjAUlfxU5Y",
+  apiKey:"AIzaSyC_PcarMTT5Un7qfSLzf92o5OGn5rginsI",
   authDomain:"fixzy-update.firebaseapp.com",
   projectId:"fixzy-update",
   storageBucket:"fixzy-update.firebasestorage.app",
@@ -119,17 +115,42 @@ const firebaseConfig={
   appId:"1:995892519622:web:fa41047944d8e5b35d6dc7"
 };
 
-const app=getApps().length?getApp():initializeApp(firebaseConfig);
-const auth=getAuth(app);
-const db=getFirestore(app);
+/*
+  Prioritas:
+  1. Firebase Auth dari index FIXZY melalui bridge.
+  2. Jika halaman dibuka langsung, gunakan instance Firebase sendiri.
+*/
+let app,auth,db;
+try{
+  if(window.parent&&window.parent!==window&&window.parent.fixzyFirebase?.auth&&window.parent.fixzyFirebase?.db){
+    app=window.parent.fixzyFirebase.app;
+    auth=window.parent.fixzyFirebase.auth;
+    db=window.parent.fixzyFirebase.db;
+  }
+}catch(e){console.warn("Bridge parent tidak tersedia:",e)}
 
-let uid=null,profile={},jenis="servis",authReady=false;
+if(!auth||!db){
+  app=getApps().length?getApp():initializeApp(firebaseConfig);
+  auth=getAuth(app);
+  db=getFirestore(app);
+}
+
+let uid=null;
+let profile={};
+let jenis="servis";
+
 let settings={
-  namaKonter:"",waKonter:"",
+  namaKonter:"",
+  waKonter:"",
   kebijakan:"Barang yang sudah dibeli tidak dapat dikembalikan. Garansi servis mengikuti ketentuan perusahaan.",
   terimakasih:"Terima kasih telah mempercayakan kebutuhan Anda kepada kami.",
-  ukuran:"umum",warna:"warna",barcode:"nota",ttPemilik:"tampil",ttKonsumen:"tampil",
-  templateServis:1,templatePenjualan:1
+  ukuran:"umum",
+  warna:"warna",
+  barcode:"nota",
+  ttPemilik:"tampil",
+  ttKonsumen:"tampil",
+  templateServis:1,
+  templatePenjualan:1
 };
 
 const $=id=>document.getElementById(id);
@@ -137,32 +158,60 @@ const esc=v=>String(v??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&
 const money=v=>"Rp "+(Number(v)||0).toLocaleString("id-ID");
 
 const templates=[
- {id:1,name:"Klasik",desc:"Hitam/putih • tabel lengkap",cls:""},
- {id:2,name:"Modern",desc:"Header biru • total tegas",cls:"blue"},
- {id:3,name:"Minimal",desc:"Ringkas • hemat kertas",cls:"simple"},
- {id:4,name:"Profesional",desc:"Header hijau • invoice",cls:"green"},
- {id:5,name:"Konter",desc:"Header kuning • struktur",cls:"yellow"}
+  {id:1,name:"Klasik",desc:"Hitam/putih • tabel lengkap",cls:""},
+  {id:2,name:"Modern",desc:"Header biru • total tegas",cls:"blue"},
+  {id:3,name:"Minimal",desc:"Ringkas • hemat kertas",cls:"simple"},
+  {id:4,name:"Profesional",desc:"Header hijau • invoice",cls:"green"},
+  {id:5,name:"Konter",desc:"Header kuning • struktur",cls:"yellow"}
 ];
 
-function renderPresets(){
-  const make=(j)=>templates.map(t=>`
-    <div class="preset ${settings[j==="servis"?"templateServis":"templatePenjualan"]===t.id?"active":""}" onclick="pilihTemplate('${j}',${t.id})">
-      <b>${t.id}. ${t.name}</b><span>${t.desc}</span>
-      <div class="mini ${t.cls}">
-        <div class="bar"></div><div class="line"></div><div class="line"></div><div class="tbl"></div>
-      </div>
-    </div>`).join("");
-  $("presetServis").innerHTML=make("servis");
-  $("presetPenjualan").innerHTML=make("penjualan");
+function ambilSesiIndex(){
+  try{
+    const p=window.parent&&window.parent!==window?window.parent.fixzySession:null;
+    if(p?.uid){
+      uid=p.uid;
+      profile={...(p.profile||{})};
+      return true;
+    }
+  }catch(e){console.warn("Sesi index:",e)}
+  return false;
 }
 
-window.pilihTemplate=(j,id)=>{
-  jenis=j;
-  settings[j==="servis"?"templateServis":"templatePenjualan"]=id;
-  $("tabServis").classList.toggle("active",j==="servis");
-  $("tabPenjualan").classList.toggle("active",j==="penjualan");
-  renderPresets();renderPreview();
-};
+function ambilUIDAuth(){
+  try{
+    if(auth?.currentUser?.uid){
+      uid=auth.currentUser.uid;
+      return uid;
+    }
+  }catch(e){}
+  return null;
+}
+
+async function tungguAuth(maxMs=7000){
+  if(ambilUIDAuth())return uid;
+  return new Promise(resolve=>{
+    let done=false;
+    const finish=v=>{
+      if(done)return;
+      done=true;
+      clearTimeout(timer);
+      if(unsub)unsub();
+      resolve(v);
+    };
+    let unsub=null;
+    try{
+      unsub=onAuthStateChanged(auth,user=>{
+        if(user){
+          uid=user.uid;
+          finish(uid);
+        }
+      });
+    }catch(e){
+      console.warn("Auth listener:",e);
+    }
+    const timer=setTimeout(()=>finish(ambilUIDAuth()),maxMs);
+  });
+}
 
 function syncForm(){
   $("namaKonter").value=settings.namaKonter||profile.namaKonter||profile.namaToko||profile.namaUsaha||profile.toko||"";
@@ -188,8 +237,31 @@ function readForm(){
   settings.ttKonsumen=$("ttKonsumen").value;
 }
 
+function renderPresets(){
+  const make=j=>templates.map(t=>`
+    <div class="preset ${settings[j==="servis"?"templateServis":"templatePenjualan"]===t.id?"active":""}" onclick="pilihTemplate('${j}',${t.id})">
+      <b>${t.id}. ${t.name}</b><span>${t.desc}</span>
+      <div class="mini ${t.cls}">
+        <div class="bar"></div><div class="line"></div><div class="line"></div><div class="tbl"></div>
+      </div>
+    </div>`).join("");
+  $("presetServis").innerHTML=make("servis");
+  $("presetPenjualan").innerHTML=make("penjualan");
+}
+
+window.pilihTemplate=(j,id)=>{
+  jenis=j;
+  settings[j==="servis"?"templateServis":"templatePenjualan"]=id;
+  $("tabServis").classList.toggle("active",j==="servis");
+  $("tabPenjualan").classList.toggle("active",j==="penjualan");
+  renderPresets();
+  renderPreview();
+};
+
 function tableFor(rows,t){
-  if(t===3)return rows.map(r=>`<div style="display:flex;justify-content:space-between;border-bottom:1px dashed #999;padding:5px 0;font-size:9px"><span>${esc(r[1])} ×${r[3]}</span><span>${money(r[4])}</span></div>`).join("");
+  if(t===3){
+    return rows.map(r=>`<div style="display:flex;justify-content:space-between;border-bottom:1px dashed #999;padding:5px 0;font-size:9px"><span>${esc(r[1])} ×${r[3]}</span><span>${money(r[4])}</span></div>`).join("");
+  }
   const heads=t===4?["DESKRIPSI","QTY","HARGA","AMOUNT"]:["NO","BARANG / JASA","QTY","HARGA","JUMLAH"];
   return `<table><thead><tr>${heads.map(h=>`<th>${h}</th>`).join("")}</tr></thead><tbody>${rows.map((r,i)=>{
     if(t===4)return `<tr><td>${esc(r[1])}</td><td>${r[3]}</td><td>${money(r[2])}</td><td>${money(r[4])}</td></tr>`;
@@ -200,9 +272,11 @@ function tableFor(rows,t){
 function renderPreview(){
   readForm();
   const t=jenis==="servis"?settings.templateServis:settings.templatePenjualan;
-  const paper=$("paper"),isServis=jenis==="servis";
+  const paper=$("paper");
+  const isServis=jenis==="servis";
   paper.className="paper "+(settings.ukuran==="5x8"?"small ":"")+(settings.warna==="hitam"?"mono":"");
-  const no=isServis?"SRV-20260816-0001":"NOTA-20260816-0001";
+
+  const no=isServis?"SRV-20260817-0001":"NOTA-20260817-0001";
   const rows=isServis?
     [["Jasa","Ganti LCD / Perbaikan HP",150000,1,150000],["Sparepart","LCD Android",250000,1,250000],["Jasa","Pemasangan",50000,1,50000]]:
     [["LCD","LCD Samsung A05",175000,1,175000],["Baterai","Baterai Vivo",95000,1,95000],["Kabel Data","Kabel Data Type-C",35000,1,35000]];
@@ -212,16 +286,26 @@ function renderPreview(){
   const barcode=settings.barcode==="nota"?`<div class="barcode"></div><div class="barcode-text">${no}</div>`:"";
   const signL=settings.ttKonsumen==="tampil"?"Konsumen":"";
   const signR=settings.ttPemilik==="tampil"?"Pemilik / Penanggung Jawab":"";
+
   paper.innerHTML=`
     <div class="p-head" style="${headerStyle}">
       <div class="company">${esc(settings.namaKonter||"NAMA PERUSAHAAN")}</div>
       <div class="contact">${settings.waKonter?`WA: ${esc(settings.waKonter)}`:"No. WhatsApp belum diatur"}</div>
       <div class="doc-title">${isServis?"NOTA SERVIS":"NOTA PENJUALAN"}</div>
     </div>
-    <div class="meta"><div>No. Nota: <b>${no}</b></div><div>Tanggal: <b>16 Agustus 2026</b></div><div>Pelanggan: <b>Nama Pelanggan</b></div><div>${isServis?"HP / IMEI":"Kasir"}: <b>${isServis?"Samsung A05 / IMEI":"Kasir"}</b></div></div>
+    <div class="meta">
+      <div>No. Nota: <b>${no}</b></div>
+      <div>Tanggal: <b>17 Agustus 2026</b></div>
+      <div>Pelanggan: <b>Nama Pelanggan</b></div>
+      <div>${isServis?"HP / IMEI":"Kasir"}: <b>${isServis?"Samsung A05 / IMEI":"Kasir"}</b></div>
+    </div>
     ${t===2?`<div style="font-weight:900;border-bottom:2px solid ${accent};padding:5px 0;margin-bottom:5px">DETAIL TRANSAKSI</div>`:""}
     ${tableFor(rows,t)}
-    <div class="totals"><div><span>Subtotal</span><b>${money(total)}</b></div><div><span>Diskon</span><b>Rp 0</b></div><div><span>TOTAL</span><b>${money(total)}</b></div></div>
+    <div class="totals">
+      <div><span>Subtotal</span><b>${money(total)}</b></div>
+      <div><span>Diskon</span><b>Rp 0</b></div>
+      <div><span>TOTAL</span><b>${money(total)}</b></div>
+    </div>
     ${barcode}
     <div class="policy"><b>Kebijakan Perusahaan:</b><br>${esc(settings.kebijakan||"-")}</div>
     <div class="thanks">${esc(settings.terimakasih||"Terima kasih")}</div>
@@ -233,160 +317,102 @@ function renderPreview(){
   $(id).addEventListener("change",renderPreview);
 });
 
-/* ---------------- SESSION ---------------- */
-
-function ambilSesiIndex(){
+async function loadProfile(){
+  if(profile&&Object.keys(profile).length)return;
+  if(!uid)return;
   try{
-    if(window.parent && window.parent!==window){
-      const p=window.parent.fixzySession;
-      if(p && p.uid){
-        uid=p.uid;
-        profile={...(p.profile||{}),role:p.role||p.profile?.role||"",ownerUid:p.ownerUid||p.profile?.ownerUid||""};
-        return true;
-      }
-    }
-  }catch(e){console.warn("Sesi parent:",e)}
-  return false;
-}
-
-function ambilAuthParent(){
-  try{
-    if(window.parent && window.parent!==window){
-      const pa=window.parent.fixzyAuth;
-      if(pa && pa.currentUser){
-        uid=pa.currentUser.uid;
-        profile={...profile};
-        return pa.currentUser;
-      }
-    }
-  }catch(e){console.warn("Auth parent:",e)}
-  return null;
-}
-
-async function tungguAuthFirebase(timeout=10000){
-  if(auth.currentUser){
-    uid=auth.currentUser.uid;
-    return auth.currentUser;
-  }
-  return await new Promise(resolve=>{
-    let done=false;
-    const timer=setTimeout(()=>{
-      if(done)return;
-      done=true;
-      resolve(auth.currentUser||null);
-    },timeout);
-    const unsub=onAuthStateChanged(auth,user=>{
-      if(done)return;
-      if(user){
-        done=true;clearTimeout(timer);unsub();
-        uid=user.uid;resolve(user);
-      }
-    });
-  });
+    const snap=await getDoc(doc(db,"users",uid));
+    if(snap.exists())profile=snap.data()||{};
+  }catch(e){console.warn("Profil:",e)}
 }
 
 async function loadSettings(){
   if(!uid)return;
-  const snap=await getDoc(doc(db,"pengaturanNota",uid));
-  if(snap.exists())settings={...settings,...snap.data()};
-}
-
-async function loadProfile(){
-  if(!uid)return;
   try{
-    if(!profile || Object.keys(profile).length===0){
-      const snap=await getDoc(doc(db,"users",uid));
-      if(snap.exists())profile=snap.data()||{};
+    const snap=await getDoc(doc(db,"pengaturanNota",uid));
+    if(snap.exists()){
+      settings={...settings,...snap.data()};
+      return;
     }
-  }catch(e){console.warn("Profil:",e)}
-  const au=auth.currentUser;
-  const pa=ambilAuthParent();
-  const user=au||pa;
-  const nama=profile.namaPemilik||profile.namaKonter||profile.namaToko||profile.namaUsaha||profile.toko||profile.nama||user?.displayName||"Akun FIXZY";
-  const email=user?.email||profile.email||"Akun aktif";
-  $("ownerName").textContent=nama;
-  $("ownerEmail").textContent=email;
-}
+  }catch(e){
+    console.warn("Baca pengaturanNota:",e);
+  }
 
-/* ---------------- LOAD ---------------- */
+  /* Kompatibilitas data lama */
+  try{
+    const us=await getDoc(doc(db,"users",uid));
+    if(us.exists()&&us.data()?.pengaturanNota){
+      settings={...settings,...us.data().pengaturanNota};
+    }
+  }catch(e){
+    console.warn("Fallback users.pengaturanNota:",e);
+  }
+}
 
 async function muatSemua(){
-  $("status").textContent="⏳ Menunggu Firebase Auth...";
+  $("status").textContent="⏳ Menghubungkan sesi Firebase...";
+
+  /* Ambil sesi parent terlebih dahulu */
   ambilSesiIndex();
-  const parentUser=ambilAuthParent();
 
-  // Jangan menganggap fixzySession.uid sebagai request.auth.
-  // Firebase Auth adalah sumber UID yang sah untuk Firestore Rules.
-  let user=auth.currentUser||parentUser;
-  if(!user)user=await tungguAuthFirebase(10000);
+  /* Auth parent adalah sumber UID yang sebenarnya */
+  if(!uid)ambilUIDAuth();
+  if(!uid)await tungguAuth();
 
-  if(user){
-    uid=user.uid;
-    authReady=true;
-    try{
-      await loadProfile();
-      await loadSettings();
-      syncForm();
-      $("status").innerHTML='✅ Firebase Auth aktif • UID akun terdeteksi • Pengaturan siap disimpan.';
-    }catch(e){
-      console.error("Load Firebase:",e);
-      syncForm();
-      $("status").innerHTML=`⚠️ Auth aktif tetapi data belum terbaca: ${esc(e.code||"")} ${esc(e.message||e)}`;
-    }
-  }else{
-    authReady=false;
-    syncForm();
-    $("status").innerHTML='ℹ️ Halaman tetap terbuka tanpa pembatasan. Menunggu sesi Firebase Auth yang aktif.';
+  if(uid){
+    await loadProfile();
+    await loadSettings();
   }
+
+  syncForm();
   renderPresets();
   renderPreview();
+
+  if(uid){
+    const nama=profile.namaKonter||profile.namaPemilik||profile.nama||auth.currentUser?.email||"Akun";
+    $("ownerName").textContent=nama;
+    $("ownerEmail").textContent=auth.currentUser?.email||profile.email||("UID: "+uid.slice(0,8)+"…");
+    $("status").innerHTML=`✅ Terhubung ke Firebase • UID: <b>${esc(uid)}</b> • Pengaturan aktif`;
+  }else{
+    $("ownerName").textContent="Akun belum terdeteksi";
+    $("ownerEmail").textContent="Firebase Auth belum tersedia";
+    $("status").innerHTML='<span style="color:#991b1b">❌ UID Firebase Auth belum tersedia. Pastikan halaman dibuka dari index FIXZY yang sudah login.</span>';
+  }
 }
+
 window.muatSemua=muatSemua;
 
-/* ---------------- SAVE ---------------- */
-
 window.simpanPengaturan=async()=>{
+  $("saveStatus").textContent="⏳ Menyiapkan UID Firebase...";
+
+  ambilSesiIndex();
+  if(!uid)ambilUIDAuth();
+  if(!uid)await tungguAuth();
+
   readForm();
 
-  // Prioritas 1: Firebase Auth halaman ini.
-  let user=auth.currentUser;
-
-  // Prioritas 2: Firebase Auth parent/index bila index mengekspos fixzyAuth.
-  if(!user)user=ambilAuthParent();
-
-  // Prioritas 3: tunggu Firebase Auth sebentar.
-  if(!user)user=await tungguAuthFirebase(8000);
-
-  if(!user){
-    $("saveStatus").innerHTML='<span style="color:#dc2626">❌ Firebase Auth belum tersedia. UID dari halaman index saja tidak cukup untuk Firestore.</span>';
+  if(!uid){
+    $("saveStatus").innerHTML='<div class="error">❌ Firebase Auth belum memiliki UID. Jangan simpan dulu. Kembali ke index FIXZY, pastikan akun sudah login, lalu buka Template Nota lagi.</div>';
     return;
   }
 
-  uid=user.uid;
   const data={
     ...settings,
-    uid:user.uid,
+    uid,
     diperbaruiPada:new Date().toISOString()
   };
 
-  $("saveStatus").innerHTML='<span style="color:#64748b">⏳ Menyimpan ke Firebase...</span>';
-
   try{
-    await setDoc(doc(db,"pengaturanNota",user.uid),data,{merge:true});
-    $("saveStatus").innerHTML='<span class="saved">✓ Tersimpan ke Firebase</span>';
-    $("status").innerHTML='✅ Pengaturan nota tersimpan • <b>pengaturanNota/'+esc(user.uid)+'</b>';
+    await setDoc(doc(db,"pengaturanNota",uid),data,{merge:true});
+    settings={...settings,...data};
+    $("saveStatus").innerHTML='<span class="saved">✓ Tersimpan ke pengaturanNota/{UID Firebase Auth}</span>';
     renderPresets();
     renderPreview();
-  }catch(e){
-    console.error("FIREBASE SAVE ERROR:",e);
-    const code=e?.code||"";
-    const msg=e?.message||String(e);
-    $("saveStatus").innerHTML=`<span style="color:#dc2626">❌ Gagal menyimpan: ${esc(code)}<br>${esc(msg)}</span>`;
-    $("status").innerHTML='⚠️ Firebase Auth terdeteksi, tetapi Firestore menolak penulisan.';
+  }catch(error){
+    console.error("FIREBASE SAVE ERROR:",error);
+    $("saveStatus").innerHTML=`<div class="error">❌ Gagal menyimpan Firebase.<br><b>${esc(error.code||"")}</b><br>${esc(error.message||error)}</div>`;
   }
 };
-
-/* ---------------- UI ---------------- */
 
 window.pilihJenis=j=>{
   jenis=j;
@@ -400,49 +426,29 @@ window.cetakPreview=()=>{
   window.print();
 };
 
-/* ---------------- FIREBASE START ---------------- */
-
-async function mulai(){
-  try{
-    await setPersistence(auth,indexedDBLocalPersistence);
-  }catch(e){
-    try{await setPersistence(auth,browserLocalPersistence)}
-    catch(e2){console.warn("Persistence Firebase:",e2)}
+try{
+  if(!window.parent?.fixzyFirebase){
+    await setPersistence(auth,browserLocalPersistence);
   }
+}catch(e){console.warn("Firebase persistence:",e)}
 
-  // Listener dipasang sebelum mencoba membaca currentUser.
-  onAuthStateChanged(auth,async user=>{
-    if(user){
-      uid=user.uid;
-      authReady=true;
-      $("status").textContent="⏳ Firebase Auth ditemukan, membaca pengaturan...";
-      try{
-        await loadProfile();
-        await loadSettings();
-        syncForm();
-        $("status").innerHTML='✅ Firebase Auth aktif • Pengaturan nota siap.';
-      }catch(e){
-        console.error(e);
-        $("status").innerHTML=`⚠️ Auth aktif, tetapi data Firebase belum dapat dibaca: ${esc(e.code||"")} ${esc(e.message||e)}`;
-      }
-      renderPresets();
-      renderPreview();
-    }
-  });
-
-  // Jika index menyediakan auth object, pakai itu sebagai sumber status tampilan.
-  ambilSesiIndex();
-  const parentUser=ambilAuthParent();
-  if(parentUser && !auth.currentUser){
-    uid=parentUser.uid;
-  }
-
-  await muatSemua();
-}
+ambilSesiIndex();
+ambilUIDAuth();
 
 renderPresets();
 renderPreview();
-mulai();
+
+/* Auth listener hanya untuk memastikan UID terisi jika iframe dibuka langsung */
+try{
+  onAuthStateChanged(auth,async user=>{
+    if(user&&!uid){
+      uid=user.uid;
+      await muatSemua();
+    }
+  });
+}catch(e){console.warn("Auth listener:",e)}
+
+muatSemua();
 </script>
 </body>
 </html>
