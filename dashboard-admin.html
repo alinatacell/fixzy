@@ -375,7 +375,7 @@ function toggleLog(){const x=document.getElementById("systemLog");x.style.displa
 
 <script type="module">
 import {initializeApp} from "https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js";
-import {getAuth,onAuthStateChanged} from "https://www.gstatic.com/firebasejs/11.10.0/firebase-auth.js";
+import {getAuth,onAuthStateChanged,setPersistence,browserLocalPersistence} from "https://www.gstatic.com/firebasejs/11.10.0/firebase-auth.js";
 import {getFirestore,collection,getDocs,query,where,getDoc,doc} from "https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js";
 
 const firebaseConfig={
@@ -692,18 +692,36 @@ document.querySelectorAll(".tab").forEach(btn=>{
   });
 });
 
-onAuthStateChanged(auth,async user=>{
-  if(!user){
-    $("statusApp").textContent="Sesi login tidak ditemukan.";
-    $("userInfo").textContent="Belum login";
-    $("systemSummary").innerHTML='❌ Belum login Firebase. Dashboard tidak membaca data.';
-    setTimeout(()=>location.href="login.html",400);
-    return;
-  }
-  uid=user.uid;
-  await loadProfile(user);
-  await muatSemua();
-});
+let authTimer=null;
+
+async function mulaiDashboardTanpaPaksaLogin(){
+  try{ await setPersistence(auth,browserLocalPersistence); }catch(e){ console.warn("Persistence Firebase:",e); }
+
+  onAuthStateChanged(auth,async user=>{
+    if(user){
+      clearTimeout(authTimer);
+      uid=user.uid;
+      await loadProfile(user);
+      await muatSemua();
+      return;
+    }
+
+    // Jangan mengarahkan pengguna ke login.html.
+    $("statusApp").textContent="Menunggu sesi FIXZY...";
+    $("userInfo").textContent="Sesi FIXZY sedang dipulihkan";
+    $("systemSummary").innerHTML='⏳ <b>Menunggu sesi akun FIXZY.</b><br>Halaman tidak akan mengarahkan ke halaman login.';
+
+    clearTimeout(authTimer);
+    authTimer=setTimeout(()=>{
+      if(!uid){
+        $("statusApp").textContent="Sesi belum tersedia";
+        $("systemSummary").innerHTML='⚠️ <b>Sesi Firebase belum tersedia.</b><br>Buka halaman ini dari dalam aplikasi FIXZY agar akun yang sedang aktif dapat digunakan.';
+      }
+    },5000);
+  });
+}
+
+mulaiDashboardTanpaPaksaLogin();
 </script>
 </body>
 </html>
