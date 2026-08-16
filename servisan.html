@@ -589,8 +589,40 @@ async function loadEmployees(){
 }
 
 async function loadProducts(){
-  const snap=await getDocs(query(collection(db,"stok"),where("uid","==",businessUid)));
-  products=snap.docs.map(d=>({id:d.id,...d.data()}));
+  /*
+    LOAD PRODUK STOK.
+    Struktur lama menggunakan `uid`, struktur baru bisa menggunakan
+    `ownerUid`. Ambil keduanya dan gabungkan tanpa mengubah data Firebase.
+  */
+  if(!businessUid) throw new Error("Owner UID belum tersedia.");
+
+  const hasil=new Map();
+
+  try{
+    const snapUid=await getDocs(
+      query(collection(db,"stok"),where("uid","==",businessUid))
+    );
+    snapUid.docs.forEach(d=>{
+      hasil.set(d.id,{id:d.id,...d.data()});
+    });
+  }catch(e){
+    console.warn("LOAD STOK uid:",e);
+  }
+
+  try{
+    const snapOwner=await getDocs(
+      query(collection(db,"stok"),where("ownerUid","==",businessUid))
+    );
+    snapOwner.docs.forEach(d=>{
+      if(!hasil.has(d.id)){
+        hasil.set(d.id,{id:d.id,...d.data()});
+      }
+    });
+  }catch(e){
+    console.warn("LOAD STOK ownerUid:",e);
+  }
+
+  products=[...hasil.values()];
 }
 
 function filterProduk(q=""){
