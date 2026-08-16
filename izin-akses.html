@@ -229,8 +229,18 @@ window.simpanAkun=async()=>{
   if(!["employee","reseller"].includes(r)){tampilNotice("⚠️ Role","Role akun tidak valid.");return}
  try{
   if(editId){
-   await updateDoc(doc(db,"users",editId),{nama:n,namaKaryawan:n,role:r,email,noWa:wa,nomorWa:wa,loginEmail:loginEmail||email,jabatan:j,upahHarian:upah,status,izin,permissions:izin,ownerUid,updatedAt:serverTimestamp()});
-   $("popup").classList.remove("show");tampilNotice("✅ Berhasil","Data akun berhasil diperbarui.");await load();return;
+   const profilUpdate={uid:editId,nama:n,namaKaryawan:n,role:r,email,noWa:wa,nomorWa:wa,nomorWA:wa,whatsapp:wa,wa:wa,loginEmail:loginEmail||email,jabatan:j,upahHarian:upah,status,izin,permissions:izin,ownerUid,updatedAt:serverTimestamp()};
+   await setDoc(doc(db,"users",editId),profilUpdate,{merge:true});
+
+   /* Verifikasi: pastikan perubahan benar-benar sudah masuk ke Firestore. */
+   const cek=await getDoc(doc(db,"users",editId));
+   if(!cek.exists()) throw new Error("Dokumen akun tidak ditemukan setelah disimpan.");
+   const tersimpan=cek.data()||{};
+   if(String(tersimpan.email||"").trim().toLowerCase()!==email || normalizePhone(tersimpan.noWa||tersimpan.nomorWa||tersimpan.whatsapp||"")!==wa){
+     throw new Error("Perubahan belum terverifikasi tersimpan di Firebase.");
+   }
+
+   $("popup").classList.remove("show");tampilNotice("✅ Berhasil","Data akun berhasil diperbarui dan diverifikasi di Firebase. Email login Firebase tetap: <b>"+esc(loginEmail||email)+"</b>");await load();return;
   }
   if(pass.length<6){tampilNotice("⚠️ Password","Password awal minimal 6 karakter.");return}
   // Secondary Firebase app: membuat akun baru tanpa mengeluarkan Owner dari sesi aktif.
