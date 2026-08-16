@@ -1,593 +1,319 @@
 <!DOCTYPE html>
 <html lang="id">
-<head><style>
-@font-face {
-  font-family: "Optimistic";
-  font-style: normal;
-  font-weight: 400 600;
-  font-display: swap;
-  src: url("/fonts/OptimisticAI_VF_Optimized.woff2") format("woff2");
-}
-@font-face {
-  font-family: "Optimistic Mono";
-  font-style: normal;
-  font-weight: 400;
-  font-display: swap;
-  src: url("/fonts/OptimisticMono_W_TextRegular.woff2") format("woff2");
-}
-:where(html) {
-  font-family: "Optimistic", system-ui, sans-serif;
-}
-:where(code, pre, kbd, samp) {
-  font-family: "Optimistic Mono", ui-monospace, monospace;
-}
-</style>
+<head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
-<title>Pengaturan - FIXZY</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#081326">
+<title>FIXZY | Pengaturan Nota</title>
 <style>
 *{box-sizing:border-box}
-html,body{margin:0;padding:0;background:#0b0b0c;color:#fff;font-family:Arial,sans-serif}
-body{min-height:100vh}
-.header{
-  position:sticky;top:0;z-index:20;
-  height:72px;
-  background:#080808;
-  border-bottom:1px solid #2d2d2d;
-  padding:8px 14px;
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-  gap:12px;
-}
-.header-left{
-  display:flex;
-  align-items:center;
-  gap:10px;
-  min-width:0;
-}
-.back,.refresh{
-  border:1px solid #3b3b3b;
-  background:#151515;
-  color:#ffb800;
-  border-radius:12px;
-  width:42px;
-  height:42px;
-  font-size:27px;
-  font-weight:900;
-  cursor:pointer;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  flex:none;
-}
-.refresh{font-size:25px}
-.logo{
-  width:48px;
-  height:48px;
-  object-fit:contain;
-  display:block;
-}
-.header-title{
-  position:absolute;
-  left:50%;
-  transform:translateX(-50%);
-  color:#ffb800;
-  font-size:18px;
-  font-weight:900;
-  letter-spacing:.5px;
-  white-space:nowrap;
-}
-.wrap{max-width:900px;margin:0 auto;padding:18px}
-.card{
-  background:#171717;border:1px solid #3e3e3e;border-radius:20px;
-  padding:18px;margin-bottom:16px;box-shadow:0 8px 30px rgba(0,0,0,.25)
-}
-.card h2{margin:0 0 6px;color:#ffb800;font-size:20px}
-.card p{margin:0 0 16px;color:#aaa;font-size:13px}
-.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
-.field label{display:block;color:#ffb800;font-weight:800;margin-bottom:7px;font-size:13px}
-.field input,.field select,.field textarea{
-  width:100%;border:1px solid #3c3c3c;background:#222;color:#fff;
-  border-radius:12px;padding:13px;font-size:15px;outline:none
-}
-.field textarea{min-height:90px;resize:vertical}
-.field input:focus,.field select:focus,.field textarea:focus{border-color:#ffb800}
-.full{grid-column:1/-1}
-.actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:14px}
-.btn{
-  border:0;border-radius:12px;padding:13px 18px;font-weight:900;
-  cursor:pointer;background:#ffb800;color:#111
-}
-.btn.secondary{background:#2b2b2b;color:#fff;border:1px solid #444}
-.btn.danger{background:#8b1e1e;color:#fff}
-.table-wrap{overflow:auto;border:1px solid #333;border-radius:14px}
-table{width:100%;border-collapse:collapse;min-width:720px}
-th,td{padding:11px;border-bottom:1px solid #303030;text-align:left;font-size:13px}
-th{background:#222;color:#ffb800}
-td{color:#ddd}
-.badge{display:inline-block;padding:5px 9px;border-radius:999px;font-size:11px;font-weight:800}
-.badge.on{background:#173e25;color:#75e29b}
-.badge.off{background:#442020;color:#ff9c9c}
-.money{font-weight:900;color:#ffd45c}
-.summary{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:12px}
-.stat{background:#222;border:1px solid #333;border-radius:14px;padding:13px}
-.stat small{display:block;color:#999;margin-bottom:5px}
-.stat strong{font-size:18px;color:#ffb800}
-.empty{padding:20px;text-align:center;color:#888}
-.toast{
-  position:fixed;left:50%;bottom:22px;transform:translateX(-50%);
-  background:#202020;border:1px solid #ffb800;color:#fff;padding:13px 18px;
-  border-radius:12px;display:none;z-index:99;max-width:90%;text-align:center
-}
-.loading{
-  position:fixed;inset:0;background:rgba(0,0,0,.72);z-index:100;
-  display:flex;align-items:center;justify-content:center;color:#ffb800;font-weight:900
-}
-@media(max-width:650px){
-  .header{height:66px;padding:7px 10px}
-  .logo{width:46px;height:46px}
-  .header-title{font-size:16px}
-
-  .grid{grid-template-columns:1fr}
-  .summary{grid-template-columns:1fr}
-  .wrap{padding:12px}
-}
+:root{--navy:#081326;--navy2:#101d33;--yellow:#ffc107;--bg:#f2f5f9;--card:#fff;--line:#dbe3ed;--text:#172033;--muted:#64748b;--green:#16a34a;--blue:#2563eb}
+body{margin:0;background:var(--bg);color:var(--text);font-family:Inter,Arial,sans-serif}
+button,input,textarea,select{font:inherit}
+.header{position:sticky;top:0;z-index:20;min-height:74px;background:var(--navy);color:#fff;padding:9px 14px;display:flex;align-items:center;gap:12px;box-shadow:0 4px 16px #0004}
+.logo{width:52px;height:52px;object-fit:contain;border-radius:10px}
+.brand{flex:1;min-width:0}.brand h1{margin:0;font-size:18px;font-weight:900;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.brand p{margin:3px 0 0;font-size:11px;color:#cbd5e1}
+.owner{text-align:right;max-width:220px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.owner b{display:block;font-size:12px}.owner span{font-size:10px;color:#cbd5e1}
+.refresh{width:44px;height:44px;border:0;border-radius:12px;background:var(--yellow);font-size:20px;font-weight:900;cursor:pointer}
+.wrap{max-width:1200px;margin:auto;padding:12px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:14px;margin-bottom:12px;box-shadow:0 4px 16px #0000000a}
+.title{font-size:17px;font-weight:900;margin:0 0 11px}
+.status{font-size:12px;color:var(--muted);line-height:1.5}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.field{display:flex;flex-direction:column;gap:6px;margin-bottom:10px}
+.field label{font-size:11px;font-weight:900;color:#475569}
+input,textarea,select{width:100%;border:1px solid #cbd5e1;border-radius:11px;background:#fff;padding:10px 12px;outline:0}
+input,select{height:44px}textarea{min-height:100px;resize:vertical}
+.tabs{display:flex;gap:8px;overflow:auto;margin-bottom:12px}
+.tab{border:0;border-radius:11px;padding:10px 14px;background:#e2e8f0;font-weight:900;white-space:nowrap;cursor:pointer}
+.tab.active{background:var(--navy);color:#fff}
+.template-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:10px}
+.template{border:2px solid #e2e8f0;border-radius:14px;padding:8px;background:#fff;cursor:pointer;transition:.15s}
+.template.active{border-color:var(--yellow);box-shadow:0 0 0 3px #ffc10733}
+.template b{font-size:12px;display:block;margin:2px 0 7px}
+.mini{height:190px;background:#fff;border:1px solid #d5dbe3;padding:9px;font-size:6px;color:#172033;overflow:hidden}
+.mini .mhead{text-align:center;border-bottom:1px solid #222;padding-bottom:5px;margin-bottom:6px}
+.mini .mline{height:4px;background:#cbd5e1;margin:4px 0}
+.mini .mrow{display:flex;justify-content:space-between;margin:4px 0}
+.mini .mbox{border:1px dashed #94a3b8;padding:5px;margin:5px 0}
+.mini .total{text-align:right;font-weight:900;border-top:1px solid #222;padding-top:5px}
+.mini.t2{border-radius:10px}.mini.t3{border-left:4px solid #111}.mini.t4{font-family:monospace}.mini.t5{border:2px solid #111}
+.btns{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+.btn{border:0;border-radius:11px;height:44px;padding:0 16px;font-weight:900;cursor:pointer}
+.primary{background:var(--yellow);color:#111}.dark{background:var(--navy);color:#fff}.light{background:#e2e8f0;color:#111}
+.preview-wrap{display:flex;justify-content:center;background:#e9edf3;border-radius:14px;padding:18px;overflow:auto}
+.receipt{background:#fff;color:#111;width:380px;min-height:520px;padding:22px;box-shadow:0 5px 20px #0002;font-size:12px}
+.receipt h2{text-align:center;margin:0;font-size:19px}.receipt .center{text-align:center}.receipt hr{border:0;border-top:1px dashed #555;margin:12px 0}
+.receipt table{width:100%;border-collapse:collapse}.receipt td{padding:4px 0;vertical-align:top}.right{text-align:right}.policy{font-size:10px;line-height:1.45;white-space:pre-line}
+.note-box{border:1px dashed #777;padding:8px;margin-top:8px}
+.toast{position:fixed;left:50%;bottom:20px;transform:translateX(-50%);background:var(--navy);color:#fff;padding:12px 17px;border-radius:12px;display:none;z-index:100;font-size:12px;font-weight:800}
+.toast.show{display:block}
+@media(max-width:950px){.template-grid{grid-template-columns:repeat(3,1fr)}}
+@media(max-width:650px){.header{padding:8px 10px}.logo{width:48px;height:48px}.brand h1{font-size:16px}.owner{display:none}.wrap{padding:9px}.grid2{grid-template-columns:1fr}.template-grid{grid-template-columns:repeat(2,1fr)}.receipt{width:320px;padding:17px}}
 </style>
 </head>
 <body>
 
-<div id="loading" class="loading">Memeriksa akun FIXZY...</div>
-
 <header class="header">
-  <div class="header-left">
-    <button class="back" onclick="kembali()" aria-label="Kembali">‹</button>
-    <img class="logo" src="logo.png" alt="FIXZY">
+  <img src="logo.png" class="logo" alt="FIXZY">
+  <div class="brand">
+    <h1>FIXZY | PENGATURAN NOTA</h1>
+    <p>Atur template nota servis dan penjualan</p>
   </div>
-
-  <div class="header-title">PENGATURAN</div>
-
-  <button class="refresh" onclick="refreshHalaman()" aria-label="Refresh">↻</button>
+  <div class="owner"><b id="ownerName">Memuat...</b><span id="ownerEmail">Firebase</span></div>
+  <button class="refresh" onclick="muatPengaturan()" title="Refresh">↻</button>
 </header>
 
 <main class="wrap">
-
   <section class="card">
-    <h2>👥 Data Karyawan</h2>
-    <p>Kelola admin, kasir, teknisi, dan kurir. Data disimpan ke Firebase.</p>
-
-    <div class="grid">
-      <div class="field">
-        <label>Nama Karyawan</label>
-        <input id="kNama" placeholder="Nama lengkap">
-      </div>
-      <div class="field">
-        <label>Jabatan</label>
-        <select id="kJabatan">
-          <option value="admin">Admin</option>
-          <option value="kasir">Kasir</option>
-          <option value="teknisi">Teknisi</option>
-          <option value="kurir">Kurir</option>
-        </select>
-      </div>
-      <div class="field">
-        <label>No. WhatsApp</label>
-        <input id="kWhatsapp" inputmode="tel" placeholder="08xxxxxxxxxx">
-      </div>
-      <div class="field">
-        <label>Tanggal Mulai</label>
-        <input id="kTanggal" type="date">
-      </div>
-      <div class="field">
-        <label>Gaji / Upah</label>
-        <input id="kGaji" type="number" min="0" placeholder="0">
-      </div>
-      <div class="field">
-        <label>Status</label>
-        <select id="kStatus">
-          <option value="Aktif">Aktif</option>
-          <option value="Nonaktif">Nonaktif</option>
-        </select>
-      </div>
-      <div class="field full">
-        <label>Alamat</label>
-        <textarea id="kAlamat" placeholder="Alamat karyawan"></textarea>
-      </div>
-    </div>
-
-    <div class="actions">
-      <button class="btn" onclick="simpanKaryawan()">Simpan Karyawan</button>
-      <button class="btn secondary" onclick="resetKaryawan()">Bersihkan</button>
-    </div>
-
-    <div id="karyawanList" style="margin-top:16px"></div>
+    <div id="status" class="status">Memeriksa sesi Firebase...</div>
   </section>
 
   <section class="card">
-    <h2>💰 Anggaran Biaya</h2>
-    <p>Catat biaya berdasarkan tanggal supaya pengeluaran operasional mudah dipantau.</p>
-
-    <div class="grid">
-      <div class="field">
-        <label>Tanggal</label>
-        <input id="bTanggal" type="date">
-      </div>
-      <div class="field">
-        <label>Kategori</label>
-        <select id="bKategori">
-          <option value="Listrik">Listrik</option>
-          <option value="Internet">Internet</option>
-          <option value="Sewa">Sewa</option>
-          <option value="Gaji">Gaji</option>
-          <option value="Transportasi">Transportasi</option>
-          <option value="Operasional">Operasional</option>
-          <option value="Perlengkapan">Perlengkapan</option>
-          <option value="Lainnya">Lainnya</option>
-        </select>
-      </div>
-      <div class="field">
-        <label>Nominal</label>
-        <input id="bNominal" type="number" min="0" placeholder="0">
-      </div>
-      <div class="field">
-        <label>Keterangan</label>
-        <input id="bKeterangan" placeholder="Contoh: bayar listrik bulan ini">
-      </div>
+    <h2 class="title">🧾 Pilih Jenis Nota</h2>
+    <div class="tabs">
+      <button class="tab active" id="tabServis" onclick="pilihJenis('servis')">🔧 Nota Servis</button>
+      <button class="tab" id="tabPenjualan" onclick="pilihJenis('penjualan')">🛒 Nota Penjualan</button>
     </div>
-
-    <div class="actions">
-      <button class="btn" onclick="simpanBiaya()">Simpan Biaya</button>
-      <button class="btn secondary" onclick="resetBiaya()">Bersihkan</button>
-    </div>
-
-    <div class="summary">
-      <div class="stat"><small>Biaya Hari Ini</small><strong id="totalHari">Rp0</strong></div>
-      <div class="stat"><small>Biaya Bulan Ini</small><strong id="totalBulan">Rp0</strong></div>
-      <div class="stat"><small>Semua Biaya</small><strong id="totalSemua">Rp0</strong></div>
-    </div>
-
-    <div id="biayaList" style="margin-top:16px"></div>
+    <h2 class="title">🎨 Pilih Template</h2>
+    <div class="template-grid" id="templateGrid"></div>
   </section>
 
   <section class="card">
-    <h2>🏪 Profil Toko</h2>
-    <p>Disiapkan sebagai pusat data profil toko untuk nota dan laporan berikutnya.</p>
-    <div class="grid">
-      <div class="field">
-        <label>Nama Toko</label>
-        <input id="pNama" placeholder="Nama toko">
+    <h2 class="title">⚙️ Isi Nota</h2>
+    <div class="grid2">
+      <div>
+        <div class="field"><label>NAMA KONTER</label><input id="namaKonter" placeholder="Nama konter"></div>
+        <div class="field"><label>NO. WA KONTER</label><input id="waKonter" placeholder="08xxxxxxxxxx"></div>
+        <div class="field"><label>JUDUL / KETERANGAN</label><input id="judulNota" placeholder="Contoh: NOTA SERVIS"></div>
       </div>
-      <div class="field">
-        <label>No. WhatsApp</label>
-        <input id="pWhatsapp" placeholder="08xxxxxxxxxx">
-      </div>
-      <div class="field full">
-        <label>Alamat</label>
-        <textarea id="pAlamat" placeholder="Alamat toko"></textarea>
+      <div>
+        <div class="field"><label>TANGGAL NOTA</label><input id="tanggalNota" type="date"></div>
+        <div class="field"><label>KEBIJAKAN PERUSAHAAN</label><textarea id="kebijakan" placeholder="Tulis kebijakan perusahaan..."></textarea></div>
+        <div class="field"><label>UCAPAN TERIMA KASIH</label><textarea id="terimakasih" placeholder="Contoh: Terima kasih telah mempercayakan kebutuhan Anda kepada kami."></textarea></div>
       </div>
     </div>
-    <div class="actions">
-      <button class="btn" onclick="simpanProfil()">Simpan Profil</button>
+    <div class="btns">
+      <button class="btn primary" onclick="simpanPengaturan()">💾 Simpan Pengaturan</button>
+      <button class="btn dark" onclick="cetakPreview()">🖨️ Cetak / Print</button>
+      <button class="btn light" onclick="isiContoh()">Contoh Data</button>
     </div>
   </section>
 
+  <section class="card">
+    <h2 class="title">👁️ Preview Nota</h2>
+    <div class="preview-wrap"><div id="preview" class="receipt"></div></div>
+  </section>
 </main>
 
-<div id="toast" class="toast"></div>
+<div class="toast" id="toast"></div>
 
 <script type="module">
-import { initializeApp, getApps, getApp } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js";
-import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-auth.js";
-import {
-  getFirestore, collection, addDoc, getDocs, getDoc, doc, setDoc,
-  query, where, orderBy, limit, Timestamp, serverTimestamp
-} from "https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js";
+import{initializeApp,getApps,getApp}from"https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js";
+import{getAuth,onAuthStateChanged}from"https://www.gstatic.com/firebasejs/11.10.0/firebase-auth.js";
+import{getFirestore,doc,getDoc,setDoc}from"https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js";
 
-const cfg={apiKey:"AIzaSyC_PcarMTT5Un7qfSLzf92o5OGn5rginsI",authDomain:"fixzy-update.firebaseapp.com",projectId:"fixzy-update",storageBucket:"fixzy-update.firebasestorage.app",messagingSenderId:"995892519622",appId:"1:995892519622:web:fa41047944d8e5b35d6dc7"};
-
-const app=getApps().length ? getApp() : initializeApp(firebaseConfig);
-const auth=getAuth(app);
-const db=getFirestore(app);
-let currentUser=null;
-let currentProfile=null;
-
-const rupiah=n=>new Intl.NumberFormat("id-ID",{
-  style:"currency",currency:"IDR",maximumFractionDigits:0
-}).format(Number(n)||0);
-
-const todayISO=()=>{
-  const d=new Date();
-  const z=n=>String(n).padStart(2,"0");
-  return `${d.getFullYear()}-${z(d.getMonth()+1)}-${z(d.getDate())}`;
+const firebaseConfig={
+  apiKey:"AIzaSyC_PcarMTT5Un7qfSLzf92o5OGn5rginsI",
+  authDomain:"fixzy-update.firebaseapp.com",
+  projectId:"fixzy-update",
+  storageBucket:"fixzy-update.appspot.com",
+  messagingSenderId:"431404655232",
+  appId:"1:431404655232:web:5f7d9c9a1b2c3d4e5f6a7"
 };
 
-document.getElementById("kTanggal").value=todayISO();
-document.getElementById("bTanggal").value=todayISO();
+const app=getApps().length?getApp():initializeApp(firebaseConfig);
+const auth=getAuth(app),db=getFirestore(app);
+const $=id=>document.getElementById(id);
 
-function toast(msg){
-  const el=document.getElementById("toast");
-  el.textContent=msg;
-  el.style.display="block";
-  clearTimeout(window.__toastTimer);
-  window.__toastTimer=setTimeout(()=>el.style.display="none",2400);
+let uid="",jenis="servis",templateServis=1,templatePenjualan=1,profile={};
+
+const templates=[
+  {id:1,nama:"Template 1",cls:""},
+  {id:2,nama:"Template 2",cls:"t2"},
+  {id:3,nama:"Template 3",cls:"t3"},
+  {id:4,nama:"Template 4",cls:"t4"},
+  {id:5,nama:"Template 5",cls:"t5"}
+];
+
+function today(){
+  const d=new Date();
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;
+}
+const esc=v=>String(v??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]));
+function toast(t){$("toast").textContent=t;$("toast").classList.add("show");setTimeout(()=>$("toast").classList.remove("show"),2200)}
+function namaKonter(){
+  return profile.namaKonter||profile.konterName||profile.namaToko||profile.namaUsaha||profile.toko||"FIXZY";
+}
+function wa(){
+  return profile.noWa||profile.noWA||profile.wa||profile.whatsapp||profile.noHp||"";
 }
 
-function setLoading(show,text="Memproses..."){
-  const el=document.getElementById("loading");
-  el.textContent=text;
-  el.style.display=show?"flex":"none";
+function renderTemplates(){
+  const selected=jenis==="servis"?templateServis:templatePenjualan;
+  $("templateGrid").innerHTML=templates.map(t=>`
+    <div class="template ${selected===t.id?"active":""}" onclick="pilihTemplate(${t.id})">
+      <b>${t.nama}</b>
+      <div class="mini ${t.cls}">
+        <div class="mhead"><b>${jenis==="servis"?"NOTA SERVIS":"NOTA PENJUALAN"}</b><br>FIXZY</div>
+        <div>Tanggal: 16/08/2026</div>
+        <div class="mline"></div>
+        <div class="mrow"><span>Pelanggan</span><span>Umum</span></div>
+        <div class="mbox">Detail transaksi / produk / HP</div>
+        <div class="mrow"><span>Total</span><b>Rp 250.000</b></div>
+        <div class="total">TERIMA KASIH</div>
+      </div>
+    </div>
+  `).join("");
+}
+window.pilihTemplate=id=>{
+  if(jenis==="servis")templateServis=id;else templatePenjualan=id;
+  renderTemplates();renderPreview();
+};
+
+window.pilihJenis=x=>{
+  jenis=x;
+  $("tabServis").classList.toggle("active",x==="servis");
+  $("tabPenjualan").classList.toggle("active",x==="penjualan");
+  $("judulNota").value=x==="servis"?"NOTA SERVIS":"NOTA PENJUALAN";
+  renderTemplates();renderPreview();
+};
+
+function renderPreview(){
+  const selected=jenis==="servis"?templateServis:templatePenjualan;
+  const cls="t"+selected;
+  const konter=$("namaKonter").value||"NAMA KONTER";
+  const waKonter=$("waKonter").value||"-";
+  const tanggal=$("tanggalNota").value||today();
+  const kebijakan=$("kebijakan").value||"Kebijakan perusahaan belum diisi.";
+  const thanks=$("terimakasih").value||"Terima kasih telah berbelanja / menggunakan jasa kami.";
+  const judul=$("judulNota").value||(jenis==="servis"?"NOTA SERVIS":"NOTA PENJUALAN");
+
+  $("preview").className="receipt "+cls;
+  $("preview").innerHTML=`
+    <div class="center">
+      <h2>${esc(konter)}</h2>
+      <div>${esc(waKonter)}</div>
+      <div style="margin-top:5px;font-weight:900">${esc(judul)}</div>
+    </div>
+    <hr>
+    <table>
+      <tr><td>Tanggal</td><td class="right">${esc(tanggal)}</td></tr>
+      <tr><td>No. Nota</td><td class="right">CONTOH-001</td></tr>
+      <tr><td>Pelanggan</td><td class="right">Nama Pelanggan</td></tr>
+    </table>
+    <div class="note-box">
+      <b>${jenis==="servis"?"DATA SERVIS":"DATA PENJUALAN"}</b><br>
+      ${jenis==="servis"?"HP / IMEI / Keluhan / Tindakan servis":"Produk / Qty / Harga / Total"}
+    </div>
+    <table style="margin-top:8px">
+      <tr><td>Subtotal</td><td class="right">Rp 250.000</td></tr>
+      <tr><td>Diskon</td><td class="right">Rp 0</td></tr>
+      <tr><td><b>TOTAL</b></td><td class="right"><b>Rp 250.000</b></td></tr>
+    </table>
+    <hr>
+    <div class="policy"><b>KEBIJAKAN PERUSAHAAN</b>
+${esc(kebijakan)}</div>
+    <hr>
+    <div class="center"><b>${esc(thanks)}</b><br><br>FIXZY</div>
+  `;
+}
+["namaKonter","waKonter","judulNota","tanggalNota","kebijakan","terimakasih"].forEach(id=>{
+  $(id).addEventListener("input",renderPreview);
+});
+
+async function ambilProfile(){
+  if(!uid)return;
+  try{
+    const s=await getDoc(doc(db,"users",uid));
+    if(s.exists())profile=s.data()||{};
+  }catch(e){console.warn(e)}
+  $("ownerName").textContent=profile.nama||profile.namaPemilik||profile.namaLengkap||auth.currentUser?.displayName||"Akun FIXZY";
+  $("ownerEmail").textContent=auth.currentUser?.email||"Firebase";
+  if(!$("namaKonter").value)$("namaKonter").value=namaKonter();
+  if(!$("waKonter").value)$("waKonter").value=wa();
 }
 
-window.kembali=()=>{
-  // Jika Pengaturan dibuka di dalam iframe FIXZY, minta parent menutup iframe.
-  if(window.parent && window.parent !== window){
-    window.parent.postMessage({type:"FIXZY_CLOSE_SETTINGS"},"*");
+async function muatPengaturan(){
+  if(!uid){$("status").textContent="Menunggu sesi Firebase...";return}
+  $("status").textContent="Memuat pengaturan nota...";
+  try{
+    await ambilProfile();
+    const s=await getDoc(doc(db,"pengaturan",uid));
+    if(s.exists()){
+      const d=s.data()||{};
+      templateServis=Number(d.templateServis)||1;
+      templatePenjualan=Number(d.templatePenjualan)||1;
+      if(d.nota){
+        $("namaKonter").value=d.nota.namaKonter||namaKonter();
+        $("waKonter").value=d.nota.waKonter||wa();
+        $("kebijakan").value=d.nota.kebijakan||"";
+        $("terimakasih").value=d.nota.terimakasih||"";
+      }
+    }
+    $("tanggalNota").value=today();
+    pilihJenis(jenis);
+    $("status").textContent="✓ Pengaturan nota siap digunakan.";
+  }catch(e){
+    $("status").textContent="Gagal membaca pengaturan: "+e.message;
+  }
+}
+window.muatPengaturan=muatPengaturan;
+
+async function simpanPengaturan(){
+  if(!uid){toast("Sesi Firebase belum tersedia");return}
+  try{
+    await setDoc(doc(db,"pengaturan",uid),{
+      uid,
+      templateServis,
+      templatePenjualan,
+      nota:{
+        namaKonter:$("namaKonter").value.trim(),
+        waKonter:$("waKonter").value.trim(),
+        kebijakan:$("kebijakan").value.trim(),
+        terimakasih:$("terimakasih").value.trim()
+      },
+      updatedAt:new Date().toISOString()
+    },{merge:true});
+    toast("Pengaturan nota berhasil disimpan");
+    $("status").textContent="✓ Pengaturan tersimpan di Firebase.";
+  }catch(e){toast("Gagal menyimpan: "+e.message)}
+}
+window.simpanPengaturan=simpanPengaturan;
+
+window.isiContoh=()=>{
+  $("namaKonter").value=namaKonter()||"A YUDI THEA";
+  $("waKonter").value=wa()||"08xxxxxxxxxx";
+  $("kebijakan").value="Barang yang sudah dibeli tidak dapat dikembalikan kecuali sesuai ketentuan toko.\nNota harap disimpan sebagai bukti transaksi.\nKetentuan garansi mengikuti kebijakan perusahaan.";
+  $("terimakasih").value="Terima kasih telah mempercayakan kebutuhan Anda kepada kami.";
+  renderPreview();
+};
+
+window.cetakPreview=()=>{
+  renderPreview();
+  const isi=$("preview").outerHTML;
+  const css=[...document.querySelectorAll("style")].map(x=>x.textContent).join("\n");
+  const w=window.open("","_blank");
+  if(!w){toast("Popup cetak diblokir browser");return}
+  w.document.write(`<!doctype html><html><head><meta charset="utf-8"><title>Nota FIXZY</title><style>${css}body{background:#fff}.receipt{box-shadow:none;margin:auto}</style></head><body>${isi}</body></html>`);
+  w.document.close();
+  setTimeout(()=>w.print(),350);
+};
+
+$("tanggalNota").value=today();
+renderTemplates();renderPreview();
+
+onAuthStateChanged(auth,async user=>{
+  if(!user){
+    uid="";
+    $("status").textContent="Sesi FIXZY belum tersedia. Buka halaman dari aplikasi yang sudah login.";
+    $("ownerName").textContent="Menunggu sesi";
+    $("ownerEmail").textContent="";
     return;
   }
-
-  // Jika dibuka sebagai halaman mandiri, kembali ke index.
-  window.location.replace("index.html?auth=1");
-};
-
-window.refreshHalaman=()=>{
-  window.location.reload();
-};
-
-function roleBolehKelola(){
-  return ["owner","superadmin"].includes(currentProfile?.role||"");
-}
-
-async function validasi(){
-  return new Promise(resolve=>{
-    onAuthStateChanged(auth,async user=>{
-      if(!user){
-        window.location.replace("login.html");
-        return;
-      }
-
-      try{
-        const snap=await getDoc(doc(db,"users",user.uid));
-        if(!snap.exists()) throw new Error("Profil akun tidak ditemukan.");
-
-        const p=snap.data()||{};
-        if(!["owner","employee","reseller","superadmin"].includes(p.role||"")) throw new Error("Role tidak dikenali.");
-        if(p.status!=="aktif") throw new Error("Akun belum aktif.");
-
-        currentUser=user;
-        currentProfile=p;
-
-        if(!roleBolehKelola()){
-          document.querySelectorAll("button").forEach(b=>{
-            if(!["‹"].includes(b.textContent.trim())) b.disabled=true;
-          });
-          toast("Pengaturan ini hanya dapat dikelola Owner/Superadmin.");
-        }
-
-        setLoading(false);
-        resolve(true);
-        await muatSemua();
-      }catch(e){
-        console.error(e);
-        await signOut(auth).catch(()=>{});
-        window.location.replace("login.html");
-      }
-    });
-  });
-}
-
-async function simpanKaryawan(){
-  if(!roleBolehKelola()) return toast("Tidak punya hak mengelola karyawan.");
-
-  const nama=document.getElementById("kNama").value.trim();
-  if(!nama) return toast("Nama karyawan wajib diisi.");
-
-  const data={
-    uid:currentUser.uid,
-    nama,
-    jabatan:document.getElementById("kJabatan").value,
-    whatsapp:document.getElementById("kWhatsapp").value.trim(),
-    tanggalMulai:document.getElementById("kTanggal").value,
-    gaji:Number(document.getElementById("kGaji").value)||0,
-    status:document.getElementById("kStatus").value,
-    alamat:document.getElementById("kAlamat").value.trim(),
-    createdAt:serverTimestamp()
-  };
-
-  try{
-    await addDoc(collection(db,"karyawan"),data);
-    toast("Data karyawan tersimpan.");
-    resetKaryawan();
-    await muatKaryawan();
-  }catch(e){
-    console.error(e);
-    toast("Gagal menyimpan karyawan: "+(e.message||"akses ditolak"));
-  }
-}
-window.simpanKaryawan=simpanKaryawan;
-
-window.resetKaryawan=()=>{
-  ["kNama","kWhatsapp","kGaji","kAlamat"].forEach(id=>document.getElementById(id).value="");
-  document.getElementById("kTanggal").value=todayISO();
-  document.getElementById("kStatus").value="Aktif";
-};
-
-async function muatKaryawan(){
-  const box=document.getElementById("karyawanList");
-  try{
-    const snap=await getDocs(query(
-      collection(db,"karyawan"),
-      where("uid","==",currentUser.uid)
-    ));
-
-    if(snap.empty){
-      box.innerHTML='<div class="empty">Belum ada data karyawan.</div>';
-      return;
-    }
-
-    const rows=snap.docs.map(d=>({id:d.id,...d.data()}));
-    rows.sort((a,b)=>String(a.nama||"").localeCompare(String(b.nama||"")));
-
-    box.innerHTML=`
-      <div class="table-wrap">
-      <table>
-        <thead><tr>
-          <th>Nama</th><th>Jabatan</th><th>WhatsApp</th>
-          <th>Mulai</th><th>Upah</th><th>Status</th>
-        </tr></thead>
-        <tbody>
-          ${rows.map(x=>`
-            <tr>
-              <td>${esc(x.nama)}</td>
-              <td>${esc(x.jabatan)}</td>
-              <td>${esc(x.whatsapp||"-")}</td>
-              <td>${esc(x.tanggalMulai||"-")}</td>
-              <td class="money">${rupiah(x.gaji)}</td>
-              <td><span class="badge ${x.status==="Aktif"?"on":"off"}">${esc(x.status||"-")}</span></td>
-            </tr>`).join("")}
-        </tbody>
-      </table>
-      </div>`;
-  }catch(e){
-    console.error(e);
-    box.innerHTML='<div class="empty">Data karyawan tidak dapat dibaca. Periksa Rules Firebase.</div>';
-  }
-}
-
-async function simpanBiaya(){
-  if(!roleBolehKelola()) return toast("Tidak punya hak mengelola anggaran.");
-
-  const tanggal=document.getElementById("bTanggal").value;
-  const nominal=Number(document.getElementById("bNominal").value)||0;
-  if(!tanggal) return toast("Tanggal wajib diisi.");
-  if(nominal<=0) return toast("Nominal harus lebih dari 0.");
-
-  const data={
-    uid:currentUser.uid,
-    tanggal,
-    kategori:document.getElementById("bKategori").value,
-    nominal,
-    keterangan:document.getElementById("bKeterangan").value.trim(),
-    createdAt:serverTimestamp()
-  };
-
-  try{
-    await addDoc(collection(db,"anggaran"),data);
-    toast("Anggaran biaya tersimpan.");
-    resetBiaya();
-    await muatBiaya();
-  }catch(e){
-    console.error(e);
-    toast("Gagal menyimpan biaya: "+(e.message||"akses ditolak"));
-  }
-}
-window.simpanBiaya=simpanBiaya;
-
-window.resetBiaya=()=>{
-  document.getElementById("bTanggal").value=todayISO();
-  document.getElementById("bNominal").value="";
-  document.getElementById("bKeterangan").value="";
-};
-
-async function muatBiaya(){
-  const box=document.getElementById("biayaList");
-  try{
-    const snap=await getDocs(query(
-      collection(db,"anggaran"),
-      where("uid","==",currentUser.uid)
-    ));
-
-    const rows=snap.docs.map(d=>({id:d.id,...d.data()}));
-    rows.sort((a,b)=>String(b.tanggal||"").localeCompare(String(a.tanggal||"")));
-
-    const now=new Date();
-    const bulan=`${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,"0")}`;
-    const hari=todayISO();
-
-    let hariTotal=0,bulanTotal=0,semuaTotal=0;
-    rows.forEach(x=>{
-      const n=Number(x.nominal)||0;
-      semuaTotal+=n;
-      if(x.tanggal===hari) hariTotal+=n;
-      if(String(x.tanggal||"").startsWith(bulan)) bulanTotal+=n;
-    });
-
-    document.getElementById("totalHari").textContent=rupiah(hariTotal);
-    document.getElementById("totalBulan").textContent=rupiah(bulanTotal);
-    document.getElementById("totalSemua").textContent=rupiah(semuaTotal);
-
-    if(!rows.length){
-      box.innerHTML='<div class="empty">Belum ada catatan biaya.</div>';
-      return;
-    }
-
-    box.innerHTML=`
-      <div class="table-wrap">
-      <table>
-        <thead><tr>
-          <th>Tanggal</th><th>Kategori</th><th>Keterangan</th><th>Nominal</th>
-        </tr></thead>
-        <tbody>
-          ${rows.map(x=>`
-            <tr>
-              <td>${esc(x.tanggal||"-")}</td>
-              <td>${esc(x.kategori||"-")}</td>
-              <td>${esc(x.keterangan||"-")}</td>
-              <td class="money">${rupiah(x.nominal)}</td>
-            </tr>`).join("")}
-        </tbody>
-      </table>
-      </div>`;
-  }catch(e){
-    console.error(e);
-    box.innerHTML='<div class="empty">Anggaran tidak dapat dibaca. Periksa Rules Firebase.</div>';
-  }
-}
-
-async function simpanProfil(){
-  if(!roleBolehKelola()) return toast("Tidak punya hak mengubah profil toko.");
-
-  const data={
-    namaToko:document.getElementById("pNama").value.trim(),
-    whatsapp:document.getElementById("pWhatsapp").value.trim(),
-    alamat:document.getElementById("pAlamat").value.trim(),
-    updatedAt:serverTimestamp()
-  };
-
-  try{
-    await setDoc(doc(db,"pengaturan",currentUser.uid),data,{merge:true});
-    toast("Profil toko tersimpan.");
-  }catch(e){
-    console.error(e);
-    toast("Profil belum dapat disimpan: "+(e.message||"akses ditolak"));
-  }
-}
-window.simpanProfil=simpanProfil;
-
-async function muatProfil(){
-  try{
-    const snap=await getDoc(doc(db,"pengaturan",currentUser.uid));
-    if(!snap.exists()) return;
-    const p=snap.data()||{};
-    document.getElementById("pNama").value=p.namaToko||"";
-    document.getElementById("pWhatsapp").value=p.whatsapp||"";
-    document.getElementById("pAlamat").value=p.alamat||"";
-  }catch(e){
-    console.warn("Profil toko belum tersedia:",e);
-  }
-}
-
-function esc(v){
-  return String(v??"").replace(/[&<>"']/g,c=>({
-    "&":"&amp;","<":"&lt;",">":"&gt;",
-    '"':"&quot;","'":"&#39;"
-  }[c]));
-}
-
-async function muatSemua(){
-  await Promise.all([muatKaryawan(),muatBiaya(),muatProfil()]);
-}
-
-validasi();
+  uid=user.uid;
+  await muatPengaturan();
+});
 </script>
-<script>(function(){var loc=location.href.replace(/#.*$/,"");var ATTR_NAMES=["data-product-id","data-productid","data-product_id","product-id","productid","product_id","data-source-entity-id","source-entity-id","source_entity_id","data-product","data-metadata","data-meta"];var DATASET_KEYS=["productId","productid","product_id","sourceEntityId","sourceentityid","source_entity_id","product","metadata","meta"];function readProductId(value){if(typeof value!=="string"||value.length===0)return null;if(/^[0-9]{6,}$/.test(value))return value;var match=value.match(/(?:product(?:_|-)?id|source(?:_|-)?entity(?:_|-)?id)["'=:\s]+([0-9]{6,})/i);return match?match[1]:null}function extractProductId(start){for(var node=start;node&&node!==document.body;node=node.parentElement){for(var i=0;i<ATTR_NAMES.length;i++){var attrValue=node.getAttribute&&node.getAttribute(ATTR_NAMES[i]);var attrProductId=readProductId(attrValue);if(attrProductId)return attrProductId}var dataset=node.dataset||null;if(dataset){for(var j=0;j<DATASET_KEYS.length;j++){var dataValue=dataset[DATASET_KEYS[j]];var dataProductId=readProductId(dataValue);if(dataProductId)return dataProductId}}}return null}function isInlineMediaSlotElement(node){return !!(node&&node.getAttribute&&node.getAttribute("data-clippy-inline-media-slot")!==null)}function findInlineMediaSlot(start){for(var node=start;node&&node!==document.body;node=node.parentElement){if(isInlineMediaSlotElement(node))return node}return null}function readInlineMediaUrl(node){if(!node)return null;return node.getAttribute&&((node.getAttribute("data-clippy-inline-media-url")||node.getAttribute("data-url")||node.getAttribute("data_url")))||node.href||null}function stripHash(url){return String(url).replace(/#.*$/,"")}function urlsMatch(a,b){if(!a||!b)return false;try{return stripHash(new URL(a,loc).href)===stripHash(new URL(b,loc).href)}catch(_){return stripHash(a)===stripHash(b)}}function isFirstPartyReelUrl(value){try{var url=new URL(value,loc);if(url.protocol!=="https:")return false;var host=url.hostname.toLowerCase();var supported=host==="instagram.com"||host.endsWith(".instagram.com")||host==="facebook.com"||host.endsWith(".facebook.com");return supported&&/\/reels?\//i.test(url.pathname)}catch(_){return false}}function isInlineMediaUrlClick(node,href){var slot=findInlineMediaSlot(node);if(!slot)return false;var slotUrl=readInlineMediaUrl(slot);if(slotUrl)return urlsMatch(href,slotUrl);return isFirstPartyReelUrl(href)}function findDataHref(start){for(var node=start;node&&node!==document.body;node=node.parentElement){if(node.getAttribute){var href=node.getAttribute("data-href")||node.getAttribute("data-url");if(href)return{href:href,node:node}}}return null}var nativeOpen=window.open;window.open=function(url){if(parent!==window&&typeof url==="string"&&/^https?:\/\//.test(url)){parent.postMessage({type:"ecto:usercontent-link-click",href:url},"*");return null}return nativeOpen?nativeOpen.apply(window,arguments):null};document.addEventListener("click",function(e){var target=e.target instanceof Element?e.target:null;if(!target)return;if(parent===window)return;var a=target.closest?target.closest("a[href]"):null;if(a&&a.href&&/^https?:\/\//.test(a.href)&&a.href.replace(/#.*$/,"")!==loc){if(isInlineMediaUrlClick(a,a.href))return;var productId=extractProductId(target)||extractProductId(a);if(productId){e.preventDefault();parent.postMessage({type:"ecto-artifact-link-click",productId:productId},"*");return}e.preventDefault();parent.postMessage({type:"ecto:usercontent-link-click",href:a.href},"*");return}var dataHref=findDataHref(target);if(dataHref&&/^https?:\/\//.test(dataHref.href)&&dataHref.href.replace(/#.*$/,"")!==loc){if(isInlineMediaUrlClick(dataHref.node,dataHref.href))return;e.preventDefault();parent.postMessage({type:"ecto:usercontent-link-click",href:dataHref.href},"*")}},true)})();</script><script>(function(){var FOCUS_TYPE="ecto:artifact-focus-request";var CLOSE_TYPE="ecto:artifact-close-request";function focusArtifactDocument(){var body=document.body;if(!body)return;try{window.focus();}catch(e){}if(!body.hasAttribute("tabindex"))body.setAttribute("tabindex","-1");try{body.focus({preventScroll:true});}catch(e){try{body.focus();}catch(e2){}}}window.addEventListener("message",function(event){if(event.source!==window.parent)return;var data=event.data;if(!data||typeof data!=="object"||data.type!==FOCUS_TYPE)return;if(document.readyState==="loading"){document.addEventListener("DOMContentLoaded",focusArtifactDocument,{once:true});return;}focusArtifactDocument();});window.addEventListener("keydown",function(event){if(event.key!=="Escape")return;window.setTimeout(function(){if(event.defaultPrevented)return;window.parent.postMessage({type:CLOSE_TYPE},"*");},0);});})();</script></body>
+</body>
 </html>
