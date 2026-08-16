@@ -7,213 +7,94 @@
 <title>Pengaturan Nota</title>
 <style>
 *{box-sizing:border-box}
-:root{
-  --navy:#0b1426;--navy2:#14213a;--yellow:#ffc107;--bg:#f1f4f8;
-  --card:#fff;--line:#dbe3ed;--text:#172033;--muted:#64748b;
-  --green:#16a34a;--red:#dc2626;--blue:#2563eb
-}
+:root{--navy:#0b1426;--navy2:#14213a;--yellow:#ffc107;--bg:#f1f4f8;--card:#fff;--line:#dbe3ed;--text:#172033;--muted:#64748b;--green:#16a34a;--red:#dc2626;--blue:#2563eb}
 body{margin:0;font-family:Arial,Helvetica,sans-serif;background:var(--bg);color:var(--text)}
 button,input,textarea,select{font:inherit}
-.header{
-  min-height:76px;background:var(--navy);color:#fff;padding:10px 14px;
-  display:flex;align-items:center;gap:12px;position:sticky;top:0;z-index:50;
-  box-shadow:0 4px 16px #0003
-}
+.header{min-height:76px;background:var(--navy);color:#fff;padding:10px 14px;display:flex;align-items:center;gap:12px;position:sticky;top:0;z-index:50;box-shadow:0 4px 16px #0003}
 .logo{width:52px;height:52px;object-fit:contain;border-radius:10px;flex:none}
-.brand{min-width:0;flex:1}
-.brand h1{font-size:19px;margin:0;font-weight:900}
-.brand p{font-size:11px;color:#cbd5e1;margin:4px 0 0}
-.user{text-align:right;max-width:220px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.user b{display:block;font-size:12px}.user span{display:block;font-size:10px;color:#cbd5e1;margin-top:3px}
+.brand{min-width:0;flex:1}.brand h1{font-size:19px;margin:0;font-weight:900}.brand p{font-size:11px;color:#cbd5e1;margin:4px 0 0}
+.user{text-align:right;max-width:220px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.user b{display:block;font-size:12px}.user span{display:block;font-size:10px;color:#cbd5e1;margin-top:3px}
 .refresh{height:44px;border:0;border-radius:12px;background:var(--yellow);font-weight:900;padding:0 14px;cursor:pointer}
-.wrap{max-width:1250px;margin:auto;padding:14px}
-.notice{background:#fff;border:1px solid var(--line);border-radius:14px;padding:11px 13px;margin-bottom:12px;font-size:12px;color:var(--muted)}
-.grid{display:grid;grid-template-columns:390px 1fr;gap:14px}
-.card{background:#fff;border:1px solid var(--line);border-radius:16px;padding:15px;box-shadow:0 4px 16px #0000000a;margin-bottom:12px}
-.title{font-size:17px;font-weight:900;margin:0 0 12px}
-label{display:block;font-size:12px;font-weight:900;color:#475569;margin:10px 0 6px}
-input,textarea,select{
-  width:100%;border:1px solid #cbd5e1;border-radius:11px;background:#fff;
-  padding:11px 12px;outline:none
-}
-textarea{min-height:82px;resize:vertical}
-input:focus,textarea:focus,select:focus{border-color:var(--blue);box-shadow:0 0 0 3px #2563eb18}
-.row{display:grid;grid-template-columns:1fr 1fr;gap:9px}
-.btn{border:0;border-radius:11px;padding:11px 14px;font-weight:900;cursor:pointer}
-.btn-save{background:var(--green);color:#fff;width:100%;margin-top:12px}
-.btn-dark{background:var(--navy);color:#fff}
-.btn-light{background:#e2e8f0;color:#111}
-.status{font-size:12px;color:var(--muted);margin-top:8px}
-.template-tabs{display:flex;gap:7px;overflow:auto;margin-bottom:12px;padding-bottom:2px}
-.template-tabs button{border:0;border-radius:10px;background:#e2e8f0;padding:9px 12px;font-weight:900;white-space:nowrap;cursor:pointer}
-.template-tabs button.active{background:var(--navy);color:#fff}
+.wrap{max-width:1250px;margin:auto;padding:14px}.notice{background:#fff;border:1px solid var(--line);border-radius:14px;padding:11px 13px;margin-bottom:12px;font-size:12px;color:var(--muted)}
+.grid{display:grid;grid-template-columns:390px 1fr;gap:14px}.card{background:#fff;border:1px solid var(--line);border-radius:16px;padding:15px;box-shadow:0 4px 16px #0000000a;margin-bottom:12px}
+.title{font-size:17px;font-weight:900;margin:0 0 12px}label{display:block;font-size:12px;font-weight:900;color:#475569;margin:10px 0 6px}
+input,textarea,select{width:100%;border:1px solid #cbd5e1;border-radius:11px;background:#fff;padding:11px 12px;outline:none}
+textarea{min-height:82px;resize:vertical}input:focus,textarea:focus,select:focus{border-color:var(--blue);box-shadow:0 0 0 3px #2563eb18}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:9px}.btn{border:0;border-radius:11px;padding:11px 14px;font-weight:900;cursor:pointer}.btn-save{background:var(--green);color:#fff;width:100%;margin-top:12px}.btn-light{background:#e2e8f0;color:#111}
+.status{font-size:12px;color:var(--muted);margin-top:8px}.template-tabs{display:flex;gap:7px;overflow:auto;margin-bottom:12px;padding-bottom:2px}
+.template-tabs button{border:0;border-radius:10px;background:#e2e8f0;padding:9px 12px;font-weight:900;white-space:nowrap;cursor:pointer}.template-tabs button.active{background:var(--navy);color:#fff}
 .preview-wrap{display:flex;justify-content:center;background:#eef2f7;border-radius:14px;padding:16px;min-height:720px}
-.paper{
-  width:390px;max-width:100%;background:#fff;color:#111;box-shadow:0 8px 30px #0002;
-  padding:22px 20px;min-height:570px;position:relative
-}
-.paper.small{width:302px;min-height:470px;padding:15px}
-.paper.mono{filter:grayscale(1)}
-.paper .p-head{text-align:center;border-bottom:2px solid #111;padding-bottom:9px;margin-bottom:10px}
-.paper .company{font-size:20px;font-weight:900}.paper.small .company{font-size:16px}
-.paper .contact{font-size:10px;margin-top:4px;line-height:1.45}
-.paper .doc-title{font-size:16px;font-weight:900;margin:8px 0 2px}
-.paper .meta{display:grid;grid-template-columns:1fr 1fr;gap:5px;font-size:10px;margin:10px 0}
-.paper .meta div{border-bottom:1px solid #aaa;padding-bottom:3px}
-.paper table{width:100%;border-collapse:collapse;font-size:9px}
-.paper th,.paper td{border:1px solid #555;padding:5px 4px}
-.paper th{font-weight:900}
-.paper .totals{margin-top:9px;margin-left:auto;width:62%;font-size:10px}
-.paper .totals div{display:flex;justify-content:space-between;border-bottom:1px solid #aaa;padding:3px}
-.paper .policy{font-size:9px;line-height:1.45;margin-top:12px;padding:7px;border:1px dashed #777}
-.paper .thanks{text-align:center;font-weight:900;font-size:11px;margin-top:10px}
-.paper .barcode{
-  height:38px;margin:10px auto 2px;width:180px;
-  background:repeating-linear-gradient(90deg,#111 0 2px,#fff 2px 4px,#111 4px 5px,#fff 5px 8px)
-}
-.paper .barcode-text{text-align:center;font-size:8px;letter-spacing:2px}
-.paper .sign{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:17px;text-align:center;font-size:9px}
-.paper .sign div{border-top:1px solid #333;padding-top:5px;margin-top:35px}
-.preset-list{display:grid;grid-template-columns:1fr 1fr;gap:8px}
-.preset{
-  border:2px solid #e2e8f0;border-radius:12px;padding:10px;cursor:pointer;
-  background:#fff
-}
-.preset.active{border-color:var(--blue);background:#eff6ff}
+.paper{width:390px;max-width:100%;background:#fff;color:#111;box-shadow:0 8px 30px #0002;padding:22px 20px;min-height:570px;position:relative}
+.paper.small{width:302px;min-height:470px;padding:15px}.paper.mono{filter:grayscale(1)}
+.paper .p-head{text-align:center;padding-bottom:9px;margin-bottom:10px}.paper .company{font-size:20px;font-weight:900}.paper.small .company{font-size:16px}
+.paper .contact{font-size:10px;margin-top:4px;line-height:1.45}.paper .doc-title{font-size:16px;font-weight:900;margin:8px 0 2px}.paper .meta{display:grid;grid-template-columns:1fr 1fr;gap:5px;font-size:10px;margin:10px 0}.paper .meta div{border-bottom:1px solid #aaa;padding-bottom:3px}
+.paper table{width:100%;border-collapse:collapse;font-size:9px}.paper th,.paper td{border:1px solid #555;padding:5px 4px}.paper th{font-weight:900}.paper .totals{margin-top:9px;margin-left:auto;width:62%;font-size:10px}.paper .totals div{display:flex;justify-content:space-between;border-bottom:1px solid #aaa;padding:3px}
+.paper .policy{font-size:9px;line-height:1.45;margin-top:12px;padding:7px;border:1px dashed #777}.paper .thanks{text-align:center;font-weight:900;font-size:11px;margin-top:10px}
+.paper .barcode{height:38px;margin:10px auto 2px;width:180px;background:repeating-linear-gradient(90deg,#111 0 2px,#fff 2px 4px,#111 4px 5px,#fff 5px 8px)}
+.paper .barcode-text{text-align:center;font-size:8px;letter-spacing:2px}.paper .sign{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:17px;text-align:center;font-size:9px}.paper .sign div{border-top:1px solid #333;padding-top:5px;margin-top:35px;min-height:15px}
+.preset-list{display:grid;grid-template-columns:1fr 1fr;gap:8px}.preset{border:2px solid #e2e8f0;border-radius:12px;padding:10px;cursor:pointer;background:#fff}.preset.active{border-color:var(--yellow);background:#fffaf0}
 .preset b{display:block;font-size:13px}.preset span{font-size:10px;color:var(--muted)}
-.mini{height:76px;border:1px solid #cbd5e1;border-radius:8px;margin-top:7px;padding:7px;background:#fff}
-.mini.color{background:linear-gradient(135deg,#fff,#eff6ff)}
-.mini .bar{height:8px;background:#172235;margin-bottom:5px}.mini .line{height:4px;background:#cbd5e1;margin:4px 0}
+.mini{height:92px;border:1px solid #cbd5e1;border-radius:8px;margin-top:7px;padding:7px;background:#fff;overflow:hidden}.mini .bar{height:9px;background:#172235;margin-bottom:5px}.mini .line{height:4px;background:#cbd5e1;margin:4px 0}.mini .tbl{height:35px;border:1px solid #777;margin-top:5px;background:repeating-linear-gradient(0deg,transparent 0 6px,#bbb 6px 7px)}
+.mini.blue .bar{background:#2563eb}.mini.green .bar{background:#16a34a}.mini.yellow .bar{background:#ffc107}.mini.red .bar{background:#dc2626}.mini.simple .tbl{display:none}
 .saved{display:inline-block;padding:4px 8px;border-radius:99px;background:#dcfce7;color:#166534;font-size:10px;font-weight:900}
 .warn{color:#92400e;background:#fef3c7;border:1px solid #fde68a;padding:9px;border-radius:10px;font-size:11px}
+.hint{background:#eff6ff;border:1px solid #bfdbfe;color:#1e40af;border-radius:10px;padding:9px;font-size:11px;line-height:1.45;margin-top:9px}
 .hidden{display:none!important}
 @media(max-width:900px){.grid{grid-template-columns:1fr}.preview-wrap{min-height:0}.paper{width:390px}}
-@media(max-width:520px){
-  .header{padding:9px 10px}.logo{width:48px;height:48px}.user{display:none}
-  .wrap{padding:9px}.card{padding:12px;border-radius:14px}
-  .row{grid-template-columns:1fr}.preset-list{grid-template-columns:1fr 1fr}
-  .preview-wrap{padding:9px}.paper{transform-origin:top center}
-}
-@media print{
-  body{background:#fff}
-  .header,.left,.notice,.template-tabs,.print-hide{display:none!important}
-  .wrap{padding:0}.grid{display:block}.right{width:100%}
-  .preview-wrap{background:#fff;padding:0}
-  .paper{box-shadow:none;margin:0 auto}
-}
+@media(max-width:520px){.header{padding:9px 10px}.logo{width:48px;height:48px}.user{display:none}.wrap{padding:9px}.card{padding:12px;border-radius:14px}.row{grid-template-columns:1fr}.preset-list{grid-template-columns:1fr 1fr}.preview-wrap{padding:9px}}
+@media print{body{background:#fff}.header,.left,.notice,.template-tabs,.print-hide{display:none!important}.wrap{padding:0}.grid{display:block}.right{width:100%}.preview-wrap{background:#fff;padding:0}.paper{box-shadow:none;margin:0 auto}}
 </style>
 </head>
 <body>
-
 <header class="header">
   <img class="logo" src="logo.png" alt="Logo">
-  <div class="brand">
-    <h1>PENGATURAN NOTA</h1>
-    <p>Template nota perusahaan • servis & penjualan</p>
-  </div>
+  <div class="brand"><h1>PENGATURAN NOTA</h1><p>Template nota perusahaan • servis & penjualan</p></div>
   <div class="user"><b id="ownerName">Memuat...</b><span id="ownerEmail">Firebase</span></div>
   <button class="refresh" onclick="muatSemua()">↻ Refresh</button>
 </header>
 
 <main class="wrap">
-  <div class="notice" id="status">Memeriksa sesi Firebase...</div>
-
+  <div class="notice" id="status">Menunggu sesi FIXZY dari index...</div>
   <div class="grid">
     <div class="left">
       <section class="card">
         <h2 class="title">🏢 Identitas Nota</h2>
-        <div class="warn">Nama <b>FIXZY tidak dicetak</b> di nota. Yang dicetak adalah nama perusahaan/konter yang diatur di bawah.</div>
-
-        <label>Nama Konter / Perusahaan</label>
-        <input id="namaKonter" placeholder="Contoh: A Yudi Thea">
-
-        <label>No. WhatsApp Konter</label>
-        <input id="waKonter" placeholder="Contoh: 081234567890">
-
-        <label>Kebijakan Perusahaan</label>
-        <textarea id="kebijakan" placeholder="Contoh: Barang yang sudah dibeli tidak dapat dikembalikan. Garansi servis mengikuti ketentuan toko."></textarea>
-
-        <label>Ucapan Terima Kasih</label>
-        <textarea id="terimakasih" placeholder="Terima kasih telah mempercayakan kebutuhan Anda kepada kami."></textarea>
-
+        <div class="warn">Nama <b>FIXZY tidak dicetak</b> di nota. Yang dicetak adalah nama perusahaan/konter yang tersimpan di pengaturan ini.</div>
+        <label>Nama Konter / Perusahaan</label><input id="namaKonter" placeholder="Contoh: A Yudi Thea">
+        <label>No. WhatsApp Konter</label><input id="waKonter" placeholder="Contoh: 081234567890">
+        <label>Kebijakan Perusahaan</label><textarea id="kebijakan" placeholder="Kebijakan garansi, retur, dan ketentuan perusahaan"></textarea>
+        <label>Ucapan Terima Kasih</label><textarea id="terimakasih" placeholder="Terima kasih telah mempercayakan kebutuhan Anda kepada kami."></textarea>
         <div class="row">
-          <div>
-            <label>Ukuran Nota</label>
-            <select id="ukuran">
-              <option value="umum">Cetak Umum / A4</option>
-              <option value="5x8">Cetak 5 × 8 cm</option>
-            </select>
-          </div>
-          <div>
-            <label>Warna</label>
-            <select id="warna">
-              <option value="warna">Berwarna</option>
-              <option value="hitam">Hitam Putih</option>
-            </select>
-          </div>
+          <div><label>Ukuran Nota</label><select id="ukuran"><option value="umum">Cetak Umum / A4</option><option value="5x8">Cetak 5 × 8 cm</option></select></div>
+          <div><label>Warna</label><select id="warna"><option value="warna">Berwarna</option><option value="hitam">Hitam Putih</option></select></div>
         </div>
-
-        <label>Barcode</label>
-        <select id="barcode">
-          <option value="nota">Tampilkan barcode / nomor nota</option>
-          <option value="tanpa">Tanpa barcode</option>
-        </select>
-
+        <label>Barcode</label><select id="barcode"><option value="nota">Tampilkan barcode / nomor nota</option><option value="tanpa">Tanpa barcode</option></select>
         <label>Tanda Tangan</label>
         <div class="row">
-          <select id="ttPemilik">
-            <option value="tampil">Tampilkan Pemilik</option>
-            <option value="tanpa">Tanpa Pemilik</option>
-          </select>
-          <select id="ttKonsumen">
-            <option value="tampil">Tampilkan Konsumen</option>
-            <option value="tanpa">Tanpa Konsumen</option>
-          </select>
+          <select id="ttPemilik"><option value="tampil">Tampilkan Pemilik</option><option value="tanpa">Tanpa Pemilik</option></select>
+          <select id="ttKonsumen"><option value="tampil">Tampilkan Konsumen</option><option value="tanpa">Tanpa Konsumen</option></select>
         </div>
-
         <button class="btn btn-save" onclick="simpanPengaturan()">💾 Simpan Pengaturan ke Firebase</button>
         <div class="status" id="saveStatus"></div>
+        <div class="hint">Pengaturan disimpan per UID akun. Halaman nota lain cukup membaca dokumen <b>pengaturanNota/{UID}</b>; tidak perlu memilih template lagi saat mencetak.</div>
       </section>
 
-      <section class="card">
-        <h2 class="title">🧾 Template Servis</h2>
-        <div class="preset-list" id="presetServis"></div>
-      </section>
-
-      <section class="card">
-        <h2 class="title">🛒 Template Penjualan</h2>
-        <div class="preset-list" id="presetPenjualan"></div>
-      </section>
-
-      <section class="card print-hide">
-        <h2 class="title">💡 Penggunaan di Halaman Lain</h2>
-        <div class="status">
-          Halaman <b>nota.html</b>, <b>data-servis.html</b>, atau <b>data-penjualan.html</b>
-          nantinya cukup membaca pengaturan yang tersimpan di Firebase. Pilihan template,
-          ukuran, barcode, kebijakan, ucapan, dan tanda tangan akan mengikuti pengaturan ini.
-        </div>
-      </section>
+      <section class="card"><h2 class="title">🧾 Template Servis</h2><div class="preset-list" id="presetServis"></div></section>
+      <section class="card"><h2 class="title">🛒 Template Penjualan</h2><div class="preset-list" id="presetPenjualan"></div></section>
+      <section class="card print-hide"><h2 class="title">💡 Penggunaan di Halaman Lain</h2><div class="status">`nota.html`, `data-servis.html`, dan `data-penjualan.html` membaca pengaturan Firebase yang sama. Pilihan template, ukuran, warna, barcode, kebijakan, ucapan, dan tanda tangan mengikuti data tersimpan.</div></section>
     </div>
 
     <div class="right">
       <section class="card">
-        <div class="section-head" style="display:flex;justify-content:space-between;gap:8px;align-items:center">
+        <div style="display:flex;justify-content:space-between;gap:8px;align-items:center;flex-wrap:wrap">
           <h2 class="title" style="margin:0">👁️ Preview Nota</h2>
-          <div>
-            <button class="btn btn-light" onclick="cetakPreview()">🖨️ Cetak Preview</button>
-          </div>
+          <button class="btn btn-light print-hide" onclick="cetakPreview()">🖨️ Cetak Preview</button>
         </div>
-
         <div class="template-tabs">
           <button id="tabServis" class="active" onclick="pilihJenis('servis')">🔧 Nota Servis</button>
           <button id="tabPenjualan" onclick="pilihJenis('penjualan')">🛒 Nota Penjualan</button>
         </div>
-
-        <div class="preview-wrap">
-          <div id="paper" class="paper">
-            <!-- preview dibuat JS -->
-          </div>
-        </div>
+        <div class="preview-wrap"><div id="paper" class="paper"></div></div>
       </section>
     </div>
   </div>
@@ -232,249 +113,174 @@ const firebaseConfig={
   messagingSenderId:"838081521031",
   appId:"1:838081521031:web:50fdee909b56460b055f22"
 };
+const app=initializeApp(firebaseConfig),auth=getAuth(app),db=getFirestore(app);
 
-const app=initializeApp(firebaseConfig);
-const auth=getAuth(app);
-const db=getFirestore(app);
-
-let uid=null;
-let profile={};
-let jenis="servis";
+let uid=null,profile={},jenis="servis",parentSession=false;
 let settings={
-  namaKonter:"",
-  waKonter:"",
+  namaKonter:"",waKonter:"",
   kebijakan:"Barang yang sudah dibeli tidak dapat dikembalikan. Garansi servis mengikuti ketentuan perusahaan.",
   terimakasih:"Terima kasih telah mempercayakan kebutuhan Anda kepada kami.",
-  ukuran:"umum",
-  warna:"warna",
-  barcode:"nota",
-  ttPemilik:"tampil",
-  ttKonsumen:"tampil",
-  templateServis:1,
-  templatePenjualan:1
+  ukuran:"umum",warna:"warna",barcode:"nota",ttPemilik:"tampil",ttKonsumen:"tampil",
+  templateServis:1,templatePenjualan:1
 };
-
 const $=id=>document.getElementById(id);
 const esc=v=>String(v??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]));
 const money=v=>"Rp "+(Number(v)||0).toLocaleString("id-ID");
 
-const templateNames=[
-  {id:1,name:"Klasik",desc:"Tabel rapi hitam/putih"},
-  {id:2,name:"Modern",desc:"Header tebal + total jelas"},
-  {id:3,name:"Minimal",desc:"Ringkas dan hemat kertas"},
-  {id:4,name:"Invoice",desc:"Gaya invoice perusahaan"},
-  {id:5,name:"Struktur",desc:"Tabel lengkap + kebijakan"}
+const templates=[
+ {id:1,name:"Klasik",desc:"Hitam/putih • tabel lengkap",cls:""},
+ {id:2,name:"Modern",desc:"Header biru • total tegas",cls:"blue"},
+ {id:3,name:"Minimal",desc:"Ringkas • hemat kertas",cls:"simple"},
+ {id:4,name:"Profesional",desc:"Header hijau • invoice",cls:"green"},
+ {id:5,name:"Konter",desc:"Header kuning • struktur",cls:"yellow"}
 ];
 
 function renderPresets(){
-  $("presetServis").innerHTML=templateNames.map(t=>`
-    <div class="preset ${settings.templateServis===t.id?"active":""}" onclick="pilihTemplate('servis',${t.id})">
+  const make=(j)=>templates.map(t=>`
+    <div class="preset ${settings[j==="servis"?"templateServis":"templatePenjualan"]===t.id?"active":""}" onclick="pilihTemplate('${j}',${t.id})">
       <b>${t.id}. ${t.name}</b><span>${t.desc}</span>
-      <div class="mini ${settings.warna==="warna"?"color":""}">
-        <div class="bar"></div><div class="line"></div><div class="line"></div><div class="line"></div>
+      <div class="mini ${t.cls}">
+        <div class="bar"></div><div class="line"></div><div class="line"></div><div class="tbl"></div>
       </div>
     </div>`).join("");
-
-  $("presetPenjualan").innerHTML=templateNames.map(t=>`
-    <div class="preset ${settings.templatePenjualan===t.id?"active":""}" onclick="pilihTemplate('penjualan',${t.id})">
-      <b>${t.id}. ${t.name}</b><span>${t.desc}</span>
-      <div class="mini ${settings.warna==="warna"?"color":""}">
-        <div class="bar"></div><div class="line"></div><div class="line"></div><div class="line"></div>
-      </div>
-    </div>`).join("");
+  $("presetServis").innerHTML=make("servis");$("presetPenjualan").innerHTML=make("penjualan");
 }
 window.pilihTemplate=(j,id)=>{
-  jenis=j;
-  settings[j==="servis"?"templateServis":"templatePenjualan"]=id;
-  $("tabServis").classList.toggle("active",j==="servis");
-  $("tabPenjualan").classList.toggle("active",j==="penjualan");
+  jenis=j;settings[j==="servis"?"templateServis":"templatePenjualan"]=id;
+  $("tabServis").classList.toggle("active",j==="servis");$("tabPenjualan").classList.toggle("active",j==="penjualan");
   renderPresets();renderPreview();
 };
 
 function syncForm(){
   $("namaKonter").value=settings.namaKonter||profile.namaKonter||profile.namaToko||profile.namaUsaha||profile.toko||"";
   $("waKonter").value=settings.waKonter||profile.noWa||profile.nomorWa||profile.whatsapp||profile.wa||"";
-  $("kebijakan").value=settings.kebijakan||"";
-  $("terimakasih").value=settings.terimakasih||"";
-  $("ukuran").value=settings.ukuran||"umum";
-  $("warna").value=settings.warna||"warna";
-  $("barcode").value=settings.barcode||"nota";
-  $("ttPemilik").value=settings.ttPemilik||"tampil";
-  $("ttKonsumen").value=settings.ttKonsumen||"tampil";
+  $("kebijakan").value=settings.kebijakan||"";$("terimakasih").value=settings.terimakasih||"";
+  $("ukuran").value=settings.ukuran||"umum";$("warna").value=settings.warna||"warna";$("barcode").value=settings.barcode||"nota";
+  $("ttPemilik").value=settings.ttPemilik||"tampil";$("ttKonsumen").value=settings.ttKonsumen||"tampil";
+}
+function readForm(){
+  settings.namaKonter=$("namaKonter").value.trim();settings.waKonter=$("waKonter").value.trim();
+  settings.kebijakan=$("kebijakan").value.trim();settings.terimakasih=$("terimakasih").value.trim();
+  settings.ukuran=$("ukuran").value;settings.warna=$("warna").value;settings.barcode=$("barcode").value;
+  settings.ttPemilik=$("ttPemilik").value;settings.ttKonsumen=$("ttKonsumen").value;
 }
 
-function readForm(){
-  settings.namaKonter=$("namaKonter").value.trim();
-  settings.waKonter=$("waKonter").value.trim();
-  settings.kebijakan=$("kebijakan").value.trim();
-  settings.terimakasih=$("terimakasih").value.trim();
-  settings.ukuran=$("ukuran").value;
-  settings.warna=$("warna").value;
-  settings.barcode=$("barcode").value;
-  settings.ttPemilik=$("ttPemilik").value;
-  settings.ttKonsumen=$("ttKonsumen").value;
+function tableFor(rows,t){
+  if(t===3)return rows.map(r=>`<div style="display:flex;justify-content:space-between;border-bottom:1px dashed #999;padding:5px 0;font-size:9px"><span>${esc(r[1])} ×${r[3]}</span><span>${money(r[4])}</span></div>`).join("");
+  const heads=t===4?["DESKRIPSI","QTY","HARGA","AMOUNT"]:["NO","BARANG / JASA","QTY","HARGA","JUMLAH"];
+  return `<table><thead><tr>${heads.map(h=>`<th>${h}</th>`).join("")}</tr></thead><tbody>${rows.map((r,i)=>{
+    if(t===4)return `<tr><td>${esc(r[1])}</td><td>${r[3]}</td><td>${money(r[2])}</td><td>${money(r[4])}</td></tr>`;
+    if(t===2)return `<tr><td>${i+1}</td><td>${esc(r[1])}</td><td>${r[3]}</td><td>${money(r[2])}</td><td>${money(r[4])}</td></tr>`;
+    return `<tr><td>${i+1}</td><td>${esc(r[1])}</td><td>${r[3]}</td><td>${money(r[2])}</td><td>${money(r[4])}</td></tr>`;
+  }).join("")}</tbody></table>`;
 }
 
 function renderPreview(){
   readForm();
-  const t=jenis==="servis"?settings.templateServis:settings.templatePenjualan;
-  const paper=$("paper");
+  const t=jenis==="servis"?settings.templateServis:settings.templatePenjualan,paper=$("paper"),isServis=jenis==="servis";
   paper.className="paper "+(settings.ukuran==="5x8"?"small ":"")+(settings.warna==="hitam"?"mono":"");
-
-  const isServis=jenis==="servis";
-  const title=isServis?"NOTA SERVIS":"NOTA PENJUALAN";
   const no=isServis?"SRV-20260816-0001":"NOTA-20260816-0001";
-  const rows=isServis
-    ? [
-      ["Jasa Servis","Ganti LCD / Perbaikan HP",150000,1,150000],
-      ["Sparepart","LCD Android",250000,1,250000],
-      ["Jasa","Pemasangan",50000,1,50000]
-    ]
-    : [
-      ["LCD","LCD Samsung A05",175000,1,175000],
-      ["Baterai","Baterai Vivo",95000,1,95000],
-      ["Kabel Data","Kabel Data Type-C",35000,1,35000]
-    ];
-
-  let table="";
-  if(t===1){
-    table=`<table><thead><tr><th>No</th><th>Nama / Keterangan</th><th>Qty</th><th>Harga</th><th>Total</th></tr></thead><tbody>
-      ${rows.map((r,i)=>`<tr><td>${i+1}</td><td>${esc(r[1])}</td><td>${r[3]}</td><td>${money(r[2])}</td><td>${money(r[4])}</td></tr>`).join("")}
-    </tbody></table>`;
-  }else if(t===2){
-    table=`<div style="font-weight:900;border-bottom:2px solid #111;padding:5px 0">DETAIL TRANSAKSI</div>
-    ${rows.map((r,i)=>`<div style="display:flex;justify-content:space-between;gap:5px;border-bottom:1px solid #aaa;padding:6px 0;font-size:10px"><span>${i+1}. ${esc(r[1])} ×${r[3]}</span><b>${money(r[4])}</b></div>`).join("")}`;
-  }else if(t===3){
-    table=`${rows.map(r=>`<div style="display:flex;justify-content:space-between;border-bottom:1px dashed #999;padding:5px 0;font-size:9px"><span>${esc(r[1])} ×${r[3]}</span><span>${money(r[4])}</span></div>`).join("")}`;
-  }else if(t===4){
-    table=`<table><thead><tr><th>DESKRIPSI</th><th>QTY</th><th>HARGA</th><th>AMOUNT</th></tr></thead><tbody>
-      ${rows.map(r=>`<tr><td>${esc(r[1])}</td><td>${r[3]}</td><td>${money(r[2])}</td><td>${money(r[4])}</td></tr>`).join("")}
-    </tbody></table>`;
-  }else{
-    table=`<table><thead><tr><th>NO</th><th>BARANG / JASA</th><th>QTY</th><th>HARGA SATUAN</th><th>JUMLAH</th></tr></thead><tbody>
-      ${rows.map((r,i)=>`<tr><td>${i+1}</td><td>${esc(r[1])}</td><td>${r[3]}</td><td>${money(r[2])}</td><td>${money(r[4])}</td></tr>`).join("")}
-    </tbody></table>`;
-  }
-
+  const rows=isServis?
+    [["Jasa","Ganti LCD / Perbaikan HP",150000,1,150000],["Sparepart","LCD Android",250000,1,250000],["Jasa","Pemasangan",50000,1,50000]]:
+    [["LCD","LCD Samsung A05",175000,1,175000],["Baterai","Baterai Vivo",95000,1,95000],["Kabel Data","Kabel Data Type-C",35000,1,35000]];
   const total=rows.reduce((a,r)=>a+r[4],0);
-  const barcode=settings.barcode==="nota"
-    ? `<div class="barcode"></div><div class="barcode-text">${no}</div>`:"";
-
-  const signs=`
-    <div class="sign">
-      <div>${settings.ttKonsumen==="tampil"?"Konsumen":""}</div>
-      <div>${settings.ttPemilik==="tampil"?"Pemilik / Penanggung Jawab":""}</div>
-    </div>`;
-
+  const accent=t===2?"#2563eb":t===4?"#16a34a":t===5?"#ffc107":"#111";
+  const headerStyle=t===1?"border-bottom:2px solid #111":`background:${accent};color:${t===5?"#111":"#fff"};padding:9px;border-radius:7px`;
+  const barcode=settings.barcode==="nota"?`<div class="barcode"></div><div class="barcode-text">${no}</div>`:"";
+  const signL=settings.ttKonsumen==="tampil"?"Konsumen":"",signR=settings.ttPemilik==="tampil"?"Pemilik / Penanggung Jawab":"";
   paper.innerHTML=`
-    <div class="p-head">
+    <div class="p-head" style="${headerStyle}">
       <div class="company">${esc(settings.namaKonter||"NAMA PERUSAHAAN")}</div>
       <div class="contact">${settings.waKonter?`WA: ${esc(settings.waKonter)}`:"No. WhatsApp belum diatur"}</div>
-      <div class="doc-title">${title}</div>
+      <div class="doc-title">${isServis?"NOTA SERVIS":"NOTA PENJUALAN"}</div>
     </div>
-    <div class="meta">
-      <div>No. Nota: <b>${no}</b></div>
-      <div>Tanggal: <b>16 Agustus 2026</b></div>
-      <div>Pelanggan: <b>Nama Pelanggan</b></div>
-      <div>${isServis?"HP / IMEI":"Kasir"}: <b>${isServis?"Samsung A05 / IMEI":"Kasir"}</b></div>
-    </div>
-    ${table}
-    <div class="totals">
-      <div><span>Subtotal</span><b>${money(total)}</b></div>
-      <div><span>Diskon</span><b>Rp 0</b></div>
-      <div><span>TOTAL</span><b>${money(total)}</b></div>
-    </div>
+    <div class="meta"><div>No. Nota: <b>${no}</b></div><div>Tanggal: <b>16 Agustus 2026</b></div><div>Pelanggan: <b>Nama Pelanggan</b></div><div>${isServis?"HP / IMEI":"Kasir"}: <b>${isServis?"Samsung A05 / IMEI":"Kasir"}</b></div></div>
+    ${t===2?`<div style="font-weight:900;border-bottom:2px solid ${accent};padding:5px 0;margin-bottom:5px">DETAIL TRANSAKSI</div>`:""}
+    ${tableFor(rows,t)}
+    <div class="totals"><div><span>Subtotal</span><b>${money(total)}</b></div><div><span>Diskon</span><b>Rp 0</b></div><div><span>TOTAL</span><b>${money(total)}</b></div></div>
     ${barcode}
     <div class="policy"><b>Kebijakan Perusahaan:</b><br>${esc(settings.kebijakan||"-")}</div>
     <div class="thanks">${esc(settings.terimakasih||"Terima kasih")}</div>
-    ${signs}
-  `;
+    <div class="sign"><div>${signL}</div><div>${signR}</div></div>`;
 }
+
 ["namaKonter","waKonter","kebijakan","terimakasih","ukuran","warna","barcode","ttPemilik","ttKonsumen"].forEach(id=>{
-  $(id).addEventListener("input",renderPreview);
-  $(id).addEventListener("change",renderPreview);
+  $(id).addEventListener("input",renderPreview);$(id).addEventListener("change",renderPreview);
 });
 
 async function loadSettings(){
   if(!uid)return;
-  try{
-    const snap=await getDoc(doc(db,"pengaturanNota",uid));
-    if(snap.exists())settings={...settings,...snap.data()};
-  }catch(e){
-    console.warn("Pengaturan nota:",e);
-  }
+  try{const snap=await getDoc(doc(db,"pengaturanNota",uid));if(snap.exists())settings={...settings,...snap.data()};}
+  catch(e){console.warn("Pengaturan nota:",e);throw e}
 }
-
 async function loadProfile(){
-  try{
-    const snap=await getDoc(doc(db,"users",uid));
-    if(snap.exists())profile=snap.data()||{};
-  }catch(e){console.warn("Profil:",e)}
-  $("ownerName").textContent=profile.namaPemilik||profile.nama||auth.currentUser?.displayName||"Akun FIXZY";
+  try{const snap=await getDoc(doc(db,"users",uid));if(snap.exists())profile=snap.data()||{};}catch(e){console.warn("Profil:",e)}
+  $("ownerName").textContent=profile.namaPemilik||profile.nama||profile.namaKonter||auth.currentUser?.displayName||"Akun FIXZY";
   $("ownerEmail").textContent=auth.currentUser?.email||"Firebase";
 }
-
 async function muatSemua(){
-  if(!uid){
-    $("status").textContent="⚠️ Sesi Firebase belum tersedia. Halaman tidak mengarahkan ke login.";
-    return;
-  }
-  $("status").textContent="⏳ Membaca pengaturan nota...";
-  await loadProfile();
-  await loadSettings();
-  syncForm();
-  renderPresets();
-  renderPreview();
-  $("status").innerHTML='✅ Pengaturan nota siap. Pilihan disimpan berdasarkan UID akun.';
+  if(!uid){$("status").textContent="⏳ Menunggu sesi akun dari index FIXZY...";requestParentSession();return}
+  $("status").textContent="⏳ Membaca pengaturan nota dari Firebase...";
+  try{await loadProfile();await loadSettings();syncForm();renderPresets();renderPreview();$("status").innerHTML='✅ Pengaturan nota siap • UID akun aktif terdeteksi • Tidak ada redirect login';}
+  catch(e){$("status").innerHTML=`⚠️ Firebase terhubung tetapi pengaturan belum dapat dibaca.<br><small>${esc(e.code||"")} ${esc(e.message||e)}</small>`}
 }
 window.muatSemua=muatSemua;
 
 window.simpanPengaturan=async()=>{
-  if(!uid){
-    $("saveStatus").innerHTML='<span style="color:#dc2626">Sesi Firebase belum tersedia.</span>';
-    return;
-  }
+  if(!uid){$("saveStatus").innerHTML='<span style="color:#dc2626">Sesi akun belum diterima dari FIXZY.</span>';requestParentSession();return}
   readForm();
   try{
-    await setDoc(doc(db,"pengaturanNota",uid),{
-      ...settings,
-      uid,
-      diperbaruiPada:new Date().toISOString()
-    },{merge:true});
+    await setDoc(doc(db,"pengaturanNota",uid),{...settings,uid,diperbaruiPada:new Date().toISOString()},{merge:true});
     $("saveStatus").innerHTML='<span class="saved">✓ Tersimpan ke Firebase</span>';
     renderPresets();renderPreview();
-  }catch(e){
-    console.error(e);
-    $("saveStatus").innerHTML=`<span style="color:#dc2626">Gagal: ${esc(e.message||e)}</span>`;
+  }catch(e){$("saveStatus").innerHTML=`<span style="color:#dc2626">Gagal: ${esc(e.code||"")} ${esc(e.message||e)}</span>`}
+};
+
+window.pilihJenis=j=>{jenis=j;$("tabServis").classList.toggle("active",j==="servis");$("tabPenjualan").classList.toggle("active",j==="penjualan");renderPreview()};
+window.cetakPreview=()=>{renderPreview();window.print()};
+
+/* Komunikasi dengan index FIXZY:
+   - Child meminta sesi/identitas dari parent.
+   - Ini tidak menggantikan Firebase Auth; Firestore tetap memakai auth.currentUser.
+   - Tidak ada redirect ke login dari halaman ini. */
+function requestParentSession(){
+  try{
+    if(window.parent&&window.parent!==window){
+      window.parent.postMessage({type:"FIXZY_REQUEST_SESSION",source:"pengaturan-nota"},"*");
+    }
+  }catch(e){}
+}
+window.addEventListener("message",async ev=>{
+  const d=ev.data||{};
+  if(d.type!=="FIXZY_SESSION")return;
+  parentSession=true;
+  if(d.uid && !uid){uid=d.uid}
+  if(d.profile && typeof d.profile==="object")profile={...profile,...d.profile};
+  if(uid){
+    $("ownerName").textContent=profile.namaPemilik||profile.nama||profile.namaKonter||"Akun FIXZY";
+    $("ownerEmail").textContent=profile.email||auth.currentUser?.email||"Firebase";
+    await muatSemua();
   }
-};
-
-window.pilihJenis=(j)=>{
-  jenis=j;
-  $("tabServis").classList.toggle("active",j==="servis");
-  $("tabPenjualan").classList.toggle("active",j==="penjualan");
-  renderPreview();
-};
-
-window.cetakPreview=()=>{
-  renderPreview();
-  window.print();
-};
+});
 
 async function mulai(){
-  try{await setPersistence(auth,browserLocalPersistence)}catch(e){}
+  try{await setPersistence(auth,browserLocalPersistence)}catch(e){console.warn("Firebase persistence:",e)}
   onAuthStateChanged(auth,async user=>{
-    if(!user){
-      $("status").innerHTML="⚠️ Sesi Firebase belum tersedia. Halaman <b>tidak mengarahkan</b> ke login.";
-      $("ownerName").textContent="Sesi belum tersedia";
+    if(user){
+      uid=user.uid;
+      await muatSemua();
+    }else{
+      $("status").innerHTML="⏳ Menunggu sesi akun dari <b>index FIXZY</b>... halaman ini tidak membuat login sendiri dan tidak mengarahkan ke login.";
+      $("ownerName").textContent="Menunggu akun FIXZY";
       $("ownerEmail").textContent="";
-      return;
+      requestParentSession();
     }
-    uid=user.uid;
-    await muatSemua();
   });
+  setTimeout(requestParentSession,250);
+  setTimeout(()=>{if(!uid)$("status").innerHTML="⚠️ Sesi belum diterima. Pastikan halaman ini dibuka melalui <b>index FIXZY</b> sebagai halaman internal/iframe agar sesi Firebase yang sudah login dapat dipakai.";},4000);
 }
 mulai();
+renderPresets();renderPreview();
 </script>
 </body>
 </html>
