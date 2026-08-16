@@ -65,6 +65,11 @@ button,input,select{font:inherit}
 
   <section class="card">
     <div class="section-title" id="listTitle">📅 Harian</div>
+    <div class="tabs" style="margin-bottom:10px">
+      <button class="tab active" id="jenisSemua" onclick="setJenis('semua')">📋 Semua</button>
+      <button class="tab" id="jenisPenjualan" onclick="setJenis('Penjualan')">🛒 Penjualan</button>
+      <button class="tab" id="jenisServis" onclick="setJenis('Servis')">🔧 Servis</button>
+    </div>
     <div id="menu"></div>
   </section>
 
@@ -78,9 +83,10 @@ button,input,select{font:inherit}
       <div class="kpi laba"><small>LABA BERSIH</small><b id="kpLaba">Rp 0</b></div>
     </div>
 
-    <h3 class="section-title">🧾 Transaksi Konter</h3>
+    <h3 class="section-title">🧾 Semua Transaksi: Penjualan + Servis</h3>
+    <div class="status" style="margin:-5px 0 10px">Semua data penjualan dan servis ditampilkan. Kolom <b>Dihitung</b> hanya menandai transaksi yang masuk perhitungan pendapatan.</div>
     <div class="table-wrap"><table>
-      <thead><tr><th>Tanggal</th><th>Jenis</th><th>Karyawan</th><th>Pelanggan</th><th>Produk</th><th class="num">Total</th></tr></thead>
+      <thead><tr><th>Tanggal</th><th>Jenis</th><th>Karyawan/Teknisi</th><th>Pelanggan</th><th>Produk / HP</th><th>Status</th><th class="num">Total</th></tr></thead>
       <tbody id="tbody"></tbody>
     </table></div>
 
@@ -109,16 +115,16 @@ import {getAuth,onAuthStateChanged} from "https://www.gstatic.com/firebasejs/11.
 import {getFirestore,collection,query,where,getDocs,addDoc,deleteDoc,doc,serverTimestamp} from "https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js";
 
 const firebaseConfig={
-  apiKey:"AIzaSyCwMbJsuORhIq4QCmp4c1r6OsjAUlfxU5Y",
-  authDomain:"fixzy-f056f.firebaseapp.com",
-  projectId:"fixzy-f056f",
-  storageBucket:"fixzy-f056f.firebasestorage.app",
-  messagingSenderId:"838081521031",
-  appId:"1:838081521031:web:50fdee909b56460b055f22"
+  apiKey:"AIzaSyC_PcarMTT5Un7qfSLzf92o5OGn5rginsI",
+  authDomain:"fixzy-update.firebaseapp.com",
+  projectId:"fixzy-update",
+  storageBucket:"fixzy-update.appspot.com",
+  messagingSenderId:"431404655232",
+  appId:"1:431404655232:web:5f7d9c9a1b2c3d4e5f6a7"
 };
 const app=initializeApp(firebaseConfig),auth=getAuth(app),db=getFirestore(app);
 
-let uid=null, ownerUid=null, profile={}, servis=[], penjualan=[], pengeluaran=[], luar=[], mode="harian", currentVal="";
+let uid=null, ownerUid=null, profile={}, servis=[], penjualan=[], pengeluaran=[], luar=[], mode="harian", currentVal="", jenisFilter="semua";
 const $=id=>document.getElementById(id);
 const n=v=>Number(v)||0;
 const rp=v=>"Rp "+n(v).toLocaleString("id-ID");
@@ -238,10 +244,25 @@ window.muatSemua=muatSemua;
 
 function setMode(m){
   mode=m;currentVal="";
-  document.querySelectorAll(".tab").forEach(x=>x.classList.toggle("active",x.dataset.mode===m));
+  document.querySelectorAll(".tabs .tab").forEach(x=>x.classList.toggle("active",x.dataset.mode===m));
   renderList();pilihDefault();
 }
 window.setMode=setMode;
+
+function setJenis(j){
+  jenisFilter=j;
+  ["jenisSemua","jenisPenjualan","jenisServis"].forEach(id=>$(id)?.classList.remove("active"));
+  const id=j==="semua"?"jenisSemua":j==="Penjualan"?"jenisPenjualan":"jenisServis";
+  $(id)?.classList.add("active");
+  renderList();
+  if(currentVal) lihat(currentVal);
+}
+window.setJenis=setJenis;
+
+function filteredTxRows(){
+  const rows=txRows();
+  return jenisFilter==="semua" ? rows : rows.filter(r=>r._jenis===jenisFilter);
+}
 
 function keyDate(d){
   if(mode==="harian")return d;
@@ -250,7 +271,7 @@ function keyDate(d){
 }
 function allKeys(){
   const keys=new Set();
-  [...txRows(),...luar].forEach(r=>{const d=normalizeDate(r);if(d)keys.add(keyDate(d))});
+  [...filteredTxRows(),...luar].forEach(r=>{const d=normalizeDate(r);if(d)keys.add(keyDate(d))});
   return [...keys].sort().reverse();
 }
 function labelKey(k){
@@ -268,7 +289,7 @@ function renderList(){
   const keys=allKeys();
   $("listTitle").textContent=mode==="harian"?"📅 Harian":mode==="bulanan"?"📆 Bulanan":"📈 Tahunan";
   $("menu").innerHTML=keys.map(k=>{
-    const tx=txRows().filter(r=>belongs(r,k)), lr=luar.filter(r=>belongs(r,k));
+    const tx=filteredTxRows().filter(r=>belongs(r,k)), lr=luar.filter(r=>belongs(r,k));
     const total=tx.reduce((a,r)=>a+n(r.total??r.biaya),0)+lr.reduce((a,r)=>a+n(r.total),0);
     return `<div class="list-item" onclick="lihat('${k}')">
       <span><b>${esc(labelKey(k))}</b><span class="pill">${tx.length} trx</span>${lr.length?`<span class="pill green">Luar ${lr.length}</span>`:""}</span>
@@ -291,7 +312,7 @@ function pilihDefault(){
 }
 function clearDetail(){
   $("detailTitle").textContent="-";["kpKonter","kpLuar","kpTotal","kpPeng","kpLaba"].forEach(id=>$(id).textContent="Rp 0");
-  $("tbody").innerHTML='<tr><td colspan="6" class="empty">Belum ada transaksi.</td></tr>';
+  $("tbody").innerHTML='<tr><td colspan="7" class="empty">Belum ada data penjualan atau servis.</td></tr>';
   $("tbodyLuar").innerHTML='<tr><td colspan="4" class="empty">Belum ada penghasilan luar.</td></tr>';
 }
 function isPendapatanValid(r){
@@ -312,7 +333,8 @@ function isPendapatanValid(r){
 
 function lihat(k){
   currentVal=k;
-  const rows=txRows().filter(r=>belongs(r,k) && isPendapatanValid(r));
+  const allRowsForPeriod=filteredTxRows().filter(r=>belongs(r,k));
+  const rows=allRowsForPeriod.filter(r=>isPendapatanValid(r));
   const lr=luar.filter(r=>belongs(r,k));
   const konter=rows.reduce((a,r)=>a+n(r.total??r.biayaServis??r.biaya),0);
   const luarTot=lr.reduce((a,r)=>a+n(r.total),0);
@@ -321,13 +343,27 @@ function lihat(k){
   $("detailTitle").textContent=labelKey(k);
   $("kpKonter").textContent=rp(konter);$("kpLuar").textContent=rp(luarTot);
   $("kpTotal").textContent=rp(total);$("kpPeng").textContent=rp(peng);$("kpLaba").textContent=rp(laba);
-  $("tbody").innerHTML=rows.sort(sortDate).map(r=>{
-    const cust=r.pelanggan?.nama||r.namaPelanggan||r.nama||"Umum";
-    const prod=(r.items||[]).map(x=>x.nama||x.produk||x.productName||"").filter(Boolean).join(", ")
-      ||r.produk||r.namaBarang||r.hp?.merkTipe||"-";
-    const emp=r.teknisi?.nama||r.namaKaryawan||r.karyawan||r.namaTeknisi||r.teknisi||"-";
-    return `<tr><td>${esc(normalizeDate(r))}</td><td>${esc(r._jenis)}</td><td>${esc(emp)}</td><td>${esc(cust)}</td><td>${esc(prod)}</td><td class="num">${rp(r.total??r.biaya)}</td></tr>`;
-  }).join("")||'<tr><td colspan="6" class="empty">Tidak ada transaksi konter.</td></tr>';
+  $("tbody").innerHTML=allRowsForPeriod.sort(sortDate).map(r=>{
+    const cust=r.pelanggan?.nama||r.namaPelanggan||r.nama||r.customerName||"Umum";
+    const prod=(r.items||[]).map(x=>x.nama||x.produk||x.productName||x.model||"").filter(Boolean).join(", ")
+      ||r.produk||r.namaBarang||r.hp?.merkTipe||r.model||r.tipeHp||"-";
+    const emp=r.teknisi?.nama||r.namaKaryawan||r.karyawan||r.namaTeknisi||r.teknisi||r.karyawanNama||"-";
+    const status=String(r.status||r.pembayaran||r.metode||"—");
+    const total=r._jenis==="Servis" ? (r.total??r.biayaServis??r.biaya??r.harga??0) : (r.total??0);
+    const valid=isPendapatanValid(r);
+    const badge=valid
+      ? '<span class="pill green">Dihitung</span>'
+      : '<span class="pill red">Tidak dihitung</span>';
+    return `<tr>
+      <td>${esc(normalizeDate(r))}</td>
+      <td><b>${esc(r._jenis)}</b></td>
+      <td>${esc(emp)}</td>
+      <td>${esc(cust)}</td>
+      <td>${esc(prod)}</td>
+      <td>${esc(status)} ${badge}</td>
+      <td class="num">${rp(total)}</td>
+    </tr>`;
+  }).join("")||'<tr><td colspan="7" class="empty">Tidak ada data penjualan atau servis pada periode ini.</td></tr>';
   $("tbodyLuar").innerHTML=lr.sort(sortDate).map(r=>`<tr><td>${esc(normalizeDate(r))}</td><td>${esc(r.sumber||r.keterangan||"Penghasilan Luar")}</td><td class="num">${rp(r.total)}</td><td><button onclick="hapusLuar('${esc(r.id)}')" style="border:0;border-radius:8px;padding:7px 10px;background:#fee2e2;color:#991b1b;font-weight:800">Hapus</button></td></tr>`).join("")||'<tr><td colspan="4" class="empty">Tidak ada penghasilan luar.</td></tr>';
 }
 window.lihat=lihat;
