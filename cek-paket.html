@@ -20,6 +20,129 @@ body{margin:0;font-family:Arial,Helvetica,sans-serif;background:#eef2f7;color:#1
 .badge.green{background:#dcfce7;color:#166534}.badge.red{background:#fee2e2;color:#991b1b}.badge.yellow{background:#fef3c7;color:#92400e}
 .small-info{font-size:11px;color:#64748b;margin-top:7px}
 </style>
+
+<style>
+/* ===== REQUEST TOKEN ===== */
+.request-token-card{
+  margin-top:14px;
+}
+.request-token-card h3{
+  margin:0 0 8px;
+  font-size:18px;
+}
+.request-token-card p{
+  margin:0 0 12px;
+  font-size:12px;
+  color:#64748b;
+  line-height:1.5;
+}
+.request-row{
+  display:grid;
+  grid-template-columns:1fr;
+  gap:10px;
+}
+.request-select{
+  width:100%;
+  padding:14px;
+  border:1px solid #cbd5e1;
+  border-radius:12px;
+  background:#fff;
+  color:#111827;
+  font-size:16px;
+  font-weight:800;
+}
+.request-btn{
+  width:100%;
+  padding:14px;
+  font-size:16px;
+}
+.qris-box{
+  display:none;
+  margin-top:14px;
+  padding:14px;
+  border:1px solid #e5e7eb;
+  border-radius:16px;
+  background:#f8fafc;
+  text-align:center;
+}
+.qris-box.show{display:block}
+.qris-title{
+  font-weight:900;
+  margin-bottom:10px;
+}
+.qris-img{
+  display:block;
+  width:min(100%,340px);
+  max-height:420px;
+  object-fit:contain;
+  margin:0 auto 12px;
+  border-radius:12px;
+  background:#fff;
+  border:1px solid #e5e7eb;
+}
+.wa-request-btn{
+  width:100%;
+  padding:13px;
+  background:#16a34a;
+  color:#fff;
+  border:0;
+  border-radius:12px;
+  font-weight:900;
+  cursor:pointer;
+  font-size:15px;
+}
+
+/* Popup FIXZY - bukan alert browser */
+.fixzy-modal{
+  position:fixed;
+  inset:0;
+  z-index:99999;
+  display:none;
+  align-items:center;
+  justify-content:center;
+  padding:18px;
+  background:rgba(15,23,42,.68);
+}
+.fixzy-modal.show{display:flex}
+.fixzy-modal-box{
+  width:min(100%,430px);
+  background:#fff;
+  color:#111827;
+  border-radius:20px;
+  padding:20px;
+  box-shadow:0 20px 60px rgba(0,0,0,.25);
+}
+.fixzy-modal-title{
+  font-size:20px;
+  font-weight:900;
+  margin-bottom:8px;
+}
+.fixzy-modal-text{
+  font-size:14px;
+  line-height:1.55;
+  color:#475569;
+  white-space:pre-line;
+}
+.fixzy-modal-actions{
+  display:flex;
+  gap:10px;
+  justify-content:flex-end;
+  margin-top:18px;
+}
+.fixzy-modal-actions button{
+  border:0;
+  border-radius:12px;
+  padding:12px 18px;
+  font-weight:900;
+  cursor:pointer;
+}
+.fixzy-cancel{background:#e5e7eb;color:#111827}
+.fixzy-send{background:#16a34a;color:#fff}
+@media(max-width:420px){
+  .fixzy-modal-actions{flex-direction:column-reverse}
+  .fixzy-modal-actions button{width:100%}
+}
+</style>
 </head>
 <body>
 
@@ -66,6 +189,58 @@ body{margin:0;font-family:Arial,Helvetica,sans-serif;background:#eef2f7;color:#1
       onclick="pakaiToken()">Aktifkan Token</button>
 
     <div id="tokenMsg" style="margin-top:10px;font-size:12px;font-weight:800;white-space:pre-line"></div>
+  </div>
+
+
+  <!-- REQUEST TOKEN -->
+  <div class="card white request-token-card">
+    <h3>🔑 Request Token Perpanjangan</h3>
+    <p>
+      Pilih masa aktif token yang ingin direquest. Setelah menekan
+      <b>Request Token</b>, QRIS akan ditampilkan di bawah.
+    </p>
+
+    <div class="request-row">
+      <select id="requestTokenPackage" class="request-select" aria-label="Pilih masa aktif token">
+        <option value="3 Bulan" data-days="90">3 Bulan</option>
+        <option value="6 Bulan" data-days="180">6 Bulan</option>
+        <option value="12 Bulan" data-days="360">12 Bulan</option>
+      </select>
+
+      <button id="btnRequestToken" class="btn btn-y request-btn" type="button">
+        🔑 Request Token
+      </button>
+    </div>
+
+    <div id="qrisRequestBox" class="qris-box">
+      <div class="qris-title">Scan QRIS untuk pembayaran</div>
+      <img
+        src="qris.jpg"
+        alt="QRIS pembayaran FIXZY"
+        class="qris-img"
+        onerror="this.style.display='none';document.getElementById('qrisImageError').style.display='block';"
+      >
+      <div id="qrisImageError" style="display:none;color:#dc2626;font-size:12px;font-weight:800;margin-bottom:10px">
+        QRIS tidak ditemukan. Pastikan file <b>qris.jpg</b> berada satu folder dengan file HTML ini.
+      </div>
+
+      <button id="btnPesanWARequest" class="wa-request-btn" type="button">
+        💬 Pesan via WhatsApp
+      </button>
+    </div>
+  </div>
+
+  <!-- POPUP REQUEST TOKEN / WHATSAPP -->
+  <div id="fixzyRequestModal" class="fixzy-modal" role="dialog" aria-modal="true" aria-labelledby="fixzyRequestTitle">
+    <div class="fixzy-modal-box">
+      <div id="fixzyRequestTitle" class="fixzy-modal-title">Request Token</div>
+      <div id="fixzyRequestText" class="fixzy-modal-text"></div>
+
+      <div class="fixzy-modal-actions">
+        <button id="btnRequestCancel" class="fixzy-cancel" type="button">Batal</button>
+        <button id="btnRequestSend" class="fixzy-send" type="button">Kirim</button>
+      </div>
+    </div>
   </div>
 
 </div>
@@ -564,6 +739,133 @@ window.pakaiToken=async function(){
     btn.disabled=false;
   }
 };
+
+
+/* =========================================================
+   REQUEST TOKEN + QRIS + WHATSAPP
+   ========================================================= */
+const REQUEST_WA_NUMBER="6282319264646";
+let pendingRequestMessage="";
+let pendingRequestType="";
+
+function getCurrentAccountName(){
+  const d=currentUserData||{};
+  return String(
+    d.namaKonter ||
+    d.namaToko ||
+    d.tokoName ||
+    d.nama ||
+    d.name ||
+    "Akun Fixzy"
+  ).trim();
+}
+
+function getCurrentAccountEmail(){
+  const d=currentUserData||{};
+  return String(d.email || auth.currentUser?.email || "-").trim();
+}
+
+function getCurrentAccountUid(){
+  return String(currentUid || auth.currentUser?.uid || "-").trim();
+}
+
+function formatRequestMessage(paket){
+  return [
+    "Halo Admin FIXZY, saya ingin request token perpanjangan.",
+    "",
+    "Data akun:",
+    "Nama Konter: "+getCurrentAccountName(),
+    "Email: "+getCurrentAccountEmail(),
+    "UID: "+getCurrentAccountUid(),
+    "",
+    "Request Token: "+paket,
+    "",
+    "Mohon diproses. Terima kasih."
+  ].join("\n");
+}
+
+function bukaRequestPopup(title,text,type,message){
+  pendingRequestType=type||"";
+  pendingRequestMessage=message||"";
+  document.getElementById("fixzyRequestTitle").textContent=title||"Konfirmasi";
+  document.getElementById("fixzyRequestText").textContent=text||"";
+  document.getElementById("fixzyRequestModal").classList.add("show");
+}
+
+function tutupRequestPopup(){
+  document.getElementById("fixzyRequestModal").classList.remove("show");
+  pendingRequestType="";
+  pendingRequestMessage="";
+}
+
+function bukaWhatsAppRequest(message){
+  const url="https://wa.me/"+REQUEST_WA_NUMBER+"?text="+encodeURIComponent(message);
+  window.open(url,"_blank","noopener,noreferrer");
+}
+
+function tampilkanQRIS(){
+  document.getElementById("qrisRequestBox").classList.add("show");
+  document.getElementById("qrisRequestBox").scrollIntoView({
+    behavior:"smooth",
+    block:"center"
+  });
+}
+
+document.getElementById("btnRequestToken").addEventListener("click",function(){
+  const select=document.getElementById("requestTokenPackage");
+  const option=select.options[select.selectedIndex];
+  const paket=option.value;
+  const hari=option.dataset.days||"";
+
+  if(!currentUid){
+    bukaRequestPopup(
+      "Belum Login",
+      "Akun belum terdeteksi. Silakan login terlebih dahulu sebelum request token.",
+      "close",
+      ""
+    );
+    return;
+  }
+
+  tampilkanQRIS();
+});
+
+document.getElementById("btnPesanWARequest").addEventListener("click",function(){
+  const select=document.getElementById("requestTokenPackage");
+  const paket=select.options[select.selectedIndex].value;
+  const message=formatRequestMessage(paket);
+
+  bukaRequestPopup(
+    "Kirim Request via WhatsApp?",
+    "Pesan berikut akan dikirim ke 082319264646:\n\n"+message,
+    "whatsapp",
+    message
+  );
+});
+
+document.getElementById("btnRequestCancel").addEventListener("click",function(){
+  tutupRequestPopup();
+});
+
+document.getElementById("btnRequestSend").addEventListener("click",function(){
+  const type=pendingRequestType;
+  const message=pendingRequestMessage;
+
+  if(type==="whatsapp" || type==="request"){
+    if(!message){
+      tutupRequestPopup();
+      return;
+    }
+    bukaWhatsAppRequest(message);
+  }
+
+  tutupRequestPopup();
+});
+
+document.getElementById("fixzyRequestModal").addEventListener("click",function(e){
+  if(e.target===this) tutupRequestPopup();
+});
+
 
 document.getElementById("tokenInput").addEventListener("input",function(){
   this.value=this.value.toUpperCase();
