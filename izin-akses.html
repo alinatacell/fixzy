@@ -48,7 +48,12 @@ main{max-width:1180px;margin:auto;padding:14px 10px 70px}.card{background:#fff;b
 <label class="check"><input type="checkbox" value="dataKaryawan" class="izin">👥 Data Karyawan</label>
 <label class="check"><input type="checkbox" value="cekAktivasi" class="izin">🔑 Cek Paket / Aktivasi</label>
 </div><div class="status">Menu <b>Dashboard Admin, Izin Akses, Hak Akses, Kelola Karyawan/Reseller, Upah Kerja, Pengeluaran, Pengaturan</b> tetap Owner Only.</div></div></div>
-<div id="editInfo" class="status"></div><div class="popup-actions"><button class="btn secondary" onclick="tutupPopup()">Batal</button><button class="btn primary" onclick="simpanAkun()">💾 Simpan</button></div></div></div>
+<div id="editInfo" class="status"></div>
+<div id="authActions" style="display:none;gap:7px;flex-wrap:wrap;margin-top:10px">
+<button type="button" class="btn yellow" onclick="resetPasswordAkun()">🔑 Reset Password</button>
+<button type="button" class="btn secondary" onclick="sinkronEmailAuth()">🔄 Ubah Email Login</button>
+</div>
+<div class="popup-actions"><button class="btn secondary" onclick="tutupPopup()">Batal</button><button class="btn primary" onclick="simpanAkun()">💾 Simpan</button></div></div></div>
 
 <div class="popup" id="notice"><div class="popup-box" style="width:min(500px,calc(100% - 22px))"><h3 id="noticeTitle">FIXZY</h3><div id="noticeText" class="notice-text"></div><div class="popup-actions"><button class="btn primary" onclick="tutupNotice()">OK</button></div></div></div>
 <div class="popup" id="waPopup"><div class="popup-box" style="width:min(540px,calc(100% - 22px))"><h3>📲 Kirim Data Login ke WhatsApp?</h3><div id="waText" class="notice-text"></div><div class="popup-actions"><button class="btn secondary" onclick="tutupWaPopup()">Tidak</button><button class="btn primary" onclick="kirimWhatsApp()">📲 Kirim WhatsApp</button></div></div></div>
@@ -61,9 +66,10 @@ function tutupHalaman(){try{if(window.frameElement){window.frameElement.remove()
 import{initializeApp,getApps,getApp}from"https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js";
 import{getAuth,onAuthStateChanged,createUserWithEmailAndPassword,updateProfile}from"https://www.gstatic.com/firebasejs/11.10.0/firebase-auth.js";
 import{getFirestore,collection,query,where,getDocs,doc,getDoc,setDoc,updateDoc,serverTimestamp}from"https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js";
+import{getFunctions,httpsCallable}from"https://www.gstatic.com/firebasejs/11.10.0/firebase-functions.js";
 
 const cfg={apiKey:"AIzaSyC_PcarMTT5Un7qfSLzf92o5OGn5rginsI",authDomain:"fixzy-update.firebaseapp.com",projectId:"fixzy-update",storageBucket:"fixzy-update.firebasestorage.app",messagingSenderId:"995892519622",appId:"1:995892519622:web:fa41047944d8e5b35d6dc7"};
-const app=getApps().length?getApp():initializeApp(cfg),auth=getAuth(app),db=getFirestore(app),$=id=>document.getElementById(id);
+const app=getApps().length?getApp():initializeApp(cfg),auth=getAuth(app),db=getFirestore(app),functions=getFunctions(app),$=id=>document.getElementById(id);
 const rupiah=n=>"Rp "+(Number(n)||0).toLocaleString("id-ID"),esc=v=>String(v??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]));
 const PERMS=[
 ["penjualan","Input Penjualan"],["servis","Input Servis"],["dataPenjualan","Data Penjualan"],["dataServis","Data Servis"],["stock","Stock Produk"],["garansi","Monitoring Garansi"],["rekapTeknisi","Rekap Teknisi"],["laporanPendapatan","Laporan Pendapatan"],["dashboardPendapatan","Dashboard Pendapatan"],["laporanKeuangan","Laporan Keuangan"],["absensi","Absensi Karyawan"],["dataKaryawan","Data Karyawan"],["cekAktivasi","Cek Paket / Aktivasi"]
@@ -83,11 +89,13 @@ document.addEventListener("change",e=>{if(e.target.classList?.contains("izin"))u
 
 function tampilNotice(t,x){$("noticeTitle").textContent=t;$("noticeText").innerHTML=x;$("notice").classList.add("show")}
 window.tutupNotice=()=>$("notice").classList.remove("show");
-window.tutupPopup=()=>{$("popup").classList.remove("show");$("fRole").disabled=false;editId=null};
+window.tutupPopup=()=>{$("popup").classList.remove("show");$("fRole").disabled=false;if($("authActions"))$("authActions").style.display="none";editId=null};
 window.pilihSemuaIzin=()=>{document.querySelectorAll(".izin").forEach(x=>x.checked=true);updateCount()};
 window.hapusSemuaIzin=()=>{document.querySelectorAll(".izin").forEach(x=>x.checked=false);updateCount()};
 window.pilihAksesOperasional=()=>{const allowed=new Set(["penjualan","servis","dataPenjualan","dataServis","stock","garansi","rekapTeknisi","laporanPendapatan","dashboardPendapatan","absensi"]);document.querySelectorAll(".izin").forEach(x=>x.checked=allowed.has(x.value));updateCount()};
 
+$("fWA").addEventListener("input",e=>{e.target.value=e.target.value.replace(/\D/g,"").slice(0,15)});
+$("fEmail").addEventListener("input",e=>{e.target.value=e.target.value.trim().toLowerCase()});
 function renderIzin(a){const izin=gabungIzin(a);if(!izin.length)return '<span style="color:#94a3b8">Tidak ada akses</span>';return izin.map(v=>`<span class="badge">${esc(izinLabel(v))}</span>`).join("")}
 
 async function load(){
@@ -155,137 +163,93 @@ function normalWA(v){
 
 window.simpanAkun=async()=>{
  if(!ready)return;
+ const n=$("fNama").value.trim(),
+ r=editId?(accounts.find(x=>x.id===editId)?.role||""):$("fRole").value,
+ email=$("fEmail").value.trim().toLowerCase(),
+ wa=$("fWA")?$("fWA").value.trim():"",
+ pass=$("fPassword").value,
+ j=$("fJabatan").value.trim(),
+ upah=Number($("fUpah").value)||0,
+ status=$("fStatus").value,
+ izin=izinValues();
 
- const n=$("fNama").value.trim();
- const r=editId?(accounts.find(x=>x.id===editId)?.role||""):$("fRole").value;
- const email=$("fEmail").value.trim().toLowerCase();
- const wa=normalWA($("fWA").value.trim());
- const pass=$("fPassword").value;
- const j=$("fJabatan").value.trim();
- const upah=Number($("fUpah").value)||0;
- const status=$("fStatus").value;
- const izin=izinValues();
-
- if(n.length<3){tampilNotice("⚠️ Nama Tidak Valid","Nama minimal 3 karakter.");return}
- if(!validEmail(email)){tampilNotice("⚠️ Email Tidak Valid","Masukkan email yang benar, contoh: nama@gmail.com.");return}
- if(!validWA(wa)){tampilNotice("⚠️ No. WA Tidak Valid","Masukkan nomor WhatsApp Indonesia yang valid, contoh 081234567890.");return}
+ if(!n){tampilNotice("⚠️ Data Belum Lengkap","Nama wajib diisi.");return}
+ if(!validEmail(email)){tampilNotice("⚠️ Email Tidak Valid","Masukkan email yang benar, contoh: nama@gmail.com");return}
+ if(!validWA(wa)){tampilNotice("⚠️ No. WA Tidak Valid","Gunakan nomor WhatsApp Indonesia yang benar, contoh: 081234567890.");return}
  if(!["employee","reseller"].includes(r)){tampilNotice("⚠️ Role Tidak Valid","Role akun tidak valid.");return}
 
  try{
    if(editId){
-     const old=accounts.find(x=>x.id===editId);
-     if(!old)throw new Error("Data akun tidak ditemukan.");
-
+     const old=accounts.find(x=>x.id===editId)||{};
      const oldEmail=String(old.email||"").trim().toLowerCase();
-
-     /*
-       Edit akun:
-       - Firestore SELALU disinkronkan.
-       - izin + permissions tetap sama.
-       - email baru disimpan ke users/{uid}.
-       - status nonaktif dapat digunakan untuk memutus akses akun lama.
-       - Firebase Auth akun lain tidak dapat diubah langsung dari browser
-         tanpa Admin SDK/backend.
-     */
-     const data={
-       nama:n,namaKaryawan:n,
-       role:r,
-       email,
-       jabatan:j,
-       upahHarian:upah,
-       status,
-       noWA:wa,wa:wa,noWa:wa,noHp:wa,
-       izin:[...izin],
-       permissions:[...izin],
-       ownerUid,
-       updatedAt:serverTimestamp()
-     };
-
-     await setDoc(doc(db,"users",editId),data,{merge:true});
-
-     const idx=accounts.findIndex(x=>x.id===editId);
-     if(idx>=0)accounts[idx]={...accounts[idx],...data};
-     render();
-
-     $("popup").classList.remove("show");
-     editId=null;$("fRole").disabled=false;
-
-     if(oldEmail!==email){
-       tampilNotice("✅ Data Firebase Tersimpan",
-         `Data akun berhasil diperbarui di Firestore.<br><br>`+
-         `<b>Email lama:</b> ${esc(oldEmail||"-")}<br>`+
-         `<b>Email baru:</b> ${esc(email)}<br><br>`+
-         `⚠️ Perubahan email <b>Firebase Authentication</b> belum dapat dilakukan langsung dari halaman Owner ini. Agar email login benar-benar berubah dan email lama otomatis tidak dapat login, perlu fungsi backend Firebase Admin SDK.`);
-     }else{
-       tampilNotice("✅ Berhasil","Data akun, No. WA, upah, status, dan seluruh hak akses berhasil diperbarui di Firebase.");
+     if(email!==oldEmail){
+       tampilNotice("⚠️ Email Login Belum Diubah","Email baru berbeda dari email login Firebase. Klik <b>Ubah Email Login</b> terlebih dahulu agar Firebase Authentication ikut berubah.");
+       return;
      }
+     await setDoc(doc(db,"users",editId),{
+       nama:n,namaKaryawan:n,role:r,jabatan:j,upahHarian:upah,status,
+       noWA:wa,wa:wa,noWa:wa,noHp:wa,email:oldEmail,
+       izin,permissions:izin,ownerUid,updatedAt:serverTimestamp()
+     },{merge:true});
+     $("popup").classList.remove("show");
+     if($("authActions"))$("authActions").style.display="none";
+     editId=null;$("fRole").disabled=false;
+     tampilNotice("✅ Berhasil","Data akun, WA, upah, status dan hak akses berhasil disimpan ke Firebase.");
      await load();
      return;
    }
 
    if(pass.length<6){tampilNotice("⚠️ Password","Password awal minimal 6 karakter.");return}
-
    const secondary=initializeApp(cfg,"createUser-"+Date.now());
-   const secondaryAuth=(await import("https://www.gstatic.com/firebasejs/11.10.0/firebase-auth.js")).getAuth(secondary);
+   const secondaryAuth=getAuth(secondary);
    const cred=await createUserWithEmailAndPassword(secondaryAuth,email,pass);
    try{await updateProfile(cred.user,{displayName:n})}catch{}
-
-   const accountData={
+   await setDoc(doc(db,"users",cred.user.uid),{
      uid:cred.user.uid,ownerUid,role:r,status,nama:n,namaKaryawan:n,email,
-     noWA:wa,wa:wa,noWa:wa,noHp:wa,jabatan:j,upahHarian:upah,izin:[...izin],permissions:[...izin],
-     tanggalDaftar:new Date().toISOString(),createdAt:serverTimestamp(),updatedAt:serverTimestamp()
-   };
-
-   await setDoc(doc(db,"users",cred.user.uid),accountData);
+     noWA:wa,wa:wa,noWa:wa,noHp:wa,jabatan:j,upahHarian:upah,
+     izin,permissions:izin,tanggalDaftar:new Date().toISOString(),
+     createdAt:serverTimestamp(),updatedAt:serverTimestamp()
+   });
    await secondaryAuth.signOut();
-
    $("popup").classList.remove("show");
-   const pesan=`Silahkan login dengan data ini
-
-Nama: ${n}
-Email: ${email}
-Password: ${pass}
-Role: ${roleLabel(r)}
-Jabatan: ${j||"-"}
-Upah Harian: ${rupiah(upah)}
-
-Link Login:
-https://fixzy-olive.vercel.app`;
-
-   window._waPending={phone:wa,message:pesan,name:n,email,password:pass,role:r};
+   tampilNotice("✅ Akun Berhasil Dibuat",`Akun <b>${esc(n)}</b> berhasil dibuat dengan <b>${izin.length}</b> izin akses.`);
    await load();
-   tampilWaPopup(window._waPending);
+ }catch(e){console.error(e);tampilNotice("❌ Gagal Menyimpan",esc(e.message||e))}
+};
 
+async function resetPasswordAkun(){
+ const a=accounts.find(x=>x.id===editId);
+ const email=String(a?.email||$("fEmail").value||"").trim();
+ if(!validEmail(email)){tampilNotice("⚠️ Email Tidak Valid","Email login akun belum valid.");return}
+ try{
+   const {sendPasswordResetEmail}=await import("https://www.gstatic.com/firebasejs/11.10.0/firebase-auth.js");
+   await sendPasswordResetEmail(auth,email);
+   tampilNotice("✅ Reset Password","Link reset password sudah dikirim ke <b>"+esc(email)+"</b>. Password lama tidak perlu diketahui Owner.");
+ }catch(e){console.error(e);tampilNotice("❌ Gagal Reset Password",esc(e.message||e))}
+}
+window.resetPasswordAkun=resetPasswordAkun;
+
+async function sinkronEmailAuth(){
+ const a=accounts.find(x=>x.id===editId);
+ if(!a)return;
+ const oldEmail=String(a.email||"").trim().toLowerCase();
+ const newEmail=String($("fEmail").value||"").trim().toLowerCase();
+ if(!validEmail(newEmail)){tampilNotice("⚠️ Email Tidak Valid","Masukkan email yang benar, contoh: nama@gmail.com");return}
+ if(newEmail===oldEmail){tampilNotice("ℹ️ Email Sama","Email login sudah sama.");return}
+ try{
+   const fn=httpsCallable(functions,"adminUpdateUserEmail");
+   const result=await fn({uid:editId,newEmail});
+   if(!result?.data?.ok)throw new Error(result?.data?.message||"Firebase Authentication tidak mengonfirmasi perubahan.");
+   await updateDoc(doc(db,"users",editId),{email:newEmail,updatedAt:serverTimestamp()});
+   $("fEmail").value=newEmail;
+   tampilNotice("✅ Email Login Berubah","Email Firebase Authentication dan Firestore sudah menggunakan <b>"+esc(newEmail)+"</b>.");
+   await load();
  }catch(e){
    console.error(e);
-   let msg=e.message||String(e);
-   if(e.code==="auth/email-already-in-use")msg="Email sudah digunakan oleh akun Firebase lain.";
-   else if(e.code==="auth/invalid-email")msg="Format email tidak valid.";
-   else if(e.code==="auth/weak-password")msg="Password terlalu lemah.";
-   else if(e.code==="permission-denied")msg="Firebase menolak akses. Periksa Firestore Rules.";
-   tampilNotice("❌ Gagal Menyimpan",esc(msg));
+   tampilNotice("⚠️ Email Login Belum Berubah","Perubahan email login membutuhkan Cloud Function Firebase Admin <b>adminUpdateUserEmail</b>. Saya sengaja tidak mengubah email Firestore saja agar login tidak menjadi tidak sinkron.");
  }
-};
-
-function nomorWhatsApp(v){
- let s=String(v||"").replace(/[^\d]/g,"");
- if(!s)return "";
- if(s.startsWith("0"))s="62"+s.slice(1);
- else if(s.startsWith("8"))s="62"+s;
- return s;
 }
-function tampilWaPopup(data){
- $("waText").innerHTML=`Akun <b>${esc(data.name)}</b> berhasil dibuat.<br><br>Nomor WA: <b>${esc(data.phone)}</b><br><br>Pesan yang akan dikirim:<div style="margin-top:8px;padding:11px;border:1px solid #e2e8f0;border-radius:10px;background:#f8fafc;white-space:pre-wrap;font-size:11px">${esc(data.message)}</div>`;
- $("waPopup").classList.add("show");
-}
-window.tutupWaPopup=()=>{$("waPopup").classList.remove("show");window._waPending=null};
-window.kirimWhatsApp=()=>{
- const d=window._waPending;if(!d)return;
- const nomor=nomorWhatsApp(d.phone);
- if(!nomor){$("waPopup").classList.remove("show");tampilNotice("⚠️ No. WA Tidak Valid","Nomor WhatsApp tidak valid.");return}
- const url="https://wa.me/"+nomor+"?text="+encodeURIComponent(d.message);
- $("waPopup").classList.remove("show");window.open(url,"_blank");window._waPending=null;
-};
+window.sinkronEmailAuth=sinkronEmailAuth;
 
 async function init(){
  onAuthStateChanged(auth,async u=>{
