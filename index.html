@@ -459,7 +459,7 @@ body{overflow:hidden}
 
 <button class="menu-link"
       data-page="servisan.html"
-      data-roles="owner,employee,reseller"
+      data-roles="owner,employee,karyawan,kasir,kurir,reseller"
       data-permission="servis"
       onclick="bukaHalaman(this)">
       <span class="ico">👥</span>
@@ -468,8 +468,8 @@ body{overflow:hidden}
 
 <button class="menu-link"
       data-page="penjualan.html"
-      data-roles="owner,employee,reseller"
-      data-permission="servis"
+      data-roles="owner,employee,karyawan,kasir,kurir,reseller"
+      data-permission="penjualan"
       onclick="bukaHalaman(this)">
       <span class="ico">👥</span>
      Input Penjualan
@@ -477,8 +477,8 @@ body{overflow:hidden}
 
 <button class="menu-link"
       data-page="data-servis.html"
-      data-roles="owner,employee,reseller"
-      data-permission="servis"
+      data-roles="owner,employee,karyawan,kasir,kurir,reseller"
+      data-permission="dataServis"
       onclick="bukaHalaman(this)">
       <span class="ico">👥</span>
      Data Servisan
@@ -486,8 +486,8 @@ body{overflow:hidden}
 
 <button class="menu-link"
       data-page="data-penjualan.html"
-      data-roles="owner,employee,reseller"
-      data-permission="servis"
+      data-roles="owner,employee,karyawan,kasir,kurir,reseller"
+      data-permission="dataPenjualan"
       onclick="bukaHalaman(this)">
       <span class="ico">👥</span>
      Data Penjualan
@@ -495,8 +495,8 @@ body{overflow:hidden}
 
 <button class="menu-link"
       data-page="stock.html"
-      data-roles="owner,employee,reseller"
-      data-permission="servis"
+      data-roles="owner,employee,karyawan,kasir,kurir,reseller"
+      data-permission="stock"
       onclick="bukaHalaman(this)">
       <span class="ico">👥</span>
      Stock Produk
@@ -504,44 +504,44 @@ body{overflow:hidden}
       
 <button class="menu-link"
       data-page="laporan-keuangan.html"
-      data-roles="owner,employee,reseller"
-      data-permission="servis"
+      data-roles="owner,employee,karyawan,kasir,kurir,reseller"
+      data-permission="laporanKeuangan"
       onclick="bukaHalaman(this)">
-      <span class="ico">👥</span>
+      <span class="ico">💰</span>
     Laporan Keuangan
     </button>
 
 <button class="menu-link"
       data-page="absensi-karyawan.html"
-      data-roles="owner,employee,reseller"
-      data-permission="servis"
+      data-roles="owner,employee,karyawan,kasir,kurir,reseller"
+      data-permission="absensi"
       onclick="bukaHalaman(this)">
-      <span class="ico">👥</span>
+      <span class="ico">🕘</span>
    Absensi Karyawan
     </button>
 
 <button class="menu-link"
       data-page="data-karyawan.html"
-      data-roles="owner,employee,reseller"
-      data-permission="servis"
+      data-roles="owner,employee,karyawan,kasir,kurir,reseller"
+      data-permission="dataKaryawan"
       onclick="bukaHalaman(this)">
-      <span class="ico">👥</span>
+      <span class="ico">👨‍🔧</span>
    Data Karyawan
     </button>
       
 <button class="menu-link"
       data-page="dashboard-admin.html"
-      data-roles="owner,employee,reseller"
-      data-permission="servis"
+      data-roles="owner,superadmin"
+      data-permission="ownerOnly"
       onclick="bukaHalaman(this)">
-      <span class="ico">👥</span>
+      <span class="ico">📊</span>
    Dashboard Admin
     </button>
 
 <button class="menu-link"
       data-page="izin-akses.html"
-      data-roles="owner,employee,reseller"
-      data-permission="servis"
+      data-roles="owner,superadmin"
+      data-permission="ownerOnly"
       onclick="bukaHalaman(this)">
       <span class="ico">👥</span>
   Izin Akses
@@ -549,8 +549,8 @@ body{overflow:hidden}
       
     <button class="menu-link"
       data-page="cek-paket.html"
-      data-roles="owner,employee,reseller"
-      data-permission="penjualan"
+      data-roles="owner,employee,karyawan,kasir,kurir,reseller"
+      data-permission="cekAktivasi"
       onclick="bukaHalaman(this)">
       <span class="ico">⌛</span>
       Cek Aktivasi
@@ -558,7 +558,7 @@ body{overflow:hidden}
 
     <button class="menu-link"
       data-page="page.html"
-      data-roles="owner,employee,reseller,superadmin"
+      data-roles="owner,employee,karyawan,kasir,kurir,reseller,superadmin"
       onclick="bukaHalaman(this)">
       <span class="ico">ℹ️</span>
       About
@@ -637,8 +637,7 @@ function refreshIndex(){
 window.refreshIndex=refreshIndex;
 
 const FIXZY_PERMISSION_BY_PAGE={
-  // SEMUA MENU YANG BISA DIATUR OWNER LEWAT CHECKLIST KARYAWAN
-  // Kalau tambah menu baru, tinggal tambah disini + di kelola-karyawan
+  "servisan.html":"servis",
   "nota.html":"servis",
   "penjualan.html":"penjualan",
   "dashboard-pendapatan.html":"dashboardPendapatan",
@@ -646,51 +645,114 @@ const FIXZY_PERMISSION_BY_PAGE={
   "data-penjualan.html":"dataPenjualan",
   "rekap-teknisi.html":"rekapTeknisi",
   "laporan-pendapatan-servis.html":"laporanPendapatan",
+  "laporan-keuangan.html":"laporanKeuangan",
   "monitoring-garansi.html":"garansi",
   "stock.html":"stock",
-  // Menu owner-only tidak masuk map ini, karena data-roles="owner"
+  "absensi-karyawan.html":"absensi",
+  "data-karyawan.html":"dataKaryawan",
+  "cek-paket.html":"cekAktivasi",
+  "dashboard-admin.html":"ownerOnly",
+  "izin-akses.html":"ownerOnly",
+  "hak-akses.html":"ownerOnly",
+  "kelola-karyawan-reseller.html":"ownerOnly",
   "upah-kerja.html":"ownerOnly",
   "pengeluaran.html":"ownerOnly",
-  "dashboard-admin.html":"ownerOnly",
-  "kelola-karyawan-reseller.html":"ownerOnly",
-  "hak-akses.html":"ownerOnly",
-  "data-karyawan.html":"ownerOnly",
-  "cek-aktivasi.html":"ownerOnly",
   "pengaturan.html":"ownerOnly"
 };
 
-function permissionTersedia(izin, permission){
-  if(izin.includes(permission)) return true;
+/*
+  Semua nama izin dinormalisasi di sini supaya data lama dan data baru
+  tetap terbaca. Owner/superadmin tidak dibatasi checklist.
+*/
+function normalisasiIzin(value){
+  if(Array.isArray(value)) return value
+    .map(x=>String(x??"").trim())
+    .filter(Boolean);
 
-  // Kompatibilitas dengan data izin lama yang memakai format kebab-case.
+  if(value && typeof value==="object"){
+    return Object.keys(value).filter(k=>value[k]===true || value[k]==="true");
+  }
+
+  if(typeof value==="string"){
+    return value.split(/[,\|;]+/).map(x=>x.trim()).filter(Boolean);
+  }
+
+  return [];
+}
+
+function permissionTersedia(izin, permission){
+  if(!permission) return true;
+
+  const daftar=normalisasiIzin(izin).map(x=>x.toLowerCase());
+  const p=String(permission).toLowerCase();
+
+  if(p==="owneronly") return false;
+
   const alias={
-    "servis":["servis","nota"],
-    "dataServis":["dataServis","data-servis"],
-    "dataPenjualan":["dataPenjualan","data-penjualan"],
-    "garansi":["garansi","monitoring-garansi"],
-    "penjualan":["penjualan"],
-    "stock":["stock"]
+    "servis":["servis","nota","inputservis","inputservisan"],
+    "penjualan":["penjualan","inputpenjualan"],
+    "dataservis":["dataservis","data-servis","data_servis"],
+    "datapenjualan":["datapenjualan","data-penjualan","data_penjualan"],
+    "stock":["stock","stok","produk","stokproduk"],
+    "laporankeuangan":["laporankeuangan","laporan-keuangan","laporan_keuangan"],
+    "absensi":["absensi","absensikaryawan","absensi-karyawan"],
+    "datakaryawan":["datakaryawan","data-karyawan","karyawan"],
+    "cekaktivasi":["cekaktivasi","cek-aktivasi","cekpaket","cek-paket","aktivasi"],
+    "dashboardpendapatan":["dashboardpendapatan","dashboard-pendapatan"],
+    "rekapteknisi":["rekapteknisi","rekap-teknisi"],
+    "laporanpendapatan":["laporanpendapatan","laporan-pendapatan-servis"],
+    "garansi":["garansi","monitoring-garansi"]
   };
 
-  return (alias[permission]||[permission]).some(x=>izin.includes(x));
+  const candidates=alias[p] || [p];
+  return candidates.some(c=>{
+    const x=String(c).toLowerCase();
+    return daftar.some(i=>i===x || i.replace(/[\s_-]/g,"")===x.replace(/[\s_-]/g,""));
+  });
+}
+
+function roleDiizinkan(btn,role){
+  const roles=String(btn.dataset.roles||"owner")
+    .split(",").map(x=>x.trim().toLowerCase()).filter(Boolean);
+
+  const r=String(role||"").toLowerCase();
+
+  // Kompatibilitas role lama: employee = karyawan.
+  if(r==="employee" && roles.includes("karyawan")) return true;
+  if(r==="karyawan" && roles.includes("employee")) return true;
+
+  return roles.includes(r);
 }
 
 function bolehAksesMenu(btn){
   const session=window.fixzySession||{};
-  const role=session.role||"";
-  const roles=String(btn.dataset.roles||"owner").split(",").map(x=>x.trim()).filter(Boolean);
+  const role=String(session.role||"").toLowerCase();
 
-  if(!roles.includes(role)) return false;
+  if(!roleDiizinkan(btn,role)) return false;
 
+  // Owner dan superadmin tetap bisa melihat seluruh menu yang memang
+  // tersedia untuk mereka.
   if(role==="owner" || role==="superadmin") return true;
 
-  const permission=btn.dataset.permission || FIXZY_PERMISSION_BY_PAGE[btn.dataset.page];
+  const permission=btn.dataset.permission || FIXZY_PERMISSION_BY_PAGE[btn.dataset.page] || "";
   if(!permission) return true;
 
-  const izin=Array.isArray(session.permissions)?session.permissions:[];
+  if(permission==="ownerOnly") return false;
+
+  const izin=normalisasiIzin(
+    Array.isArray(session.permissions) ? session.permissions : session.permissions
+  );
+
   return permissionTersedia(izin,permission);
 }
 
+function terapkanHakAksesMenu(){
+  document.querySelectorAll(".menu-link[data-page]").forEach(btn=>{
+    const boleh=bolehAksesMenu(btn);
+    btn.style.display=boleh ? "" : "none";
+    btn.setAttribute("aria-hidden",boleh ? "false" : "true");
+  });
+}
 function tampilkanAksesDitolak(){
   const area=document.getElementById("contentArea");
   area.innerHTML=`<div style="height:100%;display:flex;align-items:center;justify-content:center;padding:20px;background:#f3f4f6">
@@ -788,12 +850,12 @@ async function validasiDanTampilkan(user){
       role,
       ownerUid:ownerUid || user.uid,
       profile:data,
-      permissions:Array.isArray(data.izin)
-        ? data.izin
-        : (Array.isArray(data.permissions) ? data.permissions : [])
+      permissions:normalisasiIzin(
+        data.izin ?? data.permissions ?? data.hakAkses ?? data.access
+      )
     };
 
-    if(!["owner","employee","reseller","superadmin"].includes(role)){
+    if(!["owner","employee","karyawan","kasir","kurir","reseller","superadmin"].includes(String(role).toLowerCase())){
       await signOut(auth);
       window.location.replace("login.html");
       return;
