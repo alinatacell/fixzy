@@ -3,51 +3,84 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<meta name="theme-color" content="#FFC107">
-<title>FIXZY | Data Karyawan</title>
+<meta name="theme-color" content="#111827">
+<title>FIXZY | Data & Upah Karyawan</title>
 <style>
 *{box-sizing:border-box}
-:root{--bg:#f5f7fb;--card:#fff;--line:#e2e8f0;--text:#172033;--muted:#64748b;--yellow:#ffc107;--orange:#f59e0b;--green:#16a34a;--red:#dc2626;--navy:#081326}
-body{margin:0;background:linear-gradient(180deg,#fff,#f5f7fb 260px);color:var(--text);font-family:Arial,Helvetica,sans-serif}
-button,input,select{font:inherit}button{cursor:pointer}
-.header{position:sticky;top:0;z-index:20;background:var(--navy);border-bottom:1px solid #17233a;box-shadow:0 3px 14px #0004}
-.header-in{max-width:1050px;margin:auto;padding:9px 14px;display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:68px}
-.brandbox{display:flex;align-items:center;gap:11px;min-width:0}
-.logo{width:48px;height:48px;object-fit:contain;border-radius:10px;flex:none;background:#fff}
-.brand{font-size:17px;font-weight:900;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+:root{--bg:#f1f5f9;--card:#fff;--line:#e2e8f0;--text:#111827;--muted:#64748b;--yellow:#ffc400;--green:#16a34a;--red:#dc2626}
+body{margin:0;background:var(--bg);color:var(--text);font-family:Arial,Helvetica,sans-serif}
+button,input{font:inherit}button{cursor:pointer}
+.header{position:sticky;top:0;z-index:50;background:#111827;color:#fff;box-shadow:0 2px 12px #0003}
+.header-in{max-width:1050px;margin:auto;padding:9px 14px;min-height:73px;display:flex;align-items:center;gap:12px}
+.brand{display:flex;align-items:center;gap:12px;min-width:0}
+.logo{width:52px;height:52px;object-fit:contain;background:#000;border-radius:10px;padding:3px;flex:none}
+.brand-text{min-width:0}
+.brand h1{font-size:18px;line-height:1.15;margin:0;font-weight:900;white-space:nowrap}
 .owner{font-size:11px;color:#cbd5e1;margin-top:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.actions{display:flex;gap:7px;flex:none}
-.btn{border:0;border-radius:10px;padding:10px 13px;font-weight:900}.light{background:#fff;color:#111827}.yellow{background:var(--yellow);color:#111827}.dark{background:#111827;color:#fff}.red{background:#fee2e2;color:#b91c1c}.green{background:#dcfce7;color:#166534}
-.wrap{max-width:1050px;margin:auto;padding:15px 10px 70px}
-.card{background:var(--card);border:1px solid var(--line);border-radius:16px;margin-bottom:12px;overflow:hidden;box-shadow:0 5px 20px #17203308}
-.head{padding:14px 16px;border-bottom:1px solid var(--line);font-weight:900;display:flex;justify-content:space-between;align-items:center;gap:8px}.body{padding:14px 16px}
+.actions{margin-left:auto;display:flex;gap:7px;flex:none}
+.btn{border:0;border-radius:8px;height:44px;padding:0 13px;font-weight:900}
+.refresh{background:#fff;color:#111827}
+.close{background:#374151;color:#fff}
+.wrap{max-width:1050px;margin:auto;padding:12px 10px 50px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;margin-bottom:12px;overflow:hidden;box-shadow:0 3px 14px #0000000a}
+.card-head{padding:14px 16px;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;gap:10px}
+.title{font-size:16px;font-weight:900}
+.count{font-size:14px;font-weight:900}
+.body{padding:12px 16px}
 .status{font-size:11px;color:var(--muted);line-height:1.5}
-.grid{display:grid;grid-template-columns:1fr 1fr;gap:9px}.full{grid-column:1/-1}
-.field{display:flex;flex-direction:column;gap:5px}label{font-size:11px;font-weight:900;color:#475569}
-input,select{width:100%;height:42px;border:1px solid #cbd5e1;border-radius:10px;padding:0 11px;background:#fff;outline:none}
-input:focus,select:focus{border-color:var(--orange);box-shadow:0 0 0 3px #f59e0b18}
-.table-wrap{overflow:auto;border:1px solid var(--line);border-radius:12px}
-table{width:100%;min-width:720px;border-collapse:collapse}
-th,td{padding:10px;border-bottom:1px solid var(--line);font-size:11px;text-align:left}
-th{background:#f8fafc;color:#475569;font-size:10px}
-.badge{display:inline-block;padding:5px 8px;border-radius:99px;font-size:9px;font-weight:900}
+.search{width:100%;height:42px;border:1px solid #cbd5e1;border-radius:9px;padding:0 11px;outline:none;background:#fff}
+.search:focus{border-color:#f59e0b;box-shadow:0 0 0 3px #f59e0b18}
+.table-wrap{overflow:auto;border:1px solid var(--line);border-radius:11px}
+table{width:100%;min-width:700px;border-collapse:collapse}
+th,td{padding:10px;border-bottom:1px solid var(--line);font-size:11px;text-align:left;vertical-align:middle}
+th{background:#f8fafc;color:#475569;font-size:10px;white-space:nowrap}
+td b{font-weight:900}
+.badge{display:inline-block;padding:5px 8px;border-radius:999px;font-size:9px;font-weight:900;white-space:nowrap}
 .active{background:#dcfce7;color:#166534}.inactive{background:#fee2e2;color:#b91c1c}
-.acts{display:flex;gap:5px}.mini{border:0;border-radius:8px;padding:7px 9px;font-size:9px;font-weight:900}.edit{background:#fef3c7;color:#92400e}.del{background:#fee2e2;color:#b91c1c}
-@media(max-width:600px){.header-in{padding:8px 9px;min-height:64px}.logo{width:43px;height:43px}.brand{font-size:14px}.owner{font-size:10px}.actions .btn{padding:9px 10px;font-size:11px}.grid{grid-template-columns:1fr}.full{grid-column:auto}.body,.head{padding:12px}}
+.empty{text-align:center;color:var(--muted);padding:25px}
+.summary{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px}
+.sum{background:#fff;border:1px solid var(--line);border-radius:11px;padding:11px}
+.sum small{display:block;font-size:9px;color:var(--muted);font-weight:900}
+.sum b{display:block;font-size:18px;margin-top:3px}
+.sum.yellow{background:#fffbeb;border-color:#fde68a}.sum.yellow b{color:#b45309}
+.sum.green{background:#ecfdf5;border-color:#a7f3d0}.sum.green b{color:#15803d}
+.sum.blue{background:#eff6ff;border-color:#bfdbfe}.sum.blue b{color:#1d4ed8}
+.notice{position:fixed;inset:0;background:#0008;display:none;align-items:center;justify-content:center;padding:14px;z-index:200}
+.notice.show{display:flex}
+.notice-box{width:min(440px,100%);background:#fff;border-radius:14px;padding:18px;box-shadow:0 20px 60px #0004}
+.notice-box h3{margin:0 0 8px;font-size:17px}
+.notice-box p{margin:0;color:#64748b;font-size:12px;line-height:1.55}
+.notice-actions{display:flex;justify-content:flex-end;margin-top:14px}
+.notice-actions button{border:0;border-radius:8px;background:#111827;color:#fff;padding:10px 16px;font-weight:900}
+@media(max-width:600px){
+ .header-in{padding:9px 10px;gap:8px}
+ .logo{width:48px;height:48px}
+ .brand h1{font-size:15px}
+ .owner{font-size:10px}
+ .btn{height:42px;padding:0 9px;font-size:11px}
+ .close{display:none}
+ .wrap{padding:10px 7px 40px}
+ .card-head{padding:12px}
+ .body{padding:11px 12px}
+ .summary{grid-template-columns:1fr 1fr}
+ .sum:last-child{grid-column:1/-1}
+}
 </style>
 </head>
 <body>
+
 <header class="header">
   <div class="header-in">
-    <div class="brandbox">
-      <img class="logo" src="logo.png" alt="FIXZY">
-      <div>
-        <div class="brand">FIXZY - DATA KARYAWAN</div>
-        <div id="ownerName" class="owner">Memuat nama pemilik...</div>
+    <div class="brand">
+      <img src="logo.png" class="logo" alt="FIXZY">
+      <div class="brand-text">
+        <h1>DATA & UPAH KARYAWAN</h1>
+        <div class="owner" id="ownerName">Pemilik: Memuat...</div>
       </div>
     </div>
     <div class="actions">
-      <button class="btn yellow" type="button" onclick="muatKaryawan()">↻ Refresh</button>
+      <button class="btn refresh" type="button" onclick="muatKaryawan()">↻ Refresh</button>
+      <button class="btn close" type="button" onclick="tutupHalaman()">✕ Tutup</button>
     </div>
   </div>
 </header>
@@ -55,109 +88,213 @@ th{background:#f8fafc;color:#475569;font-size:10px}
 <main class="wrap">
   <section class="card">
     <div class="body">
-      <div id="status" class="status">Memeriksa data Firebase...</div>
+      <div id="status" class="status">Memeriksa login Firebase...</div>
     </div>
+  </section>
+
+  <section class="summary">
+    <div class="sum yellow"><small>TOTAL KARYAWAN</small><b id="total">0</b></div>
+    <div class="sum green"><small>AKTIF</small><b id="aktif">0</b></div>
+    <div class="sum blue"><small>TOTAL UPAH / HARI</small><b id="totalUpah">Rp 0</b></div>
   </section>
 
   <section class="card">
-    <div class="head">
-      <span>💰 Data & Upah Karyawan</span>
-      <span id="count">0 karyawan</span>
+    <div class="card-head">
+      <div class="title">💰 Data & Upah Karyawan</div>
+      <div class="count" id="count">0 karyawan</div>
     </div>
     <div class="body">
-      <div class="field">
-        <label>Cari Karyawan</label>
-        <input id="cari" placeholder="Cari nama, jabatan, nomor..." oninput="render()">
-      </div>
+      <input id="cari" class="search" placeholder="Cari nama, jabatan, nomor..." oninput="render()">
     </div>
     <div class="table-wrap">
       <table>
-        <thead><tr><th>Nama Karyawan</th><th>Jabatan</th><th>No. HP</th><th>Upah</th><th>Status</th></tr></thead>
-        <tbody id="tbody"><tr><td colspan="5">Memuat Firebase...</td></tr></tbody>
+        <thead>
+          <tr>
+            <th>Nama Karyawan</th>
+            <th>Jabatan</th>
+            <th>No. HP</th>
+            <th>Upah / Hari</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody id="tbody">
+          <tr><td colspan="5" class="empty">Memuat Firebase...</td></tr>
+        </tbody>
       </table>
     </div>
   </section>
-
 </main>
 
-<script type="module">
-import {initializeApp} from "https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js";
+<div id="notice" class="notice">
+  <div class="notice-box">
+    <h3 id="noticeTitle">FIXZY</h3>
+    <p id="noticeText"></p>
+    <div class="notice-actions"><button onclick="tutupNotice()">OK</button></div>
+  </div>
+</div>
 
-import {getFirestore,collection,getDocs} from "https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js";
+<script>
+function tutupHalaman(){
+  try{if(window.frameElement){window.frameElement.remove();return}}catch(e){}
+  try{if(window.parent!==window){window.parent.postMessage({type:"FIXZY_CLOSE_KARYAWAN"},"*");return}}catch(e){}
+  try{window.close()}catch(e){}
+}
+function tutupNotice(){document.getElementById("notice").classList.remove("show")}
+function tampilNotice(t,x){
+  document.getElementById("noticeTitle").textContent=t;
+  document.getElementById("noticeText").textContent=x;
+  document.getElementById("notice").classList.add("show");
+}
+</script>
+
+<script type="module">
+import{initializeApp}from"https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js";
+import{getAuth,onAuthStateChanged}from"https://www.gstatic.com/firebasejs/11.10.0/firebase-auth.js";
+import{getFirestore,collection,query,where,getDocs,doc,getDoc}from"https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js";
 
 const firebaseConfig={
- apiKey:"AIzaSyCwMbJsuORhIq4QCmp4c1r6OsjAUlfxU5Y",
- authDomain:"fixzy-f056f.firebaseapp.com",
- projectId:"fixzy-f056f",
- storageBucket:"fixzy-f056f.firebasestorage.app",
- messagingSenderId:"838081521031",
- appId:"1:838081521031:web:50fdee909b56460b055f22"
+ apiKey:"AIzaSyC_PcarMTT5Un7qfSLzf92o5OGn5rginsI",
+ authDomain:"fixzy-update.firebaseapp.com",
+ projectId:"fixzy-update",
+ storageBucket:"fixzy-update.firebasestorage.app",
+ messagingSenderId:"995892519622",
+ appId:"1:995892519622:web:fa41047944d8e5b35d6dc7"
 };
-const app=initializeApp(firebaseConfig),db=getFirestore(app);
+
+const app=initializeApp(firebaseConfig);
+const auth=getAuth(app);
+const db=getFirestore(app);
+const $=id=>document.getElementById(id);
+
+let uid="";
+let ownerUid="";
+let profile={};
+let ownerProfile={};
 let rows=[];
 
-const $=id=>document.getElementById(id);
-function toast(t){$("toast").textContent=t;$("toast").classList.add("show");setTimeout(()=>$("toast").classList.remove("show"),2400)}
-function esc(v){return String(v??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[m]))}
+const rupiah=n=>"Rp "+(Number(n)||0).toLocaleString("id-ID");
+const norm=v=>String(v??"").trim().toLowerCase();
+const esc=v=>String(v??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[m]));
 
-function tutupHalaman(){
- try{if(window.frameElement){window.frameElement.remove();return}}catch(e){}
- try{if(window.parent!==window){window.parent.postMessage({type:"FIXZY_CLOSE_KARYAWAN"},"*");return}}catch(e){}
- try{window.close()}catch(e){}
+function namaAkun(a){
+  return a?.namaPemilik||a?.namaKaryawan||a?.nama||a?.name||a?.displayName||a?.email||"Pemilik";
 }
-window.tutupHalaman=tutupHalaman;
-window.tutupModal=()=>{$("modal").classList.remove("show")};
+function hpAkun(a){
+  return a?.hp||a?.noHp||a?.nomorHp||a?.noHP||a?.phone||a?.telepon||a?.nomorTelepon||"-";
+}
+function upahAkun(a){
+  return Number(a?.upahHarian??a?.upah??a?.gajiHarian??a?.gaji??0)||0;
+}
+function statusAkun(a){
+  const s=norm(a?.status);
+  if(["nonaktif","inactive","disabled","off"].includes(s))return "Nonaktif";
+  return "Aktif";
+}
+function jabatanAkun(a){
+  return a?.jabatan||a?.posisi||a?.jobTitle||"-";
+}
 
-async function muatNamaPemilik(){
-  const el=$("ownerName");
-  try{
-    const snap=await getDocs(collection(db,"users"));
-    const all=snap.docs.map(d=>({id:d.id,...d.data()}));
-    const owner=all.find(r=>String(r.role||r.peran||"").toLowerCase()==="owner" || String(r.role||r.peran||"").toLowerCase()==="admin");
-    el.textContent=owner ? (owner.namaKonter||owner.namaPemilik||owner.nama||owner.email||"Pemilik") : "Data Karyawan";
-  }catch(e){ el.textContent="Data Karyawan"; }
+async function ambilProfilOwner(){
+  const s=await getDoc(doc(db,"users",ownerUid));
+  ownerProfile=s.exists()?s.data():{};
+  $("ownerName").textContent="Pemilik: "+namaAkun(ownerProfile);
 }
 
 async function muatKaryawan(){
- $("status").textContent="Mengambil data karyawan dari users Firebase...";
- try{
-  const snap=await getDocs(collection(db,"users"));
-  const all=snap.docs.map(d=>({id:d.id,...d.data()}));
-  // Data karyawan disimpan di koleksi users dengan role = employee.
-  rows=all.filter(r=>String(r.role||r.peran||"").toLowerCase()==="employee");
-  // Kompatibel dengan struktur lama jika role memakai "karyawan".
-  if(!rows.length) rows=all.filter(r=>String(r.role||r.peran||"").toLowerCase()==="karyawan");
-  render();
-  $("status").textContent=`Firebase aktif • ${rows.length} karyawan dimuat dari users.`;
- }catch(e){
-  console.error(e);
-  $("status").textContent="Gagal membaca Firebase: "+e.message;
-  $("tbody").innerHTML=`<tr><td colspan="5">${esc(e.message)}</td></tr>`;
- }
+  if(!uid)return;
+
+  $("status").textContent="Mengambil data karyawan dari Firebase...";
+  $("tbody").innerHTML='<tr><td colspan="5" class="empty">Memuat data...</td></tr>';
+
+  try{
+    if(!ownerUid)throw new Error("Owner akun belum ditemukan.");
+
+    await ambilProfilOwner();
+
+    const snap=await getDocs(
+      query(collection(db,"users"),where("ownerUid","==",ownerUid))
+    );
+
+    rows=snap.docs
+      .map(d=>({id:d.id,...d.data()}))
+      .filter(a=>a.role==="employee");
+
+    render();
+    $("status").innerHTML=`✓ Firebase aktif • ${rows.length} data karyawan ditemukan.`;
+  }catch(e){
+    console.error(e);
+    $("status").textContent="Gagal membaca Firebase: "+e.message;
+    $("tbody").innerHTML=`<tr><td colspan="5" class="empty">${esc(e.message)}</td></tr>`;
+  }
 }
 window.muatKaryawan=muatKaryawan;
-muatNamaPemilik();
-muatKaryawan();
 
 function render(){
-  const q=$("cari").value.toLowerCase().trim();
-  const data=rows.filter(r=>[r.nama,r.namaKaryawan,r.jabatan,r.hp,r.noHp,r.noHP,r.phone,r.upah,r.gaji,r.status].join(" ").toLowerCase().includes(q));
+  const q=norm($("cari").value);
+  const data=rows.filter(r=>{
+    const text=[namaAkun(r),jabatanAkun(r),hpAkun(r),upahAkun(r),statusAkun(r)].join(" ");
+    return !q||norm(text).includes(q);
+  });
+
   $("count").textContent=`${data.length} karyawan`;
+  $("total").textContent=data.length;
+  $("aktif").textContent=data.filter(r=>statusAkun(r)==="Aktif").length;
+  $("totalUpah").textContent=rupiah(data.reduce((s,r)=>s+upahAkun(r),0));
+
   if(!data.length){
-    $("tbody").innerHTML='<tr><td colspan="5" style="padding:22px;text-align:center;color:#64748b">Belum ada data karyawan.</td></tr>';
+    $("tbody").innerHTML='<tr><td colspan="5" class="empty">Belum ada data karyawan.</td></tr>';
     return;
   }
-  $("tbody").innerHTML=data.map(r=>`<tr>
-    <td><b>${esc(r.namaKaryawan||r.nama||"-")}</b></td>
-    <td>${esc(r.jabatan||"-")}</td>
-    <td>${esc(r.hp||r.noHp||r.noHP||r.phone||"-")}</td>
-    <td><b>Rp ${Number(r.upah ?? r.gaji ?? 0).toLocaleString("id-ID")}</b></td>
-    <td><span class="badge ${String(r.status||"Aktif").toLowerCase()==="aktif"?"active":"inactive"}">${esc(r.status||"Aktif")}</span></td>
-  </tr>`).join("");
+
+  $("tbody").innerHTML=data.map(r=>`
+    <tr>
+      <td><b>${esc(namaAkun(r))}</b></td>
+      <td>${esc(jabatanAkun(r))}</td>
+      <td>${esc(hpAkun(r))}</td>
+      <td><b>${rupiah(upahAkun(r))}</b></td>
+      <td><span class="badge ${statusAkun(r)==="Aktif"?"active":"inactive"}">${statusAkun(r)}</span></td>
+    </tr>
+  `).join("");
 }
 window.render=render;
 
-window.render=render;
+onAuthStateChanged(auth,async user=>{
+  if(!user){
+    $("ownerName").textContent="Pemilik: Belum login";
+    $("status").textContent="Belum login Firebase.";
+    $("tbody").innerHTML='<tr><td colspan="5" class="empty">Silakan login terlebih dahulu.</td></tr>';
+    return;
+  }
+
+  uid=user.uid;
+
+  try{
+    const s=await getDoc(doc(db,"users",uid));
+    if(!s.exists())throw new Error("Profil akun tidak ditemukan.");
+
+    profile=s.data()||{};
+    const role=profile.role||"";
+
+    // Halaman ini boleh dilihat Owner dan Reseller.
+    // Karyawan sengaja tidak diberi akses.
+    if(role==="employee"){
+      $("ownerName").textContent="Akses karyawan dibatasi";
+      $("status").textContent="Akses ditolak.";
+      $("tbody").innerHTML='<tr><td colspan="5" class="empty">Halaman Data & Upah Karyawan tidak dapat diakses oleh akun Karyawan.</td></tr>';
+      tampilNotice("🔒 Akses Ditolak","Akun Karyawan tidak memiliki akses ke halaman Data & Upah Karyawan.");
+      return;
+    }
+
+    ownerUid=role==="owner"?uid:(profile.ownerUid||"");
+    if(!ownerUid)throw new Error("ownerUid akun belum tersedia.");
+
+    await muatKaryawan();
+  }catch(e){
+    console.error(e);
+    $("status").textContent=e.message||"Gagal memuat data.";
+    tampilNotice("❌ Gagal Memuat",e.message||"Terjadi kesalahan.");
+  }
+});
 </script>
 </body>
 </html>
