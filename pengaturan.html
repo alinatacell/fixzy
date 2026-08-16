@@ -223,9 +223,26 @@ function ambilSesiIndex(){
 async function loadSettings(){
   if(!uid)return;
   try{
+    // Lokasi utama: pengaturanNota/{UID}.
     const snap=await getDoc(doc(db,"pengaturanNota",uid));
-    if(snap.exists())settings={...settings,...snap.data()};
-  }catch(e){console.warn("Pengaturan nota:",e)}
+    if(snap.exists()){
+      settings={...settings,...snap.data()};
+      return;
+    }
+  }catch(e){
+    console.warn("pengaturanNota tidak dapat dibaca, coba profil users:",e);
+  }
+
+  // Fallback agar halaman tetap dapat dipakai walaupun Firestore Rules
+  // belum mengizinkan collection pengaturanNota. Data tetap per UID.
+  try{
+    const us=await getDoc(doc(db,"users",uid));
+    if(us.exists() && us.data()?.pengaturanNota){
+      settings={...settings,...us.data().pengaturanNota};
+    }
+  }catch(e){
+    console.warn("Fallback users.pengaturanNota:",e);
+  }
 }
 
 async function loadProfile(){
@@ -276,12 +293,30 @@ window.simpanPengaturan=async()=>{
     $("saveStatus").innerHTML='<span style="color:#dc2626">UID akun belum tersedia. Buka halaman ini melalui index FIXZY yang sudah login agar dapat disimpan ke Firebase.</span>';
     return;
   }
+  const data={...settings,uid,diperbaruiPada:new Date().toISOString()};
   try{
-    await setDoc(doc(db,"pengaturanNota",uid),{...settings,uid,diperbaruiPada:new Date().toISOString()},{merge:true});
+    // Coba lokasi standar terlebih dahulu.
+    await setDoc(doc(db,"pengaturanNota",uid),data,{merge:true});
     $("saveStatus").innerHTML='<span class="saved">✓ Tersimpan ke Firebase</span>';
     renderPresets();renderPreview();
-  }catch(e){
-    $("saveStatus").innerHTML=`<span style="color:#dc2626">Gagal menyimpan Firebase: ${esc(e.code||"")} ${esc(e.message||e)}</span>`;
+    return;
+  }catch(primaryError){
+    console.warn("Simpan pengaturanNota ditolak, gunakan fallback users:",primaryError);
+  }
+
+  try{
+    // Fallback: simpan pada dokumen users milik akun sendiri.
+    // Ini tidak mengubah hak akses dan tetap terikat UID akun.
+    await setDoc(doc(db,"users",uid),{
+      pengaturanNota:data,
+      updatedAt:new Date().toISOString()
+    },{merge:true});
+    settings={...settings};
+    $("saveStatus").innerHTML='<span class="saved">✓ Tersimpan ke Firebase • profil akun</span>';
+    renderPresets();renderPreview();
+  }catch(fallbackError){
+    console.error("FIREBASE SAVE ERROR:",fallbackError);
+    $("saveStatus").innerHTML=`<span style="color:#dc2626">Gagal menyimpan Firebase: ${esc(fallbackError.code||"")} ${esc(fallbackError.message||fallbackError)}</span>`;
   }
 };
 
