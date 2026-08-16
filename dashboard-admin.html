@@ -4,265 +4,547 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="theme-color" content="#081326">
-<title>FIXZY | Dashboard Admin</title>
+<title>FIXZY | Data Pengeluaran</title>
 <style>
 *{box-sizing:border-box}
-:root{--navy:#081326;--navy2:#101d33;--yellow:#ffc107;--bg:#f2f5f9;--card:#fff;--line:#dbe3ed;--text:#172033;--muted:#64748b;--green:#16a34a;--red:#dc2626;--blue:#2563eb;--purple:#7c3aed;--orange:#f59e0b}
+:root{
+  --navy:#081326;--navy2:#101d33;--yellow:#ffc107;
+  --bg:#f2f5f9;--card:#fff;--line:#dbe3ed;
+  --text:#172033;--muted:#64748b;--red:#dc2626;
+  --green:#16a34a;--blue:#2563eb
+}
 body{margin:0;background:var(--bg);color:var(--text);font-family:Inter,Arial,Helvetica,sans-serif}
-button,select{font:inherit}button{cursor:pointer}
-.header{position:sticky;top:0;z-index:30;background:var(--navy);color:#fff;min-height:74px;padding:9px 14px;display:flex;align-items:center;gap:12px;box-shadow:0 4px 16px #0004}
-.logo{width:52px;height:52px;object-fit:contain;border-radius:10px;flex:none}.brand{flex:1;min-width:0}.brand h1{font-size:19px;margin:0;font-weight:900;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.brand p{font-size:11px;color:#cbd5e1;margin:3px 0 0}.owner{text-align:right;max-width:220px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.owner b{display:block;font-size:12px}.owner span{display:block;font-size:10px;color:#cbd5e1;margin-top:3px}.refresh{height:44px;width:44px;border:0;border-radius:12px;background:var(--yellow);font-weight:900;color:#111;font-size:20px}
-.wrap{max-width:1250px;margin:auto;padding:12px 12px 35px}.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:14px;margin-bottom:12px;box-shadow:0 4px 16px #0000000a}
-.toolbar{display:flex;gap:9px;align-items:center;justify-content:space-between}.toolbar-left{display:flex;gap:8px;align-items:center;flex-wrap:wrap}.label{font-size:11px;font-weight:900;color:var(--muted)}select{height:42px;border:1px solid #cbd5e1;border-radius:11px;padding:0 11px;background:#fff;outline:none}.btn{height:42px;border:0;border-radius:11px;padding:0 14px;font-weight:900}.dark{background:var(--navy);color:#fff}.yellow{background:var(--yellow);color:#111}.light{background:#e2e8f0;color:#111}
-.status{font-size:12px;color:var(--muted);line-height:1.5}.ok{color:#15803d;font-weight:800}.err{color:#b91c1c;font-weight:800}
-.kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:12px}.kpi{padding:15px;border-radius:16px;color:#fff;min-height:105px}.kpi small{display:block;font-size:10px;font-weight:900;opacity:.9}.kpi b{display:block;font-size:22px;margin-top:8px}.k1{background:linear-gradient(135deg,#2563eb,#1d4ed8)}.k2{background:linear-gradient(135deg,#16a34a,#059669)}.k3{background:linear-gradient(135deg,#7c3aed,#4f46e5)}.k4{background:linear-gradient(135deg,#f59e0b,#d97706)}.k5{background:linear-gradient(135deg,#dc2626,#b91c1c)}.k6{background:linear-gradient(135deg,#0891b2,#0e7490)}.k7{background:linear-gradient(135deg,#475569,#334155)}.k8{background:linear-gradient(135deg,#ea580c,#c2410c)}
-.section-title{font-size:17px;font-weight:900;margin:0 0 10px}.grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}.finance{display:grid;grid-template-columns:1fr 1fr;gap:8px}.fin{background:#f8fafc;border-radius:12px;padding:11px}.fin small{display:block;color:var(--muted);font-size:10px;font-weight:800}.fin b{display:block;font-size:17px;margin-top:5px}.green{color:var(--green)}.red{color:var(--red)}.blue{color:var(--blue)}.purple{color:var(--purple)}.orange{color:#d97706}
-.list{display:grid;gap:7px}.row{display:flex;justify-content:space-between;gap:10px;padding:10px;border-radius:11px;background:#f8fafc;font-size:12px}.row b{font-size:13px}.muted{color:var(--muted)}
-.chart{height:230px;display:flex;align-items:flex-end;gap:5px;padding:15px 5px 5px;border-bottom:1px solid var(--line);overflow:hidden}.barbox{flex:1;min-width:12px;height:100%;display:flex;align-items:flex-end;justify-content:center}.bar{width:100%;max-width:28px;border-radius:6px 6px 0 0;background:var(--blue);min-height:2px;position:relative}.bar span{position:absolute;bottom:-18px;left:50%;transform:translateX(-50%);font-size:8px;color:var(--muted)}.chart-note{font-size:10px;color:var(--muted);margin-top:9px}
-.popup-bg{position:fixed;inset:0;background:#0008;display:none;align-items:center;justify-content:center;padding:18px;z-index:100}.popup-bg.show{display:flex}.popup{width:min(430px,100%);background:#fff;border-radius:18px;padding:19px;box-shadow:0 20px 60px #0005}.popup h2{margin:0 0 8px;font-size:20px}.popup p{margin:0;color:var(--muted);line-height:1.5;font-size:13px}.popup-actions{display:flex;justify-content:flex-end;margin-top:16px}.popup-actions button{border:0;border-radius:10px;padding:10px 15px;font-weight:900;background:var(--navy);color:#fff}
-@media(max-width:900px){.kpis{grid-template-columns:repeat(2,1fr)}.grid2{grid-template-columns:1fr}.owner{max-width:150px}}
-@media(max-width:600px){.header{padding:8px 10px}.logo{width:48px;height:48px}.brand h1{font-size:17px}.owner{display:none}.wrap{padding:9px}.toolbar{align-items:stretch;flex-direction:column}.toolbar-left{width:100%}.toolbar-left select,.toolbar-left button{flex:1}.kpis{grid-template-columns:1fr 1fr;gap:7px}.kpi{padding:11px;min-height:88px}.kpi b{font-size:16px}.card{padding:11px}.finance{grid-template-columns:1fr 1fr}.chart{height:190px}}
+button,input,select,textarea{font:inherit}
+.header{
+  position:sticky;top:0;z-index:30;background:var(--navy);color:#fff;
+  min-height:74px;padding:9px 14px;display:flex;align-items:center;gap:12px;
+  box-shadow:0 4px 16px #0004
+}
+.logo{width:52px;height:52px;object-fit:contain;border-radius:10px;flex:none}
+.brand{flex:1;min-width:0}
+.brand h1{font-size:18px;margin:0;font-weight:900;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.brand p{font-size:11px;color:#cbd5e1;margin:3px 0 0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.owner{text-align:right;max-width:220px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.owner b{display:block;font-size:12px}
+.owner span{display:block;font-size:10px;color:#cbd5e1;margin-top:3px}
+.refresh{
+  height:44px;width:44px;border:0;border-radius:12px;background:var(--yellow);
+  font-weight:900;cursor:pointer;color:#111;font-size:20px;flex:none
+}
+.wrap{max-width:1100px;margin:auto;padding:12px}
+.card{
+  background:var(--card);border:1px solid var(--line);border-radius:16px;
+  padding:14px;margin-bottom:12px;box-shadow:0 4px 16px #0000000a
+}
+.status{font-size:12px;color:var(--muted);line-height:1.5}
+.ok{color:#15803d;font-weight:800}.err{color:#b91c1c;font-weight:800}
+.formgrid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.field{display:flex;flex-direction:column;gap:6px}
+.field.full{grid-column:1/-1}
+label{font-size:11px;font-weight:900;color:#475569}
+input,select,textarea{
+  width:100%;border:1px solid #cbd5e1;border-radius:11px;
+  padding:0 12px;background:#fff;outline:none
+}
+input,select{height:44px}
+textarea{min-height:92px;padding-top:11px;resize:vertical}
+input:focus,select:focus,textarea:focus{border-color:var(--yellow);box-shadow:0 0 0 3px #ffc10722}
+.actions{display:flex;gap:9px;flex-wrap:wrap;margin-top:12px}
+.btn{
+  height:44px;border:0;border-radius:11px;padding:0 16px;
+  font-weight:900;cursor:pointer
+}
+.primary{background:var(--yellow);color:#111}
+.dark{background:var(--navy);color:#fff}
+.light{background:#e2e8f0;color:#111}
+.danger{background:#fee2e2;color:#991b1b}
+.title{font-size:17px;font-weight:900;margin:0 0 10px}
+.kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:9px}
+.kpi{padding:13px;border-radius:14px;color:#fff}
+.kpi small{display:block;font-size:10px;font-weight:900;opacity:.9}
+.kpi b{display:block;font-size:19px;margin-top:6px}
+.k1{background:linear-gradient(135deg,#2563eb,#1d4ed8)}
+.k2{background:linear-gradient(135deg,#ef4444,#dc2626)}
+.k3{background:linear-gradient(135deg,#16a34a,#059669)}
+.k4{background:linear-gradient(135deg,#7c3aed,#4f46e5)}
+.table-wrap{overflow:auto;border:1px solid var(--line);border-radius:13px}
+table{width:100%;border-collapse:collapse;min-width:780px}
+th{background:var(--navy2);color:#fff;text-align:left;padding:10px;font-size:12px}
+td{padding:10px;border-bottom:1px solid #edf1f5;font-size:12px;vertical-align:middle}
+.num{text-align:right;white-space:nowrap}
+.amount{font-weight:900;color:var(--red);white-space:nowrap}
+.badge{
+  display:inline-block;padding:4px 8px;border-radius:999px;
+  font-size:10px;font-weight:900;background:#dbeafe;color:#1d4ed8
+}
+.empty{text-align:center;color:var(--muted);padding:25px}
+.filterbar{display:flex;gap:9px;align-items:end;flex-wrap:wrap}
+.filterbar .field{min-width:180px;flex:1}
+.popup-bg{
+  position:fixed;inset:0;background:#0008;display:none;
+  align-items:center;justify-content:center;padding:18px;z-index:100
+}
+.popup-bg.show{display:flex}
+.popup{
+  width:min(430px,100%);background:#fff;border-radius:18px;
+  padding:19px;box-shadow:0 20px 60px #0005
+}
+.popup h2{margin:0 0 8px;font-size:20px}
+.popup p{margin:0;color:var(--muted);line-height:1.5;font-size:13px}
+.popup-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:16px}
+.popup-actions button{border:0;border-radius:10px;padding:10px 15px;font-weight:900;cursor:pointer}
+@media(max-width:800px){
+  .kpis{grid-template-columns:1fr 1fr}
+  .owner{max-width:150px}
+}
+@media(max-width:600px){
+  .header{padding:8px 10px}.logo{width:48px;height:48px}
+  .brand h1{font-size:16px}.owner{display:none}
+  .wrap{padding:9px}.card{padding:11px}
+  .formgrid{grid-template-columns:1fr}.field.full{grid-column:auto}
+  .kpis{gap:7px}.kpi{padding:10px}.kpi b{font-size:15px}
+  .title{font-size:15px}
+}
 </style>
 </head>
 <body>
+
 <header class="header">
-<img src="logo.png" class="logo" alt="FIXZY">
-<div class="brand"><h1>FIXZY - DASHBOARD ADMIN</h1><p id="brandSub">Ringkasan usaha • Firebase</p></div>
-<div class="owner"><b id="ownerName">Memuat...</b><span id="ownerEmail">Firebase</span></div>
-<button class="refresh" onclick="muatSemua()" title="Refresh">↻</button>
+  <img src="logo.png" class="logo" alt="FIXZY">
+  <div class="brand">
+    <h1 id="konterNameHeader">Memuat nama konter...</h1>
+    <p>FIXZY • DATA PENGELUARAN</p>
+  </div>
+  <div class="owner">
+    <b id="ownerName">Memuat...</b>
+    <span id="ownerEmail">Firebase</span>
+  </div>
+  <button class="refresh" onclick="muatSemua()" title="Refresh">↻</button>
 </header>
 
 <main class="wrap">
-<section class="card">
-<div class="toolbar">
-<div class="toolbar-left">
-<span class="label">PERIODE</span>
-<select id="periode" onchange="muatSemua()"><option value="hari">Hari Ini</option><option value="bulan" selected>Bulan Ini</option><option value="tahun">Tahun Ini</option></select>
-<button class="btn light" onclick="muatSemua()">↻ Muat Data</button>
-</div>
-<div id="status" class="status">Memeriksa sesi Firebase...</div>
-</div>
-</section>
 
-<section class="kpis">
-<div class="kpi k1"><small>OMZET</small><b id="omzet">Rp 0</b></div>
-<div class="kpi k2"><small>LABA</small><b id="laba">Rp 0</b></div>
-<div class="kpi k3"><small>PIUTANG</small><b id="piutang">Rp 0</b></div>
-<div class="kpi k4"><small>KAS / SALDO</small><b id="kas">Rp 0</b></div>
-<div class="kpi k5"><small>PENGELUARAN</small><b id="pengeluaran">Rp 0</b></div>
-<div class="kpi k6"><small>UPAH + KASBON</small><b id="upah">Rp 0</b></div>
-<div class="kpi k7"><small>NILAI STOK</small><b id="stok">Rp 0</b></div>
-<div class="kpi k8"><small>TRANSAKSI</small><b id="transaksi">0</b></div>
-</section>
+  <section class="card">
+    <div id="status" class="status">Memeriksa sesi Firebase...</div>
+  </section>
 
-<div class="grid2">
-<section class="card">
-<h2 class="section-title">💰 Keuangan</h2>
-<div class="finance">
-<div class="fin"><small>Omzet Penjualan</small><b class="blue" id="fPenjualan">Rp 0</b></div>
-<div class="fin"><small>Omzet Servis</small><b class="blue" id="fServis">Rp 0</b></div>
-<div class="fin"><small>Total Modal</small><b id="fModal">Rp 0</b></div>
-<div class="fin"><small>Laba Kotor</small><b class="green" id="fLabaKotor">Rp 0</b></div>
-<div class="fin"><small>Pengeluaran</small><b class="red" id="fPengeluaran">Rp 0</b></div>
-<div class="fin"><small>Sisa Upah</small><b class="orange" id="fUpah">Rp 0</b></div>
-<div class="fin"><small>Laba Bersih Perkiraan</small><b class="green" id="fLabaBersih">Rp 0</b></div>
-<div class="fin"><small>Piutang</small><b class="red" id="fPiutang">Rp 0</b></div>
-</div>
-</section>
+  <section class="kpis">
+    <div class="kpi k1"><small>TOTAL PENGELUARAN</small><b id="total">Rp 0</b></div>
+    <div class="kpi k2"><small>KASBON KARYAWAN</small><b id="kasbon">Rp 0</b></div>
+    <div class="kpi k3"><small>PENGELUARAN LAIN</small><b id="lain">Rp 0</b></div>
+    <div class="kpi k4"><small>TRANSAKSI</small><b id="jumlah">0</b></div>
+  </section>
 
-<section class="card">
-<h2 class="section-title">📊 Aktivitas Usaha</h2>
-<div class="list">
-<div class="row"><span>🔧 Servis</span><b id="jServis">0</b></div>
-<div class="row"><span>🛒 Penjualan</span><b id="jPenjualan">0</b></div>
-<div class="row"><span>👷 Karyawan Aktif</span><b id="jKaryawan">0</b></div>
-<div class="row"><span>📅 Hadir Hari Ini</span><b id="jHadir">0</b></div>
-<div class="row"><span>💸 Kasbon Bulan Ini</span><b id="jKasbon">Rp 0</b></div>
-<div class="row"><span>📦 Stok Menipis</span><b id="jStokMenipis">0</b></div>
-</div>
-</section>
-</div>
+  <section class="card" style="margin-top:12px">
+    <h2 class="title">➕ Tambah Data Pengeluaran</h2>
 
-<section class="card">
-<h2 class="section-title">💵 Sumber Dana</h2>
-<div class="finance">
-<div class="fin"><small>🛒 Penjualan</small><b class="blue" id="sPenjualan">Rp 0</b></div>
-<div class="fin"><small>🔧 Servis</small><b class="blue" id="sServis">Rp 0</b></div>
-<div class="fin"><small>💼 Pendapatan Luar</small><b class="green" id="sLuar">Rp 0</b></div>
-<div class="fin"><small>💰 Total Sumber Dana</small><b class="green" id="sTotal">Rp 0</b></div>
-</div>
-<div class="list" id="sourceList" style="margin-top:10px"></div>
-</section>
+    <div class="formgrid">
+      <div class="field">
+        <label>TANGGAL</label>
+        <input id="tanggal" type="date">
+      </div>
 
-<section class="card">
-<h2 class="section-title">📈 Tren Omzet Bulanan</h2>
-<div id="chart" class="chart"></div>
-<div class="chart-note">Grafik berdasarkan tanggal transaksi/nota yang berhasil dibaca dari Firebase.</div>
-</section>
+      <div class="field">
+        <label>JENIS PENGELUARAN</label>
+        <select id="jenis" onchange="ubahJenis()">
+          <option value="Konsumsi">Konsumsi</option>
+          <option value="Kasbon Karyawan">Kasbon Karyawan</option>
+          <option value="Pembayaran">Pembayaran</option>
+          <option value="Belanja">Belanja</option>
+          <option value="Lain Lain">Lain Lain</option>
+        </select>
+      </div>
 
-<div class="grid2">
-<section class="card"><h2 class="section-title">⚠️ Perlu Perhatian</h2><div id="warning" class="list"></div></section>
-<section class="card"><h2 class="section-title">📌 Ringkasan Cepat</h2><div id="quick" class="list"></div></section>
-</div>
+      <div class="field" id="karyawanField" style="display:none">
+        <label>KARYAWAN</label>
+        <select id="karyawan">
+          <option value="">Pilih karyawan</option>
+        </select>
+      </div>
+
+      <div class="field">
+        <label>NOMINAL</label>
+        <input id="nominal" type="number" min="1" inputmode="numeric" placeholder="Contoh: 50000">
+      </div>
+
+      <div class="field full">
+        <label>KETERANGAN</label>
+        <textarea id="keterangan" placeholder="Contoh: makan karyawan, bayar listrik, belanja sparepart, kasbon, dll."></textarea>
+      </div>
+    </div>
+
+    <div class="actions">
+      <button class="btn primary" onclick="simpan()">💾 Simpan ke Firebase</button>
+      <button class="btn light" onclick="bersihkan()">Bersihkan</button>
+    </div>
+  </section>
+
+  <section class="card">
+    <div class="filterbar">
+      <div class="field">
+        <label>FILTER BULAN</label>
+        <input id="filterBulan" type="month" onchange="render()">
+      </div>
+      <button class="btn dark" onclick="muatSemua()">↻ Refresh Data</button>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2 class="title">📒 Riwayat Pengeluaran</h2>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>No</th>
+            <th>Tanggal</th>
+            <th>Jenis</th>
+            <th>Karyawan</th>
+            <th>Keterangan</th>
+            <th class="num">Nominal</th>
+          </tr>
+        </thead>
+        <tbody id="tbody"></tbody>
+      </table>
+    </div>
+  </section>
+
 </main>
 
-<div class="popup-bg" id="popup"><div class="popup"><h2 id="popupTitle">FIXZY</h2><p id="popupText"></p><div class="popup-actions"><button onclick="tutupPopup()">OK</button></div></div></div>
+<div class="popup-bg" id="popup">
+  <div class="popup">
+    <h2 id="popupTitle">FIXZY</h2>
+    <p id="popupText"></p>
+    <div class="popup-actions">
+      <button style="background:#e2e8f0;color:#111" onclick="tutupPopup()">Tutup</button>
+      <button style="background:#081326;color:#fff" onclick="tutupPopup()">OK</button>
+    </div>
+  </div>
+</div>
 
 <script type="module">
 import{initializeApp,getApps,getApp}from"https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js";
 import{getAuth,onAuthStateChanged}from"https://www.gstatic.com/firebasejs/11.10.0/firebase-auth.js";
-import{getFirestore,collection,getDocs,doc,getDoc}from"https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js";
+import{
+  getFirestore,collection,getDocs,getDoc,doc,query,where,
+  addDoc,serverTimestamp
+}from"https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js";
 
-const cfg={apiKey:"AIzaSyC_PcarMTT5Un7qfSLzf92o5OGn5rginsI",authDomain:"fixzy-update.firebaseapp.com",projectId:"fixzy-update",storageBucket:"fixzy-update.firebasestorage.app",messagingSenderId:"995892519622",appId:"1:995892519622:web:fa41047944d8e5b35d6dc7"};
-const app=getApps().length?getApp():initializeApp(cfg),auth=getAuth(app),db=getFirestore(app);
+const cfg={
+  apiKey:"AIzaSyC_PcarMTT5Un7qfSLzf92o5OGn5rginsI",
+  authDomain:"fixzy-update.firebaseapp.com",
+  projectId:"fixzy-update",
+  storageBucket:"fixzy-update.firebasestorage.app",
+  messagingSenderId:"995892519622",
+  appId:"1:995892519622:web:fa41047944d8e5b35d6dc7"
+};
+
+const app=getApps().length?getApp():initializeApp(cfg);
+const auth=getAuth(app);
+const db=getFirestore(app);
 const $=id=>document.getElementById(id);
-let user=null,users=[],servis=[],penjualan=[],pengeluaran=[],stok=[],absensi=[],pendapatanLuar=[];
-const num=v=>{if(typeof v==="number")return v;return Number(String(v??"").replace(/[^\d.-]/g,""))||0};
-const money=v=>"Rp "+num(v).toLocaleString("id-ID");
-const esc=v=>String(v??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]));
-function today(){return new Date().toLocaleDateString("sv-SE")}
-function month(){return today().slice(0,7)}
-function dateOf(r){
- let x=r?.tanggal??r?.tanggalTransaksi??r?.tanggalNota??r?.date??r?.createdAt??r?.disimpanPada;
- if(typeof x==="string"){let m=x.match(/^(\d{4}-\d{2}-\d{2})/);if(m)return m[1];let d=new Date(x);if(!isNaN(d))return d.toLocaleDateString("sv-SE")}
- if(x?.toDate){try{return x.toDate().toLocaleDateString("sv-SE")}catch{}}
- if(x?.seconds){try{return new Date(x.seconds*1000).toLocaleDateString("sv-SE")}catch{}}
- return ""
-}
-function amount(r){
- return num(r?.total??r?.totalHarga??r?.grandTotal??r?.jumlah??r?.nominal??r?.hargaTotal??r?.totalBayar??r?.harga??r?.nilai??r?.amount)
-}
 
-function externalAmount(r){
-  return num(r?.total??r?.nominal??r?.jumlah??r?.amount??r?.nilai??r?.pendapatan);
+let uid="";
+let ownerUid="";
+let profile={};
+let namaKonter="";
+let rows=[];
+let employees=[];
+
+const money=v=>"Rp "+(Number(v)||0).toLocaleString("id-ID");
+const esc=v=>String(v??"").replace(/[&<>"']/g,m=>({
+  "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
+}[m]));
+
+function today(){
+  const d=new Date();
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;
 }
-function activeRevenue(r,type){
-  const s=String(r?.status??"").toLowerCase().trim();
-  if(s==="batal"||s==="cancel"||r?.omzetEligible===false)return false;
-  if(type==="Servis")return !s||["diambil","selesai","dibayar","lunas","tunai"].includes(s);
-  return !s||["dibayar","tunai","lunas","selesai"].includes(s)||
-    ["tunai","cash","lunas"].includes(String(r?.pembayaran??r?.metode??"").toLowerCase());
+function monthNow(){return today().slice(0,7)}
+
+function showPopup(title,text){
+  $("popupTitle").textContent=title;
+  $("popupText").textContent=text;
+  $("popup").classList.add("show");
 }
-function cost(r){
- return num(r?.modal??r?.hargaModal??r?.totalModal??r?.modalTotal??r?.hpp??r?.HPP??r?.hargaBeli??r?.modalBarang)
+window.tutupPopup=()=>$("popup").classList.remove("show");
+
+function bersihkan(){
+  $("tanggal").value=today();
+  $("jenis").value="Konsumsi";
+  $("nominal").value="";
+  $("keterangan").value="";
+  $("karyawan").value="";
+  ubahJenis();
 }
-function isBatal(r){return String(r?.status||"").toLowerCase()==="batal"}
-function periodMatch(r){
- const d=dateOf(r),p=$("periode").value;
- if(!d)return false;
- if(p==="hari")return d===today();
- if(p==="tahun")return d.startsWith(today().slice(0,4));
- return d.startsWith(month());
+window.bersihkan=bersihkan;
+
+function ubahJenis(){
+  $("karyawanField").style.display=
+    $("jenis").value==="Kasbon Karyawan"?"flex":"none";
 }
-function text(r){return [r?.jenis,r?.type,r?.kategori,r?.keterangan,r?.catatan,r?.deskripsi,r?.perihal,r?.uraian,r?.nama].filter(Boolean).join(" ").toLowerCase()}
-function isExpense(r){return !/kasbon|ambil\s+uang|pengambilan\s+uang|pinjaman\s+karyawan/.test(text(r))}
-function isKasbon(r){return /kasbon|ambil\s+uang|pengambilan\s+uang|pinjaman\s+karyawan/.test(text(r))}
-function paid(r){let s=String(r?.statusPembayaran||r?.statusBayar||r?.pembayaran||r?.status||"").toLowerCase();return /lunas|tunai|cash|dibayar|paid/.test(s)}
-function receivable(r){
- if(r?.piutang!==undefined)return num(r.piutang);
- const a=amount(r),b=num(r?.dibayar??r?.bayar??r?.uangMuka??r?.dp??r?.terbayar);
- return Math.max(0,a-b)
-}
-async function read(name){try{const s=await getDocs(collection(db,name));return s.docs.map(d=>({id:d.id,...d.data()}))}catch(e){console.warn(name,e);return[]}}
-async function load(){
-  [users,servis,penjualan,pengeluaran,stok,absensi,pendapatanLuar]=await Promise.all([
-    read("users"),read("servis"),read("penjualan"),read("pengeluaran"),read("stok"),read("absensi"),read("pendapatanLuar")
-  ]);
+window.ubahJenis=ubahJenis;
+
+async function ambilProfile(){
+  if(!uid)return;
+
+  profile={};
   try{
-    if(user){const s=await getDoc(doc(db,"users",user.uid));if(s.exists())user={...user,...s.data()}}
-  }catch{}
+    const s=await getDoc(doc(db,"users",uid));
+    if(s.exists())profile=s.data()||{};
+  }catch(e){console.warn("Profil:",e.message)}
+
+  ownerUid=profile.ownerUid||profile.ownerId||uid;
+
+  // Nama konter dari register Firebase.
+  // Prioritas: profil login -> profil owner -> cari berdasarkan email.
+  namaKonter=String(
+    profile.namaKonter||profile.konterName||profile.namaToko||
+    profile.namaUsaha||profile.toko||profile.konter||""
+  ).trim();
+
+  if(!namaKonter && ownerUid!==uid){
+    try{
+      const s=await getDoc(doc(db,"users",ownerUid));
+      if(s.exists()){
+        const p=s.data()||{};
+        namaKonter=String(
+          p.namaKonter||p.konterName||p.namaToko||p.namaUsaha||
+          p.toko||p.konter||""
+        ).trim();
+      }
+    }catch(e){}
+  }
+
+  if(!namaKonter && auth.currentUser?.email){
+    try{
+      const s=await getDocs(
+        query(collection(db,"users"),where("email","==",auth.currentUser.email))
+      );
+      if(!s.empty){
+        const p=s.docs[0].data()||{};
+        namaKonter=String(
+          p.namaKonter||p.konterName||p.namaToko||p.namaUsaha||
+          p.toko||p.konter||""
+        ).trim();
+      }
+    }catch(e){}
+  }
+
+  $("konterNameHeader").textContent=namaKonter||"Nama Konter";
+  $("ownerName").textContent=
+    profile.nama||profile.namaPemilik||profile.namaLengkap||
+    auth.currentUser?.displayName||"Akun FIXZY";
+  $("ownerEmail").textContent=auth.currentUser?.email||"Firebase";
 }
-function name(a){return String(a?.nama||a?.namaKaryawan||a?.namaLengkap||a?.name||a?.displayName||a?.email||"").trim()}
-function activeWorker(a){const r=String(a?.role||"").toLowerCase(),j=String(a?.jabatan||a?.posisi||"").toLowerCase();return ["employee","karyawan","kasir","kurir","teknisi"].includes(r)||/karyawan|kasir|kurir|teknisi|staff/.test(j)}
+
+async function ambilKaryawan(){
+  employees=[];
+
+  // Utamakan users karena akun karyawan FIXZY menyimpan upah/role di users.
+  try{
+    const s=await getDocs(collection(db,"users"));
+    employees=s.docs.map(d=>({id:d.id,...d.data()})).filter(x=>{
+      const r=String(x.role||"").toLowerCase();
+      const st=String(x.status||"aktif").toLowerCase();
+      const isWorker=["employee","karyawan","kasir","kurir","teknisi","reseller"].includes(r);
+      const belongs=x.ownerUid===ownerUid || x.id===uid || x.uid===ownerUid;
+      return isWorker && st!=="nonaktif" && (belongs || ownerUid===uid);
+    });
+  }catch(e){
+    console.warn("users karyawan:",e.message);
+  }
+
+  // Fallback koleksi karyawan lama bila users kosong.
+  if(!employees.length){
+    try{
+      const s=await getDocs(collection(db,"karyawan"));
+      employees=s.docs.map(d=>({id:d.id,...d.data()})).filter(x=>{
+        const st=String(x.status||"aktif").toLowerCase();
+        return st!=="nonaktif";
+      });
+    }catch(e){
+      console.warn("karyawan:",e.message);
+    }
+  }
+
+  const select=$("karyawan");
+  select.innerHTML='<option value="">Pilih karyawan</option>';
+
+  employees
+    .sort((a,b)=>String(a.nama||a.namaKaryawan||"").localeCompare(String(b.nama||b.namaKaryawan||"")))
+    .forEach(e=>{
+      const n=String(e.nama||e.namaKaryawan||e.namaLengkap||e.name||e.email||"").trim();
+      if(!n)return;
+      const op=document.createElement("option");
+      op.value=e.id||e.uid||"";
+      op.textContent=n;
+      op.dataset.name=n;
+      op.dataset.uid=e.uid||e.id||"";
+      select.appendChild(op);
+    });
+}
+
+async function ambilData(){
+  rows=[];
+
+  /*
+    Data pengeluaran disimpan dengan ownerUid dan uid.
+    Saat membaca, coba ownerUid terlebih dahulu agar data satu konter
+    tetap terbaca ketika halaman dibuka oleh akun karyawan/reseller.
+  */
+  const map=new Map();
+
+  for(const field of ["ownerUid","uid"]){
+    const value=field==="ownerUid"?ownerUid:uid;
+    if(!value)continue;
+    try{
+      const s=await getDocs(
+        query(collection(db,"pengeluaran"),where(field,"==",value))
+      );
+      s.docs.forEach(d=>map.set(d.id,{id:d.id,...d.data()}));
+    }catch(e){
+      console.warn("pengeluaran",field,e.message);
+    }
+  }
+
+  rows=[...map.values()];
+}
+
 function render(){
-  const ss=servis.filter(r=>periodMatch(r)&&activeRevenue(r,"Servis"));
-  const ps=penjualan.filter(r=>periodMatch(r)&&activeRevenue(r,"Penjualan"));
-  const lr=pendapatanLuar.filter(r=>periodMatch(r));
+  const period=$("filterBulan").value||monthNow();
 
-  const omzetS=ss.reduce((s,r)=>s+amount(r),0);
-  const omzetP=ps.reduce((s,r)=>s+amount(r),0);
-  const luar=lr.reduce((s,r)=>s+externalAmount(r),0);
-  const totalDana=omzetS+omzetP+luar;
+  const data=rows
+    .filter(r=>String(r.tanggal||"").startsWith(period))
+    .sort((a,b)=>String(b.tanggal||"").localeCompare(String(a.tanggal||"")));
 
-  const modal=ss.reduce((s,r)=>s+cost(r),0)+ps.reduce((s,r)=>s+cost(r),0);
-  const exp=pengeluaran.filter(r=>periodMatch(r)&&isExpense(r)).reduce((s,r)=>s+amount(r),0);
-  const kasbon=pengeluaran.filter(r=>isKasbon(r)&&dateOf(r).startsWith(month())).reduce((s,r)=>s+amount(r),0);
-  const upah=users.filter(activeWorker).reduce((s,a)=>s+num(a?.upahHarian??a?.upah??a?.gajiHarian??a?.gaji??a?.nominalUpah??a?.upahPerHari),0);
+  const total=data.reduce((s,r)=>s+(Number(r.nominal)||0),0);
+  const kasbon=data
+    .filter(r=>String(r.jenis||"").toLowerCase()==="kasbon karyawan")
+    .reduce((s,r)=>s+(Number(r.nominal)||0),0);
 
-  const labaKotor=totalDana-modal;
-  const labaBersih=labaKotor-exp;
-  const piutang=[...ss,...ps].reduce((s,r)=>s+receivable(r),0);
-  const stockValue=stok.reduce((s,r)=>s+num(r?.stok??r?.qty??r?.jumlah??r?.jumlahStok)*num(r?.hargaModal??r?.modal??r?.hargaBeli??0),0);
-  const hadir=absensi.filter(r=>dateOf(r)===today()).filter(r=>{
-    const st=String(r?.status||r?.kehadiran||"").toLowerCase();
-    return !st||["hadir","masuk","present"].includes(st);
-  }).length;
-  const active=users.filter(activeWorker).length;
+  $("total").textContent=money(total);
+  $("kasbon").textContent=money(kasbon);
+  $("lain").textContent=money(total-kasbon);
+  $("jumlah").textContent=data.length;
 
-  $("omzet").textContent=money(totalDana);
-  $("laba").textContent=money(labaBersih);
-  $("piutang").textContent=money(piutang);
-  $("pengeluaran").textContent=money(exp);
-  $("upah").textContent=money(kasbon+upah);
-  $("stok").textContent=money(stockValue);
-  $("transaksi").textContent=ss.length+ps.length+lr.length;
-  $("kas").textContent=money(totalDana-exp);
-
-  $("fPenjualan").textContent=money(omzetP);
-  $("fServis").textContent=money(omzetS);
-  $("fModal").textContent=money(modal);
-  $("fLabaKotor").textContent=money(labaKotor);
-  $("fPengeluaran").textContent=money(exp);
-  $("fUpah").textContent=money(upah);
-  $("fLabaBersih").textContent=money(labaBersih);
-  $("fPiutang").textContent=money(piutang);
-
-  $("sPenjualan").textContent=money(omzetP);
-  $("sServis").textContent=money(omzetS);
-  $("sLuar").textContent=money(luar);
-  $("sTotal").textContent=money(totalDana);
-  $("sourceList").innerHTML=
-    `<div class="row"><span>🛒 Penjualan</span><b class="blue">${money(omzetP)}</b></div>`+
-    `<div class="row"><span>🔧 Servis</span><b class="blue">${money(omzetS)}</b></div>`+
-    `<div class="row"><span>💼 Pendapatan Luar</span><b class="green">${money(luar)}</b></div>`+
-    `<div class="row"><span><b>Total Sumber Dana</b></span><b class="green">${money(totalDana)}</b></div>`;
-
-  $("jServis").textContent=ss.length;
-  $("jPenjualan").textContent=ps.length;
-  $("jKaryawan").textContent=active;
-  $("jHadir").textContent=hadir;
-  $("jKasbon").textContent=money(kasbon);
-
-  const low=stok.filter(r=>num(r?.stok??r?.qty??r?.jumlah??r?.jumlahStok)<=num(r?.stokMinimum??r?.minimumStok??r?.minStok??5)).length;
-  $("jStokMenipis").textContent=low;
-
-  const days=monthDays();
-  const vals=days.map(d=>
-    servis.filter(r=>dateOf(r)===d&&activeRevenue(r,"Servis")).reduce((s,r)=>s+amount(r),0)+
-    penjualan.filter(r=>dateOf(r)===d&&activeRevenue(r,"Penjualan")).reduce((s,r)=>s+amount(r),0)+
-    pendapatanLuar.filter(r=>dateOf(r)===d).reduce((s,r)=>s+externalAmount(r),0)
-  );
-  const mx=Math.max(...vals,1);
-  $("chart").innerHTML=vals.map((v,i)=>`<div class="barbox"><div class="bar" style="height:${Math.max(2,v/mx*90)}%"><span>${i+1}</span></div></div>`).join("");
-
-  const warns=[];
-  if(piutang>0)warns.push(`<div class="row"><span>💳 Piutang belum lunas</span><b class="red">${money(piutang)}</b></div>`);
-  if(low)warns.push(`<div class="row"><span>📦 Stok menipis</span><b class="orange">${low} item</b></div>`);
-  if(exp>labaKotor&&labaKotor>=0)warns.push(`<div class="row"><span>⚠️ Pengeluaran tinggi</span><b class="red">${money(exp)}</b></div>`);
-  $("warning").innerHTML=warns.join("")||`<div class="row"><span>✓ Tidak ada peringatan utama</span><b class="green">Aman</b></div>`;
-
-  $("quick").innerHTML=
-    `<div class="row"><span>Total sumber dana</span><b>${money(totalDana)}</b></div>`+
-    `<div class="row"><span>Laba bersih perkiraan</span><b class="green">${money(labaBersih)}</b></div>`+
-    `<div class="row"><span>Piutang</span><b class="red">${money(piutang)}</b></div>`+
-    `<div class="row"><span>Kasbon bulan ini</span><b>${money(kasbon)}</b></div>`;
-
-  $("status").innerHTML=`<span class="ok">✓ Firebase aktif</span> • Servis ${ss.length} • Penjualan ${ps.length} • Pendapatan Luar ${lr.length} • Karyawan ${active} • Periode ${$("periode").value}`;
+  $("tbody").innerHTML=data.map((r,i)=>`
+    <tr>
+      <td>${i+1}</td>
+      <td>${esc(r.tanggal||"-")}</td>
+      <td><span class="badge">${esc(r.jenis||"-")}</span></td>
+      <td>${esc(r.namaKaryawan||"-")}</td>
+      <td>${esc(r.keterangan||"-")}</td>
+      <td class="num amount">${money(r.nominal)}</td>
+    </tr>
+  `).join("") ||
+  '<tr><td colspan="6" class="empty">Belum ada pengeluaran pada bulan ini.</td></tr>';
 }
-function monthDays(){const [y,m]=month().split("-").map(Number),n=new Date(y,m,0).getDate();return Array.from({length:n},(_,i)=>`${y}-${String(m).padStart(2,"0")}-${String(i+1).padStart(2,"0")}`)}
-async function muatSemua(){ $("status").textContent="⏳ Membaca Firebase: penjualan, servis, pendapatan luar, pengeluaran, stok, absensi...";try{await load();render()}catch(e){$("status").innerHTML=`<span class="err">❌ ${esc(e.message||e)}</span>`;showPopup("Gagal membaca Firebase",e.message||String(e))}}
-function showPopup(t,x){$("popupTitle").textContent=t;$("popupText").textContent=x;$("popup").classList.add("show")}function tutupPopup(){$("popup").classList.remove("show")}window.muatSemua=muatSemua;window.tutupPopup=tutupPopup;
-onAuthStateChanged(auth,async u=>{user=u;if(u){$("ownerName").textContent=u.displayName||"Akun FIXZY";$("ownerEmail").textContent=u.email||"Firebase";await muatSemua()}else{$("ownerName").textContent="Menunggu sesi FIXZY...";$("status").innerHTML='<span class="err">⚠️ Sesi Firebase belum terbaca.</span>'}});
+
+async function simpan(){
+  if(!uid){
+    showPopup("Sesi Firebase belum tersedia",
+      "Halaman belum menemukan akun FIXZY yang aktif. Buka halaman dari aplikasi FIXZY yang sudah login.");
+    return;
+  }
+
+  const tanggal=$("tanggal").value||today();
+  const jenis=$("jenis").value;
+  const nominal=Number($("nominal").value||0);
+  const keterangan=$("keterangan").value.trim();
+
+  if(!nominal||nominal<1){
+    showPopup("Nominal belum diisi","Masukkan nominal pengeluaran terlebih dahulu.");
+    return;
+  }
+
+  let karyawanId="";
+  let namaKaryawan="";
+  let karyawanUid="";
+
+  if(jenis==="Kasbon Karyawan"){
+    const op=$("karyawan").selectedOptions[0];
+    karyawanId=$("karyawan").value;
+    namaKaryawan=op?.dataset?.name||op?.textContent||"";
+    karyawanUid=op?.dataset?.uid||"";
+
+    if(!karyawanId){
+      showPopup("Karyawan belum dipilih","Pilih karyawan untuk transaksi kasbon.");
+      return;
+    }
+  }
+
+  try{
+    $("status").textContent="⏳ Menyimpan pengeluaran ke Firebase...";
+
+    await addDoc(collection(db,"pengeluaran"),{
+      uid,
+      ownerUid,
+      email:auth.currentUser?.email||"",
+      namaKonter:namaKonter||"",
+      tanggal,
+      jenis,
+      nominal,
+      keterangan,
+      karyawanId,
+      karyawanUid,
+      namaKaryawan,
+      createdBy:auth.currentUser?.uid||uid,
+      createdAt:serverTimestamp()
+    });
+
+    bersihkan();
+    await ambilData();
+    render();
+
+    $("status").innerHTML=
+      `<span class="ok">✓ Pengeluaran berhasil disimpan ke Firebase • ${esc(jenis)} • ${money(nominal)}</span>`;
+    showPopup("Berhasil disimpan",
+      `Data pengeluaran ${jenis} sebesar ${money(nominal)} sudah tersimpan di Firebase.`);
+  }catch(e){
+    console.error(e);
+    $("status").innerHTML=
+      `<span class="err">❌ Gagal menyimpan: ${esc(e.message||e)}</span>`;
+    showPopup("Gagal menyimpan",e.message||String(e));
+  }
+}
+window.simpan=simpan;
+
+async function muatSemua(){
+  $("status").textContent="⏳ Memuat data Firebase...";
+  try{
+    await ambilProfile();
+    await ambilKaryawan();
+    await ambilData();
+    render();
+
+    $("status").innerHTML=
+      `<span class="ok">✓ Firebase aktif • ${rows.length} data pengeluaran • ${employees.length} karyawan • ${esc(namaKonter||"Nama Konter")}</span>`;
+  }catch(e){
+    console.error(e);
+    $("status").innerHTML=
+      `<span class="err">❌ Gagal memuat Firebase: ${esc(e.message||e)}</span>`;
+  }
+}
+window.muatSemua=muatSemua;
+
+$("tanggal").value=today();
+$("filterBulan").value=monthNow();
+ubahJenis();
+
+onAuthStateChanged(auth,async user=>{
+  if(!user){
+    uid="";
+    $("ownerName").textContent="Menunggu sesi FIXZY...";
+    $("ownerEmail").textContent="";
+    $("status").innerHTML=
+      '<span class="err">⚠️ Sesi Firebase belum terbaca.</span><br>'+
+      '<span class="status">Tidak ada pengalihan otomatis ke login. Buka halaman ini dari index FIXZY yang sudah login.</span>';
+    return;
+  }
+
+  uid=user.uid;
+  await muatSemua();
+});
 </script>
 </body>
 </html>
