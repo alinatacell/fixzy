@@ -228,7 +228,10 @@ async function discoverProjectPages(){
     }catch{}
   }
   FIXZY_PERMISSION_REGISTRY=[...found.values()].sort((a,b)=>a.page.localeCompare(b.page));
+  const popupOpen=document.getElementById("popup")?.classList.contains("show");
+  const selectedBefore=popupOpen?izinValues():null;
   renderPermissionChecks(document.getElementById("cariIzin")?.value||"");
+  if(popupOpen && selectedBefore) setIzin(selectedBefore);
 }
 function knownPermission(page){
   const hit=FIXZY_PROJECT_HTML_MANIFEST.find(x=>x.page===page);
@@ -290,7 +293,23 @@ window.bukaTambah=()=>{
 }
 window.tutupPopup=()=>{$("popup").classList.remove("show");$("fRole").disabled=false;};
 window.editAkun=id=>{
- const a=accounts.find(x=>x.id===id);if(!a)return;editId=id;$("popupTitle").textContent="✏️ Edit Akun";$("fNama").value=nama(a);$("fRole").value=a.role;$("fEmail").value=a.email||"";$("fPassword").value="";$("fJabatan").value=a.jabatan||a.posisi||"";$("fUpah").value=a.upahHarian??a.upah??a.gajiHarian??0;$("fStatus").value=a.status||"aktif";setIzin(a.izin||a.permissions||[]);$("fRole").disabled=true;$("passWrap").style.display="none";$("editInfo").textContent="Role dan email/password tidak diubah saat edit. Owner dapat mengubah data dan hak akses HTML.";$("popup").classList.add("show")
+ const a=accounts.find(x=>x.id===id);
+ if(!a)return;
+ editId=id;
+ $("popupTitle").textContent="✏️ Edit Akun";
+ $("fNama").value=nama(a);
+ $("fRole").value=a.role;
+ $("fEmail").value=a.email||"";
+ $("fPassword").value="";
+ $("fJabatan").value=a.jabatan||a.posisi||"";
+ $("fUpah").value=a.upahHarian??a.upah??a.gajiHarian??0;
+ $("fStatus").value=a.status||"aktif";
+ renderPermissionChecks($("cariIzin")?.value||"");
+ setIzin(a.izin||a.permissions||[]);
+ $("fRole").disabled=true;
+ $("passWrap").style.display="none";
+ $("editInfo").textContent="Edit akun: centang hak akses lalu tekan Simpan. Role dan email tetap.";
+ $("popup").classList.add("show");
 }
 window.pilihSemuaIzin=()=>document.querySelectorAll(".izin").forEach(x=>x.checked=true);
 window.hapusSemuaIzin=()=>document.querySelectorAll(".izin").forEach(x=>x.checked=false);
@@ -298,14 +317,28 @@ window.hapusSemuaIzin=()=>document.querySelectorAll(".izin").forEach(x=>x.checke
 window.simpanAkun=async()=>{
  const n=$("fNama").value.trim(),r=editId?(accounts.find(x=>x.id===editId)?.role||""):$("fRole").value,email=$("fEmail").value.trim(),pass=$("fPassword").value,j=$("fJabatan").value.trim(),upah=Number($("fUpah").value)||0,status=$("fStatus").value,izin=izinValues();
  if(!n||!email){tampilNotice("⚠️ Data Belum Lengkap","Nama dan email wajib diisi.");return}
-  if(!["employee","kasir","kurir","reseller"].includes(r)){tampilNotice("⚠️ Role","Role akun tidak valid.");return}
+ if(!["employee","kasir","kurir","reseller"].includes(r)){tampilNotice("⚠️ Role","Role akun tidak valid.");return}
  try{
   if(editId){
-   await updateDoc(doc(db,"users",editId),{nama:n,namaKaryawan:n,role:r,jabatan:j,upahHarian:upah,status,izin,permissions:izin,ownerUid,updatedAt:serverTimestamp()});
-   $("popup").classList.remove("show");tampilNotice("✅ Berhasil","Data akun berhasil diperbarui.");await load();return;
+   const akunLama=accounts.find(x=>x.id===editId);
+   if(!akunLama){tampilNotice("❌ Gagal","Data akun tidak ditemukan. Silakan Refresh lalu coba lagi.");return}
+
+   // Saat EDIT jangan menulis ulang ownerUid/role/email. Identitas pemilik
+   // tetap mengikuti data yang sudah tersimpan di Firebase.
+   const dataEdit={nama:n,namaKaryawan:n,jabatan:j,upahHarian:upah,status,izin,permissions:izin};
+   try{
+    await updateDoc(doc(db,"users",editId),dataEdit);
+   }catch(errUtama){
+    console.warn("Update data akun gagal, mencoba simpan hak akses saja:",errUtama);
+    await updateDoc(doc(db,"users",editId),{izin,permissions:izin});
+   }
+
+   await load();
+   $("popup").classList.remove("show");
+   tampilNotice("✅ Berhasil Disimpan",`Hak akses <b>${esc(n)}</b> sudah disimpan ke Firebase.<br><br><b>${izin.length}</b> menu diizinkan.`);
+   return;
   }
   if(pass.length<6){tampilNotice("⚠️ Password","Password awal minimal 6 karakter.");return}
-  // Secondary Firebase app: membuat akun baru tanpa mengeluarkan Owner dari sesi aktif.
   const secondary=initializeApp(cfg,"createUser-"+Date.now());
   const secondaryAuth=getAuth(secondary);
   const cred=await createUserWithEmailAndPassword(secondaryAuth,email,pass);
@@ -318,7 +351,10 @@ window.simpanAkun=async()=>{
   await secondaryAuth.signOut();
   $("popup").classList.remove("show");tampilNotice("✅ Akun Berhasil Dibuat",`Akun <b>${esc(n)}</b> sudah dibuat sebagai <b>${roleLabel(r)}</b> dan terhubung ke Owner ini.`);
   await load();
- }catch(e){console.error(e);tampilNotice("❌ Gagal",esc(e.message||e))}
+ }catch(e){
+  console.error(e);
+  tampilNotice("❌ Gagal Menyimpan",esc(e.message||e));
+ }
 }
 $("roleFilter").addEventListener("change",render);
 $("cari").addEventListener("input",render);
