@@ -45,7 +45,7 @@
 </style>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>FIXZY | Karyawan, Reseller & Hak Akses</title>
+<title>FIXZY | Karyawan, Kasir, Kurir, Reseller & Hak Akses</title>
 <style>
 *{box-sizing:border-box}body{margin:0;background:#eef2f6;color:#111827;font-family:Arial,Helvetica,sans-serif}
 header{background:#111827;color:#fff;padding:10px 14px;position:sticky;top:0;z-index:50}.head{max-width:1180px;margin:auto;display:flex;align-items:center;gap:10px}
@@ -59,6 +59,17 @@ input,select{width:100%;padding:11px;border:1px solid #d1d5db;border-radius:8px;
 .badge{display:inline-block;padding:5px 8px;border-radius:999px;font-size:10px;font-weight:900}.active{background:#dcfce7;color:#15803d;border:1px solid #86efac}.off{background:#f3f4f6;color:#6b7280;border:1px solid #d1d5db}.employee{background:#ede9fe;color:#7c3aed}.reseller{background:#dbeafe;color:#1d4ed8}
 .empty{text-align:center;color:#667085;padding:25px}.info{font-size:12px;color:#667085;line-height:1.5;margin-top:8px}.ok{color:#15803d;font-weight:800}.err{color:#b91c1c;font-weight:800}
 .popup{position:fixed;inset:0;background:#0008;display:none;align-items:center;justify-content:center;z-index:100}.popup.show{display:flex}.popup-box{width:min(600px,calc(100% - 24px));max-height:90vh;overflow:auto;background:#fff;border-radius:14px;padding:17px}.popup-box h3{margin:0 0 12px}.grid{display:grid;grid-template-columns:1fr 1fr;gap:9px}.full{grid-column:1/-1}.checks{display:grid;grid-template-columns:1fr 1fr;gap:7px}.check{border:1px solid #e5e7eb;border-radius:8px;padding:8px;font-size:12px}.popup-actions{display:flex;justify-content:flex-end;gap:7px;margin-top:13px}
+.permission-toolbar{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:8px}
+.permission-toolbar .action{padding:8px 10px;font-size:11px}
+.permission-source{margin-top:8px;padding:9px;background:#f8fafc;border:1px solid #e5e7eb;border-radius:8px;font-size:10px;color:#64748b;line-height:1.5}
+.permission-search{margin-bottom:8px}
+.permission-search input{font-size:12px}
+.checks{grid-template-columns:1fr 1fr}
+.check[data-system="1"]{background:#f8fafc}
+.check .page-file{display:block;font-size:9px;color:#94a3b8;margin-top:3px}
+.check .page-lock{float:right;font-size:10px;color:#94a3b8}
+@media(max-width:520px){.checks{grid-template-columns:1fr}}
+
 @media(max-width:760px){.toolbar{grid-template-columns:1fr 1fr}.toolbar .field:first-child{grid-column:1/-1}.summary{grid-template-columns:1fr 1fr}.grid{grid-template-columns:1fr}.full{grid-column:auto}}
 @media(max-width:520px){.brand h1{font-size:15px}.logo{width:40px;height:40px}.brand small{font-size:9px}.head button{font-size:12px;padding:8px 9px}.toolbar{grid-template-columns:1fr}.toolbar .field:first-child{grid-column:auto}.summary{grid-template-columns:1fr 1fr}}
 </style>
@@ -70,7 +81,7 @@ input,select{width:100%;padding:11px;border:1px solid #d1d5db;border-radius:8px;
 </div></header>
 <main>
 <section class="card">
-<div class="title">Kelola Karyawan, Reseller & Hak Akses</div>
+<div class="title">Kelola Karyawan, Kasir, Kurir, Reseller & Hak Akses</div>
 <div class="toolbar">
 <div class="field"><label>FILTER ROLE</label><select id="roleFilter"><option value="">Semua</option><option value="employee">Karyawan</option><option value="kasir">Kasir</option><option value="kurir">Kurir</option><option value="reseller">Reseller</option></select></div>
 <div class="field"><label>PENCARIAN</label><input id="cari" placeholder="Cari nama atau email..."></div>
@@ -83,6 +94,8 @@ input,select{width:100%;padding:11px;border:1px solid #d1d5db;border-radius:8px;
 <div class="sum green"><small>AKTIF</small><b id="aktif">0</b></div>
 <div class="sum blue"><small>KARYAWAN</small><b id="jmlKaryawan">0</b></div>
 <div class="sum"><small>RESELLER</small><b id="jmlReseller">0</b></div>
+<div class="sum"><small>KASIR</small><b id="jmlKasir">0</b></div>
+<div class="sum"><small>KURIR</small><b id="jmlKurir">0</b></div>
 </section>
 <section class="card"><div class="table-wrap"><table>
 <thead><tr><th>Nama</th><th>Email</th><th>Role</th><th>Jabatan</th><th>Upah/Hari</th><th>Status</th><th>Hak Akses</th><th>Aksi</th></tr></thead>
@@ -101,26 +114,16 @@ input,select{width:100%;padding:11px;border:1px solid #d1d5db;border-radius:8px;
 <div><label>UPAH HARIAN</label><input id="fUpah" type="number" min="0" step="1000"></div>
 <div class="full"><label>STATUS</label><select id="fStatus"><option value="aktif">Aktif</option><option value="nonaktif">Nonaktif</option></select></div>
 <div class="full"><label>HAK AKSES HTML / MENU — DITENTUKAN OWNER</label>
-<div style="display:flex;gap:7px;flex-wrap:wrap;margin-bottom:8px">
+<div class="permission-toolbar">
 <button type="button" class="action secondary" onclick="pilihSemuaIzin()">☑ Pilih Semua</button>
 <button type="button" class="action secondary" onclick="hapusSemuaIzin()">☐ Hapus Semua</button>
 </div>
-<div class="checks">
-<label class="check"><input type="checkbox" value="penjualan" class="izin"> 🛒 Input Penjualan</label>
-<label class="check"><input type="checkbox" value="servis" class="izin"> 🔧 Input Servis</label>
-<label class="check"><input type="checkbox" value="dataPenjualan" class="izin"> 🛒 Data Penjualan</label>
-<label class="check"><input type="checkbox" value="dataServis" class="izin"> 🔧 Data Servis</label>
-<label class="check"><input type="checkbox" value="stock" class="izin"> 📦 Stock</label>
-<label class="check"><input type="checkbox" value="garansi" class="izin"> 🛡️ Monitoring Garansi</label>
-<label class="check"><input type="checkbox" value="rekapTeknisi" class="izin"> 🧰 Rekap Teknisi</label>
-<label class="check"><input type="checkbox" value="laporanPendapatan" class="izin"> 💻 Laporan Pendapatan</label>
-<label class="check"><input type="checkbox" value="dashboardPendapatan" class="izin"> 📊 Dashboard Pendapatan</label>
-</div>
-<div style="margin-top:8px;padding:8px;background:#f3f4f6;border-radius:6px;font-size:10px;color:#6b7280">
-🔒 Menu Owner Only tetap dikendalikan oleh sistem/index.<br>
-💡 Semua menu yang dicentang disimpan ke <b>izin</b> dan <b>permissions</b> Firebase. Jika nanti ada HTML baru, cukup tambahkan checkbox/value permission baru di halaman ini.
+<div class="permission-search"><input id="cariIzin" placeholder="Cari halaman HTML / menu..."></div>
+<div id="permissionChecks" class="checks"></div>
+<div class="permission-source">
+📁 Daftar dibuat dari HTML yang ada di project FIXZY. Saat <b>index.html</b> / halaman menu memuat HTML baru, tombol <b>Refresh</b> akan mencoba menemukannya dan menambahkannya otomatis ke daftar ceklis.
+<br>💾 Ceklis disimpan ke <b>izin</b> dan <b>permissions</b> Firebase.
 </div></div>
-</div>
 <div id="editInfo" class="info"></div>
 <div class="popup-actions"><button class="action secondary" onclick="tutupPopup()">Batal</button><button class="action primary" onclick="simpanAkun()">Simpan</button></div>
 </div></div>
@@ -129,6 +132,9 @@ input,select{width:100%;padding:11px;border:1px solid #d1d5db;border-radius:8px;
 
 <script>
 function tutupHalaman(){if(window.history.length>1)history.back();else location.href="index.html"}
+</script>
+<script>
+const FIXZY_PROJECT_HTML_MANIFEST=[{"page": "cek-paket.html", "permission": "cekPaket"}, {"page": "dashboard-admin.html", "permission": "ownerOnly"}, {"page": "data-karyawan.html", "permission": "ownerOnly"}, {"page": "data-penjualan.html", "permission": "dataPenjualan"}, {"page": "data-servis.html", "permission": "dataServis"}, {"page": "hak-akses.html", "permission": "ownerOnly"}, {"page": "index.html", "permission": "index"}, {"page": "izin-akses.html", "permission": "izinAkses"}, {"page": "login.html", "permission": "login"}, {"page": "page.html", "permission": "page"}, {"page": "pengaturan.html", "permission": "ownerOnly"}, {"page": "pengeluaran.html", "permission": "ownerOnly"}, {"page": "penjualan.html", "permission": "penjualan"}, {"page": "penjualan2.html", "permission": "penjualan2"}, {"page": "register.html", "permission": "register"}, {"page": "ringkasan-pendapatan.html", "permission": "ringkasanPendapatan"}, {"page": "servisan.html", "permission": "servisan"}, {"page": "stock.html", "permission": "stock"}, {"page": "stock2.html", "permission": "stock2"}, {"page": "upah-kerja.html", "permission": "ownerOnly"}];
 </script>
 <script type="module">
 import{initializeApp}from"https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js";
@@ -159,8 +165,88 @@ function renderIzin(a){
   return izin.map(v=>`<span class="badge" style="background:#eef2ff;color:#3730a3;margin:2px">${esc(izinLabel(v))}</span>`).join(" ");
 }
 
-function izinValues(){return [...document.querySelectorAll(".izin:checked")].map(x=>x.value)}
+const FIXZY_SPECIAL_PAGES=new Set(["login.html","register.html","index.html","izin-akses.html","hak-akses.html"]);
+const FIXZY_KNOWN_LABELS={
+  "cek-paket.html":"Token FIXZY / Cek Paket",
+  "data-karyawan.html":"Data Karyawan",
+  "data-penjualan.html":"Data Penjualan",
+  "data-servis.html":"Data Servis",
+  "dashboard-admin.html":"Dashboard Admin",
+  "dashboard-pendapatan.html":"Dashboard Pendapatan",
+  "hak-akses.html":"Hak Akses",
+  "pengeluaran.html":"Pengeluaran",
+  "penjualan.html":"Input Penjualan",
+  "penjualan2.html":"Penjualan 2",
+  "page.html":"About",
+  "pengaturan.html":"Pengaturan",
+  "ringkasan-pendapatan.html":"Ringkasan Pendapatan",
+  "servisan.html":"Input Servis",
+  "stock.html":"Stock",
+  "stock2.html":"Stock 2",
+  "upah-kerja.html":"Upah Kerja"
+};
+let FIXZY_PERMISSION_REGISTRY=[...FIXZY_PROJECT_HTML_MANIFEST];
+
+function labelHalaman(page){
+  if(FIXZY_KNOWN_LABELS[page]) return FIXZY_KNOWN_LABELS[page];
+  return page.replace(/\.html$/i,"").replace(/[-_]+/g," ").replace(/\b\w/g,m=>m.toUpperCase());
+}
+function permissionValues(){return [...document.querySelectorAll(".izin:checked")].map(x=>x.value)}
 function setIzin(v){const a=Array.isArray(v)?v:[];document.querySelectorAll(".izin").forEach(x=>x.checked=a.includes(x.value))}
+function renderPermissionChecks(filter=""){
+  const box=document.getElementById("permissionChecks");
+  if(!box)return;
+  const q=norm(filter);
+  const rows=FIXZY_PERMISSION_REGISTRY.filter(x=>!q || norm(x.page+" "+labelHalaman(x.page)+" "+x.permission).includes(q));
+  box.innerHTML=rows.map(x=>{
+    const system=FIXZY_SPECIAL_PAGES.has(x.page);
+    return `<label class="check" data-system="${system?1:0}">
+      <input type="checkbox" value="${esc(x.permission)}" class="izin" data-page="${esc(x.page)}" ${system?"disabled":""}>
+      <span>${system?"🔒 ":""}${esc(labelHalaman(x.page))}</span>
+      <span class="page-lock">${system?"Sistem":""}</span>
+      <span class="page-file">${esc(x.page)}</span>
+    </label>`;
+  }).join("") || '<div class="empty" style="grid-column:1/-1;padding:14px">Halaman tidak ditemukan.</div>';
+}
+async function discoverProjectPages(){
+  const candidates=["index.html","izin-akses.html","hak-akses.html","page.html"];
+  const found=new Map(FIXZY_PERMISSION_REGISTRY.map(x=>[x.page,x]));
+  for(const url of candidates){
+    try{
+      const r=await fetch(url,{cache:"no-store"});
+      if(!r.ok)continue;
+      const txt=await r.text();
+      const re=/(?:data-page|href|src)\\s*=\\s*["']([^"']+\\.html)(?:[?#][^"']*)?["']/gi;
+      let m;
+      while((m=re.exec(txt))){
+        const page=m[1].split("/").pop();
+        if(!page || FIXZY_SPECIAL_PAGES.has(page)) continue;
+        if(!found.has(page)){
+          found.set(page,{page,permission:knownPermission(page)});
+        }
+      }
+    }catch{}
+  }
+  FIXZY_PERMISSION_REGISTRY=[...found.values()].sort((a,b)=>a.page.localeCompare(b.page));
+  renderPermissionChecks(document.getElementById("cariIzin")?.value||"");
+}
+function knownPermission(page){
+  const hit=FIXZY_PROJECT_HTML_MANIFEST.find(x=>x.page===page);
+  if(hit)return hit.permission;
+  const special={
+    "nota.html":"servis",
+    "penjualan.html":"penjualan",
+    "data-servis.html":"dataServis",
+    "data-penjualan.html":"dataPenjualan",
+    "stock.html":"stock",
+    "monitoring-garansi.html":"garansi",
+    "rekap-teknisi.html":"rekapTeknisi",
+    "laporan-pendapatan-servis.html":"laporanPendapatan",
+    "dashboard-pendapatan.html":"dashboardPendapatan"
+  };
+  if(special[page])return special[page];
+  return page.replace(/\.html$/i,"").replace(/[^a-zA-Z0-9]+(.)/g,(_,c)=>c.toUpperCase());
+}
 function tampilNotice(t,x){$("noticeTitle").textContent=t;$("noticeText").innerHTML=x;$("notice").classList.add("show")}
 window.tutupNotice=()=>$("notice").classList.remove("show");
 
@@ -184,8 +270,6 @@ function render(){
 </tr>`).join(""):'<tr><td colspan="8" class="empty">Belum ada akun karyawan/reseller.</td></tr>';
 }
 function aturHakAksesRole(){
-  // Hak akses TIDAK ditentukan otomatis berdasarkan role.
-  // Owner sendiri yang memilih HTML/menu yang boleh diakses.
   setIzin([]);
 }
 
@@ -238,6 +322,9 @@ window.simpanAkun=async()=>{
 }
 $("roleFilter").addEventListener("change",render);
 $("cari").addEventListener("input",render);
+$("cariIzin").addEventListener("input",e=>renderPermissionChecks(e.target.value));
+renderPermissionChecks();
+discoverProjectPages();
 
 // Role hanya menentukan jenis akun.
  // Hak akses selalu ditentukan manual oleh Owner.
