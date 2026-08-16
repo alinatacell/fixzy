@@ -452,15 +452,35 @@ window.muatSemua=async()=>{
 $("tanggal").value=today();
 $("bulan").value=today().slice(0,7);
 
+let authWaitTimer=null;
+
 onAuthStateChanged(auth,async u=>{
- if(!u){location.replace("login.html");return}
- uid=u.uid;
- try{
-   await loadProfile();
-   await muatAbsensi();
- }catch(e){
-   $("status").innerHTML=`<span class="err">${esc(e.message||e)}</span>`;
- }
+  clearTimeout(authWaitTimer);
+
+  if(!u){
+    uid="";
+    $("ownerName").textContent="Menunggu sesi FIXZY...";
+    $("status").innerHTML='<span class="status">⏳ Sesi Firebase belum tersedia. Halaman tidak mengarahkan ke login. Buka halaman ini dari dalam aplikasi FIXZY agar akun yang sedang aktif dapat digunakan.</span>';
+    $("tbody").innerHTML='<tr><td colspan="11" class="empty">Menunggu sesi akun FIXZY...</td></tr>';
+
+    authWaitTimer=setTimeout(()=>{
+      if(!uid){
+        $("status").innerHTML='<span class="err">⚠️ Sesi Firebase belum tersedia.</span><br><span class="status">Silakan buka halaman ini melalui aplikasi FIXZY setelah akun aktif. Tidak ada pengalihan otomatis ke login.html.</span>';
+      }
+    },5000);
+    return;
+  }
+
+  uid=u.uid;
+  try{
+    $("status").textContent="Memuat akun FIXZY...";
+    await loadProfile();
+    await muatAbsensi();
+    $("status").innerHTML=`<span class="ok">✓ Firebase aktif • ${accounts.length} akun terdaftar untuk Owner ini.</span>`;
+  }catch(e){
+    console.error(e);
+    $("status").innerHTML=`<span class="err">Gagal memuat Firebase: ${esc(e.message||e)}</span>`;
+  }
 });
 </script>
 </body>
