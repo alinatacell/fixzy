@@ -208,56 +208,106 @@ function renderPreview(){
   $(id).addEventListener("input",renderPreview);$(id).addEventListener("change",renderPreview);
 });
 
+function ambilSesiIndex(){
+  try{
+    const p=window.parent && window.parent!==window ? window.parent.fixzySession : null;
+    if(p && p.uid){
+      uid=p.uid;
+      profile={...(p.profile||{}),role:p.role||p.profile?.role||"",ownerUid:p.ownerUid||p.profile?.ownerUid||""};
+      return true;
+    }
+  }catch(e){console.warn("Sesi index:",e)}
+  return false;
+}
+
 async function loadSettings(){
   if(!uid)return;
-  try{const snap=await getDoc(doc(db,"pengaturanNota",uid));if(snap.exists())settings={...settings,...snap.data()};}
-  catch(e){console.warn("Pengaturan nota:",e);throw e}
+  try{
+    const snap=await getDoc(doc(db,"pengaturanNota",uid));
+    if(snap.exists())settings={...settings,...snap.data()};
+  }catch(e){console.warn("Pengaturan nota:",e)}
 }
+
 async function loadProfile(){
-  try{const snap=await getDoc(doc(db,"users",uid));if(snap.exists())profile=snap.data()||{};}catch(e){console.warn("Profil:",e)}
-  $("ownerName").textContent=profile.namaPemilik||profile.nama||profile.namaKonter||auth.currentUser?.displayName||"Akun FIXZY";
-  $("ownerEmail").textContent=auth.currentUser?.email||"Firebase";
+  if(!profile || Object.keys(profile).length===0){
+    try{
+      const snap=await getDoc(doc(db,"users",uid));
+      if(snap.exists())profile=snap.data()||{};
+    }catch(e){console.warn("Profil fallback:",e)}
+  }
+  const nama=profile.namaPemilik||profile.namaKonter||profile.namaToko||profile.namaUsaha||profile.toko||profile.nama||auth.currentUser?.displayName||"Akun FIXZY";
+  const email=auth.currentUser?.email||profile.email||"Akun aktif";
+  $("ownerName").textContent=nama;
+  $("ownerEmail").textContent=email;
 }
+
 async function muatSemua(){
-  if(!uid){$("status").textContent="⏳ Menunggu sesi Firebase...";return}
-  $("status").textContent="⏳ Membaca pengaturan nota dari Firebase...";
-  try{await loadProfile();await loadSettings();syncForm();renderPresets();renderPreview();$("status").innerHTML='✅ Pengaturan nota siap • UID akun aktif terdeteksi • Tidak ada redirect login';}
-  catch(e){$("status").innerHTML=`⚠️ Firebase terhubung tetapi pengaturan belum dapat dibaca.<br><small>${esc(e.code||"")} ${esc(e.message||e)}</small>`}
+  // HALAMAN INI TIDAK MEMBATASI AKSES.
+  // UID diambil langsung dari sesi index jika halaman dibuka melalui index FIXZY.
+  ambilSesiIndex();
+  if(!uid && auth.currentUser)uid=auth.currentUser.uid;
+
+  $("status").textContent="⏳ Menyiapkan pengaturan nota...";
+  try{
+    if(uid){
+      await loadProfile();
+      await loadSettings();
+    }
+    syncForm();
+    renderPresets();
+    renderPreview();
+    $("status").innerHTML=uid
+      ? '✅ Pengaturan nota siap • Tidak ada pembatasan akses di halaman ini.'
+      : 'ℹ️ Pengaturan nota siap. Buka melalui index FIXZY agar penyimpanan otomatis menggunakan UID akun.';
+  }catch(e){
+    console.warn("Muat pengaturan:",e);
+    syncForm();renderPresets();renderPreview();
+    $("status").innerHTML='⚠️ Tampilan tetap dibuka. Tidak ada pembatasan akses. Data Firebase akan dimuat saat UID tersedia.';
+  }
 }
 window.muatSemua=muatSemua;
 
 window.simpanPengaturan=async()=>{
-  if(!uid){$("saveStatus").innerHTML='<span style="color:#dc2626">Sesi Firebase belum tersedia.</span>';return}
+  // Ambil sesi parent sekali lagi sebelum menyimpan.
+  ambilSesiIndex();
+  if(!uid && auth.currentUser)uid=auth.currentUser.uid;
   readForm();
+  if(!uid){
+    $("saveStatus").innerHTML='<span style="color:#dc2626">UID akun belum tersedia. Buka halaman ini melalui index FIXZY yang sudah login agar dapat disimpan ke Firebase.</span>';
+    return;
+  }
   try{
     await setDoc(doc(db,"pengaturanNota",uid),{...settings,uid,diperbaruiPada:new Date().toISOString()},{merge:true});
     $("saveStatus").innerHTML='<span class="saved">✓ Tersimpan ke Firebase</span>';
     renderPresets();renderPreview();
-  }catch(e){$("saveStatus").innerHTML=`<span style="color:#dc2626">Gagal: ${esc(e.code||"")} ${esc(e.message||e)}</span>`}
+  }catch(e){
+    $("saveStatus").innerHTML=`<span style="color:#dc2626">Gagal menyimpan Firebase: ${esc(e.code||"")} ${esc(e.message||e)}</span>`;
+  }
 };
 
 window.pilihJenis=j=>{jenis=j;$("tabServis").classList.toggle("active",j==="servis");$("tabPenjualan").classList.toggle("active",j==="penjualan");renderPreview()};
 window.cetakPreview=()=>{renderPreview();window.print()};
 
-async function mulai(){
-  try{await setPersistence(auth,browserLocalPersistence)}catch(e){console.warn("Firebase persistence:",e)}
-  onAuthStateChanged(auth,async user=>{
-    if(user){
-      uid=user.uid;
-      await muatSemua();
-      return;
-    }
-    // Index FIXZY sudah menangani login dan hak akses menu.
-    // Halaman ini TIDAK melakukan pemeriksaan role/permission tambahan
-    // dan TIDAK pernah mengarahkan pengguna ke login.html.
-    uid=null;
-    $("status").innerHTML="⚠️ <b>Sesi Firebase belum terbaca.</b><br>Pastikan halaman dibuka dari index FIXZY yang sudah login.";
-    $("ownerName").textContent="Akun FIXZY";
-    $("ownerEmail").textContent="Menunggu sesi Firebase";
-  });
-}
-mulai();
-renderPresets();renderPreview();
+// Firebase Auth hanya dipakai sebagai sumber UID bila tersedia.
+// Tidak ada redirect, pengecekan role, pengecekan permission, atau blokir halaman.
+try{await setPersistence(auth,browserLocalPersistence)}catch(e){console.warn("Firebase persistence:",e)}
+
+onAuthStateChanged(auth,async user=>{
+  if(user && !uid){
+    uid=user.uid;
+    try{await muatSemua()}catch(e){console.warn(e)}
+  }else if(!uid){
+    ambilSesiIndex();
+    syncForm();renderPresets();renderPreview();
+    $("status").textContent="ℹ️ Halaman terbuka tanpa pembatasan akses.";
+  }
+});
+
+// Coba langsung ambil sesi dari index tanpa menunggu Firebase Auth iframe.
+ambilSesiIndex();
+if(uid)muatSemua();
+renderPresets();
+renderPreview();
 </script>
 </body>
 </html>
