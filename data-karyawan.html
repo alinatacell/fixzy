@@ -148,58 +148,150 @@ input:focus,select:focus{border-color:var(--yellow);box-shadow:0 0 0 3px #ffc107
 </div>
 
 <script type="module">
-import{initializeApp}from"https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js";
-import{getAuth,onAuthStateChanged}from"https://www.gstatic.com/firebasejs/11.10.0/firebase-auth.js";
-import{getFirestore,collection,query,where,getDocs,getDoc,doc}from"https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js";
+import {
+  initializeApp,getApps,getApp
+} from "https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js";
+import {
+  getAuth,onAuthStateChanged
+} from "https://www.gstatic.com/firebasejs/11.10.0/firebase-auth.js";
+import {
+  getFirestore,collection,getDocs,query,where
+} from "https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js";
 
+/*
+  FIXZY:
+  - Konfigurasi disamakan dengan index / hak akses FIXZY.
+  - Halaman ini TIDAK memeriksa role, izin, ownerUid, atau membatasi data sendiri.
+  - Hak akses tetap mengikuti index dan Firestore Rules.
+  - Jika halaman dibuka dari aplikasi FIXZY yang sudah login, sesi Firebase
+    yang sama akan digunakan.
+*/
 const cfg={
- apiKey:"AIzaSyCwMbJsuORHIq4QCmp4c1r6OsjAUlfxU5Y",
- authDomain:"fixzy-f056f.firebaseapp.com",
- projectId:"fixzy-f056f",
- storageBucket:"fixzy-f056f.firebasestorage.app",
- messagingSenderId:"838081521031",
- appId:"1:838081521031:web:50fdee909b56460b055f22"
+  apiKey:"AIzaSyC_PcarMTT5Un7qfSLzf92o5OGn5rginsI",
+  authDomain:"fixzy-update.firebaseapp.com",
+  projectId:"fixzy-update",
+  storageBucket:"fixzy-update.firebasestorage.app",
+  messagingSenderId:"995892519622",
+  appId:"1:995892519622:web:fa41047944d8e5b35d6dc7"
 };
-const app=initializeApp(cfg),auth=getAuth(app),db=getFirestore(app);
+
+const app=getApps().length?getApp():initializeApp(cfg);
+const auth=getAuth(app);
+const db=getFirestore(app);
 const $=id=>document.getElementById(id);
-let uid="",ownerUid="",profile={},accounts=[],absensi=[],pengeluaran=[];
+
+let uid="";
+let currentUser=null;
+let accounts=[];
+let absensi=[];
+let pengeluaran=[];
 
 const num=v=>Number(v)||0;
 const money=v=>"Rp "+num(v).toLocaleString("id-ID");
-const esc=v=>String(v??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]));
-const nama=a=>a.nama||a.namaKaryawan||a.namaLengkap||a.name||a.email||"-";
-const role=a=>({employee:"Karyawan",kasir:"Kasir",kurir:"Kurir",reseller:"Reseller"})[String(a.role||"").toLowerCase()]||a.role||"-";
-const upahHarian=a=>num(a.upahHarian??a.upah??a.gajiHarian??a.gaji??a.nominalUpah);
-const dateOf=r=>{
-  if(typeof r?.tanggal==="string")return r.tanggal.slice(0,10);
-  if(r?.tanggal?.toDate)return r.tanggal.toDate().toLocaleDateString("sv-SE");
-  if(r?.createdAt?.toDate)return r.createdAt.toDate().toLocaleDateString("sv-SE");
+const esc=v=>String(v??"").replace(/[&<>"']/g,m=>({
+  "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
+}[m]));
+
+function nama(a){
+  return String(
+    a?.nama||a?.namaKaryawan||a?.namaLengkap||a?.name||a?.displayName||a?.email||"-"
+  ).trim();
+}
+function role(a){
+  const r=String(a?.role||a?.posisi||"").toLowerCase();
+  return ({
+    owner:"Owner",
+    employee:"Karyawan",
+    karyawan:"Karyawan",
+    kasir:"Kasir",
+    kurir:"Kurir",
+    reseller:"Reseller",
+    teknisi:"Teknisi"
+  })[r] || a?.role || a?.posisi || "-";
+}
+function upahHarian(a){
+  return num(
+    a?.upahHarian??a?.upah??a?.gajiHarian??a?.gaji??a?.nominalUpah??a?.upahPerHari
+  );
+}
+function dateOf(r){
+  const x=r?.tanggal??r?.date??r?.tanggalAbsensi??r?.createdAt??r?.disimpanPada;
+  if(typeof x==="string"){
+    const m=x.match(/^(\d{4}-\d{2}-\d{2})/);
+    if(m)return m[1];
+    const d=new Date(x);
+    if(!Number.isNaN(d.getTime()))return d.toLocaleDateString("sv-SE");
+  }
+  if(x?.toDate){
+    try{return x.toDate().toLocaleDateString("sv-SE")}catch{}
+  }
+  if(x?.seconds){
+    try{return new Date(x.seconds*1000).toLocaleDateString("sv-SE")}catch{}
+  }
   return "";
-};
-const today=()=>new Date().toLocaleDateString("sv-SE");
-const monthNow=()=>today().slice(0,7);
+}
+function today(){return new Date().toLocaleDateString("sv-SE")}
+function monthNow(){return today().slice(0,7)}
 
 function periodKey(){
   const p=$("periode").value;
   const v=$("periodeTanggal").value||monthNow();
   if(p==="bulan")return v.slice(0,7);
   if(p==="tahun")return v.slice(0,4);
-  return v.length===7?v+"-"+String(new Date().getDate()).padStart(2,"0"):v;
+  if(v.length===7){
+    const day=new Date().getDate();
+    return v+"-"+String(day).padStart(2,"0");
+  }
+  return v;
 }
 function matchPeriod(r){
   const d=dateOf(r),p=$("periode").value,k=periodKey();
   if(!d)return false;
-  if(p==="hari")return d===k;
-  if(p==="tahun")return d.startsWith(k);
-  return d.startsWith(k);
+  return p==="hari"?d===k:d.startsWith(k);
 }
-function isHadir(r){return String(r.status||"").toLowerCase()==="hadir"}
+
+function isHadir(r){
+  const s=String(r?.status||r?.kehadiran||r?.keteranganStatus||"").toLowerCase().trim();
+  return !s || ["hadir","masuk","present"].includes(s);
+}
 function isKasbon(r){
-  const t=[r.jenis,r.type,r.kategori,r.keterangan,r.catatan,r.deskripsi,r.nama].filter(Boolean).join(" ").toLowerCase();
-  return /kasbon|ambil uang|pengambilan uang/.test(t);
+  const t=[
+    r?.jenis,r?.type,r?.kategori,r?.keterangan,r?.catatan,r?.deskripsi,
+    r?.nama,r?.perihal,r?.uraian,r?.memo,r?.note
+  ].filter(Boolean).join(" ").toLowerCase();
+  return /kasbon|ambil\s+uang|pengambilan\s+uang|pinjaman\s+karyawan/.test(t);
 }
-function kasbonName(r){return String(r.namaKaryawan||r.namaTeknisi||r.karyawan||r.teknisi||r.nama||"").trim()}
-function kasbonAmount(r){return num(r.nominal??r.jumlah??r.amount??r.total??r.nilai??r.uang)}
+function kasbonName(r){
+  return String(
+    r?.namaKaryawan||r?.namaTeknisi||r?.karyawan||r?.teknisi||r?.nama||r?.employeeName||""
+  ).trim();
+}
+function kasbonAmount(r){
+  return num(
+    r?.nominal??r?.jumlah??r?.amount??r?.total??r?.nilai??r?.uang??r?.nominalPengambilan
+  );
+}
+
+function attendanceMatchesEmployee(x,a){
+  const ids=[
+    x?.userId,x?.uid,x?.karyawanId,x?.employeeId,x?.akunId,x?.idKaryawan
+  ].filter(Boolean).map(String);
+  const aids=[
+    a?.id,a?.uid,a?.userId,a?.idKaryawan
+  ].filter(Boolean).map(String);
+
+  if(ids.some(id=>aids.includes(id))) return true;
+
+  const xEmail=String(x?.email||x?.emailKaryawan||"").toLowerCase().trim();
+  const aEmail=String(a?.email||"").toLowerCase().trim();
+  if(xEmail && aEmail && xEmail===aEmail) return true;
+
+  const xn=String(
+    x?.nama||x?.namaKaryawan||x?.namaTeknisi||x?.karyawan||x?.employeeName||""
+  ).toLowerCase().trim();
+  const an=nama(a).toLowerCase().trim();
+  return !!xn && !!an && xn===an;
+}
 
 function showPopup(title,text){
   $("popupTitle").textContent=title;
@@ -208,67 +300,88 @@ function showPopup(title,text){
 }
 window.tutupPopup=()=>$("popup").classList.remove("show");
 
-async function loadProfile(){
-  const s=await getDoc(doc(db,"users",uid));
-  if(s.exists())profile=s.data()||{};
-  ownerUid=profile.role==="owner"?(uid):(profile.ownerUid||profile.ownerId||"");
-  if(!ownerUid)throw new Error("ownerUid akun tidak ditemukan.");
-  $("ownerName").textContent=profile.namaKonter||profile.namaPemilik||profile.namaUsaha||profile.nama||"FIXZY";
-  $("ownerEmail").textContent=auth.currentUser?.email||"Firebase";
-}
-
-async function own(name){
-  const map=new Map();
-  for(const field of ["uid","ownerUid","ownerId"]){
-    const value=field==="uid" ? ownerUid : ownerUid;
-    try{
-      const s=await getDocs(query(collection(db,name),where(field,"==",value)));
-      s.docs.forEach(d=>map.set(d.id,{id:d.id,...d.data()}));
-    }catch(e){console.warn(name,field,e.message)}
+/*
+  Tidak memakai where("uid", ...) untuk membatasi halaman.
+  Data dibaca langsung dari koleksi; Firestore Rules tetap menjadi
+  pengaman sebenarnya.
+*/
+async function readCollection(name){
+  try{
+    const snap=await getDocs(collection(db,name));
+    return snap.docs.map(d=>({id:d.id,...d.data()}));
+  }catch(e){
+    console.warn("Koleksi",name,"gagal dibaca:",e.code||"",e.message||e);
+    return [];
   }
-  if(uid!==ownerUid){
-    try{
-      const s=await getDocs(query(collection(db,name),where("uid","==",uid)));
-      s.docs.forEach(d=>map.set(d.id,{id:d.id,...d.data()}));
-    }catch(e){}
-  }
-  return [...map.values()];
 }
 
 async function loadData(){
-  const [u,a,e]=await Promise.all([
-    getDocs(query(collection(db,"users"),where("ownerUid","==",ownerUid))),
-    own("absensi"),
-    own("pengeluaran")
+  const results=await Promise.all([
+    readCollection("users"),
+    readCollection("absensi"),
+    readCollection("pengeluaran")
   ]);
-  accounts=u.docs.map(d=>({id:d.id,...d.data()}))
-    .filter(x=>["employee","kasir","kurir","reseller"].includes(String(x.role||"").toLowerCase()))
-    .filter(x=>String(x.status||"aktif").toLowerCase()!=="nonaktif");
 
-  if(profile.role!=="owner")accounts=accounts.filter(x=>x.id===uid||x.uid===uid);
-  absensi=a;
-  pengeluaran=e;
+  accounts=results[0]||[];
+  absensi=results[1]||[];
+  pengeluaran=results[2]||[];
+
+  /*
+    Hanya halaman upah yang menentukan mana yang ditampilkan:
+    akun yang memiliki data upah atau role/jabatan karyawan.
+    Tidak ada pembatas ownerUid.
+  */
+  accounts=accounts.filter(a=>{
+    const r=String(a?.role||"").toLowerCase();
+    const j=String(a?.jabatan||a?.posisi||"").toLowerCase();
+    const up=upahHarian(a);
+    const isWorker=["employee","karyawan","kasir","kurir","reseller","teknisi"].includes(r);
+    return isWorker || up>0 || /karyawan|kasir|kurir|teknisi|staff/.test(j);
+  });
+
+  $("ownerName").textContent=
+    accounts.length ? (currentUser?.displayName||"Akun FIXZY") : "Akun FIXZY";
+  $("ownerEmail").textContent=currentUser?.email||"Firebase";
 }
 
 function buildRows(){
-  const arr=accounts.map(a=>{
-    const hadirRows=absensi.filter(x=>(x.userId||x.uid)===a.id && matchPeriod(x) && isHadir(x));
-    const takes=pengeluaran.filter(x=>matchPeriod(x)&&isKasbon(x)&&
-      String(kasbonName(x)).toLowerCase()===String(nama(a)).toLowerCase());
+  return accounts.map(a=>{
+    const hadirRows=absensi.filter(x=>matchPeriod(x)&&isHadir(x)&&attendanceMatchesEmployee(x,a));
+    const takes=pengeluaran.filter(x=>{
+      if(!matchPeriod(x)||!isKasbon(x))return false;
+      const kn=kasbonName(x).toLowerCase();
+      const an=nama(a).toLowerCase();
+      const ae=String(a?.email||"").toLowerCase();
+      const ke=String(x?.email||x?.emailKaryawan||"").toLowerCase();
+      const ki=String(x?.uid||x?.userId||x?.karyawanId||"");
+      const ai=String(a?.id||a?.uid||"");
+      return (kn&&an&&kn===an) ||
+             (ke&&ae&&ke===ae) ||
+             (ki&&ai&&ki===ai);
+    });
     const gross=hadirRows.length*upahHarian(a);
     const take=takes.reduce((s,x)=>s+kasbonAmount(x),0);
-    return {a,days:hadirRows.length,gross,take,net:Math.max(0,gross-take),rows:hadirRows};
+    return {
+      a,
+      days:hadirRows.length,
+      gross,
+      take,
+      net:Math.max(0,gross-take),
+      rows:hadirRows
+    };
   });
-  return arr;
 }
 
 function render(){
   const q=String($("cari").value||"").toLowerCase().trim();
-  const rows=buildRows().filter(r=>{
-    const a=r.a;
-    return !q||[nama(a),a.jabatan,a.posisi,role(a),a.email].join(" ").toLowerCase().includes(q);
-  });
   const all=buildRows();
+  const rows=all.filter(r=>{
+    const a=r.a;
+    return !q||[
+      nama(a),a.jabatan,a.posisi,role(a),a.email,a.noHp,a.wa
+    ].join(" ").toLowerCase().includes(q);
+  });
+
   $("karyawan").textContent=all.length;
   $("hadir").textContent=all.reduce((s,r)=>s+r.days,0);
   $("gross").textContent=money(all.reduce((s,r)=>s+r.gross,0));
@@ -290,36 +403,43 @@ function render(){
       <td class="num"><b>${money(r.net)}</b></td>
       <td><span class="badge ${r.days?'green':'orange'}">${status}</span></td>
     </tr>`;
-  }).join("")||'<tr><td colspan="10" class="empty">Belum ada data karyawan.</td></tr>';
+  }).join("")||'<tr><td colspan="10" class="empty">Belum ada data karyawan yang dapat dibaca.</td></tr>';
 
   const ab=absensi.filter(matchPeriod).sort((a,b)=>dateOf(b).localeCompare(dateOf(a)));
   $("absensiBody").innerHTML=ab.map(x=>`<tr>
-    <td>${esc(dateOf(x))}</td><td><b>${esc(x.nama||x.namaKaryawan||"-")}</b></td>
-    <td><span class="badge ${String(x.status||"").toLowerCase()==="hadir"?"green":"orange"}">${esc(x.status||"-")}</span></td>
-    <td>${esc(x.jamMasuk||"-")}</td><td>${esc(x.jamPulang||"-")}</td><td>${esc(x.catatan||"-")}</td>
+    <td>${esc(dateOf(x))}</td>
+    <td><b>${esc(x.nama||x.namaKaryawan||x.namaTeknisi||"-")}</b></td>
+    <td><span class="badge ${isHadir(x)?"green":"orange"}">${esc(x.status||"-")}</span></td>
+    <td>${esc(x.jamMasuk||x.masuk||"-")}</td>
+    <td>${esc(x.jamPulang||x.pulang||"-")}</td>
+    <td>${esc(x.catatan||x.keterangan||"-")}</td>
   </tr>`).join("")||'<tr><td colspan="6" class="empty">Belum ada absensi pada periode ini.</td></tr>';
 
-  const kb=pengeluaran.filter(x=>matchPeriod(x)&&isKasbon(x)).sort((a,b)=>dateOf(b).localeCompare(dateOf(a)));
+  const kb=pengeluaran.filter(x=>matchPeriod(x)&&isKasbon(x))
+    .sort((a,b)=>dateOf(b).localeCompare(dateOf(a)));
+
   $("kasbonBody").innerHTML=kb.map(x=>`<tr>
-    <td>${esc(dateOf(x))}</td><td>${esc(kasbonName(x)||"-")}</td><td>${esc(x.jenis||x.type||"Kasbon")}</td>
-    <td>${esc(x.keterangan||x.catatan||x.deskripsi||"-")}</td><td class="num">${money(kasbonAmount(x))}</td>
+    <td>${esc(dateOf(x))}</td>
+    <td>${esc(kasbonName(x)||"-")}</td>
+    <td>${esc(x.jenis||x.type||"Kasbon")}</td>
+    <td>${esc(x.keterangan||x.catatan||x.deskripsi||"-")}</td>
+    <td class="num">${money(kasbonAmount(x))}</td>
   </tr>`).join("")||'<tr><td colspan="5" class="empty">Belum ada kasbon pada periode ini.</td></tr>';
 }
 
 async function muatSemua(){
-  if(!uid){
-    $("status").innerHTML='<span class="err">⚠️ Sesi Firebase belum tersedia. Halaman tidak mengarahkan ke login.</span>';
-    return;
-  }
-  $("status").textContent="⏳ Membaca data upah dari Firebase...";
+  $("status").textContent="⏳ Membaca data Firebase...";
   try{
-    await loadProfile();
     await loadData();
     render();
-    $("status").innerHTML=`<span class="ok">✓ Firebase aktif • ${accounts.length} karyawan • Periode ${esc(periodKey())}</span>`;
+    $("status").innerHTML=
+      `<span class="ok">✓ Firebase aktif • ${accounts.length} karyawan • `+
+      `Absensi ${absensi.length} • Kasbon/pengeluaran ${pengeluaran.length} • `+
+      `Periode ${esc(periodKey())}</span>`;
   }catch(e){
     console.error(e);
-    $("status").innerHTML=`<span class="err">Gagal membaca Firebase: ${esc(e.message||e)}</span>`;
+    $("status").innerHTML=
+      `<span class="err">❌ Gagal membaca Firebase: ${esc(e.message||e)}</span>`;
     showPopup("Gagal membaca Firebase",e.message||String(e));
   }
 }
@@ -328,15 +448,47 @@ window.render=render;
 
 $("periodeTanggal").value=monthNow();
 
+$("periode").addEventListener("change",()=>{
+  const p=$("periode").value;
+  const f=$("periodeTanggal");
+  if(p==="hari")f.type="date";
+  else f.type="month";
+  f.value=p==="hari"?today():monthNow();
+  render();
+  muatSemua();
+});
+$("periodeTanggal").addEventListener("change",()=>{
+  render();
+  muatSemua();
+});
+
+let authTimer=null;
+
 onAuthStateChanged(auth,async user=>{
-  if(!user){
-    uid="";
-    $("ownerName").textContent="Menunggu sesi FIXZY...";
-    $("status").innerHTML='<span class="status">⏳ Menunggu sesi akun FIXZY. Tidak ada pengalihan otomatis ke login.html.</span>';
+  clearTimeout(authTimer);
+  if(user){
+    uid=user.uid;
+    currentUser=user;
+    $("ownerName").textContent=user.displayName||"Akun FIXZY";
+    $("ownerEmail").textContent=user.email||"Firebase";
+    await muatSemua();
     return;
   }
-  uid=user.uid;
-  await muatSemua();
+
+  /*
+    Tidak redirect ke login.html.
+    Tidak membuat login baru.
+    Tidak membatasi berdasarkan role/izin di halaman ini.
+    Halaman menunggu sesi yang dibaca dari login/index FIXZY.
+  */
+  uid="";
+  currentUser=null;
+  $("ownerName").textContent="Menunggu sesi FIXZY...";
+  $("ownerEmail").textContent="";
+  $("status").innerHTML=
+    '<span class="err">⚠️ Sesi Firebase belum terbaca.</span><br>'+
+    '<span class="status">Halaman tidak membatasi izin dan tidak mengarahkan ke login. '+
+    'Pastikan halaman dibuka dari index FIXZY yang sudah login.</span>';
 });
 </script>
 </body>
