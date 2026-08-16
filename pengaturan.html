@@ -43,6 +43,10 @@ input,select{height:44px}textarea{min-height:100px;resize:vertical}
 .primary{background:var(--yellow);color:#111}.dark{background:var(--navy);color:#fff}.light{background:#e2e8f0;color:#111}
 .preview-wrap{display:flex;justify-content:center;background:#e9edf3;border-radius:14px;padding:18px;overflow:auto}
 .receipt{background:#fff;color:#111;width:380px;min-height:520px;padding:22px;box-shadow:0 5px 20px #0002;font-size:12px}
+.receipt.print-5x8{width:50mm;min-height:80mm;padding:3.5mm;font-size:9px}
+.receipt.print-5x8 h2{font-size:13px}
+.receipt.print-5x8 .policy{font-size:7px}
+.receipt.print-umum{width:190mm;min-height:260mm;padding:18mm;font-size:12px}
 .receipt h2{text-align:center;margin:0;font-size:19px}.receipt .center{text-align:center}.receipt hr{border:0;border-top:1px dashed #555;margin:12px 0}
 .receipt table{width:100%;border-collapse:collapse}.receipt td{padding:4px 0;vertical-align:top}.right{text-align:right}.policy{font-size:10px;line-height:1.45;white-space:pre-line}
 .note-box{border:1px dashed #777;padding:8px;margin-top:8px}
@@ -80,12 +84,22 @@ input,select{height:44px}textarea{min-height:100px;resize:vertical}
   </section>
 
   <section class="card">
-    <h2 class="title">⚙️ Isi Nota</h2>
+    <h2 class="title">⚙️ Pengaturan Nota Perusahaan</h2>
+    <div class="status" style="margin-bottom:10px">
+      Nama <b>FIXZY</b> tidak dicetak sebagai isi nota. Yang dicetak adalah nama konter/perusahaan yang diatur di sini.
+      Template dan ukuran cetak disimpan ke Firebase dan dapat dibaca oleh halaman nota/cetak lainnya.
+    </div>
     <div class="grid2">
       <div>
         <div class="field"><label>NAMA KONTER</label><input id="namaKonter" placeholder="Nama konter"></div>
         <div class="field"><label>NO. WA KONTER</label><input id="waKonter" placeholder="08xxxxxxxxxx"></div>
         <div class="field"><label>JUDUL / KETERANGAN</label><input id="judulNota" placeholder="Contoh: NOTA SERVIS"></div>
+        <div class="field"><label>UKURAN CETAK</label>
+          <select id="ukuranCetak">
+            <option value="5x8">Nota 5 × 8 cm</option>
+            <option value="umum">Cetak Umum / A4</option>
+          </select>
+        </div>
       </div>
       <div>
         <div class="field"><label>TANGGAL NOTA</label><input id="tanggalNota" type="date"></div>
@@ -126,7 +140,7 @@ const app=getApps().length?getApp():initializeApp(firebaseConfig);
 const auth=getAuth(app),db=getFirestore(app);
 const $=id=>document.getElementById(id);
 
-let uid="",jenis="servis",templateServis=1,templatePenjualan=1,profile={};
+let uid="",jenis="servis",templateServis=1,templatePenjualan=1,ukuranCetak="5x8",profile={};
 
 const templates=[
   {id:1,nama:"Template 1",cls:""},
@@ -189,7 +203,7 @@ function renderPreview(){
   const thanks=$("terimakasih").value||"Terima kasih telah berbelanja / menggunakan jasa kami.";
   const judul=$("judulNota").value||(jenis==="servis"?"NOTA SERVIS":"NOTA PENJUALAN");
 
-  $("preview").className="receipt "+cls;
+  $("preview").className="receipt "+cls+" print-"+($("ukuranCetak").value||"5x8");
   $("preview").innerHTML=`
     <div class="center">
       <h2>${esc(konter)}</h2>
@@ -215,10 +229,10 @@ function renderPreview(){
     <div class="policy"><b>KEBIJAKAN PERUSAHAAN</b>
 ${esc(kebijakan)}</div>
     <hr>
-    <div class="center"><b>${esc(thanks)}</b><br><br>FIXZY</div>
+    <div class="center"><b>${esc(thanks)}</b></div>
   `;
 }
-["namaKonter","waKonter","judulNota","tanggalNota","kebijakan","terimakasih"].forEach(id=>{
+["namaKonter","waKonter","judulNota","tanggalNota","kebijakan","terimakasih","ukuranCetak"].forEach(id=>{
   $(id).addEventListener("input",renderPreview);
 });
 
@@ -244,12 +258,14 @@ async function muatPengaturan(){
       const d=s.data()||{};
       templateServis=Number(d.templateServis)||1;
       templatePenjualan=Number(d.templatePenjualan)||1;
+      ukuranCetak=d.ukuranCetak||d.nota?.ukuranCetak||"5x8";
       if(d.nota){
         $("namaKonter").value=d.nota.namaKonter||namaKonter();
         $("waKonter").value=d.nota.waKonter||wa();
         $("kebijakan").value=d.nota.kebijakan||"";
         $("terimakasih").value=d.nota.terimakasih||"";
       }
+      $("ukuranCetak").value=ukuranCetak;
     }
     $("tanggalNota").value=today();
     pilihJenis(jenis);
@@ -267,11 +283,13 @@ async function simpanPengaturan(){
       uid,
       templateServis,
       templatePenjualan,
+      ukuranCetak:$("ukuranCetak").value,
       nota:{
         namaKonter:$("namaKonter").value.trim(),
         waKonter:$("waKonter").value.trim(),
         kebijakan:$("kebijakan").value.trim(),
-        terimakasih:$("terimakasih").value.trim()
+        terimakasih:$("terimakasih").value.trim(),
+        ukuranCetak:$("ukuranCetak").value
       },
       updatedAt:new Date().toISOString()
     },{merge:true});
@@ -289,13 +307,31 @@ window.isiContoh=()=>{
   renderPreview();
 };
 
+// Konfigurasi yang dapat dipakai halaman nota lain.
+// Sumber utama tetap Firebase: pengaturan/{uid}.
+window.getPengaturanNotaFIXZY=async function(){
+  if(!uid) throw new Error("Sesi Firebase belum tersedia");
+  const s=await getDoc(doc(db,"pengaturan",uid));
+  if(!s.exists()) return {
+    templateServis:1,templatePenjualan:1,ukuranCetak:"5x8",
+    nota:{namaKonter:namaKonter(),waKonter:wa(),kebijakan:"",terimakasih:""}
+  };
+  const d=s.data()||{};
+  return {
+    templateServis:Number(d.templateServis)||1,
+    templatePenjualan:Number(d.templatePenjualan)||1,
+    ukuranCetak:d.ukuranCetak||d.nota?.ukuranCetak||"5x8",
+    nota:d.nota||{}
+  };
+};
+
 window.cetakPreview=()=>{
   renderPreview();
   const isi=$("preview").outerHTML;
   const css=[...document.querySelectorAll("style")].map(x=>x.textContent).join("\n");
   const w=window.open("","_blank");
   if(!w){toast("Popup cetak diblokir browser");return}
-  w.document.write(`<!doctype html><html><head><meta charset="utf-8"><title>Nota FIXZY</title><style>${css}body{background:#fff}.receipt{box-shadow:none;margin:auto}</style></head><body>${isi}</body></html>`);
+  w.document.write(`<!doctype html><html><head><meta charset="utf-8"><title>Nota FIXZY</title><style>${css}body{background:#fff}.receipt{box-shadow:none;margin:auto}.receipt.print-5x8{width:50mm;min-height:80mm}.receipt.print-umum{width:190mm;min-height:260mm}@page{margin:0}</style></head><body>${isi}</body></html>`);
   w.document.close();
   setTimeout(()=>w.print(),350);
 };
