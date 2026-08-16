@@ -7,410 +7,311 @@
 <title>FIXZY - Pendapatan</title>
 <style>
 *{box-sizing:border-box}
-:root{--navy:#0b1426;--navy2:#111d33;--yellow:#ffc107;--yellow2:#ffcf3a;--bg:#f2f5f9;--card:#fff;--line:#dbe3ed;--text:#172033;--muted:#64748b;--green:#16a34a;--red:#dc2626;--blue:#2563eb}
+:root{--navy:#0b1426;--navy2:#111d33;--yellow:#ffc107;--bg:#f2f5f9;--card:#fff;--line:#dbe3ed;--text:#172033;--muted:#64748b;--green:#16a34a;--red:#dc2626}
 body{margin:0;font-family:Inter,Arial,Helvetica,sans-serif;background:var(--bg);color:var(--text)}
 button,input,select{font:inherit}
 .header{background:var(--navy);color:#fff;min-height:78px;padding:10px 16px;display:flex;align-items:center;gap:12px;box-shadow:0 4px 16px #0003;position:sticky;top:0;z-index:20}
-.logo{width:52px;height:52px;object-fit:contain;border-radius:10px;flex:none}
+.logo{width:52px;height:52px;object-fit:contain;border-radius:10px}
 .brand{min-width:0;flex:1}.brand h1{font-size:19px;margin:0;font-weight:900;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.brand p{font-size:11px;color:#cbd5e1;margin:3px 0 0}
 .owner{text-align:right;max-width:230px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.owner b{display:block;font-size:13px}.owner span{display:block;font-size:10px;color:#cbd5e1;margin-top:3px}
-.refresh{height:44px;padding:0 15px;border:0;border-radius:12px;background:var(--yellow);color:#111;font-weight:900;cursor:pointer;flex:none}
+.refresh{height:44px;padding:0 15px;border:0;border-radius:12px;background:var(--yellow);color:#111;font-weight:900;cursor:pointer}
 .wrap{max-width:1200px;margin:auto;padding:14px}
 .notice{background:#fff;border:1px solid var(--line);border-radius:14px;padding:10px 13px;margin-bottom:12px;font-size:12px;color:var(--muted)}
 .tabs{display:flex;gap:8px;margin-bottom:12px;overflow:auto}.tab{border:0;border-radius:12px;padding:11px 15px;background:#e2e8f0;color:#334155;font-weight:900;white-space:nowrap;cursor:pointer}.tab.active{background:var(--navy);color:#fff}
 .card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:14px;box-shadow:0 4px 16px #0000000a;margin-bottom:12px}
 .section-title{font-size:17px;font-weight:900;margin:0 0 11px}
 .input-grid{display:grid;grid-template-columns:150px 1fr 180px auto;gap:8px}.input-grid input,.input-grid button{height:43px;border:1px solid #cbd5e1;border-radius:11px;padding:0 12px}.input-grid button{background:var(--green);color:#fff;border:0;font-weight:900;cursor:pointer}
-.kpis{display:grid;grid-template-columns:repeat(5,1fr);gap:9px;margin-bottom:12px}.kpi{padding:13px;border-radius:14px;color:#fff}.kpi small{display:block;font-size:11px;font-weight:800;opacity:.9}.kpi b{display:block;font-size:19px;margin-top:7px}.kpi.pend{background:linear-gradient(135deg,#0d6efd,#1d4ed8)}.kpi.luar{background:linear-gradient(135deg,#059669,#16a34a)}.kpi.total{background:linear-gradient(135deg,#7c3aed,#4f46e5)}.kpi.peng{background:linear-gradient(135deg,#ef4444,#dc2626)}.kpi.laba{background:linear-gradient(135deg,#f59e0b,#d97706)}
-.table-wrap{overflow:auto;border:1px solid var(--line);border-radius:13px}table{width:100%;border-collapse:collapse;min-width:650px}th{background:var(--navy2);color:#fff;text-align:left;padding:10px;font-size:12px}td{padding:10px;border-bottom:1px solid #edf1f5;font-size:12px}td.num{text-align:right;white-space:nowrap}
-.list-item{display:flex;justify-content:space-between;gap:10px;align-items:center;padding:12px 5px;border-bottom:1px solid #edf1f5;cursor:pointer}.list-item:last-child{border-bottom:0}.list-item:hover{background:#f8fafc}.pill{display:inline-block;padding:4px 8px;border-radius:999px;background:#dbeafe;color:#1d4ed8;font-size:10px;font-weight:900;margin-left:4px}.pill.green{background:#dcfce7;color:#166534}.pill.red{background:#fee2e2;color:#991b1b}
-.empty{text-align:center;color:var(--muted);padding:24px}
-.hidden{display:none!important}
+.kpis{display:grid;grid-template-columns:repeat(5,1fr);gap:9px;margin-bottom:12px}.kpi{padding:13px;border-radius:14px;color:#fff}.kpi small{display:block;font-size:11px;font-weight:800}.kpi b{display:block;font-size:19px;margin-top:7px}.pend{background:linear-gradient(135deg,#0d6efd,#1d4ed8)}.luar{background:linear-gradient(135deg,#059669,#16a34a)}.total{background:linear-gradient(135deg,#7c3aed,#4f46e5)}.peng{background:linear-gradient(135deg,#ef4444,#dc2626)}.laba{background:linear-gradient(135deg,#f59e0b,#d97706)}
+.table-wrap{overflow:auto;border:1px solid var(--line);border-radius:13px}table{width:100%;border-collapse:collapse;min-width:760px}th{background:var(--navy2);color:#fff;text-align:left;padding:10px;font-size:12px}td{padding:10px;border-bottom:1px solid #edf1f5;font-size:12px}td.num{text-align:right;white-space:nowrap}
+.list-item{display:flex;justify-content:space-between;gap:10px;align-items:center;padding:12px 5px;border-bottom:1px solid #edf1f5;cursor:pointer}.list-item:last-child{border-bottom:0}.pill{display:inline-block;padding:4px 8px;border-radius:999px;background:#dbeafe;color:#1d4ed8;font-size:10px;font-weight:900;margin-left:4px}.pill.green{background:#dcfce7;color:#166534}.pill.red{background:#fee2e2;color:#991b1b}
+.empty{text-align:center;color:var(--muted);padding:24px}.status{font-size:12px;color:var(--muted);margin-top:8px}
 .popup-bg{position:fixed;inset:0;background:#0008;display:none;align-items:center;justify-content:center;padding:18px;z-index:100}.popup-bg.show{display:flex}.popup{width:min(430px,100%);background:#fff;border-radius:20px;padding:20px;box-shadow:0 20px 60px #0005}.popup h2{margin:0 0 9px;font-size:20px}.popup p{margin:0;color:#64748b;line-height:1.55;font-size:14px}.popup-actions{display:flex;justify-content:flex-end;gap:9px;margin-top:18px}.popup-actions button{border:0;border-radius:11px;padding:11px 16px;font-weight:900;cursor:pointer}.ok{background:var(--navy);color:#fff}.cancel{background:#e2e8f0;color:#111}
-.status{font-size:12px;color:var(--muted);margin-top:8px}
 @media(max-width:900px){.kpis{grid-template-columns:repeat(2,1fr)}.input-grid{grid-template-columns:1fr 1fr}.input-grid input:nth-child(2){grid-column:span 2}.input-grid button{grid-column:span 2}.owner{max-width:140px}}
-@media(max-width:600px){.header{padding:9px 10px}.logo{width:48px;height:48px}.brand h1{font-size:17px}.refresh{width:44px;padding:0;font-size:0}.refresh::after{content:"↻";font-size:20px}.owner{display:none}.wrap{padding:9px}.kpis{grid-template-columns:1fr 1fr;gap:7px}.kpi{padding:10px}.kpi b{font-size:15px}.tab{padding:9px 11px;font-size:12px}.input-grid{grid-template-columns:1fr}.input-grid input:nth-child(2),.input-grid button{grid-column:auto}.section-title{font-size:15px}}
+@media(max-width:600px){.header{padding:9px 10px}.logo{width:48px;height:48px}.brand h1{font-size:17px}.refresh{width:44px;padding:0;font-size:0}.refresh:after{content:"↻";font-size:20px}.owner{display:none}.wrap{padding:9px}.kpis{grid-template-columns:1fr 1fr;gap:7px}.kpi{padding:10px}.kpi b{font-size:15px}.tab{padding:9px 11px;font-size:12px}.input-grid{grid-template-columns:1fr}.input-grid input:nth-child(2),.input-grid button{grid-column:auto}.section-title{font-size:15px}}
 </style>
 </head>
 <body>
 <header class="header">
-  <img class="logo" src="logo.png" alt="FIXZY">
-  <div class="brand">
-    <h1>FIXZY - PENDAPATAN</h1>
-    <p>Pendapatan konter + penghasilan luar</p>
-  </div>
-  <div class="owner"><b id="ownerName">Memuat...</b><span id="ownerEmail">Firebase</span></div>
-  <button class="refresh" onclick="muatSemua()" title="Refresh">↻ Refresh</button>
+<img class="logo" src="logo.png" alt="FIXZY">
+<div class="brand"><h1>FIXZY - PENDAPATAN</h1><p>Pendapatan konter + penghasilan luar</p></div>
+<div class="owner"><b id="ownerName">Memuat...</b><span id="ownerEmail">Firebase</span></div>
+<button class="refresh" onclick="muatSemua()">↻ Refresh</button>
 </header>
 
 <main class="wrap">
-  <div class="notice" id="status">Memeriksa sesi Firebase...</div>
+<div class="notice" id="status">Memeriksa sesi Firebase...</div>
 
-  <section class="card">
-    <div class="section-title">➕ Penghasilan di Luar Konter</div>
-    <div class="input-grid">
-      <input type="date" id="luarTgl">
-      <input type="text" id="luarKet" placeholder="Sumber / keterangan">
-      <input type="number" id="luarNom" placeholder="Nominal">
-      <button onclick="tambahLuar()">Simpan ke Firebase</button>
-    </div>
-    <div class="status">Data penghasilan luar tersimpan di Firebase dan mengikuti UID akun owner.</div>
-  </section>
+<section class="card">
+<div class="section-title">➕ Penghasilan di Luar Konter</div>
+<div class="input-grid">
+<input type="date" id="luarTgl">
+<input type="text" id="luarKet" placeholder="Sumber / keterangan">
+<input type="number" id="luarNom" placeholder="Nominal">
+<button onclick="tambahLuar()">Simpan ke Firebase</button>
+</div>
+<div class="status">Data penghasilan luar tersimpan di Firebase.</div>
+</section>
 
-  <div class="tabs">
-    <button class="tab active" data-mode="harian" onclick="setMode('harian')">📅 Harian</button>
-    <button class="tab" data-mode="bulanan" onclick="setMode('bulanan')">📆 Bulanan</button>
-    <button class="tab" data-mode="tahunan" onclick="setMode('tahunan')">📈 Tahunan</button>
-  </div>
+<div class="tabs">
+<button class="tab active" data-mode="harian" onclick="setMode('harian')">📅 Harian</button>
+<button class="tab" data-mode="bulanan" onclick="setMode('bulanan')">📆 Bulanan</button>
+<button class="tab" data-mode="tahunan" onclick="setMode('tahunan')">📈 Tahunan</button>
+<button class="tab" data-mode="semua" onclick="setMode('semua')">📚 Semua Data</button>
+</div>
 
-  <section class="card">
-    <div class="section-title" id="listTitle">📅 Harian</div>
-    <div class="tabs" style="margin-bottom:10px">
-      <button class="tab active" id="jenisSemua" onclick="setJenis('semua')">📋 Semua</button>
-      <button class="tab" id="jenisPenjualan" onclick="setJenis('Penjualan')">🛒 Penjualan</button>
-      <button class="tab" id="jenisServis" onclick="setJenis('Servis')">🔧 Servis</button>
-    </div>
-    <div id="menu"></div>
-  </section>
+<section class="card">
+<div class="section-title" id="listTitle">📅 Harian</div>
+<div class="tabs">
+<button class="tab active" id="jenisSemua" onclick="setJenis('semua')">📋 Semua</button>
+<button class="tab" id="jenisPenjualan" onclick="setJenis('Penjualan')">🛒 Penjualan</button>
+<button class="tab" id="jenisServis" onclick="setJenis('Servis')">🔧 Servis</button>
+</div>
+<div id="menu"></div>
+</section>
 
-  <section class="card">
-    <div class="section-title">📊 Detail: <span id="detailTitle">-</span></div>
-    <div class="kpis">
-      <div class="kpi pend"><small>PENDAPATAN KONTER</small><b id="kpKonter">Rp 0</b></div>
-      <div class="kpi luar"><small>PENGHASILAN LUAR</small><b id="kpLuar">Rp 0</b></div>
-      <div class="kpi total"><small>TOTAL PENDAPATAN</small><b id="kpTotal">Rp 0</b></div>
-      <div class="kpi peng"><small>PENGELUARAN</small><b id="kpPeng">Rp 0</b></div>
-      <div class="kpi laba"><small>LABA BERSIH</small><b id="kpLaba">Rp 0</b></div>
-    </div>
+<section class="card">
+<div class="section-title">📊 Detail: <span id="detailTitle">-</span></div>
+<div class="kpis">
+<div class="kpi pend"><small>PENDAPATAN KONTER</small><b id="kpKonter">Rp 0</b></div>
+<div class="kpi luar"><small>PENGHASILAN LUAR</small><b id="kpLuar">Rp 0</b></div>
+<div class="kpi total"><small>TOTAL PENDAPATAN</small><b id="kpTotal">Rp 0</b></div>
+<div class="kpi peng"><small>PENGELUARAN</small><b id="kpPeng">Rp 0</b></div>
+<div class="kpi laba"><small>LABA BERSIH</small><b id="kpLaba">Rp 0</b></div>
+</div>
 
-    <h3 class="section-title">🧾 Semua Transaksi: Penjualan + Servis</h3>
-    <div class="status" style="margin:-5px 0 10px">Semua data penjualan dan servis ditampilkan. Kolom <b>Dihitung</b> hanya menandai transaksi yang masuk perhitungan pendapatan.</div>
-    <div class="table-wrap"><table>
-      <thead><tr><th>Tanggal</th><th>Jenis</th><th>Karyawan/Teknisi</th><th>Pelanggan</th><th>Produk / HP</th><th>Status</th><th class="num">Total</th></tr></thead>
-      <tbody id="tbody"></tbody>
-    </table></div>
+<h3 class="section-title">🧾 Semua Transaksi: Penjualan + Servis</h3>
+<div class="status" style="margin:-5px 0 10px">Semua data penjualan dan servis ditampilkan. Dihitung hanya penanda perhitungan pendapatan.</div>
+<div class="table-wrap"><table>
+<thead><tr><th>Tanggal</th><th>Jenis</th><th>Karyawan/Teknisi</th><th>Pelanggan</th><th>Produk / HP</th><th>Status</th><th class="num">Total</th></tr></thead>
+<tbody id="tbody"></tbody>
+</table></div>
 
-    <h3 class="section-title" style="margin-top:16px">💸 Penghasilan Luar</h3>
-    <div class="table-wrap"><table>
-      <thead><tr><th>Tanggal</th><th>Sumber / Keterangan</th><th class="num">Nominal</th><th>Aksi</th></tr></thead>
-      <tbody id="tbodyLuar"></tbody>
-    </table></div>
-  </section>
+<h3 class="section-title" style="margin-top:16px">💸 Penghasilan Luar</h3>
+<div class="table-wrap"><table>
+<thead><tr><th>Tanggal</th><th>Sumber / Keterangan</th><th class="num">Nominal</th><th>Aksi</th></tr></thead>
+<tbody id="tbodyLuar"></tbody>
+</table></div>
+</section>
 </main>
 
 <div class="popup-bg" id="popup">
-  <div class="popup">
-    <h2 id="popupTitle">FIXZY</h2>
-    <p id="popupText"></p>
-    <div class="popup-actions">
-      <button class="cancel" onclick="tutupPopup()">Tutup</button>
-      <button class="ok" id="popupOk" onclick="tutupPopup()">OK</button>
-    </div>
-  </div>
-</div>
+<div class="popup"><h2 id="popupTitle">FIXZY</h2><p id="popupText"></p>
+<div class="popup-actions"><button class="cancel" onclick="tutupPopup()">Tutup</button><button class="ok" id="popupOk">OK</button></div>
+</div></div>
 
 <script type="module">
-import {initializeApp} from "https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js";
+import {initializeApp,getApps,getApp} from "https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js";
 import {getAuth,onAuthStateChanged} from "https://www.gstatic.com/firebasejs/11.10.0/firebase-auth.js";
-import {getFirestore,collection,query,where,getDocs,addDoc,deleteDoc,doc,serverTimestamp} from "https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js";
+import {getFirestore,collection,query,where,getDocs,getDoc,doc,addDoc,deleteDoc,serverTimestamp} from "https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js";
 
 const firebaseConfig={
-  apiKey:"AIzaSyC_PcarMTT5Un7qfSLzf92o5OGn5rginsI",
-  authDomain:"fixzy-update.firebaseapp.com",
-  projectId:"fixzy-update",
-  storageBucket:"fixzy-update.appspot.com",
-  messagingSenderId:"431404655232",
-  appId:"1:431404655232:web:5f7d9c9a1b2c3d4e5f6a7"
+ apiKey:"AIzaSyC_PcarMTT5Un7qfSLzf92o5OGn5rginsI",
+ authDomain:"fixzy-update.firebaseapp.com",
+ projectId:"fixzy-update",
+ storageBucket:"fixzy-update.appspot.com",
+ messagingSenderId:"431404655232",
+ appId:"1:431404655232:web:5f7d9c9a1b2c3d4e5f6a7"
 };
-const app=initializeApp(firebaseConfig),auth=getAuth(app),db=getFirestore(app);
+const app=getApps().length?getApp():initializeApp(firebaseConfig);
+const auth=getAuth(app),db=getFirestore(app);
 
-let uid=null, ownerUid=null, profile={}, servis=[], penjualan=[], pengeluaran=[], luar=[], mode="harian", currentVal="", jenisFilter="semua";
+let uid=null,ownerUid=null,profile={},servis=[],penjualan=[],pengeluaran=[],luar=[];
+let mode="harian",currentVal="",jenisFilter="semua";
 const $=id=>document.getElementById(id);
 const n=v=>Number(v)||0;
 const rp=v=>"Rp "+n(v).toLocaleString("id-ID");
 const esc=v=>String(v??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]));
-const dateOf=r=>String(r?.tanggal||r?.disimpanPada||"").slice(0,10);
 
-function showPopup(title,text,ok=true){
-  $("popupTitle").textContent=title;$("popupText").textContent=text;
-  $("popupOk").style.display=ok?"inline-block":"none";$("popup").classList.add("show");
+function popup(title,text,fn){
+ $("popupTitle").textContent=title;$("popupText").textContent=text;
+ $("popupOk").onclick=fn||tutupPopup;$("popup").classList.add("show");
 }
 function tutupPopup(){$("popup").classList.remove("show")}
 window.tutupPopup=tutupPopup;
 
 function normalizeDate(r){
-  const raw=String(r?.tanggal||r?.disimpanPada||"").trim();
-  if(/^\d{4}-\d{2}-\d{2}/.test(raw)) return raw.slice(0,10);
-  const m=raw.match(/^(\d{1,2})[\/-](\d{1,2})[\/-](\d{4})/);
-  return m?`${m[3]}-${String(m[2]).padStart(2,"0")}-${String(m[1]).padStart(2,"0")}`:"";
+ let v=r?.tanggal??r?.tanggalTransaksi??r?.createdAt??r?.disimpanPada??r?.dibuatPada??"";
+ if(v&&typeof v==="object"){
+   if(typeof v.toDate==="function") v=v.toDate();
+   else if(typeof v.seconds==="number") v=new Date(v.seconds*1000);
+ }
+ if(v instanceof Date&&!isNaN(v)) return v.toISOString().slice(0,10);
+ const raw=String(v).trim();
+ if(/^\d{4}-\d{2}-\d{2}/.test(raw))return raw.slice(0,10);
+ const m=raw.match(/^(\d{1,2})[\/-](\d{1,2})[\/-](\d{4})/);
+ return m?`${m[3]}-${String(m[2]).padStart(2,"0")}-${String(m[1]).padStart(2,"0")}`:"";
 }
-function txRows(){
-  return [
-    ...servis.map(r=>({...r,_jenis:"Servis"})),
-    ...penjualan.map(r=>({...r,_jenis:"Penjualan"}))
-  ];
-}
-function periodMatch(r){
-  const d=normalizeDate(r); if(!d)return false;
-  const now=new Date(), today=now.toISOString().slice(0,10), ym=today.slice(0,7), y=today.slice(0,4);
-  return mode==="harian"?d===today:mode==="bulanan"?d.startsWith(ym):d.startsWith(y);
-}
+function txRows(){return [...servis.map(r=>({...r,_jenis:"Servis"})),...penjualan.map(r=>({...r,_jenis:"Penjualan"}))]}
 function belongs(r,key){
-  const d=normalizeDate(r);
-  if(mode==="harian") return d===key;
-  if(mode==="bulanan") return d.startsWith(key);
-  return d.startsWith(key);
+ const d=normalizeDate(r);if(mode==="semua")return !!d;
+ if(mode==="harian")return d===key;
+ if(mode==="bulanan")return d.startsWith(key);
+ return d.startsWith(key);
 }
-function sortDate(a,b){return normalizeDate(b).localeCompare(normalizeDate(a))}
+function keyDate(d){if(mode==="semua")return"SEMUA";if(mode==="harian")return d;if(mode==="bulanan")return d.slice(0,7);return d.slice(0,4)}
+function labelKey(k){
+ if(mode==="semua")return"Semua Data";
+ if(mode==="harian")return new Date(k+"T00:00:00").toLocaleDateString("id-ID",{day:"2-digit",month:"long",year:"numeric"});
+ if(mode==="bulanan")return new Date(k+"-01T00:00:00").toLocaleDateString("id-ID",{month:"long",year:"numeric"});
+ return"Tahun "+k;
+}
+function allKeys(){
+ if(mode==="semua")return["SEMUA"];
+ const s=new Set();
+ [...filteredTxRows(),...luar].forEach(r=>{const d=normalizeDate(r);if(d)s.add(keyDate(d))});
+ return [...s].sort().reverse();
+}
+function filteredTxRows(){
+ const rows=txRows();
+ return jenisFilter==="semua"?rows:rows.filter(r=>r._jenis===jenisFilter);
+}
 
-async function getOwned(name){
-  const q=query(collection(db,name),where("uid","==",uid));
-  const snap=await getDocs(q);
-  return snap.docs.map(d=>({id:d.id,...d.data()}));
-}
 async function loadProfile(){
-  try{
-    const snap=await getDocs(query(collection(db,"users"),where("__name__","==",uid)));
-    if(!snap.empty) profile=snap.docs[0].data()||{};
-  }catch(e){ console.warn("Profil Firebase:",e); }
-
-  const role=String(profile.role||"").toLowerCase();
-  ownerUid=(role==="owner"||profile.isOwner===true)
-    ? uid
-    : (profile.ownerUid||profile.ownerId||uid);
-
-  $("ownerName").textContent=
-    profile.namaKonter||profile.namaToko||profile.namaUsaha||profile.toko||
-    profile.nama||auth.currentUser?.displayName||"Owner";
-  $("ownerEmail").textContent=auth.currentUser?.email||"Firebase";
+ profile={};
+ try{
+  const s=await getDoc(doc(db,"users",uid));
+  if(s.exists())profile=s.data()||{};
+ }catch(e){console.warn("Profil:",e)}
+ const role=String(profile.role||"").toLowerCase();
+ ownerUid=(role==="owner"||profile.isOwner===true)?uid:(profile.ownerUid||profile.ownerId||profile.ownerID||uid);
+ $("ownerName").textContent=profile.namaKonter||profile.namaToko||profile.namaUsaha||profile.toko||profile.nama||auth.currentUser?.displayName||"A Yudi Thea";
+ $("ownerEmail").textContent=auth.currentUser?.email||"Firebase";
 }
 
-/* Ambil data berdasarkan owner. Data FIXZY lama umumnya memakai uid,
-   tetapi beberapa versi menyimpan ownerUid/ownerId. Keduanya dibaca. */
+/* Baca dengan semua pola kepemilikan yang dipakai FIXZY.
+   Jika rules mengizinkan baca koleksi, fallback seluruh koleksi juga dipakai
+   agar data lama yang tidak punya field uid tetap terbaca. */
 async function getOwned(name){
-  const map=new Map();
-
-  async function ambil(field,value){
-    try{
-      const snap=await getDocs(query(collection(db,name),where(field,"==",value)));
-      snap.docs.forEach(d=>map.set(d.id,{id:d.id,...d.data()}));
-    }catch(err){
-      console.warn(`Firebase ${name} ${field}:`,err.message||err);
-    }
-  }
-
-  await ambil("uid",ownerUid);
-  if(ownerUid!==uid) await ambil("uid",uid);
-  await ambil("ownerUid",ownerUid);
-  await ambil("ownerId",ownerUid);
-
-  return [...map.values()];
+ const map=new Map();
+ const fields=[["uid",ownerUid],["ownerUid",ownerUid],["ownerId",ownerUid],["ownerID",ownerUid],["uid",uid],["ownerUid",uid],["ownerId",uid]];
+ for(const [field,value] of fields){
+  if(!value)continue;
+  try{
+   const s=await getDocs(query(collection(db,name),where(field,"==",value)));
+   s.docs.forEach(d=>map.set(d.id,{id:d.id,...d.data()}));
+  }catch(e){console.warn(name,field,e.message||e)}
+ }
+ if(!map.size){
+  try{
+   const s=await getDocs(collection(db,name));
+   s.docs.forEach(d=>{
+    const x={id:d.id,...d.data()};
+    const o=x.ownerUid||x.ownerId||x.ownerID||x.uid||x.dibuatOleh||x.createdBy;
+    if(!o||o===uid||o===ownerUid)map.set(d.id,x);
+   });
+  }catch(e){console.warn("Fallback",name,e.message||e)}
+ }
+ return [...map.values()];
 }
 
-/* Setiap koleksi dimuat sendiri-sendiri supaya satu collection yang
-   tidak tersedia/terbatas rules tidak membuat semua data menjadi kosong. */
 async function muatSemua(){
-  if(!uid){$("status").textContent="Sesi Firebase belum aktif.";return}
-  $("status").textContent="⏳ Membaca data Firebase...";
-  try{
-    await loadProfile();
-
-    const hasil=await Promise.all([
-      getOwned("servis"),
-      getOwned("penjualan"),
-      getOwned("pengeluaran"),
-      getOwned("pendapatanLuar")
-    ]);
-
-    servis=hasil[0]||[];
-    penjualan=hasil[1]||[];
-    pengeluaran=hasil[2]||[];
-    luar=hasil[3]||[];
-
-    const total=servis.length+penjualan.length+luar.length;
-    $("status").textContent=
-      `✅ Firebase terhubung • ${total} data • Servis ${servis.length} • Penjualan ${penjualan.length} • Luar ${luar.length}`;
-
-    renderList();
-    if(currentVal && allKeys().includes(currentVal)) lihat(currentVal);
-    else pilihDefault();
-  }catch(e){
-    console.error(e);
-    $("status").textContent=`❌ Gagal membaca Firebase: ${e.code||""} ${e.message||e}`;
-    showPopup("Gagal membaca Firebase",e.message||String(e));
-  }
+ if(!uid){$("status").textContent="⚠️ Sesi Firebase belum aktif.";return}
+ $("status").textContent="⏳ Membaca data Firebase...";
+ try{
+  await loadProfile();
+  const hasil=await Promise.allSettled([
+   getOwned("servis"),getOwned("penjualan"),getOwned("pengeluaran"),getOwned("pendapatanLuar")
+  ]);
+  servis=hasil[0].status==="fulfilled"?hasil[0].value:[];
+  penjualan=hasil[1].status==="fulfilled"?hasil[1].value:[];
+  pengeluaran=hasil[2].status==="fulfilled"?hasil[2].value:[];
+  luar=hasil[3].status==="fulfilled"?hasil[3].value:[];
+  $("status").textContent=`✅ Firebase terhubung • Servis ${servis.length} • Penjualan ${penjualan.length} • Luar ${luar.length}`;
+  renderList();pilihDefault();
+ }catch(e){
+  console.error(e);$("status").textContent=`❌ Gagal membaca Firebase: ${e.message||e}`;
+  popup("Gagal membaca Firebase",e.message||String(e));
+ }
 }
 window.muatSemua=muatSemua;
 
 function setMode(m){
-  mode=m;currentVal="";
-  document.querySelectorAll(".tabs .tab").forEach(x=>x.classList.toggle("active",x.dataset.mode===m));
-  renderList();pilihDefault();
+ mode=m;currentVal="";
+ document.querySelectorAll("[data-mode]").forEach(x=>x.classList.toggle("active",x.dataset.mode===m));
+ renderList();pilihDefault();
 }
 window.setMode=setMode;
-
 function setJenis(j){
-  jenisFilter=j;
-  ["jenisSemua","jenisPenjualan","jenisServis"].forEach(id=>$(id)?.classList.remove("active"));
-  const id=j==="semua"?"jenisSemua":j==="Penjualan"?"jenisPenjualan":"jenisServis";
-  $(id)?.classList.add("active");
-  renderList();
-  if(currentVal) lihat(currentVal);
+ jenisFilter=j;
+ ["jenisSemua","jenisPenjualan","jenisServis"].forEach(id=>$(id).classList.remove("active"));
+ $(j==="semua"?"jenisSemua":j==="Penjualan"?"jenisPenjualan":"jenisServis").classList.add("active");
+ renderList();pilihDefault();
 }
 window.setJenis=setJenis;
 
-function filteredTxRows(){
-  const rows=txRows();
-  return jenisFilter==="semua" ? rows : rows.filter(r=>r._jenis===jenisFilter);
-}
-
-function keyDate(d){
-  if(mode==="harian")return d;
-  if(mode==="bulanan")return d.slice(0,7);
-  return d.slice(0,4);
-}
-function allKeys(){
-  const keys=new Set();
-  [...filteredTxRows(),...luar].forEach(r=>{const d=normalizeDate(r);if(d)keys.add(keyDate(d))});
-  return [...keys].sort().reverse();
-}
-function labelKey(k){
-  if(mode==="harian"){
-    const d=new Date(k+"T00:00:00");
-    return d.toLocaleDateString("id-ID",{day:"2-digit",month:"long",year:"numeric"});
-  }
-  if(mode==="bulanan"){
-    const d=new Date(k+"-01T00:00:00");
-    return d.toLocaleDateString("id-ID",{month:"long",year:"numeric"});
-  }
-  return "Tahun "+k;
-}
 function renderList(){
-  const keys=allKeys();
-  $("listTitle").textContent=mode==="harian"?"📅 Harian":mode==="bulanan"?"📆 Bulanan":"📈 Tahunan";
-  $("menu").innerHTML=keys.map(k=>{
-    const tx=filteredTxRows().filter(r=>belongs(r,k)), lr=luar.filter(r=>belongs(r,k));
-    const total=tx.reduce((a,r)=>a+n(r.total??r.biaya),0)+lr.reduce((a,r)=>a+n(r.total),0);
-    return `<div class="list-item" onclick="lihat('${k}')">
-      <span><b>${esc(labelKey(k))}</b><span class="pill">${tx.length} trx</span>${lr.length?`<span class="pill green">Luar ${lr.length}</span>`:""}</span>
-      <b>${rp(total)}</b>
-    </div>`;
-  }).join("")||'<div class="empty">Belum ada data pada periode ini.</div>';
+ const keys=allKeys();
+ $("listTitle").textContent=mode==="harian"?"📅 Harian":mode==="bulanan"?"📆 Bulanan":mode==="tahunan"?"📈 Tahunan":"📚 Semua Data";
+ $("menu").innerHTML=keys.map(k=>{
+  const tx=filteredTxRows().filter(r=>belongs(r,k)),lr=luar.filter(r=>belongs(r,k));
+  const total=tx.reduce((a,r)=>a+n(r.total??r.biayaServis??r.biaya??r.harga),0)+lr.reduce((a,r)=>a+n(r.total??r.nominal),0);
+  return `<div class="list-item" onclick="lihat('${k}')"><span><b>${esc(labelKey(k))}</b><span class="pill">${tx.length} trx</span>${lr.length?`<span class="pill green">Luar ${lr.length}</span>`:""}</span><b>${rp(total)}</b></div>`;
+ }).join("")||'<div class="empty">Belum ada data.</div>';
 }
 window.renderList=renderList;
-
 function pilihDefault(){
-  const keys=allKeys();
-  const k=keys[0];
-  if(k){
-    currentVal=k;
-    lihat(k);
-  }else{
-    currentVal="";
-    clearDetail();
-  }
+ const k=allKeys()[0];
+ if(k){currentVal=k;lihat(k)}else clearDetail();
 }
 function clearDetail(){
-  $("detailTitle").textContent="-";["kpKonter","kpLuar","kpTotal","kpPeng","kpLaba"].forEach(id=>$(id).textContent="Rp 0");
-  $("tbody").innerHTML='<tr><td colspan="7" class="empty">Belum ada data penjualan atau servis.</td></tr>';
-  $("tbodyLuar").innerHTML='<tr><td colspan="4" class="empty">Belum ada penghasilan luar.</td></tr>';
+ $("detailTitle").textContent="-";
+ ["kpKonter","kpLuar","kpTotal","kpPeng","kpLaba"].forEach(id=>$(id).textContent="Rp 0");
+ $("tbody").innerHTML='<tr><td colspan="7" class="empty">Belum ada data penjualan atau servis.</td></tr>';
+ $("tbodyLuar").innerHTML='<tr><td colspan="4" class="empty">Belum ada penghasilan luar.</td></tr>';
 }
 function isPendapatanValid(r){
-  const status=String(r.status||"").toLowerCase();
-  const pembayaran=String(r.pembayaran||r.metode||"").toLowerCase();
-
-  // Aturan FIXZY: servis dihitung saat DIAMBIL,
-  // penjualan dihitung saat TUNAI/DIBAYAR.
-  if(r._jenis==="Servis"){
-    return !status || ["diambil","diambil pelanggan","selesai"].includes(status);
-  }
-  if(r._jenis==="Penjualan"){
-    return !status || ["dibayar","tunai","lunas"].includes(status) ||
-           ["tunai","cash"].includes(pembayaran);
-  }
-  return true;
+ const status=String(r.status||"").toLowerCase(),pay=String(r.pembayaran||r.metode||"").toLowerCase();
+ if(r._jenis==="Servis")return !status||["diambil","diambil pelanggan","selesai","lunas"].includes(status);
+ return !status||["dibayar","tunai","lunas"].includes(status)||["tunai","cash"].includes(pay);
 }
-
+function totalTx(r){return n(r.total??r.grandTotal??r.totalHarga??r.biayaServis??r.biaya??r.harga??r.nominal)}
+function sortDate(a,b){return normalizeDate(b).localeCompare(normalizeDate(a))}
 function lihat(k){
-  currentVal=k;
-  const allRowsForPeriod=filteredTxRows().filter(r=>belongs(r,k));
-  const rows=allRowsForPeriod.filter(r=>isPendapatanValid(r));
-  const lr=luar.filter(r=>belongs(r,k));
-  const konter=rows.reduce((a,r)=>a+n(r.total??r.biayaServis??r.biaya),0);
-  const luarTot=lr.reduce((a,r)=>a+n(r.total),0);
-  const peng=pengeluaran.filter(r=>belongs(r,k)).reduce((a,r)=>a+n(r.nominal??r.jumlah??r.amount),0);
-  const total=konter+luarTot,laba=total-peng;
-  $("detailTitle").textContent=labelKey(k);
-  $("kpKonter").textContent=rp(konter);$("kpLuar").textContent=rp(luarTot);
-  $("kpTotal").textContent=rp(total);$("kpPeng").textContent=rp(peng);$("kpLaba").textContent=rp(laba);
-  $("tbody").innerHTML=allRowsForPeriod.sort(sortDate).map(r=>{
-    const cust=r.pelanggan?.nama||r.namaPelanggan||r.nama||r.customerName||"Umum";
-    const prod=(r.items||[]).map(x=>x.nama||x.produk||x.productName||x.model||"").filter(Boolean).join(", ")
-      ||r.produk||r.namaBarang||r.hp?.merkTipe||r.model||r.tipeHp||"-";
-    const emp=r.teknisi?.nama||r.namaKaryawan||r.karyawan||r.namaTeknisi||r.teknisi||r.karyawanNama||"-";
-    const status=String(r.status||r.pembayaran||r.metode||"—");
-    const total=r._jenis==="Servis" ? (r.total??r.biayaServis??r.biaya??r.harga??0) : (r.total??0);
-    const valid=isPendapatanValid(r);
-    const badge=valid
-      ? '<span class="pill green">Dihitung</span>'
-      : '<span class="pill red">Tidak dihitung</span>';
-    return `<tr>
-      <td>${esc(normalizeDate(r))}</td>
-      <td><b>${esc(r._jenis)}</b></td>
-      <td>${esc(emp)}</td>
-      <td>${esc(cust)}</td>
-      <td>${esc(prod)}</td>
-      <td>${esc(status)} ${badge}</td>
-      <td class="num">${rp(total)}</td>
-    </tr>`;
-  }).join("")||'<tr><td colspan="7" class="empty">Tidak ada data penjualan atau servis pada periode ini.</td></tr>';
-  $("tbodyLuar").innerHTML=lr.sort(sortDate).map(r=>`<tr><td>${esc(normalizeDate(r))}</td><td>${esc(r.sumber||r.keterangan||"Penghasilan Luar")}</td><td class="num">${rp(r.total)}</td><td><button onclick="hapusLuar('${esc(r.id)}')" style="border:0;border-radius:8px;padding:7px 10px;background:#fee2e2;color:#991b1b;font-weight:800">Hapus</button></td></tr>`).join("")||'<tr><td colspan="4" class="empty">Tidak ada penghasilan luar.</td></tr>';
+ currentVal=k;
+ const rows=filteredTxRows().filter(r=>belongs(r,k));
+ const valid=rows.filter(isPendapatanValid),lr=luar.filter(r=>belongs(r,k));
+ const konter=valid.reduce((a,r)=>a+totalTx(r),0),luarTot=lr.reduce((a,r)=>a+n(r.total??r.nominal),0);
+ const peng=pengeluaran.filter(r=>belongs(r,k)).reduce((a,r)=>a+n(r.nominal??r.jumlah??r.amount),0);
+ $("detailTitle").textContent=labelKey(k);
+ $("kpKonter").textContent=rp(konter);$("kpLuar").textContent=rp(luarTot);$("kpTotal").textContent=rp(konter+luarTot);$("kpPeng").textContent=rp(peng);$("kpLaba").textContent=rp(konter+luarTot-peng);
+ $("tbody").innerHTML=rows.sort(sortDate).map(r=>{
+  const cust=r.pelanggan?.nama||r.namaPelanggan||r.customerName||r.customer||r.nama||"Umum";
+  const prod=(r.items||[]).map(x=>x.nama||x.produk||x.productName||x.model||"").filter(Boolean).join(", ")||r.produk||r.namaBarang||r.hp?.merkTipe||r.model||r.tipeHp||"-";
+  const emp=r.teknisi?.nama||r.namaKaryawan||r.karyawan||r.namaTeknisi||r.teknisi||r.karyawanNama||r.dibuatOlehNama||"-";
+  const status=String(r.status||r.pembayaran||r.metode||"—"),valid=isPendapatanValid(r);
+  return `<tr><td>${esc(normalizeDate(r))}</td><td><b>${r._jenis}</b></td><td>${esc(emp)}</td><td>${esc(cust)}</td><td>${esc(prod)}</td><td>${esc(status)} <span class="pill ${valid?"green":"red"}">${valid?"Dihitung":"Tidak dihitung"}</span></td><td class="num">${rp(totalTx(r))}</td></tr>`;
+ }).join("")||'<tr><td colspan="7" class="empty">Tidak ada data pada periode ini.</td></tr>';
+ $("tbodyLuar").innerHTML=lr.sort(sortDate).map(r=>`<tr><td>${esc(normalizeDate(r))}</td><td>${esc(r.sumber||r.keterangan||"Penghasilan Luar")}</td><td class="num">${rp(r.total??r.nominal)}</td><td><button onclick="hapusLuar('${r.id}')" style="border:0;border-radius:8px;padding:7px 10px;background:#fee2e2;color:#991b1b;font-weight:800">Hapus</button></td></tr>`).join("")||'<tr><td colspan="4" class="empty">Tidak ada penghasilan luar.</td></tr>';
 }
 window.lihat=lihat;
 
 async function tambahLuar(){
-  if(!uid){showPopup("Belum siap","Sesi Firebase belum aktif.");return}
-  const date=$("luarTgl").value, ket=$("luarKet").value.trim(), nom=n($("luarNom").value);
-  if(!date||!nom){showPopup("Data belum lengkap","Isi tanggal dan nominal terlebih dahulu.");return}
-  try{
-    await addDoc(collection(db,"pendapatanLuar"),{
-      uid,tanggal:date,sumber:ket||"Penghasilan Luar",total:nom,
-      dibuatPada:serverTimestamp(),dibuatOleh:uid
-    });
-    $("luarKet").value="";$("luarNom").value="";
-    showPopup("Berhasil","Penghasilan luar berhasil disimpan ke Firebase.");
-    await muatSemua();
-  }catch(e){showPopup("Gagal menyimpan",e.message||String(e))}
+ if(!uid){popup("Belum siap","Sesi Firebase belum aktif.");return}
+ const tanggal=$("luarTgl").value,ket=$("luarKet").value.trim(),nom=n($("luarNom").value);
+ if(!tanggal||!nom){popup("Data belum lengkap","Isi tanggal dan nominal.");return}
+ try{
+  await addDoc(collection(db,"pendapatanLuar"),{uid,ownerUid,tanggal,sumber:ket||"Penghasilan Luar",total:nom,dibuatPada:serverTimestamp(),dibuatOleh:uid});
+  $("luarKet").value="";$("luarNom").value="";
+  popup("Berhasil","Penghasilan luar berhasil disimpan.",async()=>{tutupPopup();await muatSemua()});
+ }catch(e){popup("Gagal menyimpan",e.message||String(e))}
 }
 window.tambahLuar=tambahLuar;
-
 async function hapusLuar(id){
-  if(!uid||!id)return;
-  // Custom popup confirmation
-  $("popupTitle").textContent="Hapus data?";
-  $("popupText").textContent="Data penghasilan luar ini akan dihapus dari Firebase.";
-  $("popupOk").style.display="inline-block";
-  $("popupOk").textContent="Hapus";
-  $("popupOk").onclick=async()=>{
-    try{await deleteDoc(doc(db,"pendapatanLuar",id));tutupPopup();$("popupOk").textContent="OK";await muatSemua()}
-    catch(e){tutupPopup();showPopup("Gagal menghapus",e.message||String(e))}
-  };
-  $("popup").classList.add("show");
+ popup("Hapus data?","Data penghasilan luar ini akan dihapus dari Firebase.",async()=>{
+  try{await deleteDoc(doc(db,"pendapatanLuar",id));tutupPopup();await muatSemua()}
+  catch(e){popup("Gagal menghapus",e.message||String(e))}
+ });
 }
 window.hapusLuar=hapusLuar;
 
 $("luarTgl").value=new Date().toISOString().slice(0,10);
-
 onAuthStateChanged(auth,async user=>{
-  if(!user){
-    $("status").textContent="⚠️ Sesi Firebase belum aktif. Buka halaman ini dari FIXZY setelah login.";
-    $("ownerName").textContent="Belum login";
-    $("ownerEmail").textContent="";
-    clearDetail();
-    return;
-  }
-  uid=user.uid;
-  await muatSemua();
+ if(!user){
+  $("status").textContent="⚠️ Sesi Firebase belum aktif. Halaman mengikuti sesi login FIXZY.";
+  $("ownerName").textContent="Belum login";$("ownerEmail").textContent="";
+  clearDetail();return;
+ }
+ uid=user.uid;await muatSemua();
 });
 </script>
 </body>
