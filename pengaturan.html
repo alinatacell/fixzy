@@ -77,7 +77,7 @@ textarea{min-height:82px;resize:vertical}input:focus,textarea:focus,select:focus
         </div>
         <button class="btn btn-save" onclick="simpanPengaturan()">💾 Simpan Pengaturan ke Firebase</button>
         <div class="status" id="saveStatus"></div>
-        <div class="hint">Data utama disimpan di <b>pengaturanNota/{UID Firebase Auth}</b>. Halaman ini menggunakan sesi Firebase dari index FIXZY jika tersedia, sehingga UID tidak lagi bergantung pada variabel sesi buatan.</div>
+        <div class="hint">Data utama disimpan di <b>pengaturanNota/{UID Firebase Auth}</b>. Firebase Auth dan Firestore dibuat langsung dari project FIXZY agar referensinya selalu valid.</div>
       </section>
 
       <section class="card"><h2 class="title">🧾 Template Servis</h2><div class="preset-list" id="presetServis"></div></section>
@@ -116,32 +116,16 @@ const firebaseConfig={
 };
 
 /*
-  Prioritas:
-  1. Firebase Auth dari index FIXZY melalui bridge.
-  2. Jika halaman dibuka langsung, gunakan instance Firebase sendiri.
+  FIREBASE ISOLATED INSTANCE
+  Halaman ini membuat App/Auth/Firestore sendiri dari konfigurasi FIXZY.
+  Object Firebase dari iframe parent tidak digunakan, karena object SDK
+  lintas window/realm dapat menyebabkan error invalid-argument pada doc/setDoc.
 */
-let app,auth,db;
-try{
-  if(window.parent&&window.parent!==window&&window.parent.fixzyFirebase?.app&&window.parent.fixzyFirebase?.auth){
-    app=window.parent.fixzyFirebase.app;
-    auth=window.parent.fixzyFirebase.auth;
-  }
-}catch(e){console.warn("Bridge parent tidak tersedia:",e)}
-
-/*
-  PENTING: jangan mengambil object Firestore dari bridge.
-  Ambil instance Firestore dari app yang sama dengan getFirestore(app).
-  Ini mencegah error:
-  "Expected first argument to collection() to be a CollectionReference,
-   a DocumentReference or FirebaseFirestore"
-*/
-if(!app){
-  app=getApps().length?getApp():initializeApp(firebaseConfig);
-}
-if(!auth){
-  auth=getAuth(app);
-}
-db=getFirestore(app);
+const APP_NAME="FIXZY_PENGATURAN";
+const existingApp=getApps().find(a=>a.name===APP_NAME);
+const app=existingApp||initializeApp(firebaseConfig,APP_NAME);
+const auth=getAuth(app);
+const db=getFirestore(app);
 
 let uid=null;
 let profile={};
@@ -176,10 +160,9 @@ const templates=[
 function ambilSesiIndex(){
   try{
     const p=window.parent&&window.parent!==window?window.parent.fixzySession:null;
-    if(p?.uid){
-      uid=p.uid;
+    if(p){
       profile={...(p.profile||{})};
-      return true;
+      return !!p.uid;
     }
   }catch(e){console.warn("Sesi index:",e)}
   return false;
@@ -411,7 +394,9 @@ window.simpanPengaturan=async()=>{
   };
 
   try{
-    await setDoc(doc(db,"pengaturanNota",uid),data,{merge:true});
+    const firestore=getFirestore(app);
+    const ref=doc(firestore,"pengaturanNota",uid);
+    await setDoc(ref,data,{merge:true});
     settings={...settings,...data};
     $("saveStatus").innerHTML='<span class="saved">✓ Tersimpan ke pengaturanNota/{UID Firebase Auth}</span>';
     renderPresets();
