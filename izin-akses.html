@@ -98,29 +98,51 @@ if(!["employee","reseller"].includes(r)){
  tampilNotice("⚠️ Role Tidak Valid","Role akun tidak valid.");
  return;
 }
-if(!editId && !wa){
- tampilNotice("⚠️ No. WA Belum Diisi","Masukkan nomor WhatsApp agar data login bisa langsung dikirim.");
+if(!wa){
+ tampilNotice("⚠️ No. WA Belum Diisi","Masukkan nomor WhatsApp agar data terbaru bisa dikirim melalui WhatsApp.");
  return;
 }
 try{
  if(editId){
    const data={
-     nama:n,namaKaryawan:n,role:r,jabatan:j,upahHarian:upah,status,
+     nama:n,namaKaryawan:n,role:r,email:email,jabatan:j,upahHarian:upah,status,
      noWA:wa,wa:wa,noWa:wa,izin,permissions:izin,ownerUid,
      updatedAt:serverTimestamp()
    };
    await setDoc(doc(db,"users",editId),data,{merge:true});
 
-   // Perbarui data lokal terlebih dahulu agar perubahan langsung terlihat.
+   // Perbarui data lokal agar hasil edit langsung terlihat.
    const idx=accounts.findIndex(x=>x.id===editId);
-   if(idx>=0) accounts[idx]={...accounts[idx],...data,noWA:wa,wa:wa,noWa:wa,izin:[...izin],permissions:[...izin]};
+   if(idx>=0) accounts[idx]={...accounts[idx],...data,noWA:wa,wa:wa,noWa:wa,email:email,izin:[...izin],permissions:[...izin]};
    render();
 
    $("popup").classList.remove("show");
-   editId=null;
    $("fRole").disabled=false;
-   tampilNotice("✅ Berhasil","Data akun, No. WA, upah, status, dan hak akses berhasil diperbarui.");
+
+   // Password tidak dapat dibaca dari Firebase Authentication.
+   // Karena itu saat EDIT, WhatsApp dikirim dengan data terbaru dan keterangan bahwa password tetap.
+   const pesanEdit=
+`Data akun FIXZY Anda telah diperbarui.
+
+Nama: ${n}
+Email Login: ${email}
+Role: ${roleLabel(r)}
+Jabatan: ${j||"-"}
+Upah Harian: ${rupiah(upah)}
+Status: ${status}
+
+Password: tetap menggunakan password sebelumnya.
+
+Hak Akses:
+${izin.length?izin.map(izinLabel).join(", "):"Tidak ada"}
+
+Silahkan login melalui:
+https://fixzy-olive.vercel.app`;
+
+   window._waPending={phone:wa,message:pesanEdit,name:n,email,password:"",role:r,mode:"edit"};
+   editId=null;
    await load();
+   tampilWaPopup(window._waPending);
    return;
  }
 
@@ -174,8 +196,10 @@ function nomorWhatsApp(v){
 }
 function tampilWaPopup(data){
  const safePhone=esc(data.phone||"-");
+ const judul=data.mode==="edit"?"Data akun berhasil diperbarui.":"Akun berhasil dibuat.";
  $("waText").innerHTML=
-   `Akun <b>${esc(data.name)}</b> berhasil dibuat.<br><br>`+
+   `<b>${judul}</b><br><br>`+
+   `Nama: <b>${esc(data.name)}</b><br>`+
    `Nomor WA: <b>${safePhone}</b><br><br>`+
    `Pesan yang akan dikirim:<div style="margin-top:8px;padding:11px;border:1px solid #e2e8f0;border-radius:10px;background:#f8fafc;white-space:pre-wrap;font-size:11px">${esc(data.message)}</div>`;
  $("waPopup").classList.add("show");
