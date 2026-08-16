@@ -107,12 +107,17 @@ td.num{text-align:right;white-space:nowrap}
     </div>
 
     <h3 class="title" style="margin-top:18px">🧾 Semua Transaksi Penjualan + Servis</h3>
+    <div class="notice" style="margin-bottom:10px">
+      <b>Aturan pendapatan FIXZY:</b> Servis dihitung saat <b>SELESAI/DIAMBIL</b>.
+      Penjualan dihitung saat <b>TUNAI/DIBAYAR/LUNAS</b>. Nilai pendapatan memakai field
+      <b>pendapatan/pendapatan1/jumlahTotal</b> sehingga diskon tidak dihitung sebagai pendapatan.
+    </div>
     <div class="table-wrap">
       <table>
         <thead>
           <tr>
             <th>Tanggal</th><th>Jenis</th><th>Karyawan/Teknisi</th>
-            <th>Pelanggan</th><th>Produk / HP</th><th>Status</th><th>Total</th>
+            <th>Pelanggan</th><th>Produk / HP</th><th>Status</th><th>Nilai Pendapatan</th>
           </tr>
         </thead>
         <tbody id="tbody"></tbody>
@@ -139,8 +144,8 @@ td.num{text-align:right;white-space:nowrap}
 
 <script type="module">
 import {initializeApp} from "https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js";
-import {getAuth,onAuthStateChanged,signInAnonymously} from "https://www.gstatic.com/firebasejs/11.10.0/firebase-auth.js";
-import {getFirestore,collection,getDocs} from "https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js";
+import {getAuth,onAuthStateChanged} from "https://www.gstatic.com/firebasejs/11.10.0/firebase-auth.js";
+import {getFirestore,collection,getDocs,query,where,getDoc,doc} from "https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js";
 
 const firebaseConfig={
  apiKey:"AIzaSyC_PcarMTT5Un7qfSLzf92o5OGn5rginsI",
@@ -164,7 +169,7 @@ const rp=v=>"Rp "+num(v).toLocaleString("id-ID");
 const esc=v=>String(v??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]));
 const lower=v=>String(v??"").trim().toLowerCase();
 
-let uid="";
+let uid="",ownerUid="",profile={};
 let servis=[],penjualan=[],pengeluaran=[],luar=[];
 let mode="harian",currentKey="";
 
@@ -174,24 +179,48 @@ function showPopup(t,x){
 function tutupPopup(){$("popup").classList.remove("show")}
 window.tutupPopup=tutupPopup;
 
+function localDate(d){
+ const x=new Date(d);
+ if(isNaN(x))return "";
+ return `${x.getFullYear()}-${String(x.getMonth()+1).padStart(2,"0")}-${String(x.getDate()).padStart(2,"0")}`;
+}
 function dateOf(r){
- const candidates=[r?.tanggal,r?.tgl,r?.date,r?.createdAt,r?.disimpanPada,r?.dibuatPada];
+ const candidates=[
+  r?.tanggal,r?.tanggalServis,r?.tanggalTransaksi,r?.tanggalNota,
+  r?.tgl,r?.date,r?.disimpanPada,r?.dibuatPada,r?.waktuSimpan,
+  r?.createdAt,r?.created_at,r?.createdAtISO,r?.updatedAt
+ ];
  for(const v of candidates){
-   if(v==null) continue;
-   if(typeof v==="object" && typeof v.toDate==="function"){
-     const d=v.toDate(); if(!isNaN(d)) return d.toISOString().slice(0,10);
-   }
-   const s=String(v).trim();
-   if(/^\\d{4}-\\d{2}-\\d{2}/.test(s)) return s.slice(0,10);
-   let m=s.match(/^(\\d{1,2})[\\/-](\\d{1,2})[\\/-](\\d{4})/);
-   if(m) return `${m[3]}-${String(m[2]).padStart(2,"0")}-${String(m[1]).padStart(2,"0")}`;
+  if(v==null||v==="")continue;
+  if(typeof v==="object" && typeof v.toDate==="function"){
+   const d=v.toDate(); if(d instanceof Date&&!isNaN(d))return localDate(d);
+  }
+  if(typeof v==="object" && Number.isFinite(v.seconds)){
+   const d=new Date(v.seconds*1000); if(!isNaN(d))return localDate(d);
+  }
+  const raw=String(v).trim();
+  let m=raw.match(/(\d{4})[-\/.](\d{1,2})[-\/.](\d{1,2})/);
+  if(m)return `${m[1]}-${String(m[2]).padStart(2,"0")}-${String(m[3]).padStart(2,"0")}`;
+  m=raw.match(/^(\d{1,2})[\/-](\d{1,2})[\/-](\d{4})/);
+  if(m)return `${m[3]}-${String(m[2]).padStart(2,"0")}-${String(m[1]).padStart(2,"0")}`;
+  const d=new Date(raw); if(!isNaN(d))return localDate(d);
  }
  return "";
 }
-
 function moneyOf(r){
- return num(r?.total ?? r?.grandTotal ?? r?.totalHarga ?? r?.totalBayar ??
-            r?.hargaTotal ?? r?.jumlahTotal ?? r?.biayaServis ?? r?.biaya ?? r?.harga ?? 0);
+ if(r?._jenis==="Servis"){
+  return num(r?.pendapatan1 ?? r?.pendapatan ?? r?.jumlahTotal ??
+             r?.total ?? r?.biayaServis ?? r?.biaya ?? r?.harga ?? 0);
+ }
+ return num(r?.pendapatan ?? r?.jumlahTotal ?? r?.total ??
+            r?.grandTotal ?? r?.totalHarga ?? r?.totalBayar ?? 0);
+}
+function recordedRevenue(r){
+ if(r?._jenis==="Servis"){
+  return num(r?.pendapatan1 ?? r?.pendapatan ?? r?.jumlahTotal ??
+             r?.total ?? r?.biayaServis ?? r?.biaya ?? r?.harga ?? 0);
+ }
+ return num(r?.pendapatan ?? r?.jumlahTotal ?? r?.total ?? 0);
 }
 function expenseOf(r){
  return num(r?.pengeluaran ?? r?.peng ?? r?.modal ?? r?.biayaModal ?? 0);
@@ -216,13 +245,24 @@ function productOf(r){
 function statusOf(r){return r?.status||r?.pembayaran||r?.metode||r?.paymentStatus||"—"}
 
 function active(r,type){
- const s=lower(r?.status);
- if(s==="batal" || s==="cancel" || r?.omzetEligible===false) return false;
- if(type==="Servis") return !s || ["diambil","selesai","dibayar","lunas","tunai"].includes(s);
- return !s || ["dibayar","tunai","lunas","selesai"].includes(s) ||
-        ["tunai","cash","lunas"].includes(lower(r?.pembayaran||r?.metode));
-}
+ const status=lower(r?.status);
+ const pembayaran=lower(r?.pembayaran||r?.metode);
 
+ if(status==="batal" || status==="cancel" || r?.omzetEligible===false) return false;
+
+ // FIXZY: servis masuk pendapatan saat selesai/diambil.
+ if(type==="Servis"){
+  return !status || ["diambil","diambil pelanggan","selesai"].includes(status);
+ }
+
+ // FIXZY: penjualan masuk pendapatan saat tunai/dibayar/lunas.
+ if(type==="Penjualan"){
+  return !status ||
+    ["dibayar","tunai","lunas"].includes(status) ||
+    ["tunai","cash","lunas"].includes(pembayaran);
+ }
+ return true;
+}
 function allTx(){
  return [
   ...servis.map(r=>({...r,_jenis:"Servis"})),
@@ -247,34 +287,70 @@ function labelKey(k){
 }
 function belongs(r,k){const d=dateOf(r);return d && periodKey(d)===k}
 
-async function readCollection(name){
+async function loadProfile(user){
  try{
-  const snap=await getDocs(collection(db,name));
-  return snap.docs.map(d=>({id:d.id,...d.data()}));
- }catch(e){
-  console.warn(name,e);
-  throw new Error(`Koleksi "${name}" tidak bisa dibaca: ${e.code||e.message}`);
- }
+  const snap=await getDoc(doc(db,"users",user.uid));
+  if(snap.exists()) profile=snap.data()||{};
+ }catch(e){console.warn("Profil Firebase:",e)}
+
+ const role=lower(profile.role);
+ ownerUid=(role==="owner" || profile.isOwner===true)
+   ? uid
+   : (profile.ownerUid||profile.ownerId||uid);
 }
 
+async function getOwned(name){
+ const map=new Map();
+
+ async function ambil(field,value){
+  if(!value)return;
+  try{
+   const snap=await getDocs(query(collection(db,name),where(field,"==",value)));
+   snap.docs.forEach(d=>map.set(d.id,{id:d.id,...d.data()}));
+  }catch(e){
+   console.warn(`Firebase ${name} ${field}:`,e.message||e);
+  }
+ }
+
+ // FIXZY lama bisa menyimpan uid atau ownerUid/ownerId.
+ await ambil("uid",ownerUid);
+ if(ownerUid!==uid) await ambil("uid",uid);
+ await ambil("ownerUid",ownerUid);
+ await ambil("ownerId",ownerUid);
+
+ return [...map.values()];
+}
 async function muatSemua(){
- $("status").textContent="⏳ Membaca penjualan, servis, pengeluaran dan penghasilan luar...";
+ if(!uid){
+  $("status").textContent="⚠️ Sesi login FIXZY belum aktif.";
+  clearDetail();
+  return;
+ }
+
+ $("status").textContent="⏳ Membaca data Firebase berdasarkan akun/owner...";
  try{
+  await loadProfile(auth.currentUser);
+
   const [s,p,e,l]=await Promise.all([
-   readCollection("servis"),
-   readCollection("penjualan"),
-   readCollection("pengeluaran"),
-   readCollection("pendapatanLuar")
+   getOwned("servis"),
+   getOwned("penjualan"),
+   getOwned("pengeluaran"),
+   getOwned("pendapatanLuar")
   ]);
+
   servis=s;penjualan=p;pengeluaran=e;luar=l;
-  $("status").textContent=`✅ Firebase terhubung • Penjualan ${p.length} • Servis ${s.length} • Pengeluaran ${e.length} • Luar ${l.length}`;
-  renderList();pilihDefault();
+
+  $("status").textContent=
+   `✅ Firebase terhubung • ${p.length} penjualan • ${s.length} servis • ${e.length} pengeluaran • ${l.length} luar`;
+
+  renderList();
+  pilihDefault();
  }catch(e){
   console.error(e);
   $("status").textContent="❌ Firebase terhubung tetapi data tidak bisa dibaca.";
   showPopup("Data Firebase belum terbaca",e.message||String(e));
   clearDetail();
- }
+ } 
 }
 window.muatSemua=muatSemua;
 
@@ -333,7 +409,7 @@ function lihat(k){
  const tx=allTx().filter(r=>belongs(r,k)).sort((a,b)=>dateOf(b).localeCompare(dateOf(a)));
  const lr=luar.filter(r=>belongs(r,k)).sort((a,b)=>dateOf(b).localeCompare(dateOf(a)));
  const pg=pengeluaran.filter(r=>belongs(r,k));
- const konter=tx.filter(r=>active(r,r._jenis)).reduce((a,r)=>a+moneyOf(r),0);
+ const konter=tx.filter(r=>active(r,r._jenis)).reduce((a,r)=>a+recordedRevenue(r),0);
  const luarTotal=lr.reduce((a,r)=>a+num(r?.total??r?.nominal??r?.jumlah??r?.amount),0);
  const peng=pg.reduce((a,r)=>a+expenseOf(r),0);
  const total=konter+luarTotal;
@@ -351,7 +427,7 @@ function lihat(k){
    <td>${esc(nameOf(r))}</td>
    <td>${esc(productOf(r))}</td>
    <td>${esc(statusOf(r))} ${valid?'<span class="badge green">Dihitung</span>':'<span class="badge red">Tidak dihitung</span>'}</td>
-   <td class="num">${rp(moneyOf(r))}</td>
+   <td class="num">${rp(recordedRevenue(r))}</td>
   </tr>`;
  }).join("") || '<tr><td colspan="7" class="empty">Tidak ada transaksi pada periode ini.</td></tr>';
 
@@ -368,13 +444,10 @@ onAuthStateChanged(auth,async user=>{
   uid=user.uid;
   await muatSemua();
  }else{
-  $("status").textContent="⏳ Mengaktifkan sesi Firebase...";
-  try{
-   await signInAnonymously(auth);
-  }catch(e){
-   $("status").textContent="❌ Login Firebase gagal: "+(e.message||e);
-   showPopup("Login Firebase gagal","Aktifkan Anonymous pada Firebase Authentication. Detail: "+(e.message||e));
-  }
+  uid="";
+  ownerUid="";
+  $("status").textContent="⚠️ Sesi login FIXZY belum terbaca. Buka Dashboard dari index/login FIXZY.";
+  clearDetail();
  }
 });
 </script>
