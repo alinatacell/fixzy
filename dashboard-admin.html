@@ -402,7 +402,38 @@ const $=id=>document.getElementById(id);
 const num=v=>Number(v)||0;
 const money=v=>"Rp "+num(v).toLocaleString("id-ID");
 const esc=v=>String(v??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]));
-const dateOf=r=>String(r?.tanggal||r?.disimpanPada||"").slice(0,10);
+function dateOf(r){
+  const candidates=[
+    r?.tanggal,
+    r?.tanggalNota,
+    r?.tanggalTransaksi,
+    r?.createdAt,
+    r?.disimpanPada,
+    r?.createdAtText,
+    r?.updatedAt
+  ];
+  for(const v of candidates){
+    if(v===undefined||v===null||v==="") continue;
+    try{
+      if(typeof v==="object" && typeof v.toDate==="function"){
+        const d=v.toDate();
+        if(!isNaN(d.getTime())) return d.toISOString().slice(0,10);
+      }
+      if(typeof v==="object" && v.seconds!==undefined){
+        const d=new Date(Number(v.seconds)*1000);
+        if(!isNaN(d.getTime())) return d.toISOString().slice(0,10);
+      }
+      const s=String(v).trim();
+      const m=s.match(/^(\\d{4})[-/](\\d{1,2})[-/](\\d{1,2})/);
+      if(m){
+        return `${m[1]}-${String(m[2]).padStart(2,"0")}-${String(m[3]).padStart(2,"0")}`;
+      }
+      const d=new Date(s);
+      if(!isNaN(d.getTime())) return d.toISOString().slice(0,10);
+    }catch(e){}
+  }
+  return "";
+}
 const active=r=>String(r?.status||"").toLowerCase()!=="batal" && r?.omzetEligible!==false;
 const statusLabel=v=>{
   const x=String(v||"").toLowerCase().trim();
@@ -417,11 +448,21 @@ const badge=s=>{
 const modalServis=r=>(r?.sparepart||[]).reduce((a,x)=>a+num(x.hargaModal)*Math.max(1,num(x.qty)||1),0);
 const modalJual=r=>(r?.items||[]).reduce((a,x)=>a+num(x.hargaModal)*Math.max(1,num(x.qty)||1),0);
 
+function localToday(){
+  const d=new Date();
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;
+}
 function periodeMatch(r){
-  const d=dateOf(r),p=$("periode").value,now=new Date(),today=now.toISOString().slice(0,10),month=today.slice(0,7),year=today.slice(0,4);
-  if(p==="hari")return d===today;
-  if(p==="tahun")return d.startsWith(year);
-  return d.startsWith(month);
+  const d=dateOf(r);
+  if(!d) return false;
+  const p=$("periode").value;
+  const today=localToday();
+  const month=today.slice(0,7);
+  const year=today.slice(0,4);
+  if(p==="hari") return d===today;
+  if(p==="bulan") return d.slice(0,7)===month;
+  if(p==="tahun") return d.slice(0,4)===year;
+  return true;
 }
 
 async function own(name){
@@ -533,9 +574,9 @@ function isKasbon(r){
     /ambil\s+uang|pengambilan\s+uang|kasbon/.test(withdrawalText(r));
 }
 function periodeKey(){
-  const now=new Date(),d=now.toISOString().slice(0,10),p=$("periode").value;
-  if(p==="hari")return d;
-  if(p==="tahun")return d.slice(0,4);
+  const d=localToday(),p=$("periode").value;
+  if(p==="hari") return d;
+  if(p==="tahun") return d.slice(0,4);
   return d.slice(0,7);
 }
 function buildUpahRows(){
@@ -723,9 +764,12 @@ function renderAll(){
 }
 
 $("periode").addEventListener("change",()=>{
+  const p=$("periode").value;
+  $("statusApp").textContent=`Menghitung data: ${p==="hari"?"Hari ini":p==="bulan"?"Bulan ini":"Tahun ini"}...`;
   upahRows=buildUpahRows();
-  renderRingkasan();
-  renderUpah();
+  renderAll();
+  const label=p==="hari"?"Hari ini":p==="bulan"?"Bulan ini":"Tahun ini";
+  $("statusApp").textContent=`Terhubung • Periode ${label} • Servis ${servis.filter(periodeMatch).length} • Penjualan ${penjualan.filter(periodeMatch).length}`;
 });
 document.querySelectorAll(".tab").forEach(btn=>{
   btn.addEventListener("click",()=>{
