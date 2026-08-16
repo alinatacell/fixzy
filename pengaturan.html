@@ -122,18 +122,26 @@ const firebaseConfig={
 */
 let app,auth,db;
 try{
-  if(window.parent&&window.parent!==window&&window.parent.fixzyFirebase?.auth&&window.parent.fixzyFirebase?.db){
+  if(window.parent&&window.parent!==window&&window.parent.fixzyFirebase?.app&&window.parent.fixzyFirebase?.auth){
     app=window.parent.fixzyFirebase.app;
     auth=window.parent.fixzyFirebase.auth;
-    db=window.parent.fixzyFirebase.db;
   }
 }catch(e){console.warn("Bridge parent tidak tersedia:",e)}
 
-if(!auth||!db){
+/*
+  PENTING: jangan mengambil object Firestore dari bridge.
+  Ambil instance Firestore dari app yang sama dengan getFirestore(app).
+  Ini mencegah error:
+  "Expected first argument to collection() to be a CollectionReference,
+   a DocumentReference or FirebaseFirestore"
+*/
+if(!app){
   app=getApps().length?getApp():initializeApp(firebaseConfig);
-  auth=getAuth(app);
-  db=getFirestore(app);
 }
+if(!auth){
+  auth=getAuth(app);
+}
+db=getFirestore(app);
 
 let uid=null;
 let profile={};
