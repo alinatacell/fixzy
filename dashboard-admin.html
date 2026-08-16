@@ -375,16 +375,16 @@ function toggleLog(){const x=document.getElementById("systemLog");x.style.displa
 
 <script type="module">
 import {initializeApp} from "https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js";
-import {getAuth,onAuthStateChanged,setPersistence,browserLocalPersistence} from "https://www.gstatic.com/firebasejs/11.10.0/firebase-auth.js";
+import {getAuth,onAuthStateChanged} from "https://www.gstatic.com/firebasejs/11.10.0/firebase-auth.js";
 import {getFirestore,collection,getDocs,query,where,getDoc,doc} from "https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js";
 
 const firebaseConfig={
-  apiKey:"AIzaSyCwMbJsuORhIq4QCmp4c1r6OsjAUlfxU5Y",
-  authDomain:"fixzy-f056f.firebaseapp.com",
-  projectId:"fixzy-f056f",
-  storageBucket:"fixzy-f056f.firebasestorage.app",
-  messagingSenderId:"838081521031",
-  appId:"1:838081521031:web:50fdee909b56460b055f22"
+  apiKey:"AIzaSyC_PcarMTT5Un7qfSLzf92o5OGn5rginsI",
+  authDomain:"fixzy-update.firebaseapp.com",
+  projectId:"fixzy-update",
+  storageBucket:"fixzy-update.firebasestorage.app",
+  messagingSenderId:"995892519622",
+  appId:"1:995892519622:web:fa41047944d8e5b35d6dc7"
 };
 
 const app=initializeApp(firebaseConfig);
@@ -392,6 +392,8 @@ const auth=getAuth(app);
 const db=getFirestore(app);
 
 let uid=null;
+let ownerUid=null;
+let fixzySession=null;
 let servis=[],penjualan=[],stok=[],pengeluaran=[],karyawan=[];
 let upahRows=[];
 let profile={};
@@ -423,21 +425,61 @@ function periodeMatch(r){
 }
 
 async function own(name){
-  const snap=await getDocs(query(collection(db,name),where("uid","==",uid)));
+  const targetUid=ownerUid||uid;
+  if(!targetUid) throw new Error("UID pemilik data FIXZY belum ditemukan.");
+
+  // Struktur data FIXZY menyimpan uid sebagai businessUid/pemilik.
+  // Jadi karyawan/reseller harus membaca berdasarkan ownerUid, bukan UID login pribadi.
+  const snap=await getDocs(
+    query(collection(db,name),where("uid","==",targetUid))
+  );
   return snap.docs.map(d=>({id:d.id,...d.data()}));
 }
 
-async function loadProfile(user){
+function ambilSessionFIXZY(){
   try{
-    const snap=await getDoc(doc(db,"users",user.uid));
-    if(snap.exists())profile=snap.data()||{};
-  }catch(e){console.warn("Profil:",e)}
+    if(window.fixzySession) return window.fixzySession;
+    if(window.parent && window.parent!==window && window.parent.fixzySession) return window.parent.fixzySession;
+    if(window.top && window.top!==window && window.top.fixzySession) return window.top.fixzySession;
+  }catch(e){}
+  return null;
+}
+
+async function loadProfile(user){
+  fixzySession=ambilSessionFIXZY();
+
+  // Utamakan sesi yang sudah dibuat index FIXZY.
+  if(fixzySession){
+    profile=fixzySession.profile||{};
+    ownerUid=fixzySession.ownerUid||user?.uid||fixzySession.uid||null;
+  }
+
+  try{
+    const profileUid=user?.uid||fixzySession?.uid;
+    if(profileUid){
+      const snap=await getDoc(doc(db,"users",profileUid));
+      if(snap.exists()){
+        const data=snap.data()||{};
+        profile={...data,...profile};
+        ownerUid=fixzySession?.ownerUid || (data.role==="owner"?profileUid:(data.ownerUid||ownerUid||profileUid));
+      }
+    }
+  }catch(e){
+    console.warn("Profil Firebase:",e);
+  }
+
+  ownerUid=ownerUid||user?.uid||fixzySession?.uid||null;
   $("storeName").textContent=profile.namaKonter||profile.namaToko||"FIXZY";
-  $("userInfo").textContent=profile.namaPemilik||user.email||"Admin";
+  $("userInfo").textContent=profile.namaPemilik||user?.email||profile.nama||"Akun FIXZY";
 }
 
 async function muatSemua(){
-  if(!uid){$("statusApp").textContent="Belum login Firebase.";return}
+  const target=ownerUid||uid;
+  if(!target){
+    $("statusApp").textContent="Sesi FIXZY belum siap.";
+    $("systemSummary").innerHTML="⏳ <b>Sesi FIXZY sedang dipulihkan.</b><br>Dashboard menunggu akun aktif dari aplikasi FIXZY.";
+    return;
+  }
   $("statusApp").textContent="Membaca Firebase...";
   try{
     const [s,p,st,e,k]=await Promise.all([
@@ -451,9 +493,11 @@ async function muatSemua(){
     upahRows=buildUpahRows();
     renderAll();
     $("statusApp").textContent=`Terhubung • Servis ${servis.length} • Penjualan ${penjualan.length} • Pengeluaran ${pengeluaran.length} • Karyawan ${karyawan.length}`;
-    $("systemSummary").innerHTML="✅ Firebase normal. Semua collection dashboard dibaca berdasarkan <b>UID akun yang sedang login</b>.";
+    $("systemSummary").innerHTML=`✅ Firebase normal. Data dashboard dibaca berdasarkan <b>UID pemilik/bisnis FIXZY</b>.<br>Akun aktif: <b>${esc(uid||"-")}</b><br>UID pemilik data: <b>${esc(ownerUid||"-")}</b>.`;
     $("systemLog").textContent=JSON.stringify({
       uid,
+      ownerUid,
+      session:fixzySession?"tersedia":"tidak tersedia",
       users:"terbaca",
       servis:servis.length,
       penjualan:penjualan.length,
@@ -466,7 +510,7 @@ async function muatSemua(){
     $("statusApp").textContent="Gagal membaca Firebase";
     $("systemSummary").innerHTML=`❌ <b>Gagal membaca data Firebase.</b><br>${esc(e.code||"")} ${esc(e.message||e)}`;
     $("systemLog").textContent=String(e.stack||e);
-    alert("Gagal membaca Dashboard Firebase:\n\n"+(e.code||"")+" \n"+(e.message||e));
+    $("systemSummary").innerHTML=`❌ <b>Gagal membaca data Firebase.</b><br>Kode: ${esc(e.code||"-")}<br>${esc(e.message||e)}<br><br><b>Periksa Firestore Rules dan UID pemilik data.</b>`;
   }
 }
 window.muatSemua=muatSemua;
@@ -692,36 +736,60 @@ document.querySelectorAll(".tab").forEach(btn=>{
   });
 });
 
-let authTimer=null;
-
-async function mulaiDashboardTanpaPaksaLogin(){
-  try{ await setPersistence(auth,browserLocalPersistence); }catch(e){ console.warn("Persistence Firebase:",e); }
+async function mulaiSesiFIXZY(){
+  // Index FIXZY sudah membuat window.fixzySession.
+  // Ambil juga dari parent/top bila dashboard dibuka melalui iframe.
+  fixzySession=ambilSessionFIXZY();
 
   onAuthStateChanged(auth,async user=>{
-    if(user){
-      clearTimeout(authTimer);
+    try{
+      fixzySession=ambilSessionFIXZY()||fixzySession;
+
+      if(!user){
+        // Jangan redirect ke login.html.
+        // Tunggu sebentar karena Firebase Auth dapat membutuhkan waktu
+        // untuk memulihkan persistence dari aplikasi utama.
+        if(fixzySession){
+          uid=fixzySession.uid||null;
+          ownerUid=fixzySession.ownerUid||fixzySession.uid||null;
+          profile=fixzySession.profile||{};
+          $("storeName").textContent=profile.namaKonter||profile.namaToko||"FIXZY";
+          $("userInfo").textContent=profile.namaPemilik||profile.nama||"Akun FIXZY";
+          $("statusApp").textContent="Memulihkan sesi Firebase...";
+        }else{
+          $("statusApp").textContent="Menunggu sesi FIXZY...";
+          $("userInfo").textContent="Sesi FIXZY sedang dipulihkan";
+          $("systemSummary").innerHTML='⚠️ <b>Sesi Firebase belum tersedia.</b><br>Buka dashboard melalui menu di dalam aplikasi FIXZY.';
+        }
+        return;
+      }
+
       uid=user.uid;
       await loadProfile(user);
       await muatSemua();
-      return;
+    }catch(e){
+      console.error("FIXZY session:",e);
+      $("statusApp").textContent="Gagal memulihkan sesi";
+      $("systemSummary").innerHTML=`❌ <b>Sesi FIXZY gagal dipulihkan.</b><br>${esc(e.code||"")} ${esc(e.message||e)}`;
     }
-
-    // Jangan mengarahkan pengguna ke login.html.
-    $("statusApp").textContent="Menunggu sesi FIXZY...";
-    $("userInfo").textContent="Sesi FIXZY sedang dipulihkan";
-    $("systemSummary").innerHTML='⏳ <b>Menunggu sesi akun FIXZY.</b><br>Halaman tidak akan mengarahkan ke halaman login.';
-
-    clearTimeout(authTimer);
-    authTimer=setTimeout(()=>{
-      if(!uid){
-        $("statusApp").textContent="Sesi belum tersedia";
-        $("systemSummary").innerHTML='⚠️ <b>Sesi Firebase belum tersedia.</b><br>Buka halaman ini dari dalam aplikasi FIXZY agar akun yang sedang aktif dapat digunakan.';
-      }
-    },5000);
   });
 }
 
-mulaiDashboardTanpaPaksaLogin();
+mulaiSesiFIXZY();
+
+window.addEventListener("message",async ev=>{
+  if(ev.data?.type==="FIXZY_SESSION_READY"){
+    fixzySession=ambilSessionFIXZY()||ev.data.session||null;
+    if(fixzySession){
+      uid=fixzySession.uid||uid;
+      ownerUid=fixzySession.ownerUid||fixzySession.uid||ownerUid;
+      profile=fixzySession.profile||profile;
+      $("storeName").textContent=profile.namaKonter||profile.namaToko||"FIXZY";
+      $("userInfo").textContent=profile.namaPemilik||profile.nama||"Akun FIXZY";
+      await muatSemua();
+    }
+  }
+});
 </script>
 </body>
 </html>
