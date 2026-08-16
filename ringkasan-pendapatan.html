@@ -118,7 +118,7 @@ const firebaseConfig={
 };
 const app=initializeApp(firebaseConfig),auth=getAuth(app),db=getFirestore(app);
 
-let uid=null, profile={}, servis=[], penjualan=[], pengeluaran=[], luar=[], mode="harian", currentVal="";
+let uid=null, ownerUid=null, profile={}, servis=[], penjualan=[], pengeluaran=[], luar=[], mode="harian", currentVal="";
 const $=id=>document.getElementById(id);
 const n=v=>Number(v)||0;
 const rp=v=>"Rp "+n(v).toLocaleString("id-ID");
@@ -166,24 +166,68 @@ async function loadProfile(){
   try{
     const snap=await getDocs(query(collection(db,"users"),where("__name__","==",uid)));
     if(!snap.empty) profile=snap.docs[0].data()||{};
-  }catch(e){}
-  $("ownerName").textContent=profile.namaPemilik||profile.nama||auth.currentUser?.displayName||"Owner";
+  }catch(e){ console.warn("Profil Firebase:",e); }
+
+  const role=String(profile.role||"").toLowerCase();
+  ownerUid=(role==="owner"||profile.isOwner===true)
+    ? uid
+    : (profile.ownerUid||profile.ownerId||uid);
+
+  $("ownerName").textContent=
+    profile.namaKonter||profile.namaToko||profile.namaUsaha||profile.toko||
+    profile.nama||auth.currentUser?.displayName||"Owner";
   $("ownerEmail").textContent=auth.currentUser?.email||"Firebase";
 }
 
+/* Ambil data berdasarkan owner. Data FIXZY lama umumnya memakai uid,
+   tetapi beberapa versi menyimpan ownerUid/ownerId. Keduanya dibaca. */
+async function getOwned(name){
+  const map=new Map();
+
+  async function ambil(field,value){
+    try{
+      const snap=await getDocs(query(collection(db,name),where(field,"==",value)));
+      snap.docs.forEach(d=>map.set(d.id,{id:d.id,...d.data()}));
+    }catch(err){
+      console.warn(`Firebase ${name} ${field}:`,err.message||err);
+    }
+  }
+
+  await ambil("uid",ownerUid);
+  if(ownerUid!==uid) await ambil("uid",uid);
+  await ambil("ownerUid",ownerUid);
+  await ambil("ownerId",ownerUid);
+
+  return [...map.values()];
+}
+
+/* Setiap koleksi dimuat sendiri-sendiri supaya satu collection yang
+   tidak tersedia/terbatas rules tidak membuat semua data menjadi kosong. */
 async function muatSemua(){
   if(!uid){$("status").textContent="Sesi Firebase belum aktif.";return}
   $("status").textContent="⏳ Membaca data Firebase...";
   try{
-    const [s,p,e,l]=await Promise.all([
+    await loadProfile();
+
+    const hasil=await Promise.all([
       getOwned("servis"),
       getOwned("penjualan"),
       getOwned("pengeluaran"),
       getOwned("pendapatanLuar")
     ]);
-    servis=s;penjualan=p;pengeluaran=e;luar=l;
-    $("status").textContent=`✅ Firebase terhubung • Servis ${s.length} • Penjualan ${p.length} • Luar ${l.length}`;
-    renderList(); if(currentVal) lihat(currentVal); else pilihDefault();
+
+    servis=hasil[0]||[];
+    penjualan=hasil[1]||[];
+    pengeluaran=hasil[2]||[];
+    luar=hasil[3]||[];
+
+    const total=servis.length+penjualan.length+luar.length;
+    $("status").textContent=
+      `✅ Firebase terhubung • ${total} data • Servis ${servis.length} • Penjualan ${penjualan.length} • Luar ${luar.length}`;
+
+    renderList();
+    if(currentVal && allKeys().includes(currentVal)) lihat(currentVal);
+    else pilihDefault();
   }catch(e){
     console.error(e);
     $("status").textContent=`❌ Gagal membaca Firebase: ${e.code||""} ${e.message||e}`;
@@ -235,19 +279,42 @@ function renderList(){
 window.renderList=renderList;
 
 function pilihDefault(){
-  const k=allKeys()[0];
-  if(k) lihat(k); else clearDetail();
+  const keys=allKeys();
+  const k=keys[0];
+  if(k){
+    currentVal=k;
+    lihat(k);
+  }else{
+    currentVal="";
+    clearDetail();
+  }
 }
 function clearDetail(){
   $("detailTitle").textContent="-";["kpKonter","kpLuar","kpTotal","kpPeng","kpLaba"].forEach(id=>$(id).textContent="Rp 0");
   $("tbody").innerHTML='<tr><td colspan="6" class="empty">Belum ada transaksi.</td></tr>';
   $("tbodyLuar").innerHTML='<tr><td colspan="4" class="empty">Belum ada penghasilan luar.</td></tr>';
 }
+function isPendapatanValid(r){
+  const status=String(r.status||"").toLowerCase();
+  const pembayaran=String(r.pembayaran||r.metode||"").toLowerCase();
+
+  // Aturan FIXZY: servis dihitung saat DIAMBIL,
+  // penjualan dihitung saat TUNAI/DIBAYAR.
+  if(r._jenis==="Servis"){
+    return !status || ["diambil","diambil pelanggan","selesai"].includes(status);
+  }
+  if(r._jenis==="Penjualan"){
+    return !status || ["dibayar","tunai","lunas"].includes(status) ||
+           ["tunai","cash"].includes(pembayaran);
+  }
+  return true;
+}
+
 function lihat(k){
   currentVal=k;
-  const rows=txRows().filter(r=>belongs(r,k));
+  const rows=txRows().filter(r=>belongs(r,k) && isPendapatanValid(r));
   const lr=luar.filter(r=>belongs(r,k));
-  const konter=rows.reduce((a,r)=>a+n(r.total??r.biaya),0);
+  const konter=rows.reduce((a,r)=>a+n(r.total??r.biayaServis??r.biaya),0);
   const luarTot=lr.reduce((a,r)=>a+n(r.total),0);
   const peng=pengeluaran.filter(r=>belongs(r,k)).reduce((a,r)=>a+n(r.nominal??r.jumlah??r.amount),0);
   const total=konter+luarTot,laba=total-peng;
@@ -255,9 +322,10 @@ function lihat(k){
   $("kpKonter").textContent=rp(konter);$("kpLuar").textContent=rp(luarTot);
   $("kpTotal").textContent=rp(total);$("kpPeng").textContent=rp(peng);$("kpLaba").textContent=rp(laba);
   $("tbody").innerHTML=rows.sort(sortDate).map(r=>{
-    const cust=r.pelanggan?.nama||r.namaPelanggan||"Umum";
-    const prod=(r.items||[]).map(x=>x.nama||x.produk||"").filter(Boolean).join(", ")||r.produk||r.namaBarang||"-";
-    const emp=r.namaKaryawan||r.karyawan||r.namaTeknisi||r.teknisi||"-";
+    const cust=r.pelanggan?.nama||r.namaPelanggan||r.nama||"Umum";
+    const prod=(r.items||[]).map(x=>x.nama||x.produk||x.productName||"").filter(Boolean).join(", ")
+      ||r.produk||r.namaBarang||r.hp?.merkTipe||"-";
+    const emp=r.teknisi?.nama||r.namaKaryawan||r.karyawan||r.namaTeknisi||r.teknisi||"-";
     return `<tr><td>${esc(normalizeDate(r))}</td><td>${esc(r._jenis)}</td><td>${esc(emp)}</td><td>${esc(cust)}</td><td>${esc(prod)}</td><td class="num">${rp(r.total??r.biaya)}</td></tr>`;
   }).join("")||'<tr><td colspan="6" class="empty">Tidak ada transaksi konter.</td></tr>';
   $("tbodyLuar").innerHTML=lr.sort(sortDate).map(r=>`<tr><td>${esc(normalizeDate(r))}</td><td>${esc(r.sumber||r.keterangan||"Penghasilan Luar")}</td><td class="num">${rp(r.total)}</td><td><button onclick="hapusLuar('${esc(r.id)}')" style="border:0;border-radius:8px;padding:7px 10px;background:#fee2e2;color:#991b1b;font-weight:800">Hapus</button></td></tr>`).join("")||'<tr><td colspan="4" class="empty">Tidak ada penghasilan luar.</td></tr>';
@@ -306,7 +374,6 @@ onAuthStateChanged(auth,async user=>{
     return;
   }
   uid=user.uid;
-  await loadProfile();
   await muatSemua();
 });
 </script>
