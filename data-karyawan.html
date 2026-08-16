@@ -82,8 +82,8 @@ th{background:#f8fafc;color:#475569;font-size:10px}
 
 <script type="module">
 import {initializeApp} from "https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js";
-import {getAuth,onAuthStateChanged} from "https://www.gstatic.com/firebasejs/11.10.0/firebase-auth.js";
-import {getFirestore,collection,query,where,getDocs} from "https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js";
+
+import {getFirestore,collection,getDocs} from "https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js";
 
 const firebaseConfig={
  apiKey:"AIzaSyCwMbJsuORhIq4QCmp4c1r6OsjAUlfxU5Y",
@@ -93,8 +93,8 @@ const firebaseConfig={
  messagingSenderId:"838081521031",
  appId:"1:838081521031:web:50fdee909b56460b055f22"
 };
-const app=initializeApp(firebaseConfig),auth=getAuth(app),db=getFirestore(app);
-let uid=null,rows=[],deleteId=null;
+const app=initializeApp(firebaseConfig),db=getFirestore(app);
+let rows=[];
 
 const $=id=>document.getElementById(id);
 function toast(t){$("toast").textContent=t;$("toast").classList.add("show");setTimeout(()=>$("toast").classList.remove("show"),2400)}
@@ -108,43 +108,27 @@ function tutupHalaman(){
 window.tutupHalaman=tutupHalaman;
 window.tutupModal=()=>{$("modal").classList.remove("show")};
 
-async function muatNamaPemilik(user){
+async function muatNamaPemilik(){
   const el=$("ownerName");
-  try{
-    const snap=await getDocs(query(collection(db,"users"),where("email","==",user.email)));
-    let nama="";
-    snap.forEach(d=>{
-      const u=d.data();
-      nama=u.namaKonter||u.nama||u.namaPemilik||"";
-    });
-    el.textContent=nama ? nama+" • "+user.email : user.email;
-  }catch(e){
-    el.textContent=user.email||"Pemilik";
-  }
+  el.textContent="Data Karyawan";
 }
 
-onAuthStateChanged(auth,async user=>{
- if(!user){$("status").textContent="Belum login Firebase.";return}
- uid=user.uid;
- await muatNamaPemilik(user);
- await muatKaryawan();
-});
-
 async function muatKaryawan(){
- if(!uid)return;
  $("status").textContent="Mengambil data karyawan dari Firebase...";
  try{
-  const snap=await getDocs(query(collection(db,"karyawan"),where("uid","==",uid)));
+  const snap=await getDocs(collection(db,"karyawan"));
   rows=snap.docs.map(d=>({id:d.id,...d.data()}));
   render();
-  $("status").textContent=`Firebase aktif • ${rows.length} karyawan dimuat dari koleksi karyawan.`;
+  $("status").textContent=`Firebase aktif • ${rows.length} karyawan dimuat.`;
  }catch(e){
   console.error(e);
   $("status").textContent="Gagal membaca Firebase: "+e.message;
-  $("tbody").innerHTML=`<tr><td colspan="7">${esc(e.message)}</td></tr>`;
+  $("tbody").innerHTML=`<tr><td colspan="5">${esc(e.message)}</td></tr>`;
  }
 }
 window.muatKaryawan=muatKaryawan;
+muatNamaPemilik();
+muatKaryawan();
 
 function render(){
   const q=$("cari").value.toLowerCase().trim();
