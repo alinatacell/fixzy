@@ -140,12 +140,12 @@ button,input,select{font:inherit}
   <section id="upah" class="panel"><div class="card">
     <div class="filters"><input id="uSearch" placeholder="Cari nama karyawan..." oninput="renderUpah()"></div>
     <div class="grid3" style="margin-bottom:12px">
-      <div class="kpiMini"><small>Total Hari Hadir</small><b id="uDays">0</b></div>
+      <div class="kpiMini"><small>Total Absen</small><b id="uDays">0</b></div>
       <div class="kpiMini"><small>Total Upah</small><b id="uGross">Rp 0</b></div>
       <div class="kpiMini"><small>Kasbon</small><b id="uTake" class="red">Rp 0</b></div>
       <div class="kpiMini"><small>Sisa Upah</small><b id="uNet" class="red">Rp 0</b></div>
     </div>
-    <div class="table-wrap"><table><thead><tr><th>Nama</th><th>Upah/Hari</th><th>Hari Hadir</th><th class="num">Total Upah</th><th class="num">Kasbon</th><th class="num">Sisa Upah</th></tr></thead><tbody id="upahBody"></tbody></table></div>
+    <div class="table-wrap"><table><thead><tr><th>Nama</th><th>Nominal Upah</th><th>Absen</th><th class="num">Total Upah</th><th class="num">Kasbon</th><th class="num">Sisa Upah</th></tr></thead><tbody id="upahBody"></tbody></table></div>
   </div></section>
 
   <section class="section"><div class="card"><div class="section-head"><h2>🔎 Status Sistem</h2><button class="btn btn-light" onclick="toggleLog()">Tampilkan detail</button></div><div id="systemSummary">Belum ada pemeriksaan.</div><pre id="systemLog" class="log" style="display:none"></pre></div></section>
@@ -170,7 +170,7 @@ const firebaseConfig={
  appId:"1:995892519622:web:fa41047944d8e5b35d6dc7"
 };
 const app=initializeApp(firebaseConfig),auth=getAuth(app),db=getFirestore(app);
-let uid=null,servis=[],penjualan=[],stok=[],pengeluaran=[],karyawan=[],upahRows=[],profile={},accountStartDate="";
+let uid=null,servis=[],penjualan=[],stok=[],pengeluaran=[],karyawan=[],users=[],upahRows=[],profile={},accountStartDate="";
 const $=id=>document.getElementById(id);
 const num=v=>{if(typeof v==="number")return v;return Number(String(v??"").replace(/[^\d.-]/g,""))||0};
 const money=v=>"Rp "+num(v).toLocaleString("id-ID");
@@ -192,7 +192,7 @@ function todayLocal(){return localDate(new Date())}
 function normalizeName(v){return String(v??"").trim().toLowerCase().replace(/\s+/g," ")}
 function cleanTech(v){return String(v??"").trim().replace(/\s*[•|]\s*(teknisi|karyawan|admin|kasir|kurir).*$/i,"").replace(/\s+-\s+(teknisi|karyawan|admin|kasir|kurir).*$/i,"").trim()}
 function employeeName(e){return String(e?.nama||e?.namaKaryawan||e?.namaTeknisi||e?.namaLengkap||e?.name||e?.username||"").trim()}
-function employeeRate(e){return num(e?.upah??e?.upahHarian??e?.nominalUpah??e?.rate??e?.upahPerHari??e?.gajiHarian??e?.gajiPerHari)}
+function employeeRate(e){return num(e?.nominalUpah??e?.nominal_upah??e?.upah??e?.upahHarian??e?.rate??e?.upahPerHari??e?.gajiHarian??e?.gajiPerHari)}
 function active(r){return String(r?.status||"").toLowerCase().trim()!=="batal"}
 function serviceTechName(r){return cleanTech(r?.namaTeknisi||r?.teknisiNama||r?.teknisiName||r?.karyawanNama||r?.namaKaryawan||r?.teknisi||"")}
 function withdrawalText(r){return [r?.keterangan,r?.catatan,r?.deskripsi,r?.nama,r?.jenis,r?.type,r?.kategori,r?.perihal,r?.note,r?.notes,r?.memo,r?.uraian].filter(Boolean).join(" ").toLowerCase()}
@@ -247,38 +247,84 @@ function findEmployeeForService(r){
  if(names.length){for(const e of karyawan){const en=employeeNameKeys(e);if(en.some(x=>names.includes(x)))return e}}
  return null;
 }
+function userName(u){
+ return String(u?.namaKaryawan||u?.namaTeknisi||u?.namaLengkap||u?.nama||u?.name||u?.username||"").trim();
+}
+function userRate(u){
+ return num(u?.nominalUpah??u?.nominal_upah??u?.upah??u?.upahHarian??u?.upahPerHari??u?.gajiHarian??u?.gajiPerHari);
+}
+function userAttendance(u){
+ const v=u?.absen??u?.absensi??u?.jumlahAbsen??u?.totalAbsen??u?.hariHadir??u?.hadir??u?.jumlahHadir;
+ if(Array.isArray(v)) return v.length;
+ if(v&&typeof v==="object"){
+   if(Array.isArray(v.data)) return v.data.length;
+   if(Array.isArray(v.tanggal)) return v.tanggal.length;
+   if(Array.isArray(v.hari)) return v.hari.length;
+   if(Array.isArray(v.records)) return v.records.length;
+ }
+ return num(v);
+}
+function findUserForEmployee(e){
+ const eids=employeeIdentityKeys(e), enames=employeeNameKeys(e);
+ let u=users.find(x=>{
+   const ids=employeeIdentityKeys(x);
+   return ids.length&&eids.some(id=>ids.includes(id));
+ });
+ if(u)return u;
+ return users.find(x=>{
+   const names=employeeNameKeys(x);
+   return names.length&&enames.some(n=>names.includes(n));
+ })||null;
+}
+function attendanceFromUser(u){
+ if(!u)return 0;
+ // Jika user sudah mempunyai nilai absen/absensi, gunakan langsung.
+ const a=userAttendance(u);
+ if(a>0)return a;
+ return 0;
+}
 function buildUpahRows(){
  const employees=karyawan.map(e=>({id:e.id,record:e,name:employeeName(e),rate:employeeRate(e)})).filter(e=>e.name);
- const byDate={};
- servis.forEach(r=>{
-  const d=dateOf(r);if(!d||!periodeMatch({tanggal:d}))return;
-  const jenis=String(r?.jenis||"").trim().toLowerCase();if(jenis&&jenis!=="servis")return;
-  if(String(r?.status||"").toLowerCase().trim()==="batal")return;
-  const emp=findEmployeeForService(r);if(!emp)return;
-  const key=normalizeName(employeeName(emp));if(!key)return;
-  (byDate[d]??=new Set()).add(key);
- });
- const dates=Object.keys(byDate).sort();
  return employees.map(e=>{
-  const key=normalizeName(e.name);
-  const hadir=dates.filter(d=>byDate[d]?.has(key));
-  const gross=hadir.length*e.rate;
-  const takes=pengeluaran.filter(r=>{
-   const d=dateOf(r);if(!d||!periodeMatch({tanggal:d})||!isKasbon(r))return false;
-   const rid=[r?.karyawanId,r?.karyawanID,r?.teknisiId,r?.teknisiID,r?.employeeId,r?.employeeID,r?.employeeUid,r?.employeeUID,r?.userId,r?.userID].filter(Boolean).map(normalizeName);
-   const eid=employeeIdentityKeys(e.record);
-   if(rid.length&&eid.some(x=>rid.includes(x)))return true;
-   return normalizeName(cleanTech(withdrawalName(r)))===key;
-  });
-  const take=takes.reduce((a,r)=>a+withdrawalAmount(r),0);
-  return {...e,dates:hadir,gross,take,net:Math.max(0,gross-take),takenRows:takes};
- }).filter(r=>r.dates.length||r.take>0||r.rate>0);
+   const u=findUserForEmployee(e.record);
+   const rate=userRate(u)||e.rate;
+   const userAbsen=attendanceFromUser(u);
+
+   // Prioritas: nominal upah pada Users x jumlah absen pada Users.
+   // Jika field absen belum tersedia pada Users, fallback ke perhitungan hari servis unik.
+   let hadir=userAbsen;
+   let hadirDates=[];
+   if(!hadir){
+     const byDate={};
+     servis.forEach(r=>{
+       const d=dateOf(r);if(!d||!periodeMatch({tanggal:d}))return;
+       if(String(r?.status||"").toLowerCase().trim()==="batal")return;
+       const emp=findEmployeeForService(r);if(!emp)return;
+       const key=normalizeName(employeeName(emp));if(!key)return;
+       (byDate[d]??=new Set()).add(key);
+     });
+     const key=normalizeName(e.name);
+     hadirDates=Object.keys(byDate).filter(d=>byDate[d]?.has(key)).sort();
+     hadir=hadirDates.length;
+   }
+
+   const gross=rate*hadir;
+   const takes=pengeluaran.filter(r=>{
+     const d=dateOf(r);if(!d||!periodeMatch({tanggal:d})||!isKasbon(r))return false;
+     const rid=[r?.karyawanId,r?.karyawanID,r?.teknisiId,r?.teknisiID,r?.employeeId,r?.employeeID,r?.employeeUid,r?.employeeUID,r?.userId,r?.userID].filter(Boolean).map(normalizeName);
+     const eid=employeeIdentityKeys(u||e.record);
+     if(rid.length&&eid.some(x=>rid.includes(x)))return true;
+     return normalizeName(cleanTech(withdrawalName(r)))===normalizeName(e.name);
+   });
+   const take=takes.reduce((a,r)=>a+withdrawalAmount(r),0);
+   return {...e,user:u,rate,gross,take,net:Math.max(0,gross-take),dates:hadirDates,attendance:hadir,takenRows:takes};
+ }).filter(r=>r.attendance>0||r.take>0||r.rate>0);
 }
 function renderUpah(){
  const q=normalizeName($("uSearch")?.value||""),arr=upahRows.filter(r=>!q||normalizeName(r.name).includes(q));
  const days=arr.reduce((a,r)=>a+r.dates.length,0),gross=arr.reduce((a,r)=>a+r.gross,0),take=arr.reduce((a,r)=>a+r.take,0),net=arr.reduce((a,r)=>a+r.net,0);
  $("uDays").textContent=days;$("uGross").textContent=money(gross);$("uTake").textContent=money(take);$("uNet").textContent=money(net);
- $("upahBody").innerHTML=arr.map(r=>`<tr><td><b>${esc(r.name)}</b></td><td>${money(r.rate)}</td><td>${r.dates.length}</td><td class="num">${money(r.gross)}</td><td class="num">${money(r.take)}</td><td class="num"><b>${money(r.net)}</b></td></tr>`).join("")||'<tr><td colspan="6" class="empty">Belum ada data upah pada periode ini.</td></tr>';
+ $("upahBody").innerHTML=arr.map(r=>`<tr><td><b>${esc(r.name)}</b></td><td>${money(r.rate)}</td><td>${r.attendance}</td><td class="num">${money(r.gross)}</td><td class="num">${money(r.take)}</td><td class="num"><b>${money(r.net)}</b></td></tr>`).join("")||'<tr><td colspan="6" class="empty">Belum ada data upah pada periode ini.</td></tr>';
 }
 
 /* ===================== KEUANGAN ===================== */
@@ -322,11 +368,11 @@ function renderAll(){upahRows=buildUpahRows();renderRingkasan();renderServis();r
 async function muatSemua(){
  if(!uid){$("statusApp").textContent="Belum login Firebase.";return}
  $("statusApp").textContent="Membaca Firebase...";
- [servis,penjualan,stok,pengeluaran,karyawan]=await Promise.all([own("servis"),own("penjualan"),own("stok"),own("pengeluaran"),own("karyawan")]);
+ [servis,penjualan,stok,pengeluaran,karyawan,users]=await Promise.all([own("servis"),own("penjualan"),own("stok"),own("pengeluaran"),own("karyawan"),own("users")]);
  upahRows=buildUpahRows();renderAll();
  $("statusApp").textContent=`Terhubung • Servis ${servis.length} • Penjualan ${penjualan.length} • Pengeluaran ${pengeluaran.length} • Karyawan ${karyawan.length}`;
- $("systemSummary").innerHTML="✅ Firebase normal. Perhitungan upah mengikuti Data Karyawan + nota servis + kasbon.";
- $("systemLog").textContent=JSON.stringify({uid,servis:servis.length,penjualan:penjualan.length,stok:stok.length,pengeluaran:pengeluaran.length,karyawan:karyawan.length,upahRows:upahRows.map(x=>({nama:x.name,hari:x.dates.length,upah:x.gross,kasbon:x.take,sisa:x.net}))},null,2);
+ $("systemSummary").innerHTML="✅ Firebase normal. Upah = nominalUpah pada Users × absen/absensi. Kasbon dikurangkan dari sisa upah.";
+ $("systemLog").textContent=JSON.stringify({uid,servis:servis.length,penjualan:penjualan.length,stok:stok.length,pengeluaran:pengeluaran.length,karyawan:karyawan.length,users:users.length,upahRows:upahRows.map(x=>({nama:x.name,nominalUpah:x.rate,absen:x.attendance,upah:x.gross,kasbon:x.take,sisa:x.net}))},null,2);
 }
 window.muatSemua=muatSemua;window.renderUpah=renderUpah;window.renderServis=renderServis;window.renderPenjualan=renderPenjualan;window.renderStok=renderStok;window.renderPengeluaran=renderPengeluaran;
 $("periode").addEventListener("change",renderAll);
