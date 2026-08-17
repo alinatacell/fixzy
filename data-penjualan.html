@@ -131,7 +131,7 @@ body.dark .section-title{background:#0f172a;color:#fff}.dark .summary.white{back
 <script type="module">
 import {initializeApp} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import {getAuth,onAuthStateChanged} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-import {getFirestore,collection,getDocs,doc,updateDoc,getDoc,setDoc,query,where,serverTimestamp} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import {getFirestore,collection,getDocs,doc,updateDoc,getDoc,getDocFromServer,getDocsFromServer,query,where,serverTimestamp} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 const firebaseConfig={
  apiKey:"AIzaSyC_PcarMTT5Un7qfSLzf92o5OGn5rginsI",
@@ -179,7 +179,7 @@ async function loadKonter(u){
 
 async function load(){
  try{
-  const snap=await getDocs(collection(db,"penjualan"));
+  const snap=await getDocsFromServer(collection(db,"penjualan"));
   allRows=snap.docs.map(x=>({id:x.id,...x.data()})).sort((a,b)=>dateValue(b)-dateValue(a));
   if((!konterName||konterName==="FIXZY")&&allRows.length){
    const k=allRows[0].namaKonter||allRows[0].konter||allRows[0].namaToko||"";
@@ -291,62 +291,166 @@ window.removeEditItem=btn=>{
 document.addEventListener("input",e=>{if(e.target.closest("#editModal"))calcEditTotal()});
 
 window.simpanEdit=async()=>{
- const id=$("editId").value,d=allRows.find(x=>x.id===id);
- if(!d){showEditNotice("Data tidak ditemukan","Data penjualan tidak ditemukan.");return}
+ const id=$("editId").value;
+ const old=allRows.find(x=>x.id===id);
+ if(!old){showEditNotice("Data tidak ditemukan","Data penjualan tidak ditemukan.");return}
+
  const items=collectEditItems();
  if(!items.length){showEditNotice("Data belum lengkap","Minimal satu produk harus diisi.");return}
 
  const total=items.reduce((a,x)=>a+x.subtotal,0);
- const diskon=Math.max(0,num($("editDiskon").value)),dp=Math.max(0,num($("editDp").value));
- const grand=Math.max(0,total-diskon),sisa=Math.max(0,grand-dp);
+ const diskon=Math.max(0,num($("editDiskon").value));
+ const dp=Math.max(0,num($("editDp").value));
+ const grand=Math.max(0,total-diskon);
+ const sisa=Math.max(0,grand-dp);
  const modal=items.reduce((a,x)=>a+x.modal*x.qty,0);
- const nama=$("editNama").value.trim(),wa=$("editWa").value.trim(),alamat=$("editAlamat").value.trim(),teknisi=$("editTeknisi").value.trim();
- const tanggal=$("editTanggal").value||d.tanggal||"",nota=$("editNota").value.trim()||getNota(d),status=$("editStatus").value||getStatus(d);
+
+ const nama=$("editNama").value.trim();
+ const wa=$("editWa").value.trim();
+ const alamat=$("editAlamat").value.trim();
+ const teknisi=$("editTeknisi").value.trim();
+ const tanggal=$("editTanggal").value||old.tanggal||"";
+ const nota=$("editNota").value.trim()||getNota(old);
+ const status=$("editStatus").value||getStatus(old);
+
+ const pelanggan={
+   ...(old.pelanggan||{}),
+   nama,
+   wa,
+   alamat
+ };
 
  const patch={
-  tanggal,nomorNota:nota,teknisiNama:teknisi,
-  pelanggan:{...(d.pelanggan||{}),nama,wa,alamat},
-  items,total,diskon,dp,sisa,modal,status,statusTerakhir:status,
-  updatedAt:serverTimestamp()
+   tanggal,
+   nomorNota:nota,
+   teknisiNama:teknisi,
+   pelanggan,
+   items,
+   total,
+   diskon,
+   dp,
+   sisa,
+   modal,
+   status,
+   statusTerakhir:status,
+   updatedAt:serverTimestamp()
  };
- const btn=$("editSaveBtn");btn.disabled=true;btn.textContent="Menyimpan...";
+
+ const btn=$("editSaveBtn");
+ btn.disabled=true;
+ btn.textContent="Menyimpan...";
+
  try{
-  const ref=doc(db,"penjualan",id);
-  await setDoc(ref,patch,{merge:true});
+   const ref=doc(db,"penjualan",id);
 
-  // VERIFIKASI: baca kembali dokumen yang baru saja disimpan.
-  const verify=await getDoc(ref);
-  if(!verify.exists())throw new Error("Data berhasil ditulis tetapi tidak dapat dibaca kembali dari Firebase.");
+   // UPDATE dokumen yang sama. Tidak membuat dokumen baru.
+   await updateDoc(ref,patch);
 
-  const firebaseData={id:verify.id,...verify.data()};
-  const ft=num(firebaseData.total),fd=num(firebaseData.diskon),fp=num(firebaseData.dp),fs=num(firebaseData.sisa);
-  if(ft!==total||fd!==diskon||fp!==dp||fs!==sisa){
-   throw new Error(`Firebase tidak cocok setelah penyimpanan.\n\nDikirim:\nTotal ${money(total)}\nDiskon ${money(diskon)}\nDP ${money(dp)}\nSisa ${money(sisa)}\n\nFirebase:\nTotal ${money(ft)}\nDiskon ${money(fd)}\nDP ${money(fp)}\nSisa ${money(fs)}`);
-  }
+   // Pastikan Firebase sudah mengembalikan nilai yang baru.
+   const verify=await getDocFromServer(ref);
+   if(!verify.exists()){
+     throw new Error("Dokumen tidak ditemukan setelah disimpan.");
+   }
 
-  const idx=allRows.findIndex(x=>x.id===id);if(idx!==-1)allRows[idx]=firebaseData;
-  currentDetail=firebaseData;closeEditModal();render();lihatPanel(id);
+   const saved={id:verify.id,...verify.data()};
+
+   // Verifikasi nilai penting.
+   const checks=[
+     ["Total",num(saved.total),total],
+     ["Diskon",num(saved.diskon),diskon],
+     ["DP",num(saved.dp),dp],
+     ["Sisa",num(saved.sisa),sisa],
+     ["Modal",num(saved.modal),modal],
+     ["Nama",String(saved.pelanggan?.nama||""),nama],
+     ["WA",String(saved.pelanggan?.wa||""),wa],
+     ["Alamat",String(saved.pelanggan?.alamat||""),alamat]
+   ];
+
+   const mismatch=checks.find(x=>x[1]!==x[2]);
+   if(mismatch){
+     throw new Error(
+       `${mismatch[0]} belum sesuai di Firebase.\n\n`+
+       `Dikirim: ${typeof mismatch[2]==="number"?money(mismatch[2]):mismatch[2]}\n`+
+       `Firebase: ${typeof mismatch[1]==="number"?money(mismatch[1]):mismatch[1]}`
+     );
+   }
+
+   // WAJIB ambil ulang seluruh tabel dari SERVER.
+   const freshSnap=await getDocsFromServer(collection(db,"penjualan"));
+   allRows=freshSnap.docs
+     .map(x=>({id:x.id,...x.data()}))
+     .sort((a,b)=>dateValue(b)-dateValue(a));
+
+   const freshRow=allRows.find(x=>x.id===id);
+   if(!freshRow){
+     throw new Error("Data tersimpan tetapi tidak muncul saat mengambil ulang daftar Firebase.");
+   }
+
+   currentDetail=freshRow;
+
+   // Tutup form edit lalu render dari data Firebase terbaru.
+   closeEditModal();
+   render();
+
+   // Buka detail memakai objek hasil baca SERVER.
+   lihatPanel(id);
+
  }catch(e){
-  console.error("Gagal menyimpan edit penjualan:",e);
-  showEditNotice("Gagal menyimpan perubahan",e?.message||"Data tidak berhasil disimpan ke Firebase.");
- }finally{btn.disabled=false;btn.textContent="Simpan Perubahan"}
-};
-
-window.setStatus=async(id,st)=>{
- try{
-  const d=allRows.find(x=>x.id===id);if(!d){showEditNotice("Data tidak ditemukan","Data penjualan tidak ditemukan.");return}
-  const waktu=new Date().toISOString();
-  await updateDoc(doc(db,"penjualan",id),{status:st,statusTerakhir:st,statusUpdatedAt:waktu,updatedAt:waktu});
-  d.status=st;d.statusTerakhir=st;d.statusUpdatedAt=waktu;d.updatedAt=waktu;
-  if(currentDetail?.id===id)Object.assign(currentDetail,{status:st,statusTerakhir:st,statusUpdatedAt:waktu,updatedAt:waktu});
-  render();
-  if(st==="tagihan"||st==="tunai")showWAPopup(d,st);else if(currentDetail?.id===id)lihatPanel(id);
- }catch(e){
-  console.error("Gagal menyimpan status:",e);
-  showEditNotice("Status gagal disimpan",e?.message||"Status tidak berhasil disimpan ke Firebase.");
+   console.error("Gagal menyimpan edit penjualan:",e);
+   showEditNotice(
+     "Gagal menyimpan perubahan",
+     e?.message||"Data tidak berhasil disimpan ke Firebase."
+   );
+ }finally{
+   btn.disabled=false;
+   btn.textContent="Simpan Perubahan";
  }
 };
+window.setStatus=async(id,st)=>{
+ try{
+  const d=allRows.find(x=>x.id===id);
+  if(!d){
+    showEditNotice("Data tidak ditemukan","Data penjualan tidak ditemukan.");
+    return;
+  }
 
+  const waktu=new Date().toISOString();
+  await updateDoc(
+    doc(db,"penjualan",id),
+    {status:st,statusTerakhir:st,statusUpdatedAt:waktu,updatedAt:serverTimestamp()}
+  );
+
+  // Baca dokumen langsung dari server.
+  const verify=await getDocFromServer(doc(db,"penjualan",id));
+  if(!verify.exists())throw new Error("Data tidak ditemukan setelah perubahan status.");
+
+  const fresh={id:verify.id,...verify.data()};
+
+  // Ambil ulang seluruh daftar.
+  const snap=await getDocsFromServer(collection(db,"penjualan"));
+  allRows=snap.docs
+    .map(x=>({id:x.id,...x.data()}))
+    .sort((a,b)=>dateValue(b)-dateValue(a));
+
+  const freshRow=allRows.find(x=>x.id===id)||fresh;
+  currentDetail=freshRow;
+
+  render();
+
+  if(st==="tagihan"||st==="tunai"){
+    showWAPopup(freshRow,st);
+  }else{
+    lihatPanel(id);
+  }
+
+ }catch(e){
+  console.error("Gagal menyimpan status:",e);
+  showEditNotice(
+    "Status gagal disimpan",
+    e?.message||"Status tidak berhasil disimpan ke Firebase."
+  );
+ }
+};
 function showWAPopup(data,status){
  pendingWA={data,status};const nama=getNamaPel(data),wa=getWa(data),nota=getNota(data),total=getTotal(data),alamat=getAlamat(data),sisa=getSisa(data),items=getItems(data),barang=items.length?items.map(i=>i.nama).join(", "):"Y20";
  const k=data.namaKonter||data.konter||data.namaToko||konterName||"FIXZY";
@@ -365,7 +469,7 @@ window.sendWA=()=>{
 }
 function showEditNotice(title,text){$("editNoticeTitle").textContent=title;$("editNoticeText").textContent=text;$("editNotice").classList.add("show")}
 window.closeEditNotice=()=>{$("editNotice").classList.remove("show")}
-window.refreshData=()=>location.reload();
+window.refreshData=()=>{location.replace(location.pathname+"?refresh="+Date.now());};
 window.toggleDarkMode=()=>{document.body.classList.toggle("dark");const dark=document.body.classList.contains("dark");localStorage.setItem("fixzy-dark",dark?"1":"0");$("moonIcon").className=dark?"ri-sun-fill":"ri-moon-fill"}
 if(localStorage.getItem("fixzy-dark")==="1"){document.body.classList.add("dark");$("moonIcon").className="ri-sun-fill"}
 $("q").addEventListener("input",render);$("f").addEventListener("change",render);
