@@ -110,7 +110,7 @@ td.num{text-align:right;white-space:nowrap}
     <div class="notice" style="margin-bottom:10px">
       <b>Aturan pendapatan FIXZY:</b> Servis dihitung saat <b>SELESAI/DIAMBIL</b>.
       Penjualan dihitung saat <b>TUNAI/DIBAYAR/LUNAS</b>. Nilai pendapatan memakai field
-      <b>pendapatan/pendapatan1/jumlahTotal</b> sehingga diskon tidak dihitung sebagai pendapatan.
+      <b>pendapatan/pendapatan1/jumlahTotal</b>. Jika field tersebut kosong/0, sistem memakai <b>Total - Diskon</b> agar transaksi tetap masuk laporan.
     </div>
     <div class="table-wrap">
       <table>
@@ -208,19 +208,25 @@ function dateOf(r){
  return "";
 }
 function moneyOf(r){
- if(r?._jenis==="Servis"){
-  return num(r?.pendapatan1 ?? r?.pendapatan ?? r?.jumlahTotal ??
-             r?.total ?? r?.biayaServis ?? r?.biaya ?? r?.harga ?? 0);
- }
- return num(r?.pendapatan ?? r?.jumlahTotal ?? r?.total ??
-            r?.grandTotal ?? r?.totalHarga ?? r?.totalBayar ?? 0);
+ return recordedRevenue(r);
 }
 function recordedRevenue(r){
+ // Prioritas nilai pendapatan yang tersimpan.
+ // Jika field pendapatan kosong/0, gunakan nilai transaksi.
  if(r?._jenis==="Servis"){
-  return num(r?.pendapatan1 ?? r?.pendapatan ?? r?.jumlahTotal ??
-             r?.total ?? r?.biayaServis ?? r?.biaya ?? r?.harga ?? 0);
+  const stored=num(r?.pendapatan1 ?? r?.pendapatan ?? r?.jumlahTotal ?? 0);
+  if(stored>0) return stored;
+  return num(r?.total ?? r?.biayaServis ?? r?.biaya ?? r?.harga ?? 0);
  }
- return num(r?.pendapatan ?? r?.jumlahTotal ?? r?.total ?? 0);
+
+ const stored=num(r?.pendapatan ?? r?.pendapatan1 ?? r?.jumlahTotal ?? 0);
+ if(stored>0) return stored;
+
+ // Penjualan: Pendapatan = Total - Diskon.
+ // DP tidak mengurangi harga karena DP adalah pembayaran.
+ const total=num(r?.total ?? r?.grandTotal ?? r?.totalHarga ?? r?.totalBayar ?? 0);
+ const diskon=num(r?.diskon ?? r?.discount ?? 0);
+ return Math.max(0,total-diskon);
 }
 function expenseOf(r){
  return num(r?.pengeluaran ?? r?.peng ?? r?.modal ?? r?.biayaModal ?? 0);
