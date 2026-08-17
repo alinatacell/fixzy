@@ -440,12 +440,14 @@ async function listenRequests(){
 }
 
 onAuthStateChanged(auth,async u=>{
+ // Login dan izin akses dilakukan di Index.
+ // Halaman ini tidak meminta login atau persetujuan tambahan.
  if(!u){
   $("email").textContent="-";
-  $("nama").textContent="Login melalui Index";
+  $("nama").textContent="Belum login";
   $("role").textContent="RESELLER";
   $("statusAkun").textContent="Belum terhubung";
-  $("requestList").innerHTML='<div class="empty">Silakan buka halaman ini dari Index setelah login reseller.</div>';
+  $("requestList").innerHTML='<div class="empty">Buka halaman ini melalui Index setelah login.</div>';
   return;
  }
 
