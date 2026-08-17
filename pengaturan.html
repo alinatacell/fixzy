@@ -179,14 +179,56 @@ function setProfile(){
   $("statusAkun").textContent=profile.status||"aktif";
 }
 
-async function loadProfile(u){
+async function loadProfile(u,seedProfile={}){
+  profile={...(seedProfile||{})};
   try{
-    const ref=doc(db,"users",u.uid);
-    const snap=await getDoc(ref);
-    profile=snap.exists()?snap.data():{};
-  }catch(e){profile={};}
+    // SAMA seperti penjualan.html: baca users/{UID Firebase Auth}.
+    const snap=await getDocs(query(collection(db,"users"),where("__name__","==",u.uid)));
+    if(!snap.empty) profile={...profile,...(snap.docs[0].data()||{})};
+    else{
+      const d=await getDoc(doc(db,"users",u.uid));
+      if(d.exists()) profile={...profile,...(d.data()||{})};
+    }
+  }catch(e){
+    try{
+      const d=await getDoc(doc(db,"users",u.uid));
+      if(d.exists()) profile={...profile,...(d.data()||{})};
+    }catch(err){ console.warn("Profil users:",err); }
+  }
+  profile.uid=profile.uid||u.uid;
+  profile.email=profile.email||u.email||"";
   setProfile();
 }
+
+function ambilSesiIndex(){
+  try{
+    if(window.fixzySession?.uid) return window.fixzySession;
+    if(window.parent && window.parent!==window && window.parent.fixzySession?.uid) return window.parent.fixzySession;
+    if(window.top && window.top!==window && window.top.fixzySession?.uid) return window.top.fixzySession;
+  }catch(e){}
+  return null;
+}
+
+let sesiIndexDiterima=false;
+let authSelesai=false;
+let userSessionStarted="";
+
+async function mulaiDariSesi(uid,email,seedProfile={}){
+  if(!uid)return;
+  const key=String(uid);
+  if(userSessionStarted===key && currentUser?.uid===key){
+    if(seedProfile && Object.keys(seedProfile).length){
+      profile={...profile,...seedProfile};
+      setProfile();
+    }
+    return;
+  }
+  userSessionStarted=key;
+  currentUser={uid:String(uid),email:email||seedProfile?.email||""};
+  await loadProfile(currentUser,seedProfile);
+  await listenRequests();
+}
+
 
 async function getExistingRequests(){
   const arr=[];
@@ -314,9 +356,12 @@ window.kirimRequest=async()=>{
       resellerUid:currentUser.uid,
       resellerEmail:currentUser.email,
       resellerNama:nama,
-      role:"reseller",
+      role:String(profile.role||"reseller").toLowerCase(),
+      ownerUid:profile.ownerId||profile.ownerUid||"",
+      ownerId:profile.ownerId||profile.ownerUid||"",
       catatan:$("catatan").value.trim(),
-      jumlahRequest:Math.max(1,Math.min(100,parseInt($("jumlahRequest").value,10)||1)),\n      jumlahTokenDiminta:Math.max(1,Math.min(100,parseInt($("jumlahRequest").value,10)||1)),
+      jumlahRequest:Math.max(1,Math.min(100,parseInt($("jumlahRequest").value,10)||1)),
+      jumlahTokenDiminta:Math.max(1,Math.min(100,parseInt($("jumlahRequest").value,10)||1)),
       hargaToken:harga||0,
       jumlahTagihan:0,
       token:"",
@@ -338,29 +383,54 @@ window.kirimRequest=async()=>{
   }
 };
 
-onAuthStateChanged(auth,async u=>{
-  if(!u){
-    // Tidak meminta login kedua. Halaman ini memang dibuka dari Index.
-    $("email").textContent="-";
-    $("nama").textContent="-";
-    $("statusAkun").textContent="Sesi Index belum terbaca";
-    $("requestList").innerHTML='<div class="empty">Buka halaman ini melalui Index setelah login.</div>';
-    return;
-  }
-  currentUser=u;
-  await loadProfile(u);
-  await listenRequests();
+// Anak iframe meminta sesi ke Index. Tidak ada login ulang dan tidak ada pemeriksaan izin kedua.
+window.addEventListener("message",async event=>{
+  if(event.origin!==location.origin)return;
+  const d=event.data||{};
+  if(d.type!=="FIXZY_AUTH_SESSION" || !d.uid)return;
+  sesiIndexDiterima=true;
+  await mulaiDariSesi(d.uid,d.email||"",d.profile||{});
 });
 
-window.addEventListener("message",event=>{
-  if(event.origin!==location.origin)return;
-  if(!event.data||event.data.type!=="FIXZY_AUTH_SESSION")return;
-  // Index sudah mengirim sesi. Firebase Auth tetap dipakai untuk akses Firestore.
-  if(event.data.profile){
-    profile={...profile,...event.data.profile};
-    setProfile();
+// Minta sesi dari Index saat halaman ini dibuka di iframe.
+try{
+  if(window.parent!==window){
+    window.parent.postMessage({type:"FIXZY_REQUEST_AUTH_SESSION"},location.origin);
+  }
+}catch(e){}
+
+// Jika Firebase Auth di iframe sudah/kemudian memulihkan sesi, gunakan pola penjualan.html.
+onAuthStateChanged(auth,async u=>{
+  authSelesai=true;
+  if(u){
+    await mulaiDariSesi(u.uid,u.email||"",{});
+    return;
+  }
+
+  // Jangan redirect ke login. Tunggu sesi dari Index.
+  if(!sesiIndexDiterima){
+    const s=ambilSesiIndex();
+    if(s?.uid){
+      sesiIndexDiterima=true;
+      await mulaiDariSesi(s.uid,s.email||"",s.profile||{});
+      return;
+    }
+    $("email").textContent="-";
+    $("nama").textContent="Menunggu akun FIXZY...";
+    $("role").textContent="RESELLER";
+    $("statusAkun").textContent="Menunggu sesi Index";
+    $("requestList").innerHTML='<div class="empty">Sesi akun dari Index sedang dipulihkan...</div>';
   }
 });
+
+// Coba langsung mengambil sesi parent juga, tanpa menunggu event message.
+(async()=>{
+  const s=ambilSesiIndex();
+  if(s?.uid){
+    sesiIndexDiterima=true;
+    await mulaiDariSesi(s.uid,s.email||"",s.profile||{});
+  }
+})();
 
 $("darkBtn").onclick=()=>{
   document.body.classList.toggle("dark");
