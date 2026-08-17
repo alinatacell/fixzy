@@ -147,17 +147,17 @@ Tagihan perkiraan:
 </div>
 
 <script type="module">
-import{initializeApp}from"https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import{getAuth,onAuthStateChanged}from"https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-import{getFirestore,collection,query,where,getDocs,addDoc,doc,getDoc,onSnapshot}from"https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import{initializeApp}from"https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js";
+import{getAuth,onAuthStateChanged}from"https://www.gstatic.com/firebasejs/11.10.0/firebase-auth.js";
+import{getFirestore,collection,query,where,getDocs,addDoc,doc,getDoc,onSnapshot}from"https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js";
 
 const firebaseConfig={
- apiKey:"AIzaSy_C_PcarMTT5Un7qfSLzf92o5OGn5rginsI",
- authDomain:"fixzy-update.firebaseapp.com",
- projectId:"fixzy-update",
- storageBucket:"fixzy-update.appspot.com",
- messagingSenderId:"431404655232",
- appId:"1:431404655232:web:5f7d9c9a1b2c3d4e5f6a7"
+ apiKey:"AIzaSyCwMbJsuORHqI4QCmp4c1r6OsjAUlfxU5Y",
+ authDomain:"fixzy-f056f.firebaseapp.com",
+ projectId:"fixzy-f056f",
+ storageBucket:"fixzy-f056f.firebasestorage.app",
+ messagingSenderId:"838081521031",
+ appId:"1:838081521031:web:50fddf909b56460b055f22"
 };
 
 const app=initializeApp(firebaseConfig);
@@ -438,6 +438,19 @@ async function listenRequests(){
   renderRequests(await getExistingRequests());
  }
 }
+
+
+window.addEventListener("message",event=>{
+ if(event.origin!==location.origin)return;
+ if(!event.data||event.data.type!=="FIXZY_AUTH_SESSION")return;
+ // The Index already authenticated this user. Firebase Auth in this
+ // same-origin iframe will resolve the same persisted session.
+});
+try{
+ if(window.parent!==window){
+  window.parent.postMessage({type:"FIXZY_REQUEST_AUTH_SESSION"},location.origin);
+ }
+}catch(e){}
 
 onAuthStateChanged(auth,async u=>{
  // Login dan izin akses dilakukan di Index.
