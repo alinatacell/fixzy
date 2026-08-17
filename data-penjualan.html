@@ -228,6 +228,7 @@ const auth = getAuth(app);
 const db = getFirestore(app);
 let allRows=[], filteredRows=[], currentDetail=null, pendingWA=null;
 let konterName="FIXZY";
+const $ = id => document.getElementById(id);
 
 onAuthStateChanged(auth, async u=>{
   if(!u){ location.href="login.html"; return; }
@@ -334,7 +335,11 @@ function getDp(d){ return Number(d.dp||0); }
 function getSisa(d){ return Number(d.sisa ?? (getTotal(d)-getDiskon(d)-getDp(d))); }
 function getModal(d){ const it=getItems(d); if(it.length>0) return it.reduce((s,x)=>s+Number(x.modal||0)*Number(x.qty||1),0); return Number(d.modal||0); }
 function getPendapatan(d){ return getTotal(d)-getDiskon(d); }
-function getLaba(d){ return getPendapatan(d)-getModal(d); }
+function getLaba(d){
+  // Laba nota FIXZY = Total Belanja - Diskon.
+  // Contoh: Rp195.000 - Rp5.000 = Rp190.000.
+  return Math.max(0, getTotal(d) - getDiskon(d));
+}
 function getStatus(d){ return (d.status||'masuk').toLowerCase(); }
 
 function render(){
