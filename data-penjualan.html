@@ -336,10 +336,9 @@ function getSisa(d){ return Number(d.sisa ?? (getTotal(d)-getDiskon(d)-getDp(d))
 function getModal(d){ const it=getItems(d); if(it.length>0) return it.reduce((s,x)=>s+Number(x.modal||0)*Number(x.qty||1),0); return Number(d.modal||0); }
 function getPendapatan(d){ return getTotal(d)-getDiskon(d); }
 function getLaba(d){
-  // Laba = Pendapatan - Modal Belanja.
-  // Pendapatan = Total - Diskon.
-  // Contoh: Pendapatan Rp190.000 - Modal Rp195.000 = Laba -Rp5.000.
-  return getPendapatan(d) - getModal(d);
+  // Laba FIXZY mengikuti nilai penjualan setelah diskon.
+  // Contoh: Total Rp195.000 - Diskon Rp5.000 = Laba Rp190.000.
+  return getTotal(d) - getDiskon(d);
 }
 function getStatus(d){ return (d.status||'masuk').toLowerCase(); }
 
