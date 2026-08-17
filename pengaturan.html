@@ -1,447 +1,493 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="id">
 <head>
-<meta charset="UTF-8">
+<meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<meta name="theme-color" content="#0b1426">
-<title>Pengaturan Nota</title>
+<meta name="theme-color" content="#081326">
+<title>FIXZY | Request Token Reseller</title>
 <style>
 *{box-sizing:border-box}
-:root{--navy:#0b1426;--navy2:#14213a;--yellow:#ffc107;--bg:#f1f4f8;--card:#fff;--line:#dbe3ed;--text:#172033;--muted:#64748b;--green:#16a34a;--red:#dc2626;--blue:#2563eb}
-body{margin:0;font-family:Arial,Helvetica,sans-serif;background:var(--bg);color:var(--text)}
-button,input,textarea,select{font:inherit}
-.header{min-height:76px;background:var(--navy);color:#fff;padding:10px 14px;display:flex;align-items:center;gap:12px;position:sticky;top:0;z-index:50;box-shadow:0 4px 16px #0003}
-.logo{width:52px;height:52px;object-fit:contain;border-radius:10px;flex:none}
-.brand{min-width:0;flex:1}.brand h1{font-size:19px;margin:0;font-weight:900}.brand p{font-size:11px;color:#cbd5e1;margin:4px 0 0}
-.user{text-align:right;max-width:220px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.user b{display:block;font-size:12px}.user span{display:block;font-size:10px;color:#cbd5e1;margin-top:3px}
-.refresh{height:44px;border:0;border-radius:12px;background:var(--yellow);font-weight:900;padding:0 14px;cursor:pointer}
-.wrap{max-width:1250px;margin:auto;padding:14px}.notice{background:#fff;border:1px solid var(--line);border-radius:14px;padding:11px 13px;margin-bottom:12px;font-size:12px;color:var(--muted)}
-.grid{display:grid;grid-template-columns:390px 1fr;gap:14px}.card{background:#fff;border:1px solid var(--line);border-radius:16px;padding:15px;box-shadow:0 4px 16px #0000000a;margin-bottom:12px}
-.title{font-size:17px;font-weight:900;margin:0 0 12px}label{display:block;font-size:12px;font-weight:900;color:#475569;margin:10px 0 6px}
-input,textarea,select{width:100%;border:1px solid #cbd5e1;border-radius:11px;background:#fff;padding:11px 12px;outline:none}
-textarea{min-height:82px;resize:vertical}input:focus,textarea:focus,select:focus{border-color:var(--blue);box-shadow:0 0 0 3px #2563eb18}
-.row{display:grid;grid-template-columns:1fr 1fr;gap:9px}.btn{border:0;border-radius:11px;padding:11px 14px;font-weight:900;cursor:pointer}.btn-save{background:var(--green);color:#fff;width:100%;margin-top:12px}.btn-light{background:#e2e8f0;color:#111}
-.status{font-size:12px;color:var(--muted);margin-top:8px}.template-tabs{display:flex;gap:7px;overflow:auto;margin-bottom:12px;padding-bottom:2px}
-.template-tabs button{border:0;border-radius:10px;background:#e2e8f0;padding:9px 12px;font-weight:900;white-space:nowrap;cursor:pointer}.template-tabs button.active{background:var(--navy);color:#fff}
-.preview-wrap{display:flex;justify-content:center;background:#eef2f7;border-radius:14px;padding:16px;min-height:720px}
-.paper{width:390px;max-width:100%;background:#fff;color:#111;box-shadow:0 8px 30px #0002;padding:22px 20px;min-height:570px;position:relative}
-.paper.small{width:302px;min-height:470px;padding:15px}.paper.mono{filter:grayscale(1)}
-.paper .p-head{text-align:center;padding-bottom:9px;margin-bottom:10px}.paper .company{font-size:20px;font-weight:900}.paper.small .company{font-size:16px}
-.paper .contact{font-size:10px;margin-top:4px;line-height:1.45}.paper .doc-title{font-size:16px;font-weight:900;margin:8px 0 2px}.paper .meta{display:grid;grid-template-columns:1fr 1fr;gap:5px;font-size:10px;margin:10px 0}.paper .meta div{border-bottom:1px solid #aaa;padding-bottom:3px}
-.paper table{width:100%;border-collapse:collapse;font-size:9px}.paper th,.paper td{border:1px solid #555;padding:5px 4px}.paper th{font-weight:900}.paper .totals{margin-top:9px;margin-left:auto;width:62%;font-size:10px}.paper .totals div{display:flex;justify-content:space-between;border-bottom:1px solid #aaa;padding:3px}
-.paper .policy{font-size:9px;line-height:1.45;margin-top:12px;padding:7px;border:1px dashed #777}.paper .thanks{text-align:center;font-weight:900;font-size:11px;margin-top:10px}
-.paper .barcode{height:38px;margin:10px auto 2px;width:180px;background:repeating-linear-gradient(90deg,#111 0 2px,#fff 2px 4px,#111 4px 5px,#fff 5px 8px)}
-.paper .barcode-text{text-align:center;font-size:8px;letter-spacing:2px}.paper .sign{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:17px;text-align:center;font-size:9px}.paper .sign div{border-top:1px solid #333;padding-top:5px;margin-top:35px;min-height:15px}
-.preset-list{display:grid;grid-template-columns:1fr 1fr;gap:8px}.preset{border:2px solid #e2e8f0;border-radius:12px;padding:10px;cursor:pointer;background:#fff}.preset.active{border-color:var(--yellow);background:#fffaf0}
-.preset b{display:block;font-size:13px}.preset span{font-size:10px;color:var(--muted)}
-.mini{height:92px;border:1px solid #cbd5e1;border-radius:8px;margin-top:7px;padding:7px;background:#fff;overflow:hidden}.mini .bar{height:9px;background:#172235;margin-bottom:5px}.mini .line{height:4px;background:#cbd5e1;margin:4px 0}.mini .tbl{height:35px;border:1px solid #777;margin-top:5px;background:repeating-linear-gradient(0deg,transparent 0 6px,#bbb 6px 7px)}
-.mini.blue .bar{background:#2563eb}.mini.green .bar{background:#16a34a}.mini.yellow .bar{background:#ffc107}.mini.red .bar{background:#dc2626}.mini.simple .tbl{display:none}
-.saved{display:inline-block;padding:4px 8px;border-radius:99px;background:#dcfce7;color:#166534;font-size:10px;font-weight:900}
-.warn{color:#92400e;background:#fef3c7;border:1px solid #fde68a;padding:9px;border-radius:10px;font-size:11px}
-.hint{background:#eff6ff;border:1px solid #bfdbfe;color:#1e40af;border-radius:10px;padding:9px;font-size:11px;line-height:1.45;margin-top:9px}
-.error{color:#991b1b;background:#fee2e2;border:1px solid #fecaca;border-radius:10px;padding:9px;font-size:11px;margin-top:9px;line-height:1.45}
-.hidden{display:none!important}
-@media(max-width:900px){.grid{grid-template-columns:1fr}.preview-wrap{min-height:0}.paper{width:390px}}
-@media(max-width:520px){.header{padding:9px 10px}.logo{width:48px;height:48px}.user{display:none}.wrap{padding:9px}.card{padding:12px;border-radius:14px}.row{grid-template-columns:1fr}.preset-list{grid-template-columns:1fr 1fr}.preview-wrap{padding:9px}}
-@media print{body{background:#fff}.header,.left,.notice,.template-tabs,.print-hide{display:none!important}.wrap{padding:0}.grid{display:block}.right{width:100%}.preview-wrap{background:#fff;padding:0}.paper{box-shadow:none;margin:0 auto}}
+:root{
+  --navy:#081326;--navy2:#101d33;--yellow:#ffc107;
+  --bg:#f2f5f9;--card:#fff;--text:#111827;--muted:#64748b;
+  --green:#16a34a;--blue:#2563eb;--red:#dc2626;--border:#111827
+}
+body{margin:0;background:var(--bg);color:var(--text);font-family:Arial,Helvetica,sans-serif}
+header{min-height:72px;background:var(--navy);color:#fff;padding:9px 14px;display:flex;align-items:center;gap:12px;position:sticky;top:0;z-index:20;border-bottom:2px solid #000;box-shadow:0 3px 0 #000}
+.logo{width:52px;height:52px;flex:0 0 52px;border-radius:13px;background:#000;border:1px solid #334155;padding:4px;display:flex;align-items:center;justify-content:center;overflow:hidden}
+.logo img{width:100%;height:100%;object-fit:contain}
+.head-title{min-width:0;flex:1}.head-title b{font-size:18px;display:block}.head-title small{font-size:11px;color:#cbd5e1}
+.wrap{width:min(760px,100%);margin:auto;padding:14px}
+.card{background:var(--card);border:2px solid var(--border);border-radius:14px;padding:16px;margin-bottom:16px;box-shadow:4px 4px 0 #111827}
+h2{margin:0 0 5px;font-size:18px}.sub{font-size:12px;color:var(--muted);margin-bottom:14px}
+.identity{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.info{border:1px solid #dbe2ea;border-radius:10px;padding:10px;background:#f8fafc}
+.info span{display:block;font-size:10px;color:var(--muted);margin-bottom:3px}.info b{font-size:13px;word-break:break-word}
+.buttons{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:14px}
+button{border:0;border-radius:10px;padding:13px 12px;font-weight:900;cursor:pointer;box-shadow:3px 3px 0 #111827}
+.btn-reg{background:#111827;color:#fff}.btn-ext{background:var(--yellow);color:#111827}
+button:disabled{opacity:.5;cursor:not-allowed}
+.request-box{display:none;margin-top:14px;border:2px solid #111827;border-radius:12px;padding:14px;background:#f8fafc}
+.request-box.show{display:block}
+label{display:block;font-size:12px;font-weight:800;margin:0 0 5px}
+select,input,textarea{width:100%;min-height:42px;border:2px solid #111827;border-radius:9px;padding:9px 10px;background:#fff;font:inherit}
+textarea{min-height:70px;resize:vertical}
+.form-row{margin-bottom:10px}
+.quantity-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.quantity-info{background:#fff;border:1px solid #dbe2ea;border-radius:9px;padding:9px 10px;font-size:11px;color:var(--muted);line-height:1.45}
+.quantity-info b{display:block;color:#111827;font-size:13px;margin-top:2px}
+.price{font-size:18px;font-weight:900;background:#fff7d6;border:1px solid #f2c94c;border-radius:9px;padding:10px;margin:10px 0}
+.price small{display:block;font-size:10px;color:#92400e;margin-top:3px}
+.actions{display:flex;gap:8px}.send{background:var(--green);color:#fff;flex:1}.cancel{background:#e5e7eb;color:#111827}
+.notice{font-size:11px;color:#64748b;margin-top:8px;line-height:1.5}
+.req{border:1px solid #dbe2ea;border-radius:11px;padding:12px;margin-top:10px;background:#fff}
+.req-top{display:flex;justify-content:space-between;gap:10px;align-items:center}
+.badge{font-size:10px;font-weight:900;padding:5px 8px;border-radius:999px}
+.pending{background:#fef3c7;color:#92400e}.approved{background:#dcfce7;color:#166534}.rejected{background:#fee2e2;color:#991b1b}
+.req small{color:#64748b}
+.token-list{margin-top:9px;border:1px solid #bbf7d0;border-radius:9px;overflow:hidden;background:#f0fdf4}
+.token-head{padding:7px 10px;background:#dcfce7;color:#166534;font-size:10px;font-weight:900}
+.token-row{display:grid;grid-template-columns:36px 1fr;gap:8px;align-items:center;padding:9px 10px;border-top:1px solid #bbf7d0;background:#fff}
+.token-no{width:26px;height:26px;border-radius:7px;background:#166534;color:#fff;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:900}
+.token-row code{font-size:14px;font-weight:900;word-break:break-all;color:#111827}
+.empty{text-align:center;color:#94a3b8;font-size:12px;padding:18px}
+.modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.62);z-index:50;align-items:center;justify-content:center;padding:14px}
+.modal.show{display:flex}.modal-box{width:min(430px,100%);background:#fff;border:2px solid #111827;border-radius:14px;padding:18px;box-shadow:6px 6px 0 #111827}
+.modal-box h3{margin:0 0 8px}.modal-box p{font-size:13px;line-height:1.5}.ok{width:100%;background:#111827;color:#fff}
+@media(max-width:600px){.identity,.buttons{grid-template-columns:1fr}.quantity-row{grid-template-columns:1fr}.wrap{padding:12px}.card{padding:14px}}
+body.dark{background:#0b0f14;color:#f3f4f6}
+body.dark .card,body.dark .req{background:#151b23;color:#f3f4f6;border-color:#000}
+body.dark .info{background:#10161e;border-color:#334155}
+body.dark .request-box{background:#10161e}
+body.dark select,body.dark input,body.dark textarea{background:#0f141b;color:#f3f4f6;border-color:#334155}
+body.dark .modal-box{background:#151b23;color:#f3f4f6}
+body.dark .token-row{background:#151b23;color:#f3f4f6}
+body.dark .token-row code{color:#f3f4f6}
 </style>
 </head>
 <body>
-<header class="header">
-  <img class="logo" src="logo.png" alt="Logo">
-  <div class="brand"><h1>PENGATURAN NOTA</h1><p>Template nota perusahaan • servis & penjualan</p></div>
-  <div class="user"><b id="ownerName">Memuat...</b><span id="ownerEmail">Firebase</span></div>
-  <button class="refresh" onclick="muatSemua()">↻ Refresh</button>
+<header>
+  <div class="logo"><img src="logo.png" onerror="this.style.display='none'"></div>
+  <div class="head-title">
+    <b>Request Token Reseller</b>
+    <small>Pengajuan token registrasi & perpanjangan</small>
+  </div>
+  <button id="darkBtn" type="button" style="background:#000;color:#fff;padding:10px 12px">☾</button>
 </header>
 
 <main class="wrap">
-  <div class="notice" id="status">Menunggu sesi FIXZY...</div>
-  <div class="grid">
-    <div class="left">
-      <section class="card">
-        <h2 class="title">🏢 Identitas Nota</h2>
-        <div class="warn">Nama <b>FIXZY tidak dicetak</b> di nota. Yang dicetak adalah nama perusahaan/konter yang tersimpan di pengaturan ini.</div>
-        <label>Nama Konter / Perusahaan</label><input id="namaKonter" placeholder="Contoh: A Yudi Thea">
-        <label>No. WhatsApp Konter</label><input id="waKonter" placeholder="Contoh: 081234567890">
-        <label>Kebijakan Perusahaan</label><textarea id="kebijakan" placeholder="Kebijakan garansi, retur, dan ketentuan perusahaan"></textarea>
-        <label>Ucapan Terima Kasih</label><textarea id="terimakasih" placeholder="Terima kasih telah mempercayakan kebutuhan Anda kepada kami."></textarea>
-        <div class="row">
-          <div><label>Ukuran Nota</label><select id="ukuran"><option value="umum">Cetak Umum / A4</option><option value="5x8">Cetak 5 × 8 cm</option></select></div>
-          <div><label>Warna</label><select id="warna"><option value="warna">Berwarna</option><option value="hitam">Hitam Putih</option></select></div>
-        </div>
-        <label>Barcode</label><select id="barcode"><option value="nota">Tampilkan barcode / nomor nota</option><option value="tanpa">Tanpa barcode</option></select>
-        <label>Tanda Tangan</label>
-        <div class="row">
-          <select id="ttPemilik"><option value="tampil">Tampilkan Pemilik</option><option value="tanpa">Tanpa Pemilik</option></select>
-          <select id="ttKonsumen"><option value="tampil">Tampilkan Konsumen</option><option value="tanpa">Tanpa Konsumen</option></select>
-        </div>
-        <button class="btn btn-save" onclick="simpanPengaturan()">💾 Simpan Pengaturan ke Firebase</button>
-        <div class="status" id="saveStatus"></div>
-        <div class="hint">Data utama disimpan di <b>pengaturanNota/{UID Firebase Auth}</b>. Firebase Auth dan Firestore dibuat langsung dari project FIXZY agar referensinya selalu valid.</div>
-      </section>
+<section class="card">
+<h2>Akun Reseller</h2>
+<div class="sub">Request akan masuk ke Firebase untuk diperiksa dan disetujui admin. Tidak ada form login yang ditampilkan.</div>
+<div class="identity">
+<div class="info"><span>Email</span><b id="email">-</b></div>
+<div class="info"><span>Nama / Toko</span><b id="nama">-</b></div>
+<div class="info"><span>Role</span><b id="role">RESELLER</b></div>
+<div class="info"><span>Status Akun</span><b id="statusAkun">-</b></div>
+</div>
 
-      <section class="card"><h2 class="title">🧾 Template Servis</h2><div class="preset-list" id="presetServis"></div></section>
-      <section class="card"><h2 class="title">🛒 Template Penjualan</h2><div class="preset-list" id="presetPenjualan"></div></section>
-      <section class="card print-hide"><h2 class="title">💡 Penggunaan di Halaman Lain</h2><div class="status">`nota.html`, `data-servis.html`, dan `data-penjualan.html` dapat membaca pengaturan Firebase yang sama berdasarkan UID akun.</div></section>
-    </div>
+<div class="buttons">
+<button class="btn-reg" onclick="openRequest('registrasi')">🔑 Request Token Registrasi</button>
+<button class="btn-ext" onclick="openRequest('perpanjangan')">♻️ Request Token Perpanjangan</button>
+</div>
 
-    <div class="right">
-      <section class="card">
-        <div style="display:flex;justify-content:space-between;gap:8px;align-items:center;flex-wrap:wrap">
-          <h2 class="title" style="margin:0">👁️ Preview Nota</h2>
-          <button class="btn btn-light print-hide" onclick="cetakPreview()">🖨️ Cetak Preview</button>
-        </div>
-        <div class="template-tabs">
-          <button id="tabServis" class="active" onclick="pilihJenis('servis')">🔧 Nota Servis</button>
-          <button id="tabPenjualan" onclick="pilihJenis('penjualan')">🛒 Nota Penjualan</button>
-        </div>
-        <div class="preview-wrap"><div id="paper" class="paper"></div></div>
-      </section>
-    </div>
-  </div>
+<div id="requestBox" class="request-box">
+<h3 id="requestTitle" style="margin:0 0 10px">Request</h3>
+
+<div class="form-row">
+<label>Jenis Request</label>
+<input id="jenisView" readonly>
+</div>
+
+<div class="form-row">
+<label>JUMLAH TOKEN YANG DIMINTA</label>
+<div class="quantity-row">
+<div>
+<input id="jumlahRequest" type="number" min="1" max="100" value="1" inputmode="numeric" oninput="updateEstimasi()">
+</div>
+<div class="quantity-info">
+Jumlah token
+<b id="jumlahView">1 Token</b>
+</div>
+</div>
+</div>
+
+<div class="form-row">
+<label>Catatan untuk Admin (opsional)</label>
+<textarea id="catatan" placeholder="Contoh: mohon diproses..."></textarea>
+</div>
+
+<div class="price">
+Tagihan perkiraan:
+<span id="hargaView">Menunggu penetapan / persetujuan admin</span>
+<small id="hargaInfo">Harga final dan jumlah tagihan ditetapkan berdasarkan persetujuan admin.</small>
+</div>
+
+<div class="actions">
+<button class="cancel" onclick="closeRequest()">Batal</button>
+<button class="send" onclick="kirimRequest()">📨 Kirim Request</button>
+</div>
+<div class="notice">Jumlah token yang diminta dikirim ke admin. Token belum dibuat sebelum admin menyetujui request.</div>
+</div>
+</section>
+
+<section class="card">
+<h2>Request Saya</h2>
+<div class="sub">Setelah admin menyetujui, token dan jumlah tagihan akan tampil di sini. Setiap token ditampilkan satu baris.</div>
+<div id="requestList"><div class="empty">Memuat data...</div></div>
+</section>
 </main>
 
+<div class="modal" id="infoModal">
+<div class="modal-box">
+<h3 id="modalTitle">Info</h3>
+<p id="modalText"></p>
+<button class="ok" onclick="closeInfo()">OK</button>
+</div>
+</div>
+
 <script type="module">
-import {initializeApp,getApps,getApp} from "https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js";
-import {getAuth,onAuthStateChanged,setPersistence,browserLocalPersistence} from "https://www.gstatic.com/firebasejs/11.10.0/firebase-auth.js";
-import {getFirestore,doc,getDoc,setDoc} from "https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js";
+import{initializeApp}from"https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import{getAuth,signInAnonymously}from"https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+import{getFirestore,collection,query,where,getDocs,addDoc,doc,getDoc,onSnapshot}from"https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 const firebaseConfig={
-  apiKey:"AIzaSyC_PcarMTT5Un7qfSLzf92o5OGn5rginsI",
-  authDomain:"fixzy-update.firebaseapp.com",
-  projectId:"fixzy-update",
-  storageBucket:"fixzy-update.firebasestorage.app",
-  messagingSenderId:"995892519622",
-  appId:"1:995892519622:web:fa41047944d8e5b35d6dc7"
+ apiKey:"AIzaSy_C_PcarMTT5Un7qfSLzf92o5OGn5rginsI",
+ authDomain:"fixzy-update.firebaseapp.com",
+ projectId:"fixzy-update",
+ storageBucket:"fixzy-update.appspot.com",
+ messagingSenderId:"431404655232",
+ appId:"1:431404655232:web:5f7d9c9a1b2c3d4e5f6a7"
 };
 
-/*
-  FIREBASE ISOLATED INSTANCE
-  Halaman ini membuat App/Auth/Firestore sendiri dari konfigurasi FIXZY.
-  Object Firebase dari iframe parent tidak digunakan, karena object SDK
-  lintas window/realm dapat menyebabkan error invalid-argument pada doc/setDoc.
-*/
-const APP_NAME="FIXZY_PENGATURAN";
-const existingApp=getApps().find(a=>a.name===APP_NAME);
-const app=existingApp||initializeApp(firebaseConfig,APP_NAME);
+const app=initializeApp(firebaseConfig);
 const auth=getAuth(app);
 const db=getFirestore(app);
 
-let uid=null;
+let currentUser=null;
 let profile={};
-let jenis="servis";
+let selectedJenis="";
+let hargaAktif=0;
+let unsub=null;
 
-let settings={
-  namaKonter:"",
-  waKonter:"",
-  kebijakan:"Barang yang sudah dibeli tidak dapat dikembalikan. Garansi servis mengikuti ketentuan perusahaan.",
-  terimakasih:"Terima kasih telah mempercayakan kebutuhan Anda kepada kami.",
-  ukuran:"umum",
-  warna:"warna",
-  barcode:"nota",
-  ttPemilik:"tampil",
-  ttKonsumen:"tampil",
-  templateServis:1,
-  templatePenjualan:1
+/*
+ * HALAMAN TANPA LOGIN
+ * Tidak ada login manual. Identitas reseller dapat dikirim melalui URL:
+ * ?uid=UID_RESELLER&email=email@contoh.com&nama=Nama%20Toko
+ * Jika parameter tidak ada, halaman membuat ID sesi sementara.
+ */
+function getResellerIdentity(){
+ const p=new URLSearchParams(location.search);
+ const uid=(p.get("uid")||"").trim();
+ const email=(p.get("email")||"").trim();
+ const nama=(p.get("nama")||p.get("namaToko")||"").trim()||"Reseller";
+ return {uid,email,nama};
+}
+currentUser=getResellerIdentity();
+profile={
+ namaToko:currentUser.nama,
+ nama:currentUser.nama,
+ role:"reseller",
+ status:"aktif"
 };
 
 const $=id=>document.getElementById(id);
-const esc=v=>String(v??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]));
-const money=v=>"Rp "+(Number(v)||0).toLocaleString("id-ID");
 
-const templates=[
-  {id:1,name:"Klasik",desc:"Hitam/putih • tabel lengkap",cls:""},
-  {id:2,name:"Modern",desc:"Header biru • total tegas",cls:"blue"},
-  {id:3,name:"Minimal",desc:"Ringkas • hemat kertas",cls:"simple"},
-  {id:4,name:"Profesional",desc:"Header hijau • invoice",cls:"green"},
-  {id:5,name:"Konter",desc:"Header kuning • struktur",cls:"yellow"}
-];
-
-function ambilSesiIndex(){
-  try{
-    const p=window.parent&&window.parent!==window?window.parent.fixzySession:null;
-    if(p){
-      profile={...(p.profile||{})};
-      return !!p.uid;
-    }
-  }catch(e){console.warn("Sesi index:",e)}
-  return false;
+function rupiah(v){
+ const n=Number(v||0);
+ return n>0?"Rp "+n.toLocaleString("id-ID"):"Belum ditetapkan";
 }
-
-function ambilUIDAuth(){
-  try{
-    if(auth?.currentUser?.uid){
-      uid=auth.currentUser.uid;
-      return uid;
-    }
-  }catch(e){}
-  return null;
+function esc(v){
+ return String(v??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[m]));
 }
-
-async function tungguAuth(maxMs=7000){
-  if(ambilUIDAuth())return uid;
-  return new Promise(resolve=>{
-    let done=false;
-    const finish=v=>{
-      if(done)return;
-      done=true;
-      clearTimeout(timer);
-      if(unsub)unsub();
-      resolve(v);
-    };
-    let unsub=null;
-    try{
-      unsub=onAuthStateChanged(auth,user=>{
-        if(user){
-          uid=user.uid;
-          finish(uid);
-        }
-      });
-    }catch(e){
-      console.warn("Auth listener:",e);
-    }
-    const timer=setTimeout(()=>finish(ambilUIDAuth()),maxMs);
-  });
+function showInfo(title,text){
+ $("modalTitle").textContent=title;
+ $("modalText").textContent=text;
+ $("infoModal").classList.add("show");
 }
+window.closeInfo=()=>$("infoModal").classList.remove("show");
 
-function syncForm(){
-  $("namaKonter").value=settings.namaKonter||profile.namaKonter||profile.namaToko||profile.namaUsaha||profile.toko||"";
-  $("waKonter").value=settings.waKonter||profile.noWa||profile.nomorWa||profile.whatsapp||profile.wa||"";
-  $("kebijakan").value=settings.kebijakan||"";
-  $("terimakasih").value=settings.terimakasih||"";
-  $("ukuran").value=settings.ukuran||"umum";
-  $("warna").value=settings.warna||"warna";
-  $("barcode").value=settings.barcode||"nota";
-  $("ttPemilik").value=settings.ttPemilik||"tampil";
-  $("ttKonsumen").value=settings.ttKonsumen||"tampil";
+function setProfile(){
+ $("email").textContent=currentUser?.email||"-";
+ $("nama").textContent=profile.namaToko||profile.nama||profile.displayName||profile.name||currentUser?.email?.split("@")[0]||"-";
+ $("role").textContent=(profile.role||"reseller").toUpperCase();
+ $("statusAkun").textContent=profile.status||"aktif";
 }
-
-function readForm(){
-  settings.namaKonter=$("namaKonter").value.trim();
-  settings.waKonter=$("waKonter").value.trim();
-  settings.kebijakan=$("kebijakan").value.trim();
-  settings.terimakasih=$("terimakasih").value.trim();
-  settings.ukuran=$("ukuran").value;
-  settings.warna=$("warna").value;
-  settings.barcode=$("barcode").value;
-  settings.ttPemilik=$("ttPemilik").value;
-  settings.ttKonsumen=$("ttKonsumen").value;
-}
-
-function renderPresets(){
-  const make=j=>templates.map(t=>`
-    <div class="preset ${settings[j==="servis"?"templateServis":"templatePenjualan"]===t.id?"active":""}" onclick="pilihTemplate('${j}',${t.id})">
-      <b>${t.id}. ${t.name}</b><span>${t.desc}</span>
-      <div class="mini ${t.cls}">
-        <div class="bar"></div><div class="line"></div><div class="line"></div><div class="tbl"></div>
-      </div>
-    </div>`).join("");
-  $("presetServis").innerHTML=make("servis");
-  $("presetPenjualan").innerHTML=make("penjualan");
-}
-
-window.pilihTemplate=(j,id)=>{
-  jenis=j;
-  settings[j==="servis"?"templateServis":"templatePenjualan"]=id;
-  $("tabServis").classList.toggle("active",j==="servis");
-  $("tabPenjualan").classList.toggle("active",j==="penjualan");
-  renderPresets();
-  renderPreview();
-};
-
-function tableFor(rows,t){
-  if(t===3){
-    return rows.map(r=>`<div style="display:flex;justify-content:space-between;border-bottom:1px dashed #999;padding:5px 0;font-size:9px"><span>${esc(r[1])} ×${r[3]}</span><span>${money(r[4])}</span></div>`).join("");
-  }
-  const heads=t===4?["DESKRIPSI","QTY","HARGA","AMOUNT"]:["NO","BARANG / JASA","QTY","HARGA","JUMLAH"];
-  return `<table><thead><tr>${heads.map(h=>`<th>${h}</th>`).join("")}</tr></thead><tbody>${rows.map((r,i)=>{
-    if(t===4)return `<tr><td>${esc(r[1])}</td><td>${r[3]}</td><td>${money(r[2])}</td><td>${money(r[4])}</td></tr>`;
-    return `<tr><td>${i+1}</td><td>${esc(r[1])}</td><td>${r[3]}</td><td>${money(r[2])}</td><td>${money(r[4])}</td></tr>`;
-  }).join("")}</tbody></table>`;
-}
-
-function renderPreview(){
-  readForm();
-  const t=jenis==="servis"?settings.templateServis:settings.templatePenjualan;
-  const paper=$("paper");
-  const isServis=jenis==="servis";
-  paper.className="paper "+(settings.ukuran==="5x8"?"small ":"")+(settings.warna==="hitam"?"mono":"");
-
-  const no=isServis?"SRV-20260817-0001":"NOTA-20260817-0001";
-  const rows=isServis?
-    [["Jasa","Ganti LCD / Perbaikan HP",150000,1,150000],["Sparepart","LCD Android",250000,1,250000],["Jasa","Pemasangan",50000,1,50000]]:
-    [["LCD","LCD Samsung A05",175000,1,175000],["Baterai","Baterai Vivo",95000,1,95000],["Kabel Data","Kabel Data Type-C",35000,1,35000]];
-  const total=rows.reduce((a,r)=>a+r[4],0);
-  const accent=t===2?"#2563eb":t===4?"#16a34a":t===5?"#ffc107":"#111";
-  const headerStyle=t===1?"border-bottom:2px solid #111":`background:${accent};color:${t===5?"#111":"#fff"};padding:9px;border-radius:7px`;
-  const barcode=settings.barcode==="nota"?`<div class="barcode"></div><div class="barcode-text">${no}</div>`:"";
-  const signL=settings.ttKonsumen==="tampil"?"Konsumen":"";
-  const signR=settings.ttPemilik==="tampil"?"Pemilik / Penanggung Jawab":"";
-
-  paper.innerHTML=`
-    <div class="p-head" style="${headerStyle}">
-      <div class="company">${esc(settings.namaKonter||"NAMA PERUSAHAAN")}</div>
-      <div class="contact">${settings.waKonter?`WA: ${esc(settings.waKonter)}`:"No. WhatsApp belum diatur"}</div>
-      <div class="doc-title">${isServis?"NOTA SERVIS":"NOTA PENJUALAN"}</div>
-    </div>
-    <div class="meta">
-      <div>No. Nota: <b>${no}</b></div>
-      <div>Tanggal: <b>17 Agustus 2026</b></div>
-      <div>Pelanggan: <b>Nama Pelanggan</b></div>
-      <div>${isServis?"HP / IMEI":"Kasir"}: <b>${isServis?"Samsung A05 / IMEI":"Kasir"}</b></div>
-    </div>
-    ${t===2?`<div style="font-weight:900;border-bottom:2px solid ${accent};padding:5px 0;margin-bottom:5px">DETAIL TRANSAKSI</div>`:""}
-    ${tableFor(rows,t)}
-    <div class="totals">
-      <div><span>Subtotal</span><b>${money(total)}</b></div>
-      <div><span>Diskon</span><b>Rp 0</b></div>
-      <div><span>TOTAL</span><b>${money(total)}</b></div>
-    </div>
-    ${barcode}
-    <div class="policy"><b>Kebijakan Perusahaan:</b><br>${esc(settings.kebijakan||"-")}</div>
-    <div class="thanks">${esc(settings.terimakasih||"Terima kasih")}</div>
-    <div class="sign"><div>${signL}</div><div>${signR}</div></div>`;
-}
-
-["namaKonter","waKonter","kebijakan","terimakasih","ukuran","warna","barcode","ttPemilik","ttKonsumen"].forEach(id=>{
-  $(id).addEventListener("input",renderPreview);
-  $(id).addEventListener("change",renderPreview);
-});
 
 async function loadProfile(){
-  if(profile&&Object.keys(profile).length)return;
-  if(!uid)return;
-  try{
-    const snap=await getDoc(doc(db,"users",uid));
-    if(snap.exists())profile=snap.data()||{};
-  }catch(e){console.warn("Profil:",e)}
+ setProfile();
 }
 
-async function loadSettings(){
-  if(!uid)return;
-  try{
-    const snap=await getDoc(doc(db,"pengaturanNota",uid));
-    if(snap.exists()){
-      settings={...settings,...snap.data()};
-      return;
-    }
-  }catch(e){
-    console.warn("Baca pengaturanNota:",e);
-  }
-
-  /* Kompatibilitas data lama */
-  try{
-    const us=await getDoc(doc(db,"users",uid));
-    if(us.exists()&&us.data()?.pengaturanNota){
-      settings={...settings,...us.data().pengaturanNota};
-    }
-  }catch(e){
-    console.warn("Fallback users.pengaturanNota:",e);
-  }
+function getQuantity(){
+ let n=parseInt($("jumlahRequest").value,10);
+ if(!Number.isFinite(n)||n<1)n=1;
+ if(n>100)n=100;
+ $("jumlahRequest").value=n;
+ return n;
 }
 
-async function muatSemua(){
-  $("status").textContent="⏳ Menghubungkan sesi Firebase...";
-
-  /* Ambil sesi parent terlebih dahulu */
-  ambilSesiIndex();
-
-  /* Auth parent adalah sumber UID yang sebenarnya */
-  if(!uid)ambilUIDAuth();
-  if(!uid)await tungguAuth();
-
-  if(uid){
-    await loadProfile();
-    await loadSettings();
-  }
-
-  syncForm();
-  renderPresets();
-  renderPreview();
-
-  if(uid){
-    const nama=profile.namaKonter||profile.namaPemilik||profile.nama||auth.currentUser?.email||"Akun";
-    $("ownerName").textContent=nama;
-    $("ownerEmail").textContent=auth.currentUser?.email||profile.email||("UID: "+uid.slice(0,8)+"…");
-    $("status").innerHTML=`✅ Terhubung ke Firebase • UID: <b>${esc(uid)}</b> • Pengaturan aktif`;
-  }else{
-    $("ownerName").textContent="Akun belum terdeteksi";
-    $("ownerEmail").textContent="Firebase Auth belum tersedia";
-    $("status").innerHTML='<span style="color:#991b1b">❌ UID Firebase Auth belum tersedia. Pastikan halaman dibuka dari index FIXZY yang sudah login.</span>';
-  }
+function updateEstimasi(){
+ const n=getQuantity();
+ $("jumlahView").textContent=n+" "+(n===1?"Token":"Token");
+ if(hargaAktif>0){
+   $("hargaView").textContent=rupiah(hargaAktif*n);
+   $("hargaInfo").textContent=`${rupiah(hargaAktif)} × ${n} token. Tagihan final tetap mengikuti persetujuan admin.`;
+ }else{
+   $("hargaView").textContent="Menunggu penetapan / persetujuan admin";
+   $("hargaInfo").textContent="Harga final dan jumlah tagihan ditetapkan berdasarkan persetujuan admin.";
+ }
 }
 
-window.muatSemua=muatSemua;
-
-window.simpanPengaturan=async()=>{
-  $("saveStatus").textContent="⏳ Menyiapkan UID Firebase...";
-
-  ambilSesiIndex();
-  if(!uid)ambilUIDAuth();
-  if(!uid)await tungguAuth();
-
-  readForm();
-
-  if(!uid){
-    $("saveStatus").innerHTML='<div class="error">❌ Firebase Auth belum memiliki UID. Jangan simpan dulu. Kembali ke index FIXZY, pastikan akun sudah login, lalu buka Template Nota lagi.</div>';
-    return;
-  }
-
-  const data={
-    ...settings,
-    uid,
-    diperbaruiPada:new Date().toISOString()
-  };
-
-  try{
-    const firestore=getFirestore(app);
-    const ref=doc(firestore,"pengaturanNota",uid);
-    await setDoc(ref,data,{merge:true});
-    settings={...settings,...data};
-    $("saveStatus").innerHTML='<span class="saved">✓ Tersimpan ke pengaturanNota/{UID Firebase Auth}</span>';
-    renderPresets();
-    renderPreview();
-  }catch(error){
-    console.error("FIREBASE SAVE ERROR:",error);
-    $("saveStatus").innerHTML=`<div class="error">❌ Gagal menyimpan Firebase.<br><b>${esc(error.code||"")}</b><br>${esc(error.message||error)}</div>`;
-  }
-};
-
-window.pilihJenis=j=>{
-  jenis=j;
-  $("tabServis").classList.toggle("active",j==="servis");
-  $("tabPenjualan").classList.toggle("active",j==="penjualan");
-  renderPreview();
-};
-
-window.cetakPreview=()=>{
-  renderPreview();
-  window.print();
-};
-
-try{
-  if(!window.parent?.fixzyFirebase){
-    await setPersistence(auth,browserLocalPersistence);
-  }
-}catch(e){console.warn("Firebase persistence:",e)}
-
-ambilSesiIndex();
-ambilUIDAuth();
-
-renderPresets();
-renderPreview();
-
-/* Auth listener hanya untuk memastikan UID terisi jika iframe dibuka langsung */
-try{
-  onAuthStateChanged(auth,async user=>{
-    if(user&&!uid){
-      uid=user.uid;
-      await muatSemua();
+async function loadHarga(jenis){
+ const ids=jenis==="registrasi"
+ ?["tokenRegistrasi","registrasi","token"]
+ :["tokenPerpanjangan","perpanjangan","token"];
+ const cols=["pengaturan","settings","tokenSettings"];
+ for(const col of cols){
+  for(const id of ids){
+   try{
+    const s=await getDoc(doc(db,col,id));
+    if(s.exists()){
+     const d=s.data();
+     const v=jenis==="registrasi"
+      ?(d.hargaRegistrasi??d.hargaTokenRegistrasi??d.hargaToken??d.harga)
+      :(d.hargaPerpanjangan??d.hargaTokenPerpanjangan??d.hargaToken??d.harga);
+     if(Number(v)>0)return Number(v);
     }
+   }catch(e){}
+  }
+ }
+ return 0;
+}
+
+window.openRequest=async jenis=>{
+ selectedJenis=jenis;
+ hargaAktif=0;
+ $("requestTitle").textContent=jenis==="registrasi"?"Request Token Registrasi":"Request Token Perpanjangan";
+ $("jenisView").value=jenis==="registrasi"?"Token Registrasi":"Token Perpanjangan";
+ $("jumlahRequest").value=1;
+ $("catatan").value="";
+ $("hargaView").textContent="Memuat harga...";
+ $("hargaInfo").textContent="Mengambil harga token dari pengaturan Firebase...";
+ $("requestBox").classList.add("show");
+ hargaAktif=await loadHarga(jenis);
+ updateEstimasi();
+};
+
+window.closeRequest=()=>{
+ $("requestBox").classList.remove("show");
+ selectedJenis="";
+ hargaAktif=0;
+};
+
+window.kirimRequest=async()=>{
+ if(!selectedJenis)return;
+
+ const status=String(profile.status||"aktif").toLowerCase();
+ if(status==="nonaktif"){
+  showInfo("Akun Nonaktif","Akun reseller sedang nonaktif. Request token tidak dapat dikirim.");
+  return;
+ }
+
+ const jumlah=getQuantity();
+ const catatan=$("catatan").value.trim();
+ const btn=document.querySelector(".send");
+ btn.disabled=true;
+ btn.textContent="Mengirim...";
+
+ try{
+  const nama=profile.namaToko||profile.nama||profile.displayName||profile.name||currentUser.email.split("@")[0];
+
+  await addDoc(collection(db,"registrationTokens"),{
+   requestType:selectedJenis,
+   requestStatus:"pending",
+   status:"pending",
+
+   resellerUid:currentUser.uid,
+   resellerEmail:currentUser.email||"",
+   resellerNama:nama,
+   role:"reseller",
+
+   jumlahRequest:jumlah,
+   jumlahTokenDiminta:jumlah,
+
+   catatan,
+   hargaToken:hargaAktif||0,
+
+   jumlahTagihan:0,
+   totalTagihan:0,
+
+   token:"",
+   kodeToken:"",
+   registrationToken:"",
+   tokens:[],
+
+   adminNote:"",
+   createdAt:new Date(),
+   createdAtText:new Date().toLocaleString("id-ID"),
+   updatedAt:new Date(),
+
+   notificationAdmin:true,
+   notificationReseller:false,
+   notificationText:`Request ${selectedJenis} sebanyak ${jumlah} token dari ${nama}`
   });
-}catch(e){console.warn("Auth listener:",e)}
 
-muatSemua();
+  closeRequest();
+  showInfo("Request Terkirim",`Request ${selectedJenis} sebanyak ${jumlah} token sudah dikirim ke admin. Setelah disetujui, token dan tagihan akan tampil di halaman ini.`);
+ }catch(e){
+  showInfo("Gagal","Request gagal dikirim: "+e.message);
+ }finally{
+  btn.disabled=false;
+  btn.textContent="📨 Kirim Request";
+ }
+};
+
+function getTokens(x){
+ let raw=[];
+
+ // Format utama: tokens = ["TOKEN-1","TOKEN-2",...]
+ if(Array.isArray(x.tokens))raw.push(...x.tokens);
+
+ // Format alternatif dari admin: token/kodeToken/registrationToken.
+ const singles=[x.token,x.kodeToken,x.registrationToken];
+ singles.forEach(v=>{
+  if(Array.isArray(v))raw.push(...v);
+  else if(v)raw.push(...String(v).split(/\r?\n|[,;]+/));
+ });
+
+ return [...new Set(raw.map(v=>String(v||"").trim()).filter(Boolean))];
+}
+
+function getRequestDate(x){
+ try{
+  if(x.createdAt?.toDate)return x.createdAt.toDate().toLocaleString("id-ID");
+  return x.createdAtText||"";
+ }catch(e){return x.createdAtText||""}
+}
+
+function renderApprovedTokens(tokens){
+ if(!tokens.length)return"";
+ return `<div class="token-list">
+  <div class="token-head">TOKEN DISETUJUI ADMIN • ${tokens.length} TOKEN</div>
+  ${tokens.map((t,i)=>`
+   <div class="token-row">
+    <div class="token-no">${i+1}</div>
+    <code>${esc(t)}</code>
+   </div>`).join("")}
+ </div>`;
+}
+
+function renderRequests(list){
+ const el=$("requestList");
+ if(!list.length){
+  el.innerHTML='<div class="empty">Belum ada request token.</div>';
+  return;
+ }
+
+ el.innerHTML=list.map(x=>{
+  const status=String(x.requestStatus||x.status||"pending").toLowerCase();
+  const cls=status.includes("approve")||status==="disetujui"?"approved":status.includes("tolak")||status==="rejected"?"rejected":"pending";
+  const label=cls==="approved"?"DISETUJUI":cls==="rejected"?"DITOLAK":"MENUNGGU ADMIN";
+  const jenis=x.requestType==="perpanjangan"?"Perpanjangan":"Registrasi";
+  const jumlah=Number(x.jumlahRequest??x.jumlahTokenDiminta??1)||1;
+  const harga=x.jumlahTagihan??x.totalTagihan??x.amount??0;
+  const tokens=getTokens(x);
+
+  return `<div class="req">
+   <div class="req-top">
+    <div>
+     <b>Request ${esc(jenis)}</b><br>
+     <small>${esc(getRequestDate(x))}</small>
+    </div>
+    <span class="badge ${cls}">${label}</span>
+   </div>
+
+   <div style="margin-top:8px;font-size:12px">
+    Diminta: <b>${jumlah} Token</b>
+    ${harga?` • Tagihan: <b>${rupiah(harga)}</b>`:""}
+   </div>
+
+   ${x.catatan?`<div style="margin-top:7px;font-size:11px;color:#64748b">Catatan: ${esc(x.catatan)}</div>`:""}
+   ${x.adminNote?`<div style="margin-top:6px;font-size:11px;color:#166534">Admin: ${esc(x.adminNote)}</div>`:""}
+
+   ${cls==="approved"
+    ?renderApprovedTokens(tokens)
+    :(tokens.length?renderApprovedTokens(tokens):"")
+   }
+
+   ${cls==="approved"
+    ?`<div style="font-size:11px;color:#166534;margin-top:7px">Token dan tagihan sudah disetujui admin.</div>`
+    :""}
+  </div>`;
+ }).join("");
+}
+
+async function getExistingRequests(){
+ const arr=[];
+ try{
+  const q=query(collection(db,"registrationTokens"),where("resellerUid","==",currentUser.uid));
+  const s=await getDocs(q);
+  s.forEach(d=>arr.push({id:d.id,...d.data()}));
+ }catch(e){}
+ arr.sort((a,b)=>(b.createdAt?.seconds||0)-(a.createdAt?.seconds||0));
+ return arr;
+}
+
+async function listenRequests(){
+ if(unsub)unsub();
+
+ try{
+  const q=query(collection(db,"registrationTokens"),where("resellerUid","==",currentUser.uid));
+  unsub=onSnapshot(q,s=>{
+   const list=[];
+   s.forEach(d=>list.push({id:d.id,...d.data()}));
+   list.sort((a,b)=>(b.createdAt?.seconds||0)-(a.createdAt?.seconds||0));
+   renderRequests(list);
+  },async()=>{
+   renderRequests(await getExistingRequests());
+  });
+ }catch(e){
+  renderRequests(await getExistingRequests());
+ }
+}
+
+(async()=>{
+ try{
+   /*
+    * Tidak ada halaman/login form untuk reseller.
+    * Firebase hanya membuat sesi anonim di belakang layar agar
+    * Firestore dapat menerima request sesuai security rules.
+    */
+   const cred=await signInAnonymously(auth);
+   const identity=getResellerIdentity();
+
+   currentUser={
+     uid:cred.user.uid,
+     email:identity.email,
+     nama:identity.nama
+   };
+
+   profile={
+     namaToko:identity.nama,
+     nama:identity.nama,
+     role:"reseller",
+     status:"aktif"
+   };
+
+   setProfile();
+   await listenRequests();
+ }catch(e){
+   console.error("Firebase anonymous auth gagal:",e);
+   showInfo(
+     "❌ Gagal Terhubung",
+     "Sistem tidak dapat membuat sesi Firebase. Pastikan Anonymous Authentication diaktifkan pada Firebase Authentication."
+   );
+ }
+})();
+
+$("darkBtn").onclick=()=>{
+ document.body.classList.toggle("dark");
+};
 </script>
 </body>
 </html>
