@@ -263,6 +263,27 @@ button.action{border:2px solid #111827;border-radius:9px;padding:12px;font-weigh
 .popup-box h3{margin:0 0 8px}.popup-box p{font-size:13px;color:#475467;line-height:1.5}
 .popup-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:13px}.popup-actions button{border:0;border-radius:8px;padding:10px 14px;font-weight:800}
 #garansiWrap{display:none}
+.print-template-picker{position:fixed;inset:0;background:#0008;display:none;align-items:center;justify-content:center;z-index:150}
+.print-template-picker.show{display:flex}
+.print-template-box{width:min(520px,calc(100% - 24px));max-height:90vh;overflow:auto;background:#fff;color:#111827;border:2px solid #111827;border-radius:14px;padding:16px;box-shadow:6px 6px 0 #111827}
+.print-template-box h3{margin:0 0 5px;font-size:18px}
+.print-template-box>p{margin:0 0 12px;font-size:12px;color:#667085}
+.print-template-list{display:grid;grid-template-columns:1fr 1fr;gap:9px}
+.print-template-option{border:2px solid #d1d5db;border-radius:11px;padding:10px;background:#fff;cursor:pointer;text-align:left}
+.print-template-option.active{border-color:#facc15;background:#fffbea}
+.print-template-option b{display:block;font-size:13px}
+.print-template-option span{display:block;font-size:10px;color:#667085;margin-top:2px}
+.print-template-mini{height:70px;border:1px solid #cbd5e1;border-radius:7px;margin-top:7px;padding:6px;overflow:hidden;background:#fff}
+.print-template-mini .mini-bar{height:8px;background:#111827;margin-bottom:5px;border-radius:2px}
+.print-template-mini .mini-line{height:4px;background:#cbd5e1;margin:4px 0}
+.print-template-mini .mini-table{height:25px;border:1px solid #777;margin-top:5px;background:repeating-linear-gradient(0deg,transparent 0 5px,#bbb 5px 6px)}
+.print-template-mini.blue .mini-bar{background:#2563eb}
+.print-template-mini.green .mini-bar{background:#16a34a}
+.print-template-mini.yellow .mini-bar{background:#ffc107}
+.print-template-mini.simple .mini-table{display:none}
+.print-template-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:13px}
+.print-template-actions button{border:0;border-radius:9px;padding:10px 14px;font-weight:900;cursor:pointer}
+@media(max-width:520px){.print-template-list{grid-template-columns:1fr}.print-template-box{padding:13px}}
 #printArea{display:none}
 @media(max-width:650px){
   .grid{grid-template-columns:1fr}
@@ -468,6 +489,19 @@ button.action{border:2px solid #111827;border-radius:9px;padding:12px;font-weigh
     <div class="popup-actions">
       <button onclick="batalGaransi()" style="background:#e5e7eb">Kembali</button>
       <button onclick="konfirmasiGaransi()" style="background:#111827;color:#fff">Lanjut Simpan</button>
+    </div>
+  </div>
+</div>
+
+
+<div id="printTemplatePicker" class="print-template-picker">
+  <div class="print-template-box">
+    <h3>🧾 Pilih Template Nota</h3>
+    <p>Template hanya digunakan untuk cetakan ini. Pilihan tidak disimpan ke Firebase.</p>
+    <div id="printTemplateList" class="print-template-list"></div>
+    <div class="print-template-actions">
+      <button type="button" onclick="batalPilihTemplate()" style="background:#e5e7eb">Batal</button>
+      <button type="button" onclick="cetakDenganTemplate()" style="background:#111827;color:#fff">🖨️ Pilih & Cetak</button>
     </div>
   </div>
 </div>
@@ -930,21 +964,103 @@ async function saveData(d){
   });
 }
 
-function makePrint(d){
+const PRINT_TEMPLATES=[
+  {id:1,name:"Klasik",desc:"Hitam/putih • tabel lengkap",cls:""},
+  {id:2,name:"Modern",desc:"Header biru • total tegas",cls:"blue"},
+  {id:3,name:"Minimal",desc:"Ringkas • hemat kertas",cls:"simple"},
+  {id:4,name:"Profesional",desc:"Header hijau • invoice",cls:"green"},
+  {id:5,name:"Konter",desc:"Header kuning • struktur",cls:"yellow"}
+];
+
+let selectedPrintTemplate=1;
+let pendingPrintData=null;
+
+function renderPrintTemplatePicker(){
+  const wrap=$("printTemplateList");
+  if(!wrap)return;
+  wrap.innerHTML=PRINT_TEMPLATES.map(t=>`
+    <button type="button" class="print-template-option ${selectedPrintTemplate===t.id?"active":""}"
+      onclick="pilihTemplateCetak(${t.id})">
+      <b>${t.id}. ${esc(t.name)}</b>
+      <span>${esc(t.desc)}</span>
+      <div class="print-template-mini ${t.cls}">
+        <div class="mini-bar"></div>
+        <div class="mini-line"></div>
+        <div class="mini-line"></div>
+        <div class="mini-table"></div>
+      </div>
+    </button>`).join("");
+}
+
+window.pilihTemplateCetak=function(id){
+  selectedPrintTemplate=Number(id)||1;
+  renderPrintTemplatePicker();
+};
+
+function bukaPilihTemplate(d){
+  pendingPrintData=d;
+  selectedPrintTemplate=1;
+  renderPrintTemplatePicker();
+  $("printTemplatePicker").classList.add("show");
+}
+
+window.batalPilihTemplate=function(){
+  $("printTemplatePicker").classList.remove("show");
+  pendingPrintData=null;
+};
+
+window.cetakDenganTemplate=function(){
+  if(!pendingPrintData)return;
+  const d=pendingPrintData;
+  $("printTemplatePicker").classList.remove("show");
+  makePrint(d,selectedPrintTemplate);
+  pendingPrintData=null;
+  printNow();
+};
+
+function makePrint(d,templateId=1){
+  const t=Number(templateId)||1;
   const footer=profile.templateNota?.footer||"Terima kasih telah mempercayakan servis kepada kami.";
+  const accent=t===2?"#2563eb":t===4?"#16a34a":t===5?"#ffc107":"#111";
+  const headStyle=t===1
+    ?"border-bottom:2px solid #111"
+    :`background:${accent};color:${t===5?"#111":"#fff"};padding:9px;border-radius:7px`;
+  const companyStyle=t===3?"font-size:15px":"";
+  const metaStyle=t===3?"border-bottom:1px dashed #777":"";
+  const simpleClass=t===3?" simple-print":"";
+  const productName=d.penggunaanProduk?.nama||"-";
+  const productQty=d.penggunaanProduk?.qty||1;
+  const productTotal=(Number(d.penggunaanProduk?.modalSatuan)||0)*Number(productQty);
+  const detailRows=t===4?`
+      <tr><td>Jasa Servis</td><td>1</td><td>${rupiah(d.estimasi.biayaService)}</td><td>${rupiah(d.estimasi.biayaService)}</td></tr>
+      ${productName!=="-"?`<tr><td>${esc(productName)}</td><td>${productQty}</td><td>${rupiah(d.penggunaanProduk?.modalSatuan||0)}</td><td>${rupiah(productTotal)}</td></tr>`:""}
+    `:`
+      <tr><td>1</td><td>Jasa Servis</td><td>1</td><td>${rupiah(d.estimasi.biayaService)}</td><td>${rupiah(d.estimasi.biayaService)}</td></tr>
+      ${productName!=="-"?`<tr><td>2</td><td>${esc(productName)}</td><td>${productQty}</td><td>${rupiah(d.penggunaanProduk?.modalSatuan||0)}</td><td>${rupiah(productTotal)}</td></tr>`:""}
+    `;
+  const detailTable=t===3
+    ?`<div class="print-simple-item"><span>Jasa Servis ×1</span><b>${rupiah(d.estimasi.biayaService)}</b></div>
+      ${productName!=="-"?`<div class="print-simple-item"><span>${esc(productName)} ×${productQty}</span><b>${rupiah(productTotal)}</b></div>`:""}`
+    :`<table class="print-money print-items"><thead><tr>${t===4
+      ?"<th>DESKRIPSI</th><th>QTY</th><th>HARGA</th><th>AMOUNT</th>"
+      :"<th>NO</th><th>BARANG / JASA</th><th>QTY</th><th>HARGA</th><th>JUMLAH</th>"}</tr></thead><tbody>${detailRows}</tbody></table>`;
+
   $("printArea").innerHTML=`
-  <div class="print-paper">
-    <div class="print-shop">
-      <h2>${esc(d.namaKonter)}</h2>
+  <div class="print-paper${simpleClass}">
+    <div class="print-shop" style="${headStyle}">
+      <h2 style="${companyStyle}">${esc(d.namaKonter)}</h2>
       <div>${esc(profile.alamat||profile.alamatUsaha||profile.alamatToko||"")}</div>
       <div>${esc(profile.whatsapp||profile.noWa||profile.wa||"")}</div>
+      <div style="font-weight:900;margin-top:4px">NOTA SERVIS</div>
     </div>
-    <div class="print-meta">
+
+    <div class="print-meta" style="${metaStyle}">
       <div>No. Nota: <b>${esc(d.nomorNota)}</b></div>
       <div>Tanggal: <b>${esc(d.tanggal)}</b></div>
       <div>Teknisi: <b>${esc(d.namaTeknisi)}</b></div>
       <div>Status: <b>${esc(d.status)}</b></div>
     </div>
+
     <div class="print-section">
       <b class="tt">Pelanggan</b>
       <div class="print-grid">
@@ -953,6 +1069,7 @@ function makePrint(d){
         <span>Alamat</span><span>${esc(d.pelanggan.alamat||"-")}</span>
       </div>
     </div>
+
     <div class="print-section">
       <b class="tt">Perangkat</b>
       <div class="print-grid">
@@ -962,24 +1079,27 @@ function makePrint(d){
         <span>Kelengkapan</span><span>${esc(d.servisan.kelengkapan.join(", ")||"-")}</span>
       </div>
     </div>
+
     <div class="print-section">
-      <b class="tt">Pembayaran</b>
-      <table class="print-money">
-        <tr><td>Biaya Servis</td><td>${rupiah(d.estimasi.biayaService)}</td></tr>
+      <b class="tt">${t===2?"DETAIL TRANSAKSI":"Pembayaran"}</b>
+      ${detailTable}
+      <table class="print-money print-total-table">
+        <tr><td>Subtotal</td><td>${rupiah(d.estimasi.total+d.estimasi.diskon)}</td></tr>
         <tr><td>Diskon</td><td>${rupiah(d.estimasi.diskon)}</td></tr>
-        <tr class="print-total"><td>Total</td><td>${rupiah(d.estimasi.total)}</td></tr>
+        <tr class="print-total"><td>TOTAL</td><td>${rupiah(d.estimasi.total)}</td></tr>
         <tr><td>DP</td><td>${rupiah(d.estimasi.dp)}</td></tr>
         <tr><td>Sisa</td><td>${rupiah(d.estimasi.sisa)}</td></tr>
       </table>
     </div>
+
     <div class="print-status">STATUS: ${esc(d.status)}</div>
     ${d.garansi?.aktif?`<div class="print-status">GARANSI ${d.garansi.durasi} HARI<br>Berlaku sampai ${new Date(d.garansi.berakhir).toLocaleDateString("id-ID")}</div>`:""}
     <div class="barcode-wrap"><svg id="printBarcode"></svg><div class="barcode-code">${esc(d.barcode)}</div></div>
     <div class="print-footer">${esc(footer)}</div>
   </div>`;
+
   try{JsBarcode("#printBarcode",d.barcode,{format:"CODE128",width:1.4,height:48,displayValue:false,margin:0})}catch(e){}
 }
-
 function printNow(){setTimeout(()=>window.print(),200)}
 
 function kosongkanFormSetelahSimpan(){
@@ -1043,9 +1163,9 @@ async function executeSave(printAfter){
     tampilError("✅ Berhasil Disimpan",`Transaksi ${d.nomorNota} berhasil disimpan ke Firebase.`);
 
     if(printAfter){
-      makePrint(d);
+      // Template dipilih hanya untuk cetakan ini dan TIDAK disimpan ke Firebase.
       kosongkanFormSetelahSimpan();
-      printNow();
+      bukaPilihTemplate(d);
     }else{
       kosongkanFormSetelahSimpan();
     }
