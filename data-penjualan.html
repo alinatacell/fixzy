@@ -86,6 +86,46 @@ body.dark .price-box{background:#0f172a;border-color:#334155}
 .summary.black{background:#111827;color:#fff}.summary.yellow{background:#fffbeb}.summary.white{background:#fff}
 body.dark .summary.white{background:#0f172a;color:#fff}
 .wa-modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:300;align-items:center;justify-content:center;padding:16px}
+/* ===== EDIT PENJUALAN - INLINE, TANPA ROUTE input-penjualan.html ===== */
+.edit-modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.68);z-index:400;align-items:center;justify-content:center;padding:12px}
+.edit-modal.show{display:flex}
+.edit-box{width:min(680px,100%);max-height:92vh;overflow:auto;background:#fff;border:3px solid #111827;border-radius:18px;box-shadow:8px 8px 0 #111827}
+body.dark .edit-box{background:#1e293b;border-color:#334155;color:#e5e7eb}
+.edit-head{position:sticky;top:0;z-index:5;padding:14px 16px;background:#111827;color:#fff;display:flex;align-items:center;justify-content:space-between;border-bottom:2px solid #facc15}
+.edit-body{padding:14px}
+.edit-grid{display:grid;grid-template-columns:1fr 1fr;gap:9px}
+.edit-field{display:flex;flex-direction:column;gap:4px;margin-bottom:9px}
+.edit-field.full{grid-column:1/-1}
+.edit-field label{font-size:10px;font-weight:900;text-transform:uppercase;color:#64748b}
+.edit-field input,.edit-field select{width:100%;padding:11px 12px;border:2px solid #111827;border-radius:10px;background:#fff;color:#111827;font-size:13px;font-weight:700;outline:none}
+.edit-field input:focus,.edit-field select:focus{border-color:#facc15;box-shadow:0 0 0 2px #facc1533}
+body.dark .edit-field input,body.dark .edit-field select{background:#0f172a;color:#e5e7eb;border-color:#475569}
+.edit-items{border:2px solid #111827;border-radius:12px;padding:10px;background:#f8fafc;margin-bottom:12px}
+body.dark .edit-items{background:#0f172a;border-color:#334155}
+.edit-item{display:grid;grid-template-columns:minmax(0,1fr) 72px 110px 110px 38px;gap:6px;align-items:end;margin-bottom:7px}
+.edit-item input{width:100%;padding:9px 8px;border:1px solid #111827;border-radius:8px;font-size:11px;background:#fff;color:#111827}
+body.dark .edit-item input{background:#1e293b;color:#e5e7eb;border-color:#475569}
+.edit-item-head{font-size:9px;font-weight:900;color:#64748b;text-transform:uppercase;margin-bottom:3px}
+.edit-remove{height:36px;border:1px solid #ef4444;border-radius:8px;background:#fff;color:#ef4444;font-weight:900;cursor:pointer}
+.edit-add{border:2px solid #111827;background:#fff;color:#111827;padding:8px 10px;border-radius:9px;font-weight:900;cursor:pointer;font-size:11px}
+body.dark .edit-add{background:#1e293b;color:#fff;border-color:#475569}
+.edit-total{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-top:10px}
+.edit-money{background:#fff;border:2px solid #111827;border-radius:10px;padding:9px;text-align:center}
+body.dark .edit-money{background:#1e293b;border-color:#475569}
+.edit-money small{display:block;font-size:9px;color:#64748b;font-weight:900}
+.edit-money b{font-size:14px}
+.edit-actions{display:grid;grid-template-columns:1fr 1.4fr;gap:8px;margin-top:14px}
+.edit-cancel,.edit-save{padding:12px;border-radius:11px;font-weight:900;cursor:pointer;border:2px solid #111827}
+.edit-cancel{background:#fff;color:#111827}
+.edit-save{background:#facc15;color:#111827}
+body.dark .edit-cancel{background:#334155;color:#e5e7eb;border-color:#475569}
+@media(max-width:600px){
+  .edit-grid{grid-template-columns:1fr}
+  .edit-field.full{grid-column:auto}
+  .edit-item{grid-template-columns:minmax(0,1fr) 62px 92px 92px 34px;overflow:auto}
+  .edit-total{grid-template-columns:1fr}
+}
+
 .wa-modal.show{display:flex}
 .wa-box{width:min(400px,100%);background:#fff;border:3px solid #111827;border-radius:18px;padding:20px;box-shadow:8px 8px 0 #111827;text-align:center}
 .wa-box h3{font-weight:900;font-size:16px;margin:0 0 8px}
@@ -382,36 +422,238 @@ window.lihatPanel=(id)=>{
 
 window.closeModal=()=>{ document.getElementById('modal').classList.remove('show'); }
 
-window.editData=(id)=>{localStorage.setItem('fixzy_edit_id',id);location.href=`input-penjualan.html?edit=${id}`;}
+window.editData=(id)=>{
+  const d=allRows.find(x=>x.id===id);
+  if(!d)return;
+  currentDetail=d;
+  openEditForm(d);
+}
+
+
+function editNum(v){const n=Number(v);return Number.isFinite(n)?n:0}
+function editEsc(v){
+  return String(v??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]));
+}
+function editItemsOf(d){
+  const items=getItems(d);
+  if(Array.isArray(items)&&items.length)return items.map(x=>({
+    nama:x?.nama??x?.name??"",
+    qty:editNum(x?.qty)||1,
+    harga:editNum(x?.harga??x?.price),
+    modal:editNum(x?.modal??x?.hargaModal??x?.modalBelanja),
+    subtotal:editNum(x?.subtotal) || (editNum(x?.harga??x?.price)*Math.max(1,editNum(x?.qty)||1))
+  }));
+  return [{
+    nama:d?.produk||d?.namaProduk||"Y20",
+    qty:editNum(d?.qty)||1,
+    harga:editNum(d?.harga),
+    modal:editNum(d?.modal),
+    subtotal:editNum(d?.harga)*Math.max(1,editNum(d?.qty)||1)
+  }];
+}
+function editRowHtml(it,i){
+  return `<div class="edit-item" data-edit-item="${i}">
+    <div><div class="edit-item-head">Produk</div><input class="ei-nama" value="${editEsc(it.nama)}" placeholder="Nama produk"></div>
+    <div><div class="edit-item-head">Qty</div><input class="ei-qty" type="number" min="1" value="${Math.max(1,it.qty||1)}"></div>
+    <div><div class="edit-item-head">Harga</div><input class="ei-harga" type="number" min="0" value="${editNum(it.harga)}"></div>
+    <div><div class="edit-item-head">Modal</div><input class="ei-modal" type="number" min="0" value="${editNum(it.modal)}"></div>
+    <button type="button" class="edit-remove" onclick="removeEditItem(this)">×</button>
+  </div>`;
+}
+function openEditForm(d){
+  const pel=d.pelanggan||{};
+  const items=editItemsOf(d);
+  $("editTitle").textContent=`Edit Penjualan • ${getNota(d)}`;
+  $("editId").value=d.id||"";
+  $("editTanggal").value=String(d.tanggal||"").slice(0,10);
+  $("editNota").value=getNota(d)==="-"?"":getNota(d);
+  $("editTeknisi").value=getTeknisi(d)==="-"?"":getTeknisi(d);
+  $("editNama").value=pel.nama??d.nama??"";
+  $("editWa").value=pel.wa??d.noHp??d.wa??"";
+  $("editAlamat").value=pel.alamat??d.alamat??"";
+  $("editDiskon").value=editNum(d.diskon);
+  $("editDp").value=editNum(d.dp);
+  $("editStatus").value=getStatus(d);
+  $("editItemsBody").innerHTML=items.map(editRowHtml).join("");
+  $("editModal").classList.add("show");
+  calcEditTotal();
+}
+window.closeEditModal=()=>{$("editModal").classList.remove("show");}
+window.addEditItem=()=>{
+  const n=document.querySelectorAll("#editItemsBody .edit-item").length;
+  $("editItemsBody").insertAdjacentHTML("beforeend",editRowHtml({nama:"",qty:1,harga:0,modal:0},n));
+  calcEditTotal();
+}
+window.removeEditItem=(btn)=>{
+  const rows=document.querySelectorAll("#editItemsBody .edit-item");
+  if(rows.length<=1){
+    const r=rows[0];
+    if(r){
+      r.querySelector(".ei-nama").value="";
+      r.querySelector(".ei-qty").value=1;
+      r.querySelector(".ei-harga").value=0;
+      r.querySelector(".ei-modal").value=0;
+    }
+  }else btn.closest(".edit-item").remove();
+  calcEditTotal();
+}
+function collectEditItems(){
+  return [...document.querySelectorAll("#editItemsBody .edit-item")].map(r=>{
+    const qty=Math.max(1,editNum(r.querySelector(".ei-qty")?.value)||1);
+    const harga=editNum(r.querySelector(".ei-harga")?.value);
+    const modal=editNum(r.querySelector(".ei-modal")?.value);
+    return {
+      nama:(r.querySelector(".ei-nama")?.value||"").trim(),
+      qty,harga,modal,
+      subtotal:harga*qty
+    };
+  }).filter(x=>x.nama);
+}
+function calcEditTotal(){
+  const items=collectEditItems();
+  const total=items.reduce((a,x)=>a+x.subtotal,0);
+  const diskon=editNum($("editDiskon")?.value);
+  const dp=editNum($("editDp")?.value);
+  const grand=Math.max(0,total-diskon);
+  const sisa=Math.max(0,grand-dp);
+  $("editTotalView").textContent="Rp "+grand.toLocaleString("id-ID");
+  $("editSisaView").textContent="Rp "+sisa.toLocaleString("id-ID");
+  $("editModalView").textContent="Rp "+items.reduce((a,x)=>a+x.modal*x.qty,0).toLocaleString("id-ID");
+}
+async function simpanEdit(){
+  const id=$("editId").value;
+  const d=allRows.find(x=>x.id===id);
+  if(!d)return;
+
+  const items=collectEditItems();
+  if(!items.length){
+    showEditNotice("Data belum lengkap","Minimal satu produk harus diisi.");
+    return;
+  }
+
+  const total=items.reduce((a,x)=>a+x.subtotal,0);
+  const diskon=Math.max(0,editNum($("editDiskon").value));
+  const dp=Math.max(0,editNum($("editDp").value));
+  const grand=Math.max(0,total-diskon);
+  const sisa=Math.max(0,grand-dp);
+
+  const nama=$("editNama").value.trim();
+  const wa=$("editWa").value.trim();
+  const alamat=$("editAlamat").value.trim();
+  const teknisi=$("editTeknisi").value.trim();
+  const tanggal=$("editTanggal").value||d.tanggal||"";
+
+  const patch={
+    tanggal,
+    nomorNota:$("editNota").value.trim()||getNota(d),
+    teknisiNama:teknisi,
+    pelanggan:{...(d.pelanggan||{}),nama,wa,alamat},
+    items,
+    total,
+    diskon,
+    dp,
+    sisa,
+    status:$("editStatus").value||getStatus(d),
+    updatedAt:new Date().toISOString()
+  };
+
+  const btn=$("editSaveBtn");
+  btn.disabled=true;
+  btn.textContent="Menyimpan...";
+  try{
+    await updateDoc(doc(db,"penjualan",id),patch);
+    Object.assign(d,patch);
+    currentDetail=d;
+    closeEditModal();
+    render();
+    // Tampilkan kembali detail setelah tersimpan agar hasil edit langsung terlihat.
+    lihatPanel(id);
+  }catch(e){
+    console.error("Gagal menyimpan edit penjualan:",e);
+    showEditNotice("Gagal menyimpan",e?.message||"Data tidak berhasil disimpan ke Firebase.");
+  }finally{
+    btn.disabled=false;
+    btn.textContent="Simpan Perubahan";
+  }
+}
+function showEditNotice(title,text){
+  $("editNoticeTitle").textContent=title;
+  $("editNoticeText").textContent=text;
+  $("editNotice").classList.add("show");
+}
+window.closeEditNotice=()=>{$("editNotice").classList.remove("show");}
+document.addEventListener("input",e=>{
+  if(e.target.closest("#editModal"))calcEditTotal();
+});
 
 window.setStatus=async(id,st)=>{
   try{
     const d=allRows.find(x=>x.id===id);
-    await updateDoc(doc(db,"penjualan",id),{status:st,updatedAt:new Date().toISOString()});
-    // JANGAN TUTUP PANEL - biar pengguna yang tutup
-    // Update allRows
-    if(d) d.status=st;
-    render();
-    // Jika panel sedang terbuka, update badge di modal juga
+    if(!d){
+      console.error('Data penjualan tidak ditemukan:', id);
+      return;
+    }
+
+    // STATUS TERAKHIR WAJIB DISIMPAN KE FIREBASE.
+    // status = status aktif saat ini
+    // statusTerakhir = status terakhir yang dipilih dari popup
+    // statusUpdatedAt = waktu terakhir status diubah
+    const waktuStatus = new Date().toISOString();
+
+    await updateDoc(doc(db,"penjualan",id),{
+      status:st,
+      statusTerakhir:st,
+      statusUpdatedAt:waktuStatus,
+      updatedAt:waktuStatus
+    });
+
+    // Update data lokal hanya SETELAH Firebase berhasil disimpan.
+    d.status=st;
+    d.statusTerakhir=st;
+    d.statusUpdatedAt=waktuStatus;
+    d.updatedAt=waktuStatus;
+
     if(currentDetail && currentDetail.id===id){
       currentDetail.status=st;
-      const badgeInModal=document.querySelector('#modalBody .badge');
+      currentDetail.statusTerakhir=st;
+      currentDetail.statusUpdatedAt=waktuStatus;
+      currentDetail.updatedAt=waktuStatus;
+    }
+
+    // Render ulang agar tabel langsung memakai status yang sudah tersimpan.
+    render();
+
+    // Jika panel sedang terbuka, update badge STATUS saja.
+    if(currentDetail && currentDetail.id===id){
+      const badges=document.querySelectorAll('#modalBody .badge');
+      const badgeInModal=badges.length ? badges[badges.length-1] : null;
       if(badgeInModal){
         badgeInModal.className=`badge ${st}`;
         badgeInModal.textContent=st.toUpperCase();
       }
-      // Tampilkan popup WA jika tagihan atau tunai
+
+      // Tampilkan popup WA jika status berubah menjadi tagihan/tunai.
       if(st==='tagihan' || st==='tunai'){
         showWAPopup(d, st);
       }
-    } else {
-      // Jika ganti dari tabel langsung
+    }else{
       if(st==='tagihan' || st==='tunai'){
-        const target=allRows.find(x=>x.id===id);
-        if(target) showWAPopup(target, st);
+        showWAPopup(d, st);
       }
     }
-  }catch(e){ console.error(e); }
+
+    console.log('Status berhasil tersimpan ke Firebase:', {
+      id,
+      status:st,
+      statusTerakhir:st,
+      statusUpdatedAt:waktuStatus
+    });
+
+  }catch(e){
+    console.error('Gagal menyimpan status ke Firebase:',e);
+    // Jangan mengubah tampilan seolah-olah berhasil jika Firebase gagal.
+    alert('Status gagal disimpan ke Firebase: ' + (e.message || e));
+  }
 }
 
 function showWAPopup(data, status){
@@ -622,6 +864,67 @@ document.getElementById('f').addEventListener('change',render);
     <div class="modal-body" id="modalBody"></div>
   </div>
 </div>
+
+<div class="edit-modal" id="editModal" onclick="if(event.target===this) closeEditModal()">
+  <div class="edit-box">
+    <div class="edit-head">
+      <div><b id="editTitle">Edit Penjualan</b><br><small style="opacity:.7">Perubahan disimpan langsung ke Firebase</small></div>
+      <button onclick="closeEditModal()" style="background:#facc15;color:#000;border:2px solid #000;width:36px;height:36px;border-radius:10px;font-weight:900">✕</button>
+    </div>
+    <div class="edit-body">
+      <input type="hidden" id="editId">
+      <div class="edit-grid">
+        <div class="edit-field"><label>Tanggal</label><input id="editTanggal" type="date"></div>
+        <div class="edit-field"><label>No Nota</label><input id="editNota"></div>
+        <div class="edit-field"><label>Teknisi</label><input id="editTeknisi"></div>
+        <div class="edit-field"><label>Status</label>
+          <select id="editStatus">
+            <option value="masuk">Masuk</option>
+            <option value="tagihan">Tagihan</option>
+            <option value="tunai">Tunai</option>
+            <option value="batal">Batal</option>
+          </select>
+        </div>
+        <div class="edit-field"><label>Nama Pelanggan</label><input id="editNama"></div>
+        <div class="edit-field"><label>No WhatsApp</label><input id="editWa" inputmode="tel"></div>
+        <div class="edit-field full"><label>Alamat</label><input id="editAlamat"></div>
+      </div>
+
+      <div class="section-title" style="margin-top:8px">PRODUK</div>
+      <div class="edit-items">
+        <div id="editItemsBody"></div>
+        <button type="button" class="edit-add" onclick="addEditItem()">＋ Tambah Produk</button>
+      </div>
+
+      <div class="edit-grid">
+        <div class="edit-field"><label>Diskon</label><input id="editDiskon" type="number" min="0"></div>
+        <div class="edit-field"><label>DP</label><input id="editDp" type="number" min="0"></div>
+      </div>
+
+      <div class="edit-total">
+        <div class="edit-money"><small>TOTAL PENJUALAN</small><b id="editTotalView">Rp 0</b></div>
+        <div class="edit-money"><small>MODAL</small><b id="editModalView">Rp 0</b></div>
+        <div class="edit-money"><small>SISA TAGIHAN</small><b id="editSisaView">Rp 0</b></div>
+      </div>
+
+      <div class="edit-actions">
+        <button type="button" class="edit-cancel" onclick="closeEditModal()">Batal</button>
+        <button type="button" class="edit-save" id="editSaveBtn" onclick="simpanEdit()">Simpan Perubahan</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="edit-modal" id="editNotice" style="z-index:500" onclick="if(event.target===this) closeEditNotice()">
+  <div class="edit-box" style="max-width:400px">
+    <div class="edit-head"><b id="editNoticeTitle">Informasi</b><button onclick="closeEditNotice()" style="background:#facc15;color:#000;border:2px solid #000;width:34px;height:34px;border-radius:9px;font-weight:900">✕</button></div>
+    <div class="edit-body">
+      <div id="editNoticeText" style="font-size:13px;line-height:1.5"></div>
+      <button type="button" class="edit-save" style="width:100%;margin-top:14px" onclick="closeEditNotice()">OK</button>
+    </div>
+  </div>
+</div>
+
 <div class="wa-modal" id="waModal" onclick="if(event.target===this) closeWAModal()">
   <div class="wa-box">
     <div style="width:56px;height:56px;background:#25D366;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 12px;color:#fff;font-size:28px"><i class="ri-whatsapp-fill"></i></div>
