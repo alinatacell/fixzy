@@ -69,9 +69,159 @@ window.openRequest=async jenis=>{if(!currentUser?.uid){showInfo("Sesi Belum Siap
 window.closeRequest=()=>{$("requestBox").classList.remove("show");selectedJenis=""};$("jumlahRequest").addEventListener("input",updateHargaView);
 window.kirimRequest=async()=>{if(!currentUser?.uid||!selectedJenis)return;const status=String(profile.status||"aktif").toLowerCase();if(["nonaktif","inactive","disabled"].includes(status)){showInfo("Akun Nonaktif","Akun reseller sedang nonaktif.");return}const q=getQuantity(),catatan=$("catatan").value.trim(),btn=document.querySelector(".send");btn.disabled=true;btn.textContent="Mengirim...";
 try{const n=await loadHarga(selectedJenis),r=resellerPrice(n),nama=profile.namaToko||profile.nama||profile.displayName||profile.name||currentUser.email?.split("@")[0]||"Reseller";await addDoc(collection(db,"registrationTokens"),{requestType:selectedJenis,requestStatus:"pending",status:"pending",resellerUid:currentUser.uid,resellerEmail:profile.email||currentUser.email||"",resellerNama:nama,role:String(profile.role||"reseller").toLowerCase(),ownerUid:profile.ownerUid||profile.ownerId||"",ownerId:profile.ownerId||profile.ownerUid||"",catatan,jumlahRequest:q,jumlahTokenDiminta:q,hargaToken:n||0,hargaNormalToken:n||0,hargaTokenReseller:r||0,hargaResellerToken:r||0,jumlahTagihan:0,totalTagihan:0,jumlahTagihanNormal:0,totalTagihanNormal:0,jumlahTagihanReseller:0,totalTagihanReseller:0,token:"",kodeToken:"",registrationToken:"",tokens:[],adminNote:"",createdAt:new Date(),createdAtText:new Date().toLocaleString("id-ID"),updatedAt:new Date(),notificationAdmin:true,notificationReseller:false,notificationText:`Request token ${selectedJenis} sebanyak ${q} token dari ${nama}`});closeRequest();showInfo("Request Terkirim",`Request ${selectedJenis} sebanyak ${q} token sudah dikirim ke admin. Harga reseller dihitung dengan potongan Rp20.000/token.`)}catch(e){showInfo("Gagal","Request gagal dikirim: "+e.message)}finally{btn.disabled=false;btn.textContent="📨 Kirim Request"}};
-async function initAuth(){try{await setPersistence(auth,browserLocalPersistence)}catch(e){}onAuthStateChanged(auth,async u=>{if(!u){$("email").textContent="-";$("nama").textContent="Sesi Index belum terbaca";$("role").textContent="RESELLER";$("statusAkun").textContent="Menunggu sesi...";$("requestList").innerHTML='<div class="empty">Sesi akun dari Index sedang dipulihkan...</div>';return}try{await startWithUser(u)}catch(e){$("requestList").innerHTML=`<div class="empty">Gagal membaca data akun: ${esc(e.message)}</div>`}})}
+/* ============================================================
+   SESSION FIXZY - mengikuti pola Index/penjualan/admin lama
+   ------------------------------------------------------------
+   Prioritas:
+   1. Firebase Auth currentUser
+   2. fixzySession dari Index
+   3. postMessage dari Index/parent
+   Tidak ada login ulang dan tidak mencari akun berdasarkan email.
+   ============================================================ */
+let sesiIndexDiterima=false;
+let sessionStarted="";
+
+function ambilSesiIndex(){
+  try{
+    if(window.fixzySession?.uid)return window.fixzySession;
+    if(window.parent&&window.parent!==window&&window.parent.fixzySession?.uid)return window.parent.fixzySession;
+    if(window.top&&window.top!==window&&window.top.fixzySession?.uid)return window.top.fixzySession;
+  }catch(e){}
+  return null;
+}
+
+async function mulaiDariSesi(uid,email,seedProfile={}){
+  if(!uid)return false;
+  const key=String(uid);
+  if(sessionStarted===key&&currentUser?.uid===key){
+    await listenRequests();
+    return true;
+  }
+
+  sessionStarted=key;
+  currentUser={uid:key,email:email||seedProfile?.email||""};
+  profile={...(seedProfile||{})};
+
+  try{
+    const s=await getDoc(doc(db,"users",key));
+    if(s.exists())profile={...profile,...(s.data()||{})};
+  }catch(e){
+    console.warn("Profil users/{UID}:",e);
+  }
+
+  profile.uid=profile.uid||key;
+  profile.email=profile.email||currentUser.email||"";
+  setProfile();
+  await listenRequests();
+  return true;
+}
+
+function tampilMenungguSesi(){
+  $("email").textContent="-";
+  $("nama").textContent="Sesi Index belum terbaca";
+  $("role").textContent="RESELLER";
+  $("statusAkun").textContent="Menunggu sesi...";
+  $("requestList").innerHTML='<div class="empty">Sesi akun dari Index sedang dipulihkan...</div>';
+}
+
+window.addEventListener("message",async event=>{
+  if(event.origin!==location.origin)return;
+  const d=event.data||{};
+
+  if(d.type==="FIXZY_AUTH_SESSION"&&d.uid){
+    sesiIndexDiterima=true;
+    try{
+      await mulaiDariSesi(d.uid,d.email||"",d.profile||{});
+    }catch(e){
+      console.error("Sesi Index:",e);
+      $("requestList").innerHTML=`<div class="empty">Gagal membaca sesi: ${esc(e.message)}</div>`;
+    }
+  }
+});
+
+function mintaSesiDariIndex(){
+  try{
+    if(window.parent&&window.parent!==window){
+      window.parent.postMessage({type:"FIXZY_REQUEST_AUTH_SESSION"},location.origin);
+    }
+    if(window.top&&window.top!==window&&window.top!==window.parent){
+      window.top.postMessage({type:"FIXZY_REQUEST_AUTH_SESSION"},location.origin);
+    }
+  }catch(e){}
+}
+
+async function initAuth(){
+  try{await setPersistence(auth,browserLocalPersistence)}catch(e){console.warn("Persistence:",e)}
+
+  onAuthStateChanged(auth,async u=>{
+    if(u){
+      try{
+        await mulaiDariSesi(u.uid,u.email||"",{});
+      }catch(e){
+        console.error("Auth:",e);
+        $("requestList").innerHTML=`<div class="empty">Gagal membaca data akun: ${esc(e.message)}</div>`;
+      }
+      return;
+    }
+
+    const s=ambilSesiIndex();
+    if(s?.uid){
+      sesiIndexDiterima=true;
+      try{await mulaiDariSesi(s.uid,s.email||"",s.profile||{})}catch(e){console.error(e)}
+      return;
+    }
+
+    tampilMenungguSesi();
+    mintaSesiDariIndex();
+  });
+}
+
+/* Cek sesi Index lebih awal, sebelum Auth selesai memulihkan persistence. */
+(async()=>{
+  const s=ambilSesiIndex();
+  if(s?.uid){
+    sesiIndexDiterima=true;
+    try{await mulaiDariSesi(s.uid,s.email||"",s.profile||{})}catch(e){console.error(e)}
+  }else{
+    mintaSesiDariIndex();
+  }
+})();
+
 initAuth();
-$("refreshBtn").onclick=async()=>{const b=$("refreshBtn");b.disabled=true;b.classList.add("loading");try{const u=auth.currentUser;if(!u){showInfo("Sesi Belum Tersedia","Firebase belum memulihkan akun dari Index.");return}currentUser=u;await loadProfile(u);await listenRequests();showInfo("Berhasil","Data akun dan request token sudah diperbarui.")}catch(e){showInfo("Refresh Gagal",e.message)}finally{b.disabled=false;b.classList.remove("loading")}};
+
+$("refreshBtn").onclick=async()=>{
+  const b=$("refreshBtn");
+  b.disabled=true;
+  b.classList.add("loading");
+  try{
+    let u=auth.currentUser;
+
+    if(!u){
+      const s=ambilSesiIndex();
+      if(s?.uid){
+        await mulaiDariSesi(s.uid,s.email||"",s.profile||{});
+        u={uid:s.uid,email:s.email||""};
+      }
+    }
+
+    if(!u){
+      mintaSesiDariIndex();
+      showInfo("Sesi Belum Tersedia","Firebase belum memulihkan akun dari Index. Tunggu sebentar lalu tekan Refresh lagi.");
+      return;
+    }
+
+    currentUser=u;
+    await loadProfile(u);
+    await listenRequests();
+    showInfo("Berhasil","Data akun dan request token sudah diperbarui.");
+  }catch(e){
+    console.error("Refresh:",e);
+    showInfo("Refresh Gagal","Data gagal diperbarui: "+e.message);
+  }finally{
+    b.disabled=false;
+    b.classList.remove("loading");
+  }
+};
 $("darkBtn").onclick=()=>document.body.classList.toggle("dark");
 </script>
 </body></html>
