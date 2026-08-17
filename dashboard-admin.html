@@ -445,6 +445,7 @@ const db=getFirestore(app);
 
 let uid=null;
 let servis=[],penjualan=[],stok=[],pengeluaran=[],karyawan=[];
+let users=[],absensi=[];
 let upahRows=[];
 let profile={};
 let accountStartDate="";
@@ -516,6 +517,17 @@ async function own(name){
     return [];
   }
 }
+async function readAll(name){
+  try{
+    const snap=await getDocs(collection(db,name));
+    const rows=snap.docs.map(d=>({id:d.id,...d.data()}));
+    console.log("FIXZY Dashboard",name,"ALL",rows.length);
+    return rows;
+  }catch(e){
+    console.error("FIXZY Dashboard gagal membaca",name,e);
+    return [];
+  }
+}
 
 function profileDate(){
   const vals=[
@@ -560,14 +572,41 @@ async function muatSemua(){
   penjualan=await own("penjualan");
   stok=await own("stok");
   pengeluaran=await own("pengeluaran");
-  karyawan=await own("karyawan");
+
+  // SUMBER UPAH FIXZY: sama dengan halaman Data Upah:
+  // users + absensi + pengeluaran.
+  users=await readAll("users");
+  absensi=await readAll("absensi");
+
+  const ownerId=profile?.ownerUid||profile?.ownerId||uid;
+  const workerRoles=["employee","karyawan","kasir","kurir","reseller","teknisi"];
+  const userWorkers=users
+    .filter(x=>{
+      const role=String(x?.role||x?.posisi||"").toLowerCase().trim();
+      const jab=String(x?.jabatan||x?.posisi||"").toLowerCase();
+      const up=employeeRate(x);
+      const worker=workerRoles.includes(role)||up>0||/karyawan|kasir|kurir|teknisi|staff/.test(jab);
+      if(!worker)return false;
+      const owner=String(x?.ownerUid||x?.ownerId||"").trim();
+      return !owner || owner===uid || owner===ownerId;
+    })
+    .map(x=>({id:x.id,...x}));
+
+  // Fallback ke collection karyawan lama jika ada data di sana.
+  const oldEmployees=await own("karyawan");
+  const merged=new Map();
+  [...userWorkers,...oldEmployees].forEach(x=>{
+    const key=String(x?.uid||x?.userId||x?.id||x?.email||x?.nama||x?.namaKaryawan||"");
+    if(key)merged.set(key,x);
+  });
+  karyawan=[...merged.values()];
 
   try{
     upahRows=buildUpahRows();
     renderAll();
-    $("statusApp").textContent=`Terhubung • Servis ${servis.length} • Penjualan ${penjualan.length} • Pengeluaran ${pengeluaran.length} • Karyawan ${karyawan.length}`;
+    $("statusApp").textContent=`Terhubung • Servis ${servis.length} • Penjualan ${penjualan.length} • Pengeluaran ${pengeluaran.length} • Karyawan ${karyawan.length} • Absensi ${absensi.length}`;
     $("systemSummary").innerHTML="✅ Firebase normal. Data Dashboard dibaca berdasarkan UID akun yang sedang login.";
-    $("systemLog").textContent=JSON.stringify({uid,servis:servis.length,penjualan:penjualan.length,stok:stok.length,pengeluaran:pengeluaran.length,karyawan:karyawan.length},null,2);
+    $("systemLog").textContent=JSON.stringify({uid,servis:servis.length,penjualan:penjualan.length,stok:stok.length,pengeluaran:pengeluaran.length,karyawan:karyawan.length,users:users.length,absensi:absensi.length},null,2);
   }catch(e){
     console.error("Render Dashboard:",e);
     $("statusApp").textContent="Data Firebase terbaca, tetapi tampilan gagal dirender.";
@@ -584,8 +623,27 @@ function cleanTech(v){
     .replace(/\s*[•|]\s*(teknisi|karyawan|admin|kasir|kurir).*$/i,"")
     .replace(/\s+-\s+(teknisi|karyawan|admin|kasir|kurir).*$/i,"").trim();
 }
-function employeeName(e){return String(e?.nama||e?.namaKaryawan||e?.namaTeknisi||e?.name||e?.username||"").trim()}
-function employeeRate(e){return num(e?.upah??e?.upahHarian??e?.nominalUpah??e?.rate??e?.upahPerHari)}
+function employeeName(e){return String(e?.nama||e?.namaKaryawan||e?.namaLengkap||e?.namaTeknisi||e?.name||e?.displayName||e?.username||e?.email||"").trim()}
+function employeeRate(e){return num(e?.upahHarian??e?.upah??e?.gajiHarian??e?.gaji??e?.nominalUpah??e?.rate??e?.upahPerHari)}
+function isHadir(r){
+  const st=String(r?.status||r?.kehadiran||r?.keteranganStatus||"").toLowerCase().trim();
+  return !st || ["hadir","masuk","present"].includes(st);
+}
+function attendanceMatchesEmployee(x,a){
+  const ids=[x?.userId,x?.uid,x?.karyawanId,x?.employeeId,x?.akunId,x?.idKaryawan]
+    .filter(Boolean).map(String);
+  const aids=[a?.id,a?.uid,a?.userId,a?.idKaryawan]
+    .filter(Boolean).map(String);
+  if(ids.some(id=>aids.includes(id)))return true;
+
+  const xe=String(x?.email||x?.emailKaryawan||"").toLowerCase().trim();
+  const ae=String(a?.email||"").toLowerCase().trim();
+  if(xe&&ae&&xe===ae)return true;
+
+  const xn=String(x?.nama||x?.namaKaryawan||x?.namaTeknisi||x?.karyawan||x?.employeeName||"").toLowerCase().trim();
+  const an=employeeName(a).toLowerCase().trim();
+  return !!xn&&!!an&&xn===an;
+}
 function serviceTechName(r){return cleanTech(r?.namaTeknisi||r?.teknisiNama||r?.teknisiName||r?.karyawanNama||r?.namaKaryawan||r?.teknisi||"")}
 function withdrawalText(r){return [r?.keterangan,r?.catatan,r?.deskripsi,r?.nama,r?.jenis,r?.type,r?.kategori,r?.perihal,r?.note,r?.notes,r?.memo,r?.uraian].filter(Boolean).join(" ").toLowerCase()}
 function withdrawalName(r){return String(r?.namaKaryawan||r?.namaTeknisi||r?.karyawan||r?.teknisi||r?.nama||"").trim()}
@@ -602,29 +660,34 @@ function periodeKey(){
   return d.slice(0,7);
 }
 function buildUpahRows(){
-  const period=periodeKey();
-  const employees=karyawan.map(e=>({id:e.id,name:employeeName(e),rate:employeeRate(e)})).filter(e=>e.name);
-  const byDate={};
-  servis.forEach(r=>{
-    const d=dateOf(r),jenis=String(r?.jenis||"").trim().toLowerCase();
-    if(!d||!periodeMatch(r))return;
-    if(jenis&&jenis!=="servis")return;
-    if(String(r?.status||"").toLowerCase()==="batal")return;
-    const tech=normalizeName(serviceTechName(r));
-    if(!tech)return;
-    (byDate[d] ||= new Set()).add(tech);
-  });
-  const dates=[...new Set(servis.map(r=>dateOf(r)).filter(d=>d&&periodeMatch({tanggal:d})))].sort();
+  const employees=karyawan
+    .map(e=>({id:e.id,name:employeeName(e),rate:employeeRate(e),raw:e}))
+    .filter(e=>e.name);
+
   return employees.map(e=>{
-    const name=normalizeName(e.name);
-    const hadir=dates.filter(d=>byDate[d]?.has(name));
-    const gross=hadir.length*e.rate;
+    const hadirRows=absensi.filter(x=>
+      periodeMatch(x)&&isHadir(x)&&attendanceMatchesEmployee(x,e.raw)
+    );
+
+    // Satu tanggal dihitung satu hari, sama seperti Data Upah.
+    const hadir=[...new Set(hadirRows.map(x=>dateOf(x)).filter(Boolean))].sort();
+
     const takes=pengeluaran.filter(r=>{
       const d=dateOf(r);
-      return d&&periodeMatch(r)&&isKasbon(r)&&normalizeName(withdrawalName(r))===name;
+      return d&&periodeMatch(r)&&isKasbon(r)&&
+        normalizeName(withdrawalName(r))===normalizeName(e.name);
     });
+
+    const gross=hadir.length*e.rate;
     const take=takes.reduce((a,r)=>a+withdrawalAmount(r),0);
-    return {...e,dates:hadir,gross,take,net:Math.max(0,gross-take)};
+
+    return {
+      ...e,
+      dates:hadir,
+      gross,
+      take,
+      net:Math.max(0,gross-take)
+    };
   }).filter(r=>r.dates.length||r.take>0||r.rate>0);
 }
 function renderUpah(){
