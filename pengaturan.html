@@ -31,7 +31,7 @@ body.dark{background:#0b0f14;color:#f3f4f6}body.dark .card,body.dark .req{backgr
 <div class="buttons"><button class="btn-reg" onclick="openRequest('registrasi')">🔑 Request Token Registrasi</button><button class="btn-ext" onclick="openRequest('perpanjangan')">♻️ Request Token Perpanjangan</button></div>
 <div id="requestBox" class="request-box"><h3 id="requestTitle" style="margin:0 0 10px">Request</h3>
 <div class="form-row"><label>Jenis Request</label><input id="jenisView" readonly></div>
-<div class="form-row"><label>JUMLAH TOKEN YANG DIMINTA</label><input id="jumlahRequest" type="number" min="1" max="100" value="1" inputmode="numeric"></div>
+<div class="form-row"><label>JUMLAH TOKEN YANG DIMINTA</label><input id="jumlahRequest" type="number" min="1" max="100" value="1" inputmode="numeric" placeholder="Masukkan jumlah token"></div>
 <div class="form-row"><label>Catatan untuk Admin (opsional)</label><textarea id="catatan" placeholder="Contoh: mohon diproses..."></textarea></div>
 <div class="price">Harga reseller: <b id="hargaView">Memuat...</b><small id="hargaInfo">Harga normal admin dikurangi Rp20.000/token.</small></div>
 <div class="actions"><button class="cancel" onclick="closeRequest()">Batal</button><button class="send" onclick="kirimRequest()">📨 Kirim Request</button></div>
@@ -39,6 +39,16 @@ body.dark{background:#0b0f14;color:#f3f4f6}body.dark .card,body.dark .req{backgr
 <section class="card"><h2>Request Saya</h2><div class="sub">Setelah admin menyetujui, token dan tagihan reseller tampil di sini. Tagihan reseller sudah dikurangi Rp20.000/token.</div><div id="requestList"><div class="loading">Memuat data...</div></div></section>
 </main>
 <div class="modal" id="infoModal"><div class="modal-box"><h3 id="modalTitle">Info</h3><p id="modalText"></p><button class="ok" onclick="closeInfo()">OK</button></div></div>
+<div class="modal" id="warningModal">
+  <div class="modal-box">
+    <h3 id="warningTitle">⚠️ Peringatan</h3>
+    <p id="warningText"></p>
+    <div style="display:flex;gap:8px;margin-top:14px">
+      <button type="button" class="cancel" style="flex:0 0 auto" onclick="closeWarning()">Batal</button>
+      <button type="button" class="ok" style="flex:1" id="warningConfirmBtn">Lanjutkan</button>
+    </div>
+  </div>
+</div>
 <script type="module">
 import{initializeApp}from"https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js";
 import{getAuth,onAuthStateChanged,setPersistence,browserLocalPersistence}from"https://www.gstatic.com/firebasejs/11.10.0/firebase-auth.js";
@@ -63,12 +73,279 @@ return `<div class="req"><div class="req-top"><div><b>Request Token ${esc(jenis)
 async function listenRequests(){if(unsub){try{unsub()}catch(e){}}if(!currentUser?.uid){$("requestList").innerHTML='<div class="empty">Menunggu sesi akun dari Index...</div>';return}
 try{const q=query(collection(db,"registrationTokens"),where("resellerUid","==",currentUser.uid));unsub=onSnapshot(q,s=>{const a=[];s.forEach(d=>a.push({id:d.id,...d.data()}));a.sort((a,b)=>(b.createdAt?.seconds||0)-(a.createdAt?.seconds||0));renderRequests(a)},async()=>renderRequests(await getExistingRequests()))}catch(e){renderRequests(await getExistingRequests())}}
 async function loadHarga(jenis){const ids=jenis==="registrasi"?["tokenRegistrasi","registrasi","token"]:["tokenPerpanjangan","perpanjangan","token"],cols=["pengaturan","settings","tokenSettings"];for(const c of cols)for(const id of ids)try{const s=await getDoc(doc(db,c,id));if(s.exists()){const d=s.data()||{},v=jenis==="registrasi"?(d.hargaRegistrasi??d.hargaTokenRegistrasi??d.hargaToken??d.harga):(d.hargaPerpanjangan??d.hargaTokenPerpanjangan??d.hargaToken??d.harga);if(Number(v)>0)return Number(v)}}catch(e){}return 0}
-function getQuantity(){let n=parseInt($("jumlahRequest").value,10);if(!Number.isFinite(n)||n<1)n=1;if(n>100)n=100;$("jumlahRequest").value=n;return n}
-async function updateHargaView(){if(!selectedJenis)return;const q=getQuantity(),n=await loadHarga(selectedJenis),r=resellerPrice(n);$("hargaView").textContent=r>0?rupiah(r*q):"Menunggu penetapan / persetujuan admin";$("hargaInfo").textContent=n>0?`Harga normal ${rupiah(n)}/token − Rp20.000 = ${rupiah(r)}/token × ${q} token.`:"Harga normal belum ditetapkan admin."}
-window.openRequest=async jenis=>{if(!currentUser?.uid){showInfo("Sesi Belum Siap","Akun belum terbaca dari sesi Index. Tunggu sebentar lalu tekan Refresh.");return}selectedJenis=jenis;$("requestTitle").textContent=jenis==="registrasi"?"Request Token Registrasi":"Request Token Perpanjangan";$("jenisView").value=jenis==="registrasi"?"Token Registrasi":"Token Perpanjangan";$("jumlahRequest").value=1;$("catatan").value="";$("hargaView").textContent="Memuat...";$("requestBox").classList.add("show");await updateHargaView()};
-window.closeRequest=()=>{$("requestBox").classList.remove("show");selectedJenis=""};$("jumlahRequest").addEventListener("input",updateHargaView);
-window.kirimRequest=async()=>{if(!currentUser?.uid||!selectedJenis)return;const status=String(profile.status||"aktif").toLowerCase();if(["nonaktif","inactive","disabled"].includes(status)){showInfo("Akun Nonaktif","Akun reseller sedang nonaktif.");return}const q=getQuantity(),catatan=$("catatan").value.trim(),btn=document.querySelector(".send");btn.disabled=true;btn.textContent="Mengirim...";
-try{const n=await loadHarga(selectedJenis),r=resellerPrice(n),nama=profile.namaToko||profile.nama||profile.displayName||profile.name||currentUser.email?.split("@")[0]||"Reseller";await addDoc(collection(db,"registrationTokens"),{requestType:selectedJenis,requestStatus:"pending",status:"pending",resellerUid:currentUser.uid,resellerEmail:profile.email||currentUser.email||"",resellerNama:nama,role:String(profile.role||"reseller").toLowerCase(),ownerUid:profile.ownerUid||profile.ownerId||"",ownerId:profile.ownerId||profile.ownerUid||"",catatan,jumlahRequest:q,jumlahTokenDiminta:q,hargaToken:n||0,hargaNormalToken:n||0,hargaTokenReseller:r||0,hargaResellerToken:r||0,jumlahTagihan:0,totalTagihan:0,jumlahTagihanNormal:0,totalTagihanNormal:0,jumlahTagihanReseller:0,totalTagihanReseller:0,token:"",kodeToken:"",registrationToken:"",tokens:[],adminNote:"",createdAt:new Date(),createdAtText:new Date().toLocaleString("id-ID"),updatedAt:new Date(),notificationAdmin:true,notificationReseller:false,notificationText:`Request token ${selectedJenis} sebanyak ${q} token dari ${nama}`});closeRequest();showInfo("Request Terkirim",`Request ${selectedJenis} sebanyak ${q} token sudah dikirim ke admin. Harga reseller dihitung dengan potongan Rp20.000/token.`)}catch(e){showInfo("Gagal","Request gagal dikirim: "+e.message)}finally{btn.disabled=false;btn.textContent="📨 Kirim Request"}};
+function getQuantity(allowEmpty=false){
+  const raw=String($("jumlahRequest").value??"").trim();
+
+  if(allowEmpty && raw==="")return null;
+
+  let n=parseInt(raw,10);
+  if(!Number.isFinite(n)||n<1)n=1;
+  if(n>100)n=100;
+
+  $("jumlahRequest").value=n;
+  return n;
+}
+
+async function updateHargaView(){
+  if(!selectedJenis)return;
+
+  const raw=String($("jumlahRequest").value??"").trim();
+
+  if(raw===""){
+    $("hargaView").textContent="Masukkan jumlah token";
+    $("hargaInfo").textContent="Jumlah token wajib diisi minimal 1 token.";
+    return;
+  }
+
+  const q=getQuantity();
+  const n=await loadHarga(selectedJenis);
+  const r=resellerPrice(n);
+
+  if(r>0){
+    $("hargaView").textContent=rupiah(r*q);
+    $("hargaInfo").textContent=
+      `Harga normal ${rupiah(n)}/token − Rp20.000 = ${rupiah(r)}/token × ${q} token.`;
+  }else{
+    $("hargaView").textContent="Menunggu penetapan / persetujuan admin";
+    $("hargaInfo").textContent="Harga normal belum ditetapkan admin.";
+  }
+}
+
+window.openRequest=async jenis=>{
+  if(!currentUser?.uid){
+    showInfo(
+      "Sesi Belum Siap",
+      "Akun belum terbaca dari sesi Index. Tunggu sebentar lalu tekan Refresh."
+    );
+    return;
+  }
+
+  selectedJenis=jenis;
+  $("requestTitle").textContent=
+    jenis==="registrasi"
+      ?"Request Token Registrasi"
+      :"Request Token Perpanjangan";
+
+  $("jenisView").value=
+    jenis==="registrasi"
+      ?"Token Registrasi"
+      :"Token Perpanjangan";
+
+  $("jumlahRequest").value=1;
+  $("catatan").value="";
+  $("hargaView").textContent="Memuat...";
+  $("hargaInfo").textContent="Membaca harga reseller...";
+  $("requestBox").classList.add("show");
+
+  await updateHargaView();
+};
+
+window.closeRequest=()=>{
+  $("requestBox").classList.remove("show");
+  selectedJenis="";
+};
+
+$("jumlahRequest").addEventListener("input",()=>{
+  /* Jangan memaksa angka kembali menjadi 1 saat user menghapus isi. */
+  updateHargaView();
+});
+
+let warningAction=null;
+
+function showWarning(title,text,action){
+  $("warningTitle").textContent=title||"⚠️ Peringatan";
+  $("warningText").textContent=text||"";
+  warningAction=typeof action==="function"?action:null;
+  $("warningModal").classList.add("show");
+}
+
+window.closeWarning=()=>{
+  $("warningModal").classList.remove("show");
+  warningAction=null;
+};
+
+$("warningConfirmBtn").onclick=async()=>{
+  const action=warningAction;
+  $("warningModal").classList.remove("show");
+  warningAction=null;
+
+  if(typeof action==="function"){
+    await action();
+  }
+};
+
+window.kirimRequest=async()=>{
+  if(!currentUser?.uid){
+    showInfo(
+      "Akun Belum Terbaca",
+      "Sesi Firebase dari Index belum tersedia. Silakan tekan Refresh."
+    );
+    return;
+  }
+
+  if(!selectedJenis)return;
+
+  const status=String(profile.status||"aktif").toLowerCase();
+
+  if(["nonaktif","inactive","disabled"].includes(status)){
+    showInfo(
+      "Akun Nonaktif",
+      "Akun reseller sedang nonaktif. Request token tidak dapat dikirim."
+    );
+    return;
+  }
+
+  const q=getQuantity(true);
+
+  if(q===null){
+    showInfo(
+      "Jumlah Token Belum Diisi",
+      "Silakan masukkan jumlah token yang diminta, minimal 1 token."
+    );
+    $("jumlahRequest").focus();
+    return;
+  }
+
+  if(q<1||q>100){
+    showInfo(
+      "Jumlah Token Tidak Valid",
+      "Jumlah token harus antara 1 sampai 100 token."
+    );
+    return;
+  }
+
+  const jenisText=
+    selectedJenis==="registrasi"
+      ?"Token Registrasi"
+      :"Token Perpanjangan";
+
+  const catatan=$("catatan").value.trim();
+
+  showWarning(
+    "⚠️ Periksa Request",
+    `Anda akan mengirim request ${jenisText} sebanyak ${q} token ke admin. Pastikan jumlah token sudah benar. Setelah dikirim, request akan masuk ke daftar admin untuk diproses.`,
+    ()=>submitRequest(q,catatan)
+  );
+};
+
+async function submitRequest(q,catatan){
+  const btn=document.querySelector(".send");
+
+  btn.disabled=true;
+  btn.textContent="Mengirim...";
+
+  try{
+    const n=await loadHarga(selectedJenis);
+    const r=resellerPrice(n);
+
+    const nama=
+      profile.namaToko||
+      profile.nama||
+      profile.displayName||
+      profile.name||
+      currentUser.email?.split("@")[0]||
+      "Reseller";
+
+    await addDoc(
+      collection(db,"registrationTokens"),
+      {
+        requestType:selectedJenis,
+        requestStatus:"pending",
+        status:"pending",
+
+        resellerUid:currentUser.uid,
+        resellerEmail:
+          profile.email||
+          currentUser.email||
+          "",
+
+        resellerNama:nama,
+        role:String(
+          profile.role||
+          "reseller"
+        ).toLowerCase(),
+
+        ownerUid:
+          profile.ownerUid||
+          profile.ownerId||
+          "",
+
+        ownerId:
+          profile.ownerId||
+          profile.ownerUid||
+          "",
+
+        catatan,
+
+        jumlahRequest:q,
+        jumlahTokenDiminta:q,
+
+        hargaToken:n||0,
+        hargaNormalToken:n||0,
+
+        hargaTokenReseller:r||0,
+        hargaResellerToken:r||0,
+
+        jumlahTagihan:0,
+        totalTagihan:0,
+
+        jumlahTagihanNormal:0,
+        totalTagihanNormal:0,
+
+        jumlahTagihanReseller:0,
+        totalTagihanReseller:0,
+
+        token:"",
+        kodeToken:"",
+        registrationToken:"",
+        tokens:[],
+
+        adminNote:"",
+
+        createdAt:new Date(),
+        createdAtText:new Date().toLocaleString("id-ID"),
+        updatedAt:new Date(),
+
+        notificationAdmin:true,
+        notificationReseller:false,
+
+        notificationText:
+          `Request token ${selectedJenis} sebanyak ${q} token dari ${nama}`
+      }
+    );
+
+    closeRequest();
+
+    showInfo(
+      "Request Terkirim",
+      `Request ${selectedJenis} sebanyak ${q} token sudah dikirim ke admin. Harga reseller menggunakan potongan Rp20.000/token.`
+    );
+
+  }catch(e){
+    console.error("Kirim request:",e);
+
+    const msg=String(e?.message||e||"");
+
+    if(
+      msg.toLowerCase().includes("permission")||
+      msg.toLowerCase().includes("missing or insufficient")
+    ){
+      showInfo(
+        "⚠️ Request Ditolak Firebase",
+        "Firebase menolak penyimpanan request karena Firestore Security Rules belum mengizinkan akun reseller menulis ke registrationTokens. Data request belum tersimpan."
+      );
+    }else{
+      showInfo(
+        "Gagal",
+        "Request gagal dikirim: "+msg
+      );
+    }
+  }finally{
+    btn.disabled=false;
+    btn.textContent="📨 Kirim Request";
+  }
+};
+
 /* ============================================================
    SESSION FIXZY - mengikuti pola Index/penjualan/admin lama
    ------------------------------------------------------------
