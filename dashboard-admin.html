@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 <meta name="theme-color" content="#0d1728">
-<title>FIXZY | Dashboard Admin FIXZY</title>
+<title>FIXZY | Dashboard Admin</title>
 <style>
 *{box-sizing:border-box}
 :root{--navy:#0d1728;--blue:#0d6efd;--yellow:#ffc107;--green:#16a34a;--red:#dc2626;--muted:#64748b;--line:#e2e8f0}
@@ -291,7 +291,7 @@ header:before{content:"";display:block;flex:0 0 42px;width:42px;height:42px;back
           <tbody id="financeDetailBody"></tbody>
         </table>
       </div>
-      <div class="finance-note"><b>Aturan FIXZY:</b> Pendapatan = hasil akhir Servis (DIAMBIL) + Penjualan (TUNAI/DIBAYAR/LUNAS). Pengeluaran = koleksi pengeluaran operasional + upah. Pengeluaran tidak pernah dimasukkan ke Pendapatan. Biaya langsung adalah modal barang/sparepart dan dipisahkan dari pengeluaran operasional.</div>
+      <div class="finance-note">Hasil akhir: status <b>Tunai</b> dan <b>Diambil</b>. Status <b>Selesai</b> belum menjadi pendapatan akhir. Piutang hanya berasal dari transaksi yang belum berstatus hasil akhir. Pengeluaran operasional + upah dihitung sebagai biaya; kasbon ditampilkan terpisah dan tidak mengurangi laba.</div>
     </div>
   </section>
 
@@ -431,12 +431,12 @@ import {getAuth,onAuthStateChanged} from "https://www.gstatic.com/firebasejs/11.
 import {getFirestore,collection,getDocs,query,where,getDoc,doc} from "https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js";
 
 const firebaseConfig={
-  apiKey:"AIzaSyCwMbJsuORhIq4QCmp4c1r6OsjAUlfxU5Y",
-  authDomain:"fixzy-f056f.firebaseapp.com",
-  projectId:"fixzy-f056f",
-  storageBucket:"fixzy-f056f.firebasestorage.app",
-  messagingSenderId:"838081521031",
-  appId:"1:838081521031:web:50fdee909b56460b055f22"
+  apiKey:"AIzaSyC_PcarMTT5Un7qfSLzf92o5OGn5rginsI",
+  authDomain:"fixzy-update.firebaseapp.com",
+  projectId:"fixzy-update",
+  storageBucket:"fixzy-update.firebasestorage.app",
+  messagingSenderId:"995892519622",
+  appId:"1:995892519622:web:fa41047944d8e5b35d6dc7"
 };
 
 const app=initializeApp(firebaseConfig);
@@ -653,28 +653,19 @@ function serviceDP(r){
 function serviceStatus(r){return String(r?.status||"masuk").toLowerCase().trim()}
 function finalStatus(r){
   const st=String(r?.status||"").toLowerCase().trim();
-  const pay=String(r?.pembayaran||r?.metode||"").toLowerCase().trim();
-  if(r?._jenis==="Servis") return ["diambil","diambil pelanggan"].includes(st);
-  if(r?._jenis==="Penjualan") return ["tunai","dibayar","lunas"].includes(st) ||
-                                      ["tunai","cash","lunas"].includes(pay);
-  return false;
+  return st==="tunai" || st==="diambil";
 }
-
 function pendapatanServis(r){
-  if(!active(r) || !["diambil","diambil pelanggan"].includes(serviceStatus(r))) return 0;
-  return Math.max(0,num(r?.pendapatan1 ?? r?.pendapatan ?? r?.jumlahTotal ??
-                         r?.total ?? r?.biayaServis ?? r?.biaya ?? r?.harga ?? 0));
+  if(!active(r) || serviceStatus(r)!=="diambil") return 0;
+  return Math.max(0,serviceBiaya(r)-serviceDiskon(r));
 }
-
 function pendapatanPenjualan(r){
-  if(!active(r)) return 0;
-  const st=String(r?.status||"").toLowerCase().trim();
-  const pay=String(r?.pembayaran||r?.metode||"").toLowerCase().trim();
-  if(!["tunai","dibayar","lunas"].includes(st) &&
-     !["tunai","cash","lunas"].includes(pay)) return 0;
-
-  return Math.max(0,num(r?.pendapatan ?? r?.jumlahTotal ?? r?.total ??
-                         r?.grandTotal ?? r?.totalHarga ?? r?.totalBayar ?? 0));
+  if(!active(r) || String(r?.status||"").toLowerCase().trim()!=="tunai") return 0;
+  const stored=num(r?.pendapatan);
+  if(stored>0) return stored;
+  const total=num(r?.total);
+  const diskon=num(r?.diskon ?? r?.discount);
+  return Math.max(0,total-diskon);
 }
 function sisaTransaksi(r){
   if(!active(r) || finalStatus(r)) return 0;
@@ -738,7 +729,7 @@ function renderFinanceDetail(s,p,out,upahGross,modalS,modalP){
   const breakdown=expenseBreakdown(pengeluaran.filter(periodeMatch));
   Object.entries(breakdown).forEach(([name,value])=>rows.push({name:"💸 "+name,income:0,direct:0,expense:value,profit:-value}));
   if(upahGross>0)rows.push({name:"👷 Upah Karyawan",income:0,direct:0,expense:upahGross,profit:-upahGross});
-  const totalIncome=Math.max(0,incomeS+incomeP);
+  const totalIncome=incomeS+incomeP;
   const totalDirect=modalS+modalP;
   const operational=Object.values(breakdown).reduce((a,v)=>a+v,0);
   const totalExpense=operational+upahGross;
@@ -895,10 +886,10 @@ document.querySelectorAll(".tab").forEach(btn=>{
 
 onAuthStateChanged(auth,async user=>{
   if(!user){
-    $("statusApp").textContent="Sesi login tidak ditemukan.";
+    $("statusApp").textContent="Sesi login FIXZY tidak ditemukan.";
     $("userInfo").textContent="Belum login";
-    $("systemSummary").innerHTML='❌ Belum login Firebase. Dashboard tidak membaca data.';
-    setTimeout(()=>location.href="login.html",400);
+    $("systemSummary").innerHTML='❌ Belum login Firebase. Buka Dashboard dari index FIXZY setelah login.';
+    setTimeout(()=>location.href="index1(1).html",400);
     return;
   }
   uid=user.uid;
