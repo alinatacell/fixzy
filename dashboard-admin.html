@@ -13,9 +13,7 @@ body{font-family:Arial,Helvetica,sans-serif;background:#f1f3f7;color:#182235}
 button,input,select{font:inherit;max-width:100%}
 .top{position:sticky;top:0;z-index:50;width:100%;min-height:68px;background:#111827;color:#fff;display:flex;align-items:center;gap:10px;padding:9px 11px;box-shadow:0 2px 10px #0003;overflow:hidden}
 .top:before{content:"";display:block;flex:0 0 42px;width:42px;height:42px;background:#000 url('logo.png') center/contain no-repeat;border-radius:9px;padding:2px}
-.back{flex:0 0 42px;width:42px;height:42px;border:0;border-radius:12px;background:#17243a;color:#fff;font-size:22px;cursor:pointer}
 .brand{min-width:0;flex:1;overflow:hidden}.brand h1{margin:0;font-size:18px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.brand p{margin:2px 0 0;color:#cbd5e1;font-size:11px;white-space:normal}
-.user{flex:0 1 auto;max-width:135px;min-width:0;font-size:11px;text-align:right;color:#dbeafe;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .wrap{width:100%;max-width:1400px;margin:auto;padding:11px;min-width:0}
 .toolbar{width:100%;background:#fff;border:1px solid var(--line);border-radius:18px;padding:10px;display:flex;gap:8px;align-items:stretch;flex-wrap:wrap;margin-bottom:12px}
 .toolbar label{width:100%;font-weight:800;color:#475569;font-size:13px}.toolbar select,.toolbar input{min-width:0;padding:10px 12px;border:1px solid #cbd5e1;border-radius:12px;background:#fff;flex:1 1 100%}
@@ -39,8 +37,29 @@ table{width:100%;border-collapse:collapse;min-width:700px}th{background:#172235;
 .finance-detail{margin-top:11px}.finance-summary{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px;margin-bottom:12px}.finance-summary .kpiMini{padding:9px}.finance-summary .kpiMini b{font-size:16px}.finance-table table{min-width:820px}.finance-table .income{color:#15803d;font-weight:900}.finance-table .expense,.finance-table .loss{color:#dc2626;font-weight:900}.finance-table .profit{color:#15803d;font-weight:900}.finance-note{margin-top:9px;color:#64748b;font-size:12px;line-height:1.5;overflow-wrap:anywhere}
 #fixzyAlertOverlay{display:none;position:fixed;inset:0;z-index:100000;background:rgba(15,23,42,.68);align-items:center;justify-content:center;padding:18px;backdrop-filter:blur(3px)}#fixzyAlertOverlay.show{display:flex}
 #fixzyAlertBox{width:min(430px,100%);background:#fff;color:#111827;border-radius:20px;padding:20px;box-shadow:0 24px 70px #0006}#fixzyAlertTitle{font-size:19px;font-weight:900;margin:0 0 10px}#fixzyAlertMessage{font-size:14px;line-height:1.6;white-space:pre-line;color:#475569;max-height:55vh;overflow:auto}#fixzyAlertOk{width:100%;margin-top:16px;background:#111827;color:#fff;border:0;border-radius:12px;padding:12px 15px;font-weight:900}
+
+/* ===== HEADER REFRESH ===== */
+.header-refresh{
+  flex:0 0 44px;
+  width:44px;
+  height:44px;
+  border:0;
+  border-radius:12px;
+  background:#17243a;
+  color:#fff;
+  font-size:25px;
+  font-weight:800;
+  line-height:1;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  cursor:pointer;
+  -webkit-tap-highlight-color:transparent;
+}
+.header-refresh:active{transform:scale(.94)}
+
 @media(min-width:821px){
- .top{min-height:78px;padding:12px 18px;gap:14px}.top:before{flex-basis:42px}.back{width:48px;height:48px;flex-basis:48px;border-radius:15px}.brand h1{font-size:22px}.brand p{font-size:13px}.user{font-size:13px;max-width:240px}
+ .top{min-height:78px;padding:12px 18px;gap:14px}.top:before{flex-basis:42px}.header-refresh{flex-basis:44px;width:44px;height:44px}.brand h1{font-size:22px}.brand p{font-size:13px}
  .wrap{padding:18px}.toolbar{align-items:center;padding:13px;flex-wrap:wrap}.toolbar label{width:auto}.toolbar select,.toolbar input{flex:0 1 auto}.toolbar .btn{flex:0 0 auto}.status{width:auto;margin-left:auto;text-align:right}
  .cards{grid-template-columns:repeat(6,minmax(0,1fr));gap:12px}.card{padding:16px;border-radius:18px}.metric small{font-size:12px}.metric b{font-size:22px}.metric span{font-size:12px}
  .grid2{grid-template-columns:minmax(0,1.4fr) minmax(0,1fr);gap:16px}.grid3{grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}.kpiMini{padding:14px}.kpiMini small{font-size:inherit}.kpiMini b{font-size:20px}
@@ -51,9 +70,8 @@ table{width:100%;border-collapse:collapse;min-width:700px}th{background:#172235;
 </head>
 <body>
 <header class="top">
-<button class="back" type="button" onclick="tutupHalaman()">‹</button>
 <div class="brand"><h1 id="storeName">FIXZY</h1><p>Dashboard Admin • Informasi keseluruhan akun</p></div>
-<div class="user" id="userInfo">Memeriksa login...</div>
+<button class="header-refresh" type="button" onclick="muatSemua()" aria-label="Refresh Firebase">↻</button>
 </header>
 
 <main class="wrap">
@@ -120,10 +138,7 @@ table{width:100%;border-collapse:collapse;min-width:700px}th{background:#172235;
 <section id="upah" class="panel"><div class="card"><div class="filters"><input id="uSearch" placeholder="Cari nama karyawan..." oninput="renderUpah()"></div><div class="grid3" style="margin-bottom:14px"><div class="kpiMini"><small>Total Hari Hadir</small><b id="uDays">0</b></div><div class="kpiMini"><small>Total Upah</small><b id="uGross">Rp 0</b></div><div class="kpiMini"><small>Kasbon</small><b id="uTake" class="red">Rp 0</b></div><div class="kpiMini"><small>Sisa Upah</small><b id="uNet" class="red">Rp 0</b></div></div><div class="table-wrap"><table><thead><tr><th>Nama</th><th>Upah/Hari</th><th>Hari Hadir</th><th class="num">Total Upah</th><th class="num">Kasbon</th><th class="num">Sisa Upah</th></tr></thead><tbody id="upahBody"></tbody></table></div></div></section>
 </main>
 
-<script>
-function tutupHalaman(){try{if(window.frameElement){window.frameElement.remove();return}}catch(e){}try{if(window.parent!==window){window.parent.postMessage({type:"FIXZY_CLOSE_PAGE"},"*");return}}catch(e){}try{window.close()}catch(e){}}
-window.tutupHalaman=tutupHalaman;
-</script>
+
 
 <script type="module">
 import {initializeApp} from "https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js";
