@@ -31,6 +31,15 @@ button:disabled{opacity:.5;cursor:not-allowed}.notice{font-size:11px;color:#6474
 .token-list{display:grid;gap:7px}
 .token-item{background:#fff;border:1px solid #bbf7d0;border-radius:9px;padding:9px;font-family:monospace;font-size:12px;font-weight:900;word-break:break-all;color:#111827}
 .token-copy{margin-top:8px;width:100%;border:0;border-radius:9px;padding:10px;background:#166534;color:#fff;font-weight:900;cursor:pointer}
+.token-owned-item{background:#fff;border:2px solid #111827;border-radius:10px;padding:11px;margin-bottom:8px}
+.token-owned-item .token-owned-head{display:flex;justify-content:space-between;gap:8px;align-items:center;margin-bottom:6px}
+.token-owned-item .token-owned-no{font-size:10px;font-weight:900;color:#64748b}
+.token-owned-item code{display:block;background:#f8fafc;border:1px solid #dbe2ea;border-radius:8px;padding:9px;font-family:monospace;font-size:12px;font-weight:900;word-break:break-all;color:#111827}
+.token-copy-one{width:100%;margin-top:7px;border:0;border-radius:8px;padding:8px;background:#e5e7eb;color:#111827;font-weight:900;cursor:pointer}
+body.dark .token-owned-item{background:#151b23;border-color:#334155}
+body.dark .token-owned-item code{background:#10161e;color:#f3f4f6;border-color:#334155}
+body.dark .token-copy-one{background:#334155;color:#fff}
+
 .result-token-line{margin-top:8px}
 .result-token-line b{display:block;font-size:11px;color:#166534;margin-bottom:5px}
 .result-token-line code{display:block;background:#f8fafc;border:1px solid #dbe2ea;border-radius:8px;padding:8px;font-family:monospace;font-size:11px;word-break:break-all;color:#111827}
@@ -77,6 +86,15 @@ body.dark{background:#0b0f14;color:#f3f4f6}body.dark .card,body.dark .request,bo
   </div>
   <div id="buyError" class="error hidden"></div><button id="buyBtn" class="primary" type="button">🛒 Beli dengan Saldo</button>
   <div class="notice">Jika saldo kurang dari total pembelian, transaksi otomatis <b>DITOLAK</b> dan saldo tidak berubah.</div>
+
+  <div id="myTokensBox" class="token-result hidden">
+    <div class="token-result-title">🔑 TOKEN SAYA</div>
+    <div style="font-size:11px;color:#64748b;margin-bottom:9px;line-height:1.5">
+      Token yang sudah dibeli akan tampil di halaman ini. Reseller dapat melihat dan menyalinnya kembali jika ingin menjual token kepada pelanggan.
+    </div>
+    <div id="myTokensList" class="token-list"></div>
+    <button id="copyMyTokensBtn" class="token-copy" type="button">📋 Salin Semua Token</button>
+  </div>
  </div>
 
  <div id="tab-deposit" class="panel">
@@ -189,11 +207,72 @@ function getPurchaseTokens(x){
  return [...new Set(vals.map(v=>String(v||"").trim()).filter(Boolean))];
 }
 
+let myOwnedTokens=[];
+
+function renderMyTokens(){
+ const box=$("myTokensBox");
+ const list=$("myTokensList");
+ if(!box||!list)return;
+
+ if(!myOwnedTokens.length){
+   box.classList.add("hidden");
+   list.innerHTML="";
+   return;
+ }
+
+ box.classList.remove("hidden");
+ list.innerHTML=myOwnedTokens.map((t,i)=>`
+   <div class="token-owned-item">
+     <div class="token-owned-head">
+       <span class="token-owned-no">TOKEN #${i+1}</span>
+       <span style="font-size:10px;font-weight:900;color:#166534">SIAP DIJUAL</span>
+     </div>
+     <code>${esc(t)}</code>
+     <button class="token-copy-one" type="button" data-copy-token="${esc(t)}">📋 Salin Token</button>
+   </div>
+ `).join("");
+
+ list.querySelectorAll("[data-copy-token]").forEach(btn=>{
+   btn.onclick=async()=>{
+     const token=btn.getAttribute("data-copy-token")||"";
+     try{
+       await navigator.clipboard.writeText(token);
+       btn.textContent="✅ Token Disalin";
+       setTimeout(()=>btn.textContent="📋 Salin Token",1500);
+     }catch(e){
+       showModal("Gagal Menyalin","Browser tidak mengizinkan penyalinan otomatis. Tekan lama token lalu pilih Salin.");
+     }
+   };
+ });
+
+ $("copyMyTokensBtn").onclick=async()=>{
+   try{
+     await navigator.clipboard.writeText(myOwnedTokens.join("\n"));
+     $("copyMyTokensBtn").textContent="✅ Semua Token Disalin";
+     setTimeout(()=>$("copyMyTokensBtn").textContent="📋 Salin Semua Token",1800);
+   }catch(e){
+     showModal("Gagal Menyalin","Browser tidak mengizinkan penyalinan otomatis. Salin token satu per satu.");
+   }
+ };
+}
+
+
 async function loadHistory(){
  if(!uid)return;const el=$("historyList");el.innerHTML='<div class="loading">Memuat riwayat...</div>';let deposits=[],purchases=[];
  try{const s=await getDocs(query(collection(db,"saldoRequests"),where("resellerUid","==",uid)));s.forEach(d=>deposits.push({id:d.id,type:"deposit",...d.data()}))}catch(e){console.error(e)}
  try{const s=await getDocs(query(collection(db,"tokenPurchases"),where("resellerUid","==",uid)));s.forEach(d=>purchases.push({id:d.id,type:"purchase",...d.data()}))}catch(e){console.error(e)}
  const all=[...deposits,...purchases].sort((a,b)=>(b.createdAt?.seconds||0)-(a.createdAt?.seconds||0));
+
+ // Semua token yang sudah dibeli reseller ditampilkan kembali di halaman.
+ myOwnedTokens=[];
+ purchases.forEach(x=>{
+   if(String(x.status||"approved").toLowerCase()==="rejected")return;
+   getPurchaseTokens(x).forEach(t=>{
+     if(t&&!myOwnedTokens.includes(t))myOwnedTokens.push(t);
+   });
+ });
+ renderMyTokens();
+
  if(!all.length){el.innerHTML='<div class="empty">Belum ada riwayat saldo atau pembelian.</div>';return}
  const statusClass=v=>{const s=String(v||"pending").toLowerCase();return s.includes("approve")||s==="disetujui"?"approved":s.includes("tolak")||s==="rejected"||s==="ditolak"?"rejected":"pending"};
  const statusLabel=v=>{const c=statusClass(v);return c==="approved"?"DISETUJUI":c==="rejected"?"DITOLAK":"MENUNGGU ADMIN"};
@@ -390,6 +469,12 @@ async function buyTokens(){
   // Ambil saldo terbaru agar hasil transaksi akurat.
   await loadBalance();
   await loadHistory();
+
+  // Token hasil transaksi langsung muncul di halaman "TOKEN SAYA".
+  purchasedTokens.forEach(t=>{
+    if(t&&!myOwnedTokens.includes(t))myOwnedTokens.unshift(t);
+  });
+  renderMyTokens();
 
   const tokenText=purchasedTokens.map((t,i)=>`${i+1}. ${t}`).join("\n");
 
