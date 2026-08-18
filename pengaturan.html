@@ -112,7 +112,7 @@ body.dark .modal-box{background:#151b23;color:#f3f4f6}
 
       <div class="form-row">
         <label>JUMLAH TOKEN YANG DIMINTA</label>
-        <input id="jumlahRequest" type="number" min="1" value="1" inputmode="numeric" placeholder="Contoh: 10, 25, 100, 500">
+        <input id="jumlahRequest" type="number" min="0" inputmode="numeric" placeholder="Masukkan jumlah token">
       </div>
 
       <div class="form-row">
@@ -153,7 +153,7 @@ body.dark .modal-box{background:#151b23;color:#f3f4f6}
 </div>
 
 <script type="module">
-import {initializeApp} from "https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js";
+import {initializeApp,getApps,getApp} from "https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js";
 import {
   getAuth,
   onAuthStateChanged,
@@ -176,12 +176,14 @@ const firebaseConfig={
   apiKey:"AIzaSy_C_PcarMTT5Un7qfSLzf92o5OGn5rginsI",
   authDomain:"fixzy-update.firebaseapp.com",
   projectId:"fixzy-update",
-  storageBucket:"fixzy-update.firebasestorage.app",
+  storageBucket:"fixzy-update.appspot.com",
   messagingSenderId:"995892519622",
   appId:"1:995892519622:web:fa41047944d8e5b35d6dc7"
 };
 
-const app=initializeApp(firebaseConfig);
+// Gunakan Firebase App yang sudah ada jika halaman ini dibuka dari Index.
+// Jika dibuka langsung, buat App dengan konfigurasi FIXZY yang sama.
+const app=getApps().length ? getApp() : initializeApp(firebaseConfig);
 const auth=getAuth(app);
 const db=getFirestore(app);
 
@@ -225,49 +227,19 @@ async function loadProfile(u){
   if(!u)return false;
 
   let p={};
-
   try{
-    /*
-     * Sama dengan pola penjualan.html:
-     * query users berdasarkan document ID = Firebase Auth UID.
-     */
-    const snap=await getDocs(
-      query(collection(db,"users"),where("__name__","==",u.uid))
-    );
-
-    if(!snap.empty){
-      p=snap.docs[0].data()||{};
-    }else{
-      /*
-       * Fallback langsung ke users/{UID}.
-       */
-      const direct=await getDoc(doc(db,"users",u.uid));
-      if(direct.exists())p=direct.data()||{};
-    }
+    // Acuan FIXZY: users/{Firebase Auth UID}
+    const snap=await getDoc(doc(db,"users",u.uid));
+    if(snap.exists()) p=snap.data()||{};
   }catch(e){
-    /*
-     * Jika query __name__ gagal karena rules/index,
-     * tetap coba membaca document ID langsung.
-     */
-    try{
-      const direct=await getDoc(doc(db,"users",u.uid));
-      if(direct.exists())p=direct.data()||{};
-    }catch(err){
-      console.error("Gagal membaca users/{UID}:",err);
-    }
+    console.error("Gagal membaca users/{UID}:",e);
   }
 
   profile=p||{};
-
-  /*
-   * Email utama tetap dari Firebase Auth.
-   * Data nama/role/status tetap dari users/{UID}.
-   */
   profile.uid=profile.uid||u.uid;
   profile.email=profile.email||u.email||"";
-
   setProfile();
-  return Object.keys(profile).length>0;
+  return true;
 }
 
 function setProfile(){
@@ -585,22 +557,25 @@ async function loadHarga(jenis){
   return 0;
 }
 
-function getQuantity(){
-  let n=Number($("jumlahRequest").value);
+function getQuantity(allowEmpty=false){
+  const raw=String($("jumlahRequest").value??"").trim();
+  if(raw==="") return allowEmpty ? null : 0;
 
-  // Tidak ada batas maksimum jumlah token dari sisi reseller.
-  // Admin tetap menentukan persetujuan dan ketersediaan stok token.
-  if(!Number.isSafeInteger(n)||n<1)n=1;
-
-  $("jumlahRequest").value=n;
-
+  const n=Number(raw);
+  if(!Number.isSafeInteger(n)||n<1) return allowEmpty ? null : 0;
   return n;
 }
 
 async function updateHargaView(){
   if(!selectedJenis)return;
 
-  const qty=getQuantity();
+  const qty=getQuantity(true);
+  if(qty===null){
+    $("hargaView").textContent="Masukkan jumlah token";
+    $("hargaInfo").textContent="Jumlah token wajib diisi minimal 1 sebelum request dikirim.";
+    return;
+  }
+
   const harga=await loadHarga(selectedJenis);
 
   if(harga>0){
@@ -608,10 +583,8 @@ async function updateHargaView(){
     $("hargaInfo").textContent=
       `${rupiah(harga)} × ${qty} token. Tagihan final mengikuti persetujuan admin.`;
   }else{
-    $("hargaView").textContent=
-      "Menunggu penetapan / persetujuan admin";
-    $("hargaInfo").textContent=
-      "Harga final ditetapkan berdasarkan data admin.";
+    $("hargaView").textContent="Menunggu penetapan / persetujuan admin";
+    $("hargaInfo").textContent="Harga final ditetapkan berdasarkan data admin.";
   }
 }
 
@@ -636,7 +609,7 @@ window.openRequest=async jenis=>{
       ?"Token Registrasi"
       :"Token Perpanjangan";
 
-  $("jumlahRequest").value=1;
+  $("jumlahRequest").value="";
   $("catatan").value="";
   $("hargaView").textContent="Memuat harga...";
   $("hargaInfo").textContent="Membaca pengaturan harga Firebase...";
@@ -681,7 +654,11 @@ window.kirimRequest=async()=>{
     return;
   }
 
-  const qty=getQuantity();
+  const qty=getQuantity(true);
+  if(qty===null){
+    showInfo("Jumlah Token Belum Diisi","Masukkan jumlah token minimal 1 sebelum mengirim request.");
+    return;
+  }
   const catatan=$("catatan").value.trim();
   const btn=document.querySelector(".send");
 
