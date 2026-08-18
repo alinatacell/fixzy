@@ -353,6 +353,14 @@ async function waitForIndexSession(){
   return false;
 }
 
+async function loadBalance(){
+  if(!uid)return;
+  const ref=doc(db,"resellerBalances",uid);
+  const snap=await getDoc(ref);
+  balance=snap.exists()?Number(snap.data()?.balance||0):0;
+  $("balance").textContent=rupiah(balance);
+}
+
 function updatePurchase(){
   const qty=Math.max(1,Number($("quantity").value||1));
   const total=qty*selectedPlan.price;
@@ -388,6 +396,13 @@ $("depositAmount").oninput=()=>{
   $("depositPreview").textContent=rupiah(Math.max(0,Number($("depositAmount").value||0)));
 };
 
+/* =========================================================
+   REQUEST SALDO
+   - Simpan request ke Firebase terlebih dahulu.
+   - Status awal selalu pending / MENUNGGU ADMIN.
+   - Saldo tidak ditambahkan di halaman reseller.
+   - Setelah tersimpan, buka WhatsApp untuk mengirim bukti transfer.
+   ========================================================= */
 async function createDepositRequest(){
   if(!uid){
     showModal("Sesi Belum Siap","Akun Firebase reseller belum ditemukan.");
@@ -400,14 +415,17 @@ async function createDepositRequest(){
     return;
   }
 
+  const note=$("depositNote").value.trim();
+
   const btn=$("depositBtn");
-  btn.disabled=true;btn.textContent="Mengirim...";
+  btn.disabled=true;
+  btn.textContent="Mengirim...";
 
   try{
     const nama=profile.namaKonter||profile.namaPemilik||profile.namaToko||
       profile.nama||profile.displayName||profile.name||email.split("@")[0]||"Reseller";
 
-    await addDoc(collection(db,"saldoRequests"),{
+    const requestRef=await addDoc(collection(db,"saldoRequests"),{
       resellerUid:uid,
       resellerEmail:email,
       resellerNama:nama,
@@ -416,7 +434,7 @@ async function createDepositRequest(){
       status:"pending",
       requestStatus:"pending",
       metode:"QRIS",
-      catatan:$("depositNote").value.trim(),
+      catatan:note,
       notificationAdmin:true,
       notificationReseller:false,
       createdAt:serverTimestamp(),
@@ -426,17 +444,51 @@ async function createDepositRequest(){
     $("depositAmount").value="";
     $("depositNote").value="";
     $("depositPreview").textContent="Rp 0";
+
     await loadHistory();
 
     showModal(
       "Request Saldo Terkirim",
-      `Request saldo ${rupiah(amount)} sudah masuk dan berstatus MENUNGGU ADMIN. Saldo belum ditambahkan sampai admin memeriksa mutasi rekening dan menyetujuinya.`
+      `Request saldo ${rupiah(amount)} sudah masuk dan berstatus MENUNGGU ADMIN. Saldo belum ditambahkan sampai admin memeriksa mutasi rekening dan menyetujuinya. Setelah ini WhatsApp akan dibuka untuk mengirim bukti transfer.`
     );
+
+    /* WhatsApp:
+       Gunakan nomor internasional tanpa angka 0 di depan.
+       082319264646 -> 6282319264646
+    */
+    const waNumber="6282319264646";
+    const waMessage=
+`Halo Admin FIXZY,
+
+Saya mengajukan request saldo untuk pembelian token.
+
+Nama / Toko: ${nama}
+Email: ${email||"-"}
+UID: ${uid}
+Nominal request saldo: ${rupiah(amount)}
+Metode transfer: QRIS
+Keterangan transfer: ${note||"-"}
+ID Request: ${requestRef.id}
+
+Request sudah saya kirim melalui halaman FIXZY dan saat ini menunggu persetujuan admin.
+
+Saya lampirkan bukti transfer pada chat WhatsApp ini. Mohon dicek mutasi rekening dan diproses jika dana sudah masuk.
+
+Terima kasih.`;
+
+    const waUrl="https://wa.me/"+waNumber+"?text="+encodeURIComponent(waMessage);
+
+    /* Sedikit jeda agar popup konfirmasi tampil terlebih dahulu. */
+    setTimeout(()=>{
+      window.location.href=waUrl;
+    },500);
+
   }catch(e){
-    console.error(e);
+    console.error("createDepositRequest:",e);
     showModal("Gagal Mengirim",e?.message||String(e));
   }finally{
-    btn.disabled=false;btn.textContent="📨 Kirim Request Saldo";
+    btn.disabled=false;
+    btn.textContent="📨 Kirim Request Saldo";
   }
 }
 
