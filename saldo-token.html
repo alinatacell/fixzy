@@ -31,14 +31,22 @@ button:disabled{opacity:.5;cursor:not-allowed}.notice{font-size:11px;color:#6474
 .token-list{display:grid;gap:7px}
 .token-item{background:#fff;border:1px solid #bbf7d0;border-radius:9px;padding:9px;font-family:monospace;font-size:12px;font-weight:900;word-break:break-all;color:#111827}
 .token-copy{margin-top:8px;width:100%;border:0;border-radius:9px;padding:10px;background:#166534;color:#fff;font-weight:900;cursor:pointer}
-.token-owned-item{background:#fff;border:2px solid #111827;border-radius:10px;padding:11px;margin-bottom:8px}
-.token-owned-item .token-owned-head{display:flex;justify-content:space-between;gap:8px;align-items:center;margin-bottom:6px}
-.token-owned-item .token-owned-no{font-size:10px;font-weight:900;color:#64748b}
-.token-owned-item code{display:block;background:#f8fafc;border:1px solid #dbe2ea;border-radius:8px;padding:9px;font-family:monospace;font-size:12px;font-weight:900;word-break:break-all;color:#111827}
-.token-copy-one{width:100%;margin-top:7px;border:0;border-radius:8px;padding:8px;background:#e5e7eb;color:#111827;font-weight:900;cursor:pointer}
-body.dark .token-owned-item{background:#151b23;border-color:#334155}
-body.dark .token-owned-item code{background:#10161e;color:#f3f4f6;border-color:#334155}
-body.dark .token-copy-one{background:#334155;color:#fff}
+.owned-group{margin-top:12px;border:2px solid #86efac;border-radius:12px;background:#ecfdf5;padding:12px}
+.owned-group-head{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:8px}
+.owned-group-title{font-size:14px;font-weight:900;color:#166534}
+.owned-group-copy{border:0;border-radius:9px;background:#64748b;color:#fff;padding:10px 12px;font-weight:900;cursor:pointer;box-shadow:2px 2px 0 #111827}
+.owned-package{font-size:11px;color:#166534;font-weight:900;margin:0 0 9px}
+.owned-token-row{display:grid;grid-template-columns:38px 1fr 64px;gap:8px;align-items:center;padding:8px 0;border-top:1px solid #bbf7d0}
+.owned-token-row:first-child{border-top:0}
+.owned-token-check{width:22px;height:22px;justify-self:center;accent-color:#16a34a}
+.owned-token-code{font-family:monospace;font-size:13px;font-weight:900;word-break:break-all;color:#111827}
+.owned-token-copy{border:2px solid #111827;border-radius:9px;background:#fff;color:#111827;padding:8px 5px;font-weight:900;cursor:pointer;box-shadow:2px 2px 0 #111827}
+.owned-hint{font-size:10px;color:#166534;margin-top:9px;line-height:1.5;font-weight:700}
+body.dark .owned-group{background:#0f2118;border-color:#166534}
+body.dark .owned-token-row{border-top-color:#166534}
+body.dark .owned-token-code{color:#f3f4f6}
+body.dark .owned-token-copy{background:#151b23;color:#f3f4f6;border-color:#334155}
+@media(max-width:600px){.owned-token-row{grid-template-columns:34px 1fr 58px}.owned-token-code{font-size:12px}.owned-token-copy{font-size:11px;padding:7px 4px}}
 
 .result-token-line{margin-top:8px}
 .result-token-line b{display:block;font-size:11px;color:#166534;margin-bottom:5px}
@@ -90,10 +98,10 @@ body.dark{background:#0b0f14;color:#f3f4f6}body.dark .card,body.dark .request,bo
   <div id="myTokensBox" class="token-result hidden">
     <div class="token-result-title">🔑 TOKEN SAYA</div>
     <div style="font-size:11px;color:#64748b;margin-bottom:9px;line-height:1.5">
-      Token yang sudah dibeli akan tampil di halaman ini. Reseller dapat melihat dan menyalinnya kembali jika ingin menjual token kepada pelanggan.
+      Token yang sudah dibeli tampil di sini. Pilih token yang ingin disalin untuk dijual kembali.
     </div>
-    <div id="myTokensList" class="token-list"></div>
-    <button id="copyMyTokensBtn" class="token-copy" type="button">📋 Salin Semua Token</button>
+    <div id="myTokensList"></div>
+    <div id="myTokensHint" class="owned-hint"></div>
   </div>
  </div>
 
@@ -148,7 +156,7 @@ function showModal(title,text,waUrl="",tokens=[]){
  if(Array.isArray(tokens)&&tokens.length){
    box.classList.remove("hidden");
    box.innerHTML=`
-     <div class="token-result-title">🔑 TOKEN YANG BERHASIL DIBELI</div>
+     <div class="token-result-title">🔑 TOKEN YANG BERHASIL DIBELI • PAKET ${esc(selectedPlan.month+" BULAN")}</div>
      <div class="token-list">
        ${tokens.map((t,i)=>`<div class="token-item">${i+1}. ${esc(t)}</div>`).join("")}
      </div>
@@ -207,53 +215,100 @@ function getPurchaseTokens(x){
  return [...new Set(vals.map(v=>String(v||"").trim()).filter(Boolean))];
 }
 
-let myOwnedTokens=[];
+let myOwnedPurchases=[];
+
+function purchaseMonths(x){
+ const n=Number(x.packageMonths??x.months??x.durasiBulan??0);
+ if(n===3||n===6||n===12)return n;
+ const text=String(x.packageLabel||x.paket||"").toLowerCase();
+ const m=text.match(/(?:^|\D)(3|6|12)\s*bulan/);
+ return m?Number(m[1]):0;
+}
+
+function purchaseDays(x){
+ const n=Number(x.packageDays??x.days??x.durasiHari??0);
+ if(n)return n;
+ const m=String(x.packageLabel||"").match(/(\d+)\s*hari/i);
+ return m?Number(m[1]):0;
+}
 
 function renderMyTokens(){
  const box=$("myTokensBox");
  const list=$("myTokensList");
+ const hint=$("myTokensHint");
  if(!box||!list)return;
 
- if(!myOwnedTokens.length){
+ if(!myOwnedPurchases.length){
    box.classList.add("hidden");
    list.innerHTML="";
+   if(hint)hint.textContent="";
    return;
  }
 
  box.classList.remove("hidden");
- list.innerHTML=myOwnedTokens.map((t,i)=>`
-   <div class="token-owned-item">
-     <div class="token-owned-head">
-       <span class="token-owned-no">TOKEN #${i+1}</span>
-       <span style="font-size:10px;font-weight:900;color:#166534">SIAP DIJUAL</span>
-     </div>
-     <code>${esc(t)}</code>
-     <button class="token-copy-one" type="button" data-copy-token="${esc(t)}">📋 Salin Token</button>
-   </div>
- `).join("");
 
- list.querySelectorAll("[data-copy-token]").forEach(btn=>{
+ list.innerHTML=myOwnedPurchases.map((purchase,pIndex)=>{
+   const tokens=getPurchaseTokens(purchase);
+   const months=purchaseMonths(purchase);
+   const days=purchaseDays(purchase);
+   const label=months?`${months} Bulan${days?` / ${days} Hari`:""}`:(purchase.packageLabel||"Paket Token");
+
+   return `
+    <div class="owned-group" data-purchase-index="${pIndex}">
+      <div class="owned-group-head">
+        <div class="owned-group-title">TOKEN ANDA • ${tokens.length} TOKEN</div>
+        <button class="owned-group-copy" type="button" data-copy-group="${pIndex}">📋 Salin</button>
+      </div>
+      <div class="owned-package">📦 PAKET: ${esc(label)}</div>
+
+      <div class="owned-token-list">
+        ${tokens.map((token,tIndex)=>`
+          <div class="owned-token-row">
+            <input class="owned-token-check" type="checkbox"
+              data-group="${pIndex}" data-token-index="${tIndex}">
+            <div class="owned-token-code">${esc(token)}</div>
+            <button class="owned-token-copy" type="button"
+              data-copy-one="${pIndex}:${tIndex}">Salin</button>
+          </div>
+        `).join("")}
+      </div>
+
+      <div class="owned-hint">Centang token yang ingin disalin.</div>
+    </div>
+   `;
+ }).join("");
+
+ // Salin satu token.
+ list.querySelectorAll("[data-copy-one]").forEach(btn=>{
    btn.onclick=async()=>{
-     const token=btn.getAttribute("data-copy-token")||"";
-     try{
-       await navigator.clipboard.writeText(token);
-       btn.textContent="✅ Token Disalin";
-       setTimeout(()=>btn.textContent="📋 Salin Token",1500);
-     }catch(e){
-       showModal("Gagal Menyalin","Browser tidak mengizinkan penyalinan otomatis. Tekan lama token lalu pilih Salin.");
-     }
+     const [gi,ti]=btn.dataset.copyOne.split(":").map(Number);
+     const token=getPurchaseTokens(myOwnedPurchases[gi])[ti]||"";
+     if(!token)return;
+     await copyText(token,btn,"✓ Tersalin");
    };
  });
 
- $("copyMyTokensBtn").onclick=async()=>{
-   try{
-     await navigator.clipboard.writeText(myOwnedTokens.join("\n"));
-     $("copyMyTokensBtn").textContent="✅ Semua Token Disalin";
-     setTimeout(()=>$("copyMyTokensBtn").textContent="📋 Salin Semua Token",1800);
-   }catch(e){
-     showModal("Gagal Menyalin","Browser tidak mengizinkan penyalinan otomatis. Salin token satu per satu.");
-   }
- };
+ // Salin semua token dalam satu paket.
+ list.querySelectorAll("[data-copy-group]").forEach(btn=>{
+   btn.onclick=async()=>{
+     const gi=Number(btn.dataset.copyGroup);
+     const tokens=getPurchaseTokens(myOwnedPurchases[gi]);
+     await copyText(tokens.join("\n"),btn,"✓ Tersalin");
+   };
+ });
+
+ if(hint)hint.textContent="Paket token ditampilkan sesuai pembelian: 3, 6, atau 12 bulan.";
+}
+
+async function copyText(text,button,successText="✓ Tersalin"){
+ try{
+   await navigator.clipboard.writeText(text);
+   const old=button.textContent;
+   button.textContent=successText;
+   setTimeout(()=>button.textContent=old,1500);
+ }catch(e){
+   showModal("Gagal Menyalin","Browser tidak mengizinkan penyalinan otomatis. Tekan lama token lalu pilih Salin.");
+ }
 }
 
 
@@ -263,14 +318,11 @@ async function loadHistory(){
  try{const s=await getDocs(query(collection(db,"tokenPurchases"),where("resellerUid","==",uid)));s.forEach(d=>purchases.push({id:d.id,type:"purchase",...d.data()}))}catch(e){console.error(e)}
  const all=[...deposits,...purchases].sort((a,b)=>(b.createdAt?.seconds||0)-(a.createdAt?.seconds||0));
 
- // Semua token yang sudah dibeli reseller ditampilkan kembali di halaman.
- myOwnedTokens=[];
- purchases.forEach(x=>{
-   if(String(x.status||"approved").toLowerCase()==="rejected")return;
-   getPurchaseTokens(x).forEach(t=>{
-     if(t&&!myOwnedTokens.includes(t))myOwnedTokens.push(t);
-   });
- });
+ // Semua pembelian token reseller ditampilkan kembali, dikelompokkan berdasarkan paket.
+ myOwnedPurchases=purchases
+   .filter(x=>String(x.status||"approved").toLowerCase()!=="rejected")
+   .filter(x=>getPurchaseTokens(x).length>0)
+   .sort((a,b)=>(b.createdAt?.seconds||0)-(a.createdAt?.seconds||0));
  renderMyTokens();
 
  if(!all.length){el.innerHTML='<div class="empty">Belum ada riwayat saldo atau pembelian.</div>';return}
@@ -470,13 +522,8 @@ async function buyTokens(){
   await loadBalance();
   await loadHistory();
 
-  // Token hasil transaksi langsung muncul di halaman "TOKEN SAYA".
-  purchasedTokens.forEach(t=>{
-    if(t&&!myOwnedTokens.includes(t))myOwnedTokens.unshift(t);
-  });
-  renderMyTokens();
-
-  const tokenText=purchasedTokens.map((t,i)=>`${i+1}. ${t}`).join("\n");
+  // Muat ulang pembelian dari Firebase agar token langsung tampil di halaman.
+  await loadHistory();
 
   showModal(
     "🎉 Pembelian Berhasil",
