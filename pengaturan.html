@@ -39,9 +39,12 @@ button:disabled{opacity:.5;cursor:not-allowed}
 .request-box.show{display:block}
 label{display:block;font-size:12px;font-weight:800;margin:0 0 5px}
 input,select,textarea{width:100%;min-height:42px;border:2px solid #111827;border-radius:9px;padding:9px 10px;background:#fff;font:inherit}
+select{cursor:pointer}
 textarea{min-height:70px;resize:vertical}.form-row{margin-bottom:10px}
 .price{font-size:18px;font-weight:900;background:#fff7d6;border:1px solid #f2c94c;border-radius:9px;padding:10px;margin:10px 0}
 .price small{display:block;font-size:10px;color:#92400e;margin-top:3px}
+.plan-info{display:none;margin:6px 0 10px;padding:9px 10px;border-radius:9px;background:#ecfdf5;border:1px solid #86efac;color:#166534;font-size:11px;line-height:1.45}
+.plan-info.show{display:block}
 .actions{display:flex;gap:8px}.send{background:var(--green);color:#fff;flex:1}.cancel{background:#e5e7eb;color:#111827}
 .notice{font-size:11px;color:#64748b;margin-top:8px;line-height:1.5}
 .req{border:1px solid #dbe2ea;border-radius:11px;padding:12px;margin-top:10px;background:#fff}
@@ -101,6 +104,19 @@ body.dark .modal-box{background:#151b23;color:#f3f4f6}
       <input id="jenisView" readonly>
     </div>
 
+    <!-- KHUSUS PERPANJANGAN -->
+    <div id="planRow" class="form-row" style="display:none">
+      <label>PILIH MASA PERPANJANGAN</label>
+      <select id="planSelect">
+        <option value="">-- Pilih masa perpanjangan --</option>
+        <option value="3_bulan" data-days="90" data-price="50000">3 Bulan / 90 Hari — Rp 50.000</option>
+        <option value="6_bulan" data-days="180" data-price="80000">6 Bulan / 180 Hari — Rp 80.000</option>
+        <option value="12_bulan" data-days="360" data-price="120000">12 Bulan / 360 Hari — Rp 120.000</option>
+      </select>
+    </div>
+
+    <div id="planInfo" class="plan-info"></div>
+
     <div class="form-row">
       <label>JUMLAH TOKEN YANG DIMINTA</label>
       <input id="jumlahRequest" type="number" min="1" step="1" value="" inputmode="numeric" placeholder="Masukkan jumlah token">
@@ -159,14 +175,6 @@ const firebaseConfig={
   appId:"1:995892519622:web:fa41047944d8e5b35d6dc7"
 };
 
-/*
-  PENTING:
-  - Index dan halaman ini memakai project Firebase yang sama.
-  - Tidak mengambil db/auth dari window.parent karena itu bisa
-    menyebabkan object Firestore berbeda/invalid di iframe.
-  - UID diambil dari window.parent.fixzySession yang dibuat Index.
-  - Jika halaman dibuka langsung, fallback ke Firebase Auth lokal.
-*/
 const app=getApps().length?getApp():initializeApp(firebaseConfig);
 const auth=getAuth(app);
 const db=getFirestore(app);
@@ -209,24 +217,14 @@ function getParentSession(){
 
 function applySession(s){
   currentUid=String(s.uid||"");
-  currentEmail=String(
-    s.profile?.email||
-    s.email||
-    ""
-  );
-
+  currentEmail=String(s.profile?.email||s.email||"");
   profile={...(s.profile||{})};
 
   $("email").textContent=currentEmail||"-";
   $("nama").textContent=
-    profile.namaKonter||
-    profile.namaPemilik||
-    profile.namaToko||
-    profile.nama||
-    profile.displayName||
-    profile.name||
-    currentEmail.split("@")[0]||
-    "-";
+    profile.namaKonter||profile.namaPemilik||profile.namaToko||
+    profile.nama||profile.displayName||profile.name||
+    currentEmail.split("@")[0]||"-";
 
   $("role").textContent=String(s.role||profile.role||"reseller").toUpperCase();
   $("statusAkun").textContent=profile.status||"aktif";
@@ -247,13 +245,7 @@ async function loadAuthDirect(){
     profile={};
   }
 
-  applySession({
-    uid:u.uid,
-    email:u.email||"",
-    role:profile.role||"reseller",
-    profile
-  });
-
+  applySession({uid:u.uid,email:u.email||"",role:profile.role||"reseller",profile});
   return true;
 }
 
@@ -310,10 +302,8 @@ function renderRequests(list){
 
   el.innerHTML=list.map(x=>{
     const raw=String(x.requestStatus||x.status||"pending").toLowerCase();
-    const cls=raw.includes("approve")||raw==="disetujui"
-      ?"approved"
-      :raw.includes("tolak")||raw==="rejected"
-      ?"rejected":"pending";
+    const cls=raw.includes("approve")||raw==="disetujui"?"approved":
+      raw.includes("tolak")||raw==="rejected"?"rejected":"pending";
 
     const label=cls==="approved"?"DISETUJUI":cls==="rejected"?"DITOLAK":"MENUNGGU ADMIN";
     const jenis=x.requestType==="perpanjangan"?"Perpanjangan":"Registrasi";
@@ -321,11 +311,18 @@ function renderRequests(list){
     const tagihan=x.jumlahTagihan??x.totalTagihan??x.amount??0;
     const tokens=getTokens(x);
 
+    const planLabel=x.perpanjanganLabel||x.masaPerpanjangan||"";
+    const planHtml=jenis==="Perpanjangan" && planLabel
+      ?`<div style="margin-top:7px;font-size:11px;color:#92400e">
+          Masa perpanjangan: <b>${esc(planLabel)}</b>
+        </div>`:"";
+
     return `<div class="req">
       <div class="req-top">
         <div><b>Request Token ${esc(jenis)}</b><br><small>${esc(requestDate(x))}</small></div>
         <span class="badge ${cls}">${label}</span>
       </div>
+      ${planHtml}
       <div style="margin-top:8px;font-size:12px">
         Jumlah: <b>${jumlah} Token</b>
         ${Number(tagihan)>0?` • Tagihan: <b>${rupiah(tagihan)}</b>`:""}
@@ -343,15 +340,10 @@ function renderRequests(list){
 async function getExistingRequests(){
   if(!currentUid)return [];
 
-  const q=query(
-    collection(db,"registrationTokens"),
-    where("resellerUid","==",currentUid)
-  );
-
+  const q=query(collection(db,"registrationTokens"),where("resellerUid","==",currentUid));
   const snap=await getDocs(q);
   const list=[];
   snap.forEach(d=>list.push({id:d.id,...d.data()}));
-
   list.sort((a,b)=>(b.createdAt?.seconds||0)-(a.createdAt?.seconds||0));
   return list;
 }
@@ -361,10 +353,7 @@ async function listenRequests(){
   if(!currentUid)return;
 
   try{
-    const q=query(
-      collection(db,"registrationTokens"),
-      where("resellerUid","==",currentUid)
-    );
+    const q=query(collection(db,"registrationTokens"),where("resellerUid","==",currentUid));
 
     unsub=onSnapshot(q,snap=>{
       const list=[];
@@ -404,7 +393,6 @@ async function loadHarga(jenis){
   return 0;
 }
 
-/* Tidak memaksa angka 1 ketika field sedang dikosongkan. */
 function getQuantity(forSubmit=false){
   const raw=String($("jumlahRequest").value||"").trim();
 
@@ -415,13 +403,76 @@ function getQuantity(forSubmit=false){
 
   let n=Number(raw);
   if(!Number.isSafeInteger(n)||n<1)return forSubmit?0:null;
-
   return n;
+}
+
+function getSelectedPlan(){
+  if(selectedJenis!=="perpanjangan")return null;
+
+  const select=$("planSelect");
+  const opt=select.options[select.selectedIndex];
+
+  if(!opt || !opt.value)return null;
+
+  return {
+    value:opt.value,
+    label:opt.textContent.trim(),
+    days:Number(opt.dataset.days||0),
+    price:Number(opt.dataset.price||0)
+  };
+}
+
+function updatePlanUI(){
+  if(selectedJenis!=="perpanjangan"){
+    $("planRow").style.display="none";
+    $("planInfo").classList.remove("show");
+    $("planInfo").innerHTML="";
+    return;
+  }
+
+  $("planRow").style.display="block";
+
+  const plan=getSelectedPlan();
+  if(!plan){
+    $("planInfo").classList.remove("show");
+    $("planInfo").innerHTML="";
+    $("hargaView").textContent="Pilih masa perpanjangan";
+    $("hargaInfo").textContent="Pilih 3, 6, atau 12 bulan sebelum menentukan tagihan.";
+    return;
+  }
+
+  $("planInfo").classList.add("show");
+  $("planInfo").innerHTML=
+    `Pilihan: <b>${esc(plan.label)}</b><br>`+
+    `Harga: <b>${rupiah(plan.price)}</b> per token • Masa aktif: <b>${plan.days} hari</b>`;
+
+  updateHargaView();
 }
 
 async function updateHargaView(){
   if(!selectedJenis)return;
+
   const qty=getQuantity(false);
+
+  if(selectedJenis==="perpanjangan"){
+    const plan=getSelectedPlan();
+
+    if(!plan){
+      $("hargaView").textContent="Pilih masa perpanjangan";
+      $("hargaInfo").textContent="Tagihan dihitung dari paket yang dipilih × jumlah token.";
+      return;
+    }
+
+    if(!qty){
+      $("hargaView").textContent=rupiah(plan.price)+" per token";
+      $("hargaInfo").textContent=`Paket ${plan.days} hari. Masukkan jumlah token untuk melihat total tagihan.`;
+      return;
+    }
+
+    $("hargaView").textContent=rupiah(plan.price*qty);
+    $("hargaInfo").textContent=`${rupiah(plan.price)} × ${qty} token • masa aktif ${plan.days} hari.`;
+    return;
+  }
 
   if(!qty){
     $("hargaView").textContent="Masukkan jumlah token";
@@ -450,10 +501,17 @@ window.openRequest=async jenis=>{
   $("jenisView").value=jenis==="registrasi"?"Token Registrasi":"Token Perpanjangan";
   $("jumlahRequest").value="";
   $("catatan").value="";
-  $("hargaView").textContent="Masukkan jumlah token";
-  $("hargaInfo").textContent="Jumlah token wajib diisi sebelum request.";
+  $("planSelect").value="";
+  $("planRow").style.display=jenis==="perpanjangan"?"block":"none";
+  $("planInfo").classList.remove("show");
+  $("planInfo").innerHTML="";
+  $("hargaView").textContent=jenis==="perpanjangan"?"Pilih masa perpanjangan":"Masukkan jumlah token";
+  $("hargaInfo").textContent=jenis==="perpanjangan"
+    ?"Pilih paket 3, 6, atau 12 bulan sebelum request."
+    :"Jumlah token wajib diisi sebelum request.";
+
   $("requestBox").classList.add("show");
-  $("jumlahRequest").focus();
+  $("requestBox").scrollIntoView({behavior:"smooth",block:"nearest"});
 };
 
 window.closeRequest=()=>{
@@ -462,6 +520,7 @@ window.closeRequest=()=>{
 };
 
 $("jumlahRequest").addEventListener("input",updateHargaView);
+$("planSelect").addEventListener("change",updatePlanUI);
 
 window.kirimRequest=async()=>{
   if(!currentUid){
@@ -478,6 +537,19 @@ window.kirimRequest=async()=>{
     return;
   }
 
+  let plan=null;
+
+  if(selectedJenis==="perpanjangan"){
+    plan=getSelectedPlan();
+
+    if(!plan){
+      showInfo("Masa Perpanjangan Belum Dipilih",
+        "Pilih salah satu paket: 3 bulan / 90 hari Rp 50.000, 6 bulan / 180 hari Rp 80.000, atau 12 bulan / 360 hari Rp 120.000.");
+      $("planSelect").focus();
+      return;
+    }
+  }
+
   const status=String(profile.status||"aktif").toLowerCase();
   if(["nonaktif","inactive","disabled","blocked","rejected"].includes(status)){
     showInfo("Akun Nonaktif","Akun reseller sedang nonaktif. Request token tidak dapat dikirim.");
@@ -490,48 +562,77 @@ window.kirimRequest=async()=>{
   btn.textContent="Mengirim...";
 
   try{
-    const harga=await loadHarga(selectedJenis);
+    let harga=0;
+    let jumlahTagihan=0;
+
+    if(selectedJenis==="perpanjangan"){
+      harga=plan.price;
+      jumlahTagihan=plan.price*qty;
+    }else{
+      harga=await loadHarga(selectedJenis);
+      jumlahTagihan=harga>0?harga*qty:0;
+    }
+
     const nama=
-      profile.namaKonter||
-      profile.namaPemilik||
-      profile.namaToko||
-      profile.nama||
-      profile.displayName||
-      profile.name||
-      currentEmail.split("@")[0]||
-      "Reseller";
+      profile.namaKonter||profile.namaPemilik||profile.namaToko||
+      profile.nama||profile.displayName||profile.name||
+      currentEmail.split("@")[0]||"Reseller";
+
+    const now=new Date();
 
     await addDoc(collection(db,"registrationTokens"),{
       requestType:selectedJenis,
       requestStatus:"pending",
       status:"pending",
+
       resellerUid:currentUid,
       resellerEmail:currentEmail,
       resellerNama:nama,
       role:String(profile.role||"reseller").toLowerCase(),
+
       ownerUid:profile.ownerUid||profile.ownerId||"",
       ownerId:profile.ownerId||profile.ownerUid||"",
+
       catatan,
       jumlahRequest:qty,
       jumlahTokenDiminta:qty,
+
+      // Untuk registrasi: harga dari pengaturan.
+      // Untuk perpanjangan: harga mengikuti paket yang dipilih.
       hargaToken:harga||0,
-      jumlahTagihan:0,
-      totalTagihan:0,
+      jumlahTagihan:jumlahTagihan,
+      totalTagihan:jumlahTagihan,
+
+      // Data paket perpanjangan supaya halaman admin
+      // bisa langsung membaca pilihan dan harganya.
+      masaPerpanjangan:selectedJenis==="perpanjangan"?plan.value:"",
+      perpanjanganLabel:selectedJenis==="perpanjangan"?plan.label:"",
+      perpanjanganHari:selectedJenis==="perpanjangan"?plan.days:0,
+      hargaPerpanjangan:selectedJenis==="perpanjangan"?plan.price:0,
+
       token:"",
       kodeToken:"",
       registrationToken:"",
       tokens:[],
       adminNote:"",
-      createdAt:new Date(),
-      createdAtText:new Date().toLocaleString("id-ID"),
-      updatedAt:new Date(),
+
+      createdAt:now,
+      createdAtText:now.toLocaleString("id-ID"),
+      updatedAt:now,
+
       notificationAdmin:true,
       notificationReseller:false,
-      notificationText:`Request token ${selectedJenis} sebanyak ${qty} token dari ${nama}`
+      notificationText:`Request token ${selectedJenis} sebanyak ${qty} token${selectedJenis==="perpanjangan"?" ("+plan.days+" hari)":""} dari ${nama}`
     });
 
     closeRequest();
-    showInfo("Request Terkirim",`Request ${selectedJenis} sebanyak ${qty} token sudah dikirim ke admin.`);
+
+    showInfo(
+      "Request Terkirim",
+      selectedJenis==="perpanjangan"
+        ?`Request ${qty} token paket ${plan.days} hari (${rupiah(plan.price)}/token) sudah dikirim ke admin. Perkiraan tagihan ${rupiah(jumlahTagihan)}.`
+        :`Request ${selectedJenis} sebanyak ${qty} token sudah dikirim ke admin.`
+    );
   }catch(e){
     console.error("Kirim request:",e);
 
@@ -554,11 +655,8 @@ async function refreshData(){
 
   try{
     const s=getParentSession();
-    if(s){
-      applySession(s);
-    }else{
-      await loadAuthDirect();
-    }
+    if(s)applySession(s);
+    else await loadAuthDirect();
 
     if(!currentUid){
       showInfo("Sesi Belum Siap","Akun Firebase belum terbaca dari Index.");
@@ -578,10 +676,6 @@ async function refreshData(){
 $("refreshBtn").onclick=refreshData;
 $("darkBtn").onclick=()=>document.body.classList.toggle("dark");
 
-/*
-  Auth listener hanya sebagai fallback jika halaman dibuka langsung.
-  Jika berada di iframe Index, parent.fixzySession adalah sumber utama.
-*/
 onAuthStateChanged(auth,async u=>{
   if(!currentUid && u){
     await loadAuthDirect();
