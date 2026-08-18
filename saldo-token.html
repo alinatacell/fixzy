@@ -116,6 +116,7 @@ body.dark .secondary{background:#334155;color:#fff}
   <div class="balance">
     <small>SALDO TERSEDIA</small>
     <strong id="balance">Rp 0</strong>
+    <div id="connectionState" style="margin-top:6px;font-size:10px;font-weight:900;color:#92400e">● MENYAMBUNG KE FIREBASE...</div>
   </div>
 </section>
 
@@ -277,13 +278,17 @@ function sessionParent(){
 async function loadUser(){
   const u=auth.currentUser;
   if(!u)return false;
+
   uid=u.uid;
   email=u.email||"";
 
   try{
     const s=await getDoc(doc(db,"users",uid));
     profile=s.exists()?s.data()||{}:{};
-  }catch(e){profile={}}
+  }catch(e){
+    console.error("users/{UID}",e);
+    profile={};
+  }
 
   applyUser();
   await loadBalance();
@@ -291,7 +296,21 @@ async function loadUser(){
   return true;
 }
 
+function applyParentSession(s){
+  if(!s?.uid)return false;
+
+  uid=String(s.uid||"");
+  email=String(s.profile?.email||s.email||"");
+  profile={...(s.profile||{})};
+
+  applyUser();
+  return true;
+}
+
 function applyUser(){
+  $("connectionState").textContent="● TERHUBUNG • UID: "+uid.slice(0,8)+"...";
+  $("connectionState").style.color="#166534";
+
   $("email").textContent=email||"-";
   $("nama").textContent=
     profile.namaKonter||profile.namaPemilik||profile.namaToko||
@@ -662,9 +681,28 @@ $("refreshBtn").onclick=async()=>{
   btn.disabled=true;
   btn.textContent="↻";
   try{
-    await loadUser();
-    showModal("Berhasil","Saldo dan riwayat sudah diperbarui.");
+    const parent=sessionParent();
+
+    if(parent?.uid){
+      applyParentSession(parent);
+    }else if(auth.currentUser){
+      await loadUser();
+    }else{
+      uid="";
+      await waitForSession();
+      return;
+    }
+
+    if(!uid){
+      await waitForSession();
+      return;
+    }
+
+    await loadBalance();
+    await loadHistory();
+    showModal("Berhasil","Akun, saldo, dan riwayat sudah diperbarui.");
   }catch(e){
+    console.error("Refresh",e);
     showModal("Refresh Gagal",e?.message||String(e));
   }finally{
     btn.disabled=false;btn.textContent="↻";
@@ -673,32 +711,57 @@ $("refreshBtn").onclick=async()=>{
 
 $("darkBtn").onclick=()=>document.body.classList.toggle("dark");
 
-async function start(){
-  const parent=sessionParent();
-  if(parent){
-    uid=String(parent.uid||"");
-    email=String(parent.profile?.email||parent.email||"");
-    profile={...(parent.profile||{})};
-    applyUser();
-    await loadBalance();
-    await loadHistory();
-    return;
+async function waitForSession(){
+  // Tunggu sesi dari Index terlebih dahulu. Ini penting saat halaman
+  // dibuka melalui shell/iframe karena Firebase Auth belum tentu siap
+  // pada saat script pertama dijalankan.
+  for(let i=0;i<40;i++){
+    const parent=sessionParent();
+
+    if(parent?.uid){
+      applyParentSession(parent);
+      await loadBalance();
+      await loadHistory();
+      return true;
+    }
+
+    if(auth.currentUser){
+      if(await loadUser())return true;
+    }
+
+    await new Promise(r=>setTimeout(r,250));
   }
 
-  if(await loadUser())return;
-
   $("email").textContent="-";
-  $("nama").textContent="Belum login";
-  $("status").textContent="Belum login";
-  showModal("Sesi Belum Siap","Silakan login di Index FIXZY terlebih dahulu.");
+  $("nama").textContent="Sesi Firebase belum ditemukan";
+  $("role").textContent="RESELLER";
+  $("status").textContent="Belum terhubung";
+  $("balance").textContent="Rp 0";
+  $("connectionState").textContent="● BELUM TERHUBUNG KE FIREBASE";
+  $("connectionState").style.color="#991b1b";
+  showModal(
+    "Belum Terhubung",
+    "Sesi login Firebase belum siap. Kembali ke Index FIXZY, pastikan akun sudah login, lalu buka halaman ini kembali atau tekan tombol refresh."
+  );
+  return false;
 }
 
 onAuthStateChanged(auth,async u=>{
-  if(!uid&&u)await loadUser();
+  if(u){
+    if(!uid){
+      try{ await loadUser(); }catch(e){ console.error("Auth load",e); }
+    }else{
+      // Jika UID sudah didapat dari Index, cukup segarkan saldo/riwayat.
+      try{
+        await loadBalance();
+        await loadHistory();
+      }catch(e){ console.error("Refresh auth",e); }
+    }
+  }
 });
 
 updatePurchase();
-start();
+waitForSession();
 </script>
 </body>
 </html>
