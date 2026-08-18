@@ -592,7 +592,7 @@ window.openRequest=async jenis=>{
   if(!currentUser?.uid){
     showInfo(
       "Sesi Belum Siap",
-      "Akun belum terbaca dari sesi Index. Tunggu sebentar lalu tekan Refresh."
+      "Akun Firebase belum terbaca. Pastikan akun reseller sudah login, lalu tekan Refresh."
     );
     return;
   }
@@ -631,7 +631,7 @@ window.kirimRequest=async()=>{
   if(!currentUser?.uid){
     showInfo(
       "Akun Belum Terbaca",
-      "Sesi Firebase dari Index belum tersedia. Silakan tekan Refresh."
+      "Sesi Firebase belum tersedia. Pastikan akun reseller sudah login, lalu tekan Refresh."
     );
     return;
   }
@@ -775,48 +775,59 @@ window.kirimRequest=async()=>{
  * oleh Index.
  */
 async function initAuth(){
+  /*
+   * HALAMAN INI BERDIRI SENDIRI.
+   * Tidak mengambil sesi dari window.parent / Index.
+   * Firebase Auth sendiri yang memulihkan login yang tersimpan
+   * pada browser untuk project fixzy-update.
+   */
   try{
-    /*
-     * Memastikan sesi Firebase tetap tersedia ketika berpindah
-     * dari Index ke halaman lain pada domain yang sama.
-     * Ini bukan login baru.
-     */
-    await setPersistence(
-      auth,
-      browserLocalPersistence
-    );
+    await setPersistence(auth,browserLocalPersistence);
   }catch(e){
-    console.warn("Persistence:",e);
+    console.warn("Firebase persistence:",e);
   }
 
-  onAuthStateChanged(
-    auth,
-    async u=>{
-      authReady=true;
-
-      if(!u){
-        /*
-         * Jangan redirect.
-         * Tunggu Firebase memulihkan sesi dari Index.
-         */
-        $("email").textContent="-";
-        $("nama").textContent="Sesi Index belum terbaca";
-        $("role").textContent="RESELLER";
-        $("statusAkun").textContent="Menunggu sesi...";
-        $("requestList").innerHTML=
-          '<div class="empty">Sesi akun dari Index sedang dipulihkan...</div>';
-        return;
-      }
-
-      try{
-        await startWithUser(u);
-      }catch(e){
-        console.error("Start user:",e);
-        $("requestList").innerHTML=
-          `<div class="empty">Gagal membaca data akun: ${esc(e.message)}</div>`;
-      }
+  try{
+    /*
+     * PENTING: tunggu Firebase selesai memulihkan Auth sebelum
+     * membaca auth.currentUser. Tanpa ini currentUser bisa masih null
+     * beberapa saat dan muncul pesan "Sesi Belum Siap" padahal login ada.
+     */
+    if(typeof auth.authStateReady === "function") {
+      await auth.authStateReady();
     }
-  );
+  }catch(e){
+    console.warn("authStateReady:",e);
+  }
+
+  const applyUser=async u=>{
+    authReady=true;
+
+    if(!u){
+      currentUser=null;
+      $("email").textContent="-";
+      $("nama").textContent="Belum login di Firebase";
+      $("role").textContent="RESELLER";
+      $("statusAkun").textContent="Belum login";
+      $("requestList").innerHTML=
+        '<div class="empty">Belum ada sesi Firebase Auth pada browser ini. Login terlebih dahulu melalui Index FIXZY, lalu buka halaman ini lagi.</div>';
+      return;
+    }
+
+    try{
+      await startWithUser(u);
+    }catch(e){
+      console.error("Start user:",e);
+      $("requestList").innerHTML=
+        `<div class="empty">Gagal membaca data akun: ${esc(e.message)}</div>`;
+    }
+  };
+
+  /* Baca user yang sudah dipulihkan sekarang. */
+  await applyUser(auth.currentUser);
+
+  /* Pantau jika login/logout berubah setelah halaman terbuka. */
+  onAuthStateChanged(auth,applyUser);
 }
 
 /*
@@ -842,7 +853,7 @@ async function refreshPageData(){
     if(!u){
       showInfo(
         "Sesi Belum Tersedia",
-        "Firebase belum memulihkan akun dari Index. Coba tunggu sebentar lalu tekan Refresh lagi."
+        "Firebase belum menemukan akun yang login. Pastikan akun reseller sudah login, lalu tekan Refresh lagi."
       );
       return;
     }
