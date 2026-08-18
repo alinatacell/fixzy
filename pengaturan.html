@@ -88,7 +88,7 @@ body.dark .modal-box{background:#151b23;color:#f3f4f6}
 <main class="wrap">
   <section class="card">
     <h2>Akun Reseller</h2>
-    <div class="sub">Akun dibaca dari Firebase Auth dan users/{UID}, mengikuti pola penjualan.html. Tidak ada login ulang di halaman ini.</div>
+    <div class="sub">Akun dibaca dari Firebase Auth <b>currentUser.uid</b> dan users/{UID}. Jika dibuka dari Index, halaman ini memakai Firebase session yang sama. Tidak ada login ulang.</div>
 
     <div class="identity">
       <div class="info"><span>Email</span><b id="email">Memuat...</b></div>
@@ -156,9 +156,7 @@ body.dark .modal-box{background:#151b23;color:#f3f4f6}
 import {initializeApp} from "https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js";
 import {
   getAuth,
-  onAuthStateChanged,
-  setPersistence,
-  browserLocalPersistence
+  onAuthStateChanged
 } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-auth.js";
 import {
   getFirestore,
@@ -173,17 +171,23 @@ import {
 } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js";
 
 const firebaseConfig={
-  apiKey:"AIzaSy_C_PcarMTT5Un7qfSLzf92o5OGn5rginsI",
+  apiKey:"AIzaSyC_PcarMTT5Un7qfSLzf92o5OGn5rginsI",
   authDomain:"fixzy-update.firebaseapp.com",
   projectId:"fixzy-update",
-  storageBucket:"fixzy-update.appspot.com",
-  messagingSenderId:"431404655232",
-  appId:"1:431404655232:web:5f7d9c9a1b2c3d4e5f6a7"
+  storageBucket:"fixzy-update.firebasestorage.app",
+  messagingSenderId:"995892519622",
+  appId:"1:995892519622:web:fa41047944d8e5b35d6dc7"
 };
 
-const app=initializeApp(firebaseConfig);
-const auth=getAuth(app);
-const db=getFirestore(app);
+/*
+ * Jika pengaturan.html dibuka dari index.html, gunakan Firebase instance
+ * yang sama dengan Index agar Auth + Firestore benar-benar memakai sesi
+ * currentUser yang sama.
+ */
+const shared=window.parent!==window ? window.parent.fixzyFirebase : null;
+const app=shared?.app || initializeApp(firebaseConfig);
+const auth=shared?.auth || getAuth(app);
+const db=shared?.db || getFirestore(app);
 
 let currentUser=null;
 let profile={};
@@ -227,34 +231,10 @@ async function loadProfile(u){
   let p={};
 
   try{
-    /*
-     * Sama dengan pola penjualan.html:
-     * query users berdasarkan document ID = Firebase Auth UID.
-     */
-    const snap=await getDocs(
-      query(collection(db,"users"),where("__name__","==",u.uid))
-    );
-
-    if(!snap.empty){
-      p=snap.docs[0].data()||{};
-    }else{
-      /*
-       * Fallback langsung ke users/{UID}.
-       */
-      const direct=await getDoc(doc(db,"users",u.uid));
-      if(direct.exists())p=direct.data()||{};
-    }
+    const direct=await getDoc(doc(db,"users",u.uid));
+    if(direct.exists()) p=direct.data()||{};
   }catch(e){
-    /*
-     * Jika query __name__ gagal karena rules/index,
-     * tetap coba membaca document ID langsung.
-     */
-    try{
-      const direct=await getDoc(doc(db,"users",u.uid));
-      if(direct.exists())p=direct.data()||{};
-    }catch(err){
-      console.error("Gagal membaca users/{UID}:",err);
-    }
+    console.error("Gagal membaca users/{UID}:",e);
   }
 
   profile=p||{};
@@ -774,9 +754,13 @@ window.kirimRequest=async()=>{
   }catch(e){
     console.error("Kirim request:",e);
 
+    const detail = e?.code === "permission-denied"
+      ? "Firebase menolak penulisan ke registrationTokens. Sesi akun sudah terbaca, tetapi Firestore Rules harus mengizinkan reseller membuat request dengan resellerUid = UID akun login."
+      : (e?.message || String(e));
+
     showInfo(
       "Gagal",
-      "Request gagal dikirim: "+e.message
+      "Request gagal dikirim: "+detail
     );
   }finally{
     btn.disabled=false;
@@ -798,20 +782,10 @@ window.kirimRequest=async()=>{
  * oleh Index.
  */
 async function initAuth(){
-  try{
-    /*
-     * Memastikan sesi Firebase tetap tersedia ketika berpindah
-     * dari Index ke halaman lain pada domain yang sama.
-     * Ini bukan login baru.
-     */
-    await setPersistence(
-      auth,
-      browserLocalPersistence
-    );
-  }catch(e){
-    console.warn("Persistence:",e);
-  }
-
+  /*
+   * Tidak mengubah persistence dari halaman iframe.
+   * Sesi Firebase dikelola oleh Index.
+   */
   onAuthStateChanged(
     auth,
     async u=>{
