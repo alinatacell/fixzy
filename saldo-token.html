@@ -377,7 +377,7 @@ body.dark .owned-token-copy{background:#151b23;color:#f3f4f6;border-color:#33415
   <div id="myTokensBox" class="token-result hidden">
     <div class="token-result-title">🔑 TOKEN SAYA</div>
     <div style="font-size:11px;color:#64748b;margin-bottom:9px;line-height:1.5">
-      Token yang sudah dibeli tampil di sini. Pilih token yang ingin disalin untuk dijual kembali.
+      Token yang sudah dibeli reseller tampil di sini. Token tetap BELUM TERPAKAI sampai digunakan untuk aktivasi/perpanjangan.
     </div>
     <div id="myTokensList"></div>
     <div id="myTokensHint" class="owned-hint"></div>
@@ -482,7 +482,7 @@ function renderMyTokens(){
  }).join("");
  list.querySelectorAll("[data-copy-one]").forEach(btn=>btn.onclick=async()=>{const [gi,ti]=btn.dataset.copyOne.split(":").map(Number);const token=getPurchaseTokens(myOwnedPurchases[gi])[ti]||"";if(token)await copyText(token,btn,"✓ Tersalin")});
  list.querySelectorAll("[data-copy-group]").forEach(btn=>btn.onclick=async()=>{const gi=Number(btn.dataset.copyGroup);const tokens=getPurchaseTokens(myOwnedPurchases[gi]);await copyText(tokens.join("\n"),btn,"✓ Tersalin")});
- if(hint)hint.textContent="Paket token ditampilkan sesuai pembelian: 3, 6, atau 12 bulan.";
+ if(hint)hint.textContent="Token berstatus DIBELI RESELLER dan tetap BELUM TERPAKAI sampai digunakan untuk aktivasi.";
 }
 async function copyText(text,button,successText="✓ Tersalin"){
  try{await navigator.clipboard.writeText(text);const old=button.textContent;button.textContent=successText;setTimeout(()=>button.textContent=old,1500)}
@@ -553,9 +553,13 @@ async function buyTokens(){
  if(balance<total){showModal("Saldo Tidak Cukup",`Pembelian ditolak. Total ${rupiah(total)}, saldo tersedia ${rupiah(balance)}.`);return}
  const btn=$("buyBtn");btn.disabled=true;btn.textContent="Memproses...";
  try{
-  const snap=await getDocs(query(collection(db,"tokens"),where("status","not-in",["used","terpakai","inactive","disabled"]))),candidates=[];
+  const snap=await getDocs(collection(db,"tokens")),candidates=[];
   snap.forEach(d=>{
-    const x=d.data()||{},used=x.used===true||x.terpakai===true||x.assigned===true||x.sold===true;if(used)return;
+    const x=d.data()||{};
+    const tokenStatus=String(x.tokenStatus??x.status??"").toLowerCase();
+    const resellerOwned=x.resellerOwned===true || x.dibeliReseller===true || tokenStatus==="dibeli_reseller" || tokenStatus==="sold_reseller";
+    const used=x.used===true || x.terpakai===true || x.sold===true || tokenStatus==="used" || tokenStatus==="terpakai" || tokenStatus==="inactive" || tokenStatus==="disabled";
+    if(used || resellerOwned || x.assigned===true)return;
     const days=Number(x.paketHari??x.durasiHari??x.masaAktifHari??0),months=Number(x.durasiBulan??x.masaAktifBulan??x.paketBulan??0),label=String(x.paketLabel??x.paket??x.durasi??x.masaAktif??"").toLowerCase();
     if(!(days===selectedPlan.days||months===selectedPlan.month||label.includes(selectedPlan.month+" bulan")||label.includes(selectedPlan.days+" hari")))return;
     const token=String(x.token??x.kodeToken??x.registrationToken??x.tokenCode??x.code??d.id).trim();if(token)candidates.push({id:d.id,token});
@@ -571,8 +575,23 @@ async function buyTokens(){
     const pr=doc(collection(db,"tokenPurchases")),tr=doc(collection(db,"balanceTransactions"));
     tx.set(br,{balance:current-total,resellerUid:uid,updatedAt:serverTimestamp()},{merge:true});
     tx.set(tr,{resellerUid:uid,type:"purchase",amount:-total,balanceBefore:current,balanceAfter:current-total,description:`Pembelian ${qty} token paket ${selectedPlan.month} bulan`,purchaseId:pr.id,tokens:purchasedTokens,createdAt:serverTimestamp()});
-    fresh.forEach(t=>tx.update(t.ref,{status:"used",used:true,terpakai:true,assigned:true,sold:true,assignedTo:uid,assignedEmail:email,assignedPurchaseId:pr.id,assignedAt:serverTimestamp(),updatedAt:serverTimestamp()}));
-    tx.set(pr,{resellerUid:uid,resellerEmail:email,resellerNama:nama,packageMonths:selectedPlan.month,packageDays:selectedPlan.days,packageLabel:`${selectedPlan.month} Bulan / ${selectedPlan.days} Hari`,quantity:qty,pricePerToken:selectedPlan.price,totalPrice:total,paymentMethod:"saldo",paymentStatus:"paid",status:"approved",tokens:purchasedTokens,token:purchasedTokens.length===1?purchasedTokens[0]:"",createdAt:serverTimestamp(),updatedAt:serverTimestamp()});
+    fresh.forEach(t=>tx.update(t.ref,{
+      status:"dibeli_reseller",
+      tokenStatus:"dibeli_reseller",
+      used:false,
+      terpakai:false,
+      assigned:false,
+      sold:false,
+      resellerOwned:true,
+      dibeliReseller:true,
+      resellerUid:uid,
+      resellerEmail:email,
+      resellerNama:nama,
+      assignedPurchaseId:pr.id,
+      purchasedAt:serverTimestamp(),
+      updatedAt:serverTimestamp()
+    }));
+    tx.set(pr,{resellerUid:uid,resellerEmail:email,resellerNama:nama,packageMonths:selectedPlan.month,packageDays:selectedPlan.days,packageLabel:`${selectedPlan.month} Bulan / ${selectedPlan.days} Hari`,quantity:qty,pricePerToken:selectedPlan.price,totalPrice:total,paymentMethod:"saldo",paymentStatus:"paid",status:"approved",tokenOwnershipStatus:"dibeli_reseller_belum_digunakan",tokens:purchasedTokens,token:purchasedTokens.length===1?purchasedTokens[0]:"",createdAt:serverTimestamp(),updatedAt:serverTimestamp()});
   });
   await loadBalance();await loadHistory();
   showModal("🎉 Pembelian Berhasil",`${qty} token berhasil dibeli.\nPaket: ${selectedPlan.month} Bulan / ${selectedPlan.days} Hari\nTotal dipotong: ${rupiah(total)}\nSaldo tersisa: ${rupiah(balance)}`,"",purchasedTokens);
