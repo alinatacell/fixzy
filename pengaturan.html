@@ -51,18 +51,54 @@ textarea{min-height:70px;resize:vertical}.form-row{margin-bottom:10px}
 .req-top{display:flex;justify-content:space-between;gap:10px;align-items:center}
 .badge{font-size:10px;font-weight:900;padding:5px 8px;border-radius:999px}
 .pending{background:#fef3c7;color:#92400e}.approved{background:#dcfce7;color:#166534}.rejected{background:#fee2e2;color:#991b1b}
-.req small{color:#64748b}.token{margin-top:9px;padding:10px;border-radius:9px;background:#ecfdf5;border:1px solid #86efac}
-.token code{font-size:16px;font-weight:900;word-break:break-all}
+.req small{color:#64748b}
+.token{margin-top:9px;padding:10px;border-radius:9px;background:#ecfdf5;border:1px solid #86efac}
+.token-head{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:6px}
+.token-head-title{font-size:10px;color:#166534;font-weight:800}
+.copy-selected{
+  background:#111827;color:#fff;border-radius:7px;padding:7px 9px;
+  box-shadow:2px 2px 0 #000;font-size:10px;white-space:nowrap
+}
+.copy-selected.copied{background:#16a34a}
+.token-row{
+  display:flex;align-items:center;gap:8px;padding:7px 0;
+}
+.token-row+.token-row{border-top:1px solid #bbf7d0}
+.token-check{
+  width:21px;height:21px;min-height:21px;flex:0 0 21px;
+  margin:0;padding:0;accent-color:#16a34a;box-shadow:none;cursor:pointer
+}
+.token-code{
+  flex:1;min-width:0;font-size:16px;font-weight:900;
+  word-break:break-all;font-family:monospace
+}
+.copy-one{
+  flex:0 0 auto;background:#fff;color:#111827;border:1px solid #111827;
+  border-radius:7px;padding:6px 8px;box-shadow:2px 2px 0 #111827;
+  font-size:10px
+}
+.copy-one.copied{background:#dcfce7;color:#166534}
+.token-copy-info{
+  margin-top:7px;font-size:10px;color:#166534;font-weight:800
+}
 .empty,.loading{text-align:center;color:#64748b;font-size:12px;padding:18px}
 .modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.62);z-index:50;align-items:center;justify-content:center;padding:14px}
 .modal.show{display:flex}.modal-box{width:min(430px,100%);background:#fff;border:2px solid #111827;border-radius:14px;padding:18px;box-shadow:6px 6px 0 #111827}
 .modal-box h3{margin:0 0 8px}.modal-box p{font-size:13px;line-height:1.5}.ok{width:100%;background:#111827;color:#fff}
-@media(max-width:600px){.identity,.buttons{grid-template-columns:1fr}.wrap{padding:12px}.card{padding:14px}}
+@media(max-width:600px){
+  .identity,.buttons{grid-template-columns:1fr}
+  .wrap{padding:12px}.card{padding:14px}
+  .token-code{font-size:15px}
+  .copy-one{padding:6px 7px;font-size:9px}
+}
 body.dark{background:#0b0f14;color:#f3f4f6}
 body.dark .card,body.dark .req{background:#151b23;color:#f3f4f6;border-color:#000}
 body.dark .info,body.dark .request-box{background:#10161e;border-color:#334155}
 body.dark input,body.dark select,body.dark textarea{background:#0f141b;color:#f3f4f6;border-color:#334155}
 body.dark .modal-box{background:#151b23;color:#f3f4f6}
+body.dark .token{background:#0d3020;border-color:#22c55e}
+body.dark .token-row+.token-row{border-color:#166534}
+body.dark .copy-one{background:#151b23;color:#f3f4f6;border-color:#64748b}
 </style>
 </head>
 <body>
@@ -104,7 +140,6 @@ body.dark .modal-box{background:#151b23;color:#f3f4f6}
       <input id="jenisView" readonly>
     </div>
 
-    <!-- KHUSUS PERPANJANGAN -->
     <div id="planRow" class="form-row" style="display:none">
       <label>PILIH MASA PERPANJANGAN</label>
       <select id="planSelect">
@@ -184,6 +219,10 @@ let currentEmail="";
 let profile={};
 let selectedJenis="";
 let unsub=null;
+
+/* Token yang dicentang untuk proses SALIN.
+   Disimpan per request agar setiap request punya pilihan sendiri. */
+const selectedCopyTokens=new Map();
 
 const $=id=>document.getElementById(id);
 
@@ -293,8 +332,108 @@ function requestDate(x){
   return x.createdAtText||"";
 }
 
+/* Membuat key token yang aman untuk checkbox HTML. */
+function tokenKey(requestId,index){
+  return `${requestId}__${index}`;
+}
+
+function getSelectedCopySet(requestId){
+  if(!selectedCopyTokens.has(requestId)){
+    selectedCopyTokens.set(requestId,new Set());
+  }
+  return selectedCopyTokens.get(requestId);
+}
+
+function clearCopySelection(requestId){
+  selectedCopyTokens.delete(requestId);
+}
+
+function updateCopyButton(requestId){
+  const set=getSelectedCopySet(requestId);
+  const btn=document.getElementById(`copy-selected-${requestId}`);
+  const info=document.getElementById(`copy-info-${requestId}`);
+
+  if(btn){
+    btn.textContent=set.size?`📋 Salin ${set.size} Dipilih`:"📋 Salin";
+    btn.disabled=set.size===0;
+  }
+
+  if(info){
+    info.textContent=set.size
+      ?`${set.size} token dipilih untuk disalin.`
+      :"Centang token yang ingin disalin.";
+  }
+}
+
+/* Centang / hapus centang token yang sudah disetujui. */
+window.toggleCopyToken=(requestId,index,checked)=>{
+  const set=getSelectedCopySet(requestId);
+  if(checked)set.add(index);
+  else set.delete(index);
+  updateCopyButton(requestId);
+};
+
+/* Salin satu token langsung. */
+window.copyOneToken=async(requestId,index)=>{
+  const list=window.__requestTokens?.[requestId]||[];
+  const token=list[index];
+  if(!token)return;
+
+  try{
+    await navigator.clipboard.writeText(token);
+    const btn=document.getElementById(`copy-one-${requestId}-${index}`);
+    if(btn){
+      const old=btn.textContent;
+      btn.textContent="✓ Tersalin";
+      btn.classList.add("copied");
+      setTimeout(()=>{
+        btn.textContent=old;
+        btn.classList.remove("copied");
+      },1200);
+    }
+  }catch(e){
+    showInfo("Gagal Menyalin","Browser tidak mengizinkan akses clipboard. Silakan tekan lama pada token lalu pilih Salin.");
+  }
+};
+
+/* Salin semua token yang dicentang, satu token per baris. */
+window.copySelectedTokens=async requestId=>{
+  const list=window.__requestTokens?.[requestId]||[];
+  const set=getSelectedCopySet(requestId);
+
+  const selected=[...set]
+    .sort((a,b)=>a-b)
+    .map(i=>list[i])
+    .filter(Boolean);
+
+  if(!selected.length){
+    showInfo("Token Belum Dipilih","Centang minimal satu token terlebih dahulu.");
+    return;
+  }
+
+  try{
+    await navigator.clipboard.writeText(selected.join("\n"));
+
+    const btn=document.getElementById(`copy-selected-${requestId}`);
+    if(btn){
+      btn.textContent="✓ Berhasil Disalin";
+      btn.classList.add("copied");
+      setTimeout(()=>{
+        btn.textContent=`📋 Salin ${selected.length} Dipilih`;
+        btn.classList.remove("copied");
+      },1500);
+    }
+  }catch(e){
+    showInfo("Gagal Menyalin","Browser tidak mengizinkan akses clipboard. Silakan salin token satu per satu.");
+  }
+};
+
+/* Data token aktif di halaman untuk tombol salin. */
+window.__requestTokens=Object.create(null);
+
 function renderRequests(list){
   const el=$("requestList");
+
   if(!list.length){
     el.innerHTML='<div class="empty">Belum ada request token.</div>';
     return;
@@ -311,11 +450,63 @@ function renderRequests(list){
     const tagihan=x.jumlahTagihan??x.totalTagihan??x.amount??0;
     const tokens=getTokens(x);
 
+    /* Simpan token hanya untuk request ini. */
+    window.__requestTokens[x.id]=tokens;
+
+    /* Jika request berubah/update, pilihan lama yang sudah tidak ada dibersihkan. */
+    const set=getSelectedCopySet(x.id);
+    [...set].forEach(i=>{
+      if(i<0||i>=tokens.length)set.delete(i);
+    });
+
     const planLabel=x.perpanjanganLabel||x.masaPerpanjangan||"";
     const planHtml=jenis==="Perpanjangan" && planLabel
       ?`<div style="margin-top:7px;font-size:11px;color:#92400e">
           Masa perpanjangan: <b>${esc(planLabel)}</b>
         </div>`:"";
+
+    const tokenHtml=tokens.length?`
+      <div class="token">
+        <div class="token-head">
+          <div class="token-head-title">TOKEN ANDA • ${tokens.length} TOKEN</div>
+          <button
+            id="copy-selected-${esc(x.id)}"
+            class="copy-selected"
+            type="button"
+            onclick="copySelectedTokens('${esc(x.id)}')"
+            disabled
+          >📋 Salin</button>
+        </div>
+
+        ${tokens.map((t,i)=>`
+          <div class="token-row">
+            <input
+              class="token-check"
+              type="checkbox"
+              id="token-check-${esc(x.id)}-${i}"
+              onchange="toggleCopyToken('${esc(x.id)}',${i},this.checked)"
+              ${set.has(i)?"checked":""}
+              aria-label="Pilih token ${esc(t)}"
+            >
+
+            <code class="token-code">${esc(t)}</code>
+
+            <button
+              id="copy-one-${esc(x.id)}-${i}"
+              class="copy-one"
+              type="button"
+              onclick="copyOneToken('${esc(x.id)}',${i})"
+            >Salin</button>
+          </div>
+        `).join("")}
+
+        <div id="copy-info-${esc(x.id)}" class="token-copy-info">
+          ${set.size
+            ?`${set.size} token dipilih untuk disalin.`
+            :"Centang token yang ingin disalin."}
+        </div>
+      </div>
+    `:"";
 
     return `<div class="req">
       <div class="req-top">
@@ -329,12 +520,12 @@ function renderRequests(list){
       </div>
       ${x.catatan?`<div style="margin-top:7px;font-size:11px;color:#64748b">Catatan: ${esc(x.catatan)}</div>`:""}
       ${x.adminNote?`<div style="margin-top:6px;font-size:11px;color:#166534">Admin: ${esc(x.adminNote)}</div>`:""}
-      ${tokens.length?`<div class="token">
-        <div style="font-size:10px;color:#166534;font-weight:800;margin-bottom:4px">TOKEN ANDA • ${tokens.length} TOKEN</div>
-        ${tokens.map((t,i)=>`<div style="padding:7px 0;${i?"border-top:1px solid #bbf7d0;":""}"><code>${esc(t)}</code></div>`).join("")}
-      </div>`:""}
+      ${tokenHtml}
     </div>`;
   }).join("");
+
+  /* Setelah HTML dibuat, update tombol agar sesuai checkbox yang sudah dipilih. */
+  list.forEach(x=>updateCopyButton(x.id));
 }
 
 async function getExistingRequests(){
@@ -597,14 +788,10 @@ window.kirimRequest=async()=>{
       jumlahRequest:qty,
       jumlahTokenDiminta:qty,
 
-      // Untuk registrasi: harga dari pengaturan.
-      // Untuk perpanjangan: harga mengikuti paket yang dipilih.
       hargaToken:harga||0,
       jumlahTagihan:jumlahTagihan,
       totalTagihan:jumlahTagihan,
 
-      // Data paket perpanjangan supaya halaman admin
-      // bisa langsung membaca pilihan dan harganya.
       masaPerpanjangan:selectedJenis==="perpanjangan"?plan.value:"",
       perpanjanganLabel:selectedJenis==="perpanjangan"?plan.label:"",
       perpanjanganHari:selectedJenis==="perpanjangan"?plan.days:0,
@@ -625,13 +812,17 @@ window.kirimRequest=async()=>{
       notificationText:`Request token ${selectedJenis} sebanyak ${qty} token${selectedJenis==="perpanjangan"?" ("+plan.days+" hari)":""} dari ${nama}`
     });
 
+    const sentType=selectedJenis;
+    const sentDays=plan?.days||0;
+    const sentPrice=plan?.price||0;
+
     closeRequest();
 
     showInfo(
       "Request Terkirim",
-      selectedJenis==="perpanjangan"
-        ?`Request ${qty} token paket ${plan.days} hari (${rupiah(plan.price)}/token) sudah dikirim ke admin. Perkiraan tagihan ${rupiah(jumlahTagihan)}.`
-        :`Request ${selectedJenis} sebanyak ${qty} token sudah dikirim ke admin.`
+      sentType==="perpanjangan"
+        ?`Request ${qty} token paket ${sentDays} hari (${rupiah(sentPrice)}/token) sudah dikirim ke admin. Perkiraan tagihan ${rupiah(jumlahTagihan)}.`
+        :`Request ${sentType} sebanyak ${qty} token sudah dikirim ke admin.`
     );
   }catch(e){
     console.error("Kirim request:",e);
