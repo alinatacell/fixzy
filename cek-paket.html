@@ -20,129 +20,6 @@ body{margin:0;font-family:Arial,Helvetica,sans-serif;background:#eef2f7;color:#1
 .badge.green{background:#dcfce7;color:#166534}.badge.red{background:#fee2e2;color:#991b1b}.badge.yellow{background:#fef3c7;color:#92400e}
 .small-info{font-size:11px;color:#64748b;margin-top:7px}
 </style>
-
-<style>
-/* ===== REQUEST TOKEN ===== */
-.request-token-card{
-  margin-top:14px;
-}
-.request-token-card h3{
-  margin:0 0 8px;
-  font-size:18px;
-}
-.request-token-card p{
-  margin:0 0 12px;
-  font-size:12px;
-  color:#64748b;
-  line-height:1.5;
-}
-.request-row{
-  display:grid;
-  grid-template-columns:1fr;
-  gap:10px;
-}
-.request-select{
-  width:100%;
-  padding:14px;
-  border:1px solid #cbd5e1;
-  border-radius:12px;
-  background:#fff;
-  color:#111827;
-  font-size:16px;
-  font-weight:800;
-}
-.request-btn{
-  width:100%;
-  padding:14px;
-  font-size:16px;
-}
-.qris-box{
-  display:none;
-  margin-top:14px;
-  padding:14px;
-  border:1px solid #e5e7eb;
-  border-radius:16px;
-  background:#f8fafc;
-  text-align:center;
-}
-.qris-box.show{display:block}
-.qris-title{
-  font-weight:900;
-  margin-bottom:10px;
-}
-.qris-img{
-  display:block;
-  width:min(100%,340px);
-  max-height:420px;
-  object-fit:contain;
-  margin:0 auto 12px;
-  border-radius:12px;
-  background:#fff;
-  border:1px solid #e5e7eb;
-}
-.wa-request-btn{
-  width:100%;
-  padding:13px;
-  background:#16a34a;
-  color:#fff;
-  border:0;
-  border-radius:12px;
-  font-weight:900;
-  cursor:pointer;
-  font-size:15px;
-}
-
-/* Popup FIXZY - bukan alert browser */
-.fixzy-modal{
-  position:fixed;
-  inset:0;
-  z-index:99999;
-  display:none;
-  align-items:center;
-  justify-content:center;
-  padding:18px;
-  background:rgba(15,23,42,.68);
-}
-.fixzy-modal.show{display:flex}
-.fixzy-modal-box{
-  width:min(100%,430px);
-  background:#fff;
-  color:#111827;
-  border-radius:20px;
-  padding:20px;
-  box-shadow:0 20px 60px rgba(0,0,0,.25);
-}
-.fixzy-modal-title{
-  font-size:20px;
-  font-weight:900;
-  margin-bottom:8px;
-}
-.fixzy-modal-text{
-  font-size:14px;
-  line-height:1.55;
-  color:#475569;
-  white-space:pre-line;
-}
-.fixzy-modal-actions{
-  display:flex;
-  gap:10px;
-  justify-content:flex-end;
-  margin-top:18px;
-}
-.fixzy-modal-actions button{
-  border:0;
-  border-radius:12px;
-  padding:12px 18px;
-  font-weight:900;
-  cursor:pointer;
-}
-.fixzy-cancel{background:#e5e7eb;color:#111827}
-.fixzy-send{background:#16a34a;color:#fff}
-@media(max-width:420px){
-  .fixzy-modal-actions{flex-direction:column-reverse}
-  .fixzy-modal-actions button{width:100%}
-}
-</style>
 </head>
 <body>
 
@@ -157,6 +34,7 @@ body{margin:0;font-family:Arial,Helvetica,sans-serif;background:#eef2f7;color:#1
 
 <div class="wrap">
 
+  <!-- FUNGSI 1: CEK AKTIVASI -->
   <div class="card">
     <div style="font-size:22px;font-weight:900;margin-bottom:10px">🔐 Aktivasi Akun</div>
 
@@ -175,10 +53,49 @@ body{margin:0;font-family:Arial,Helvetica,sans-serif;background:#eef2f7;color:#1
     </div>
   </div>
 
+  <!-- REQUEST TOKEN -->
+  <div class="card white" style="padding:18px">
+    <button id="btnRequestToken" class="btn btn-y"
+      style="width:100%;padding:16px;font-size:20px"
+      onclick="toggleRequestToken()">🔑 Request Token</button>
+
+    <div id="requestTokenBox" style="display:none;margin-top:14px">
+      <div style="text-align:center;font-size:20px;font-weight:900;margin-bottom:12px">
+        Scan QRIS untuk pembayaran
+      </div>
+
+      <div style="background:#fff;border:1px solid #e5e7eb;border-radius:18px;padding:10px;overflow:hidden">
+        <img src="qris.jpg"
+          alt="QRIS Pembayaran FIXZY"
+          style="display:block;width:100%;max-width:520px;margin:auto;border-radius:12px"
+          onerror="this.style.display='none';document.getElementById('qrisError').style.display='block'">
+        <div id="qrisError"
+          style="display:none;padding:30px 12px;text-align:center;color:#dc2626;font-weight:800">
+          File <b>qris.jpg</b> belum ditemukan.<br>
+          Upload qris.jpg ke folder yang sama dengan file ini.
+        </div>
+      </div>
+
+      <a id="btnWhatsApp" class="btn"
+        href="#"
+        target="_blank"
+        rel="noopener"
+        style="display:block;text-align:center;text-decoration:none;background:#16a34a;color:#fff;width:100%;margin-top:12px;padding:16px;font-size:17px">
+        💬 Pesan via WhatsApp
+      </a>
+
+      <div style="font-size:11px;color:#64748b;text-align:center;margin-top:8px">
+        Setelah pembayaran, kirim bukti pembayaran melalui WhatsApp.
+      </div>
+    </div>
+  </div>
+
+  <!-- FUNGSI 2: PERPANJANGAN -->
   <div class="card white">
     <h3 style="margin:0 0 8px">Perpanjang Aktivasi Pakai Token</h3>
     <p style="font-size:12px;color:#64748b;margin:0 0 10px">
-      Masukkan token perpanjangan yang dibeli dari Owner.
+      Masukkan token perpanjangan. Token reseller yang sudah dibeli dapat dijual dan digunakan untuk perpanjangan.
+      Token baru dianggap terpakai setelah berhasil digunakan.
       Masa aktif akan <b>ditambahkan</b> dari tanggal aktif yang sekarang.
     </p>
 
@@ -189,58 +106,6 @@ body{margin:0;font-family:Arial,Helvetica,sans-serif;background:#eef2f7;color:#1
       onclick="pakaiToken()">Aktifkan Token</button>
 
     <div id="tokenMsg" style="margin-top:10px;font-size:12px;font-weight:800;white-space:pre-line"></div>
-  </div>
-
-
-  <!-- REQUEST TOKEN -->
-  <div class="card white request-token-card">
-    <h3>🔑 Request Token Perpanjangan</h3>
-    <p>
-      Pilih masa aktif token yang ingin direquest. Setelah menekan
-      <b>Request Token</b>, QRIS akan ditampilkan di bawah.
-    </p>
-
-    <div class="request-row">
-      <select id="requestTokenPackage" class="request-select" aria-label="Pilih masa aktif token">
-        <option value="3 Bulan" data-days="90">3 Bulan</option>
-        <option value="6 Bulan" data-days="180">6 Bulan</option>
-        <option value="12 Bulan" data-days="360">12 Bulan</option>
-      </select>
-
-      <button id="btnRequestToken" class="btn btn-y request-btn" type="button">
-        🔑 Request Token
-      </button>
-    </div>
-
-    <div id="qrisRequestBox" class="qris-box">
-      <div class="qris-title">Scan QRIS untuk pembayaran</div>
-      <img
-        src="qris.jpg"
-        alt="QRIS pembayaran FIXZY"
-        class="qris-img"
-        onerror="this.style.display='none';document.getElementById('qrisImageError').style.display='block';"
-      >
-      <div id="qrisImageError" style="display:none;color:#dc2626;font-size:12px;font-weight:800;margin-bottom:10px">
-        QRIS tidak ditemukan. Pastikan file <b>qris.jpg</b> berada satu folder dengan file HTML ini.
-      </div>
-
-      <button id="btnPesanWARequest" class="wa-request-btn" type="button">
-        💬 Pesan via WhatsApp
-      </button>
-    </div>
-  </div>
-
-  <!-- POPUP REQUEST TOKEN / WHATSAPP -->
-  <div id="fixzyRequestModal" class="fixzy-modal" role="dialog" aria-modal="true" aria-labelledby="fixzyRequestTitle">
-    <div class="fixzy-modal-box">
-      <div id="fixzyRequestTitle" class="fixzy-modal-title">Request Token</div>
-      <div id="fixzyRequestText" class="fixzy-modal-text"></div>
-
-      <div class="fixzy-modal-actions">
-        <button id="btnRequestCancel" class="fixzy-cancel" type="button">Batal</button>
-        <button id="btnRequestSend" class="fixzy-send" type="button">Kirim</button>
-      </div>
-    </div>
   </div>
 
 </div>
@@ -288,58 +153,13 @@ window.tutupHalaman=function(){
 };
 
 /* =========================================================
-   NORMALISASI TANGGAL FIXZY
-
-   PENTING:
-   Satu akun bisa mempunyai beberapa field tanggal dari
-   sistem lama dan sistem baru:
-     - tanggalBerakhir
-     - exp
-     - expAt
-     - expiredAt
-
-   Untuk mencegah akun yang sudah diperpanjang kembali terbaca
-   memakai tanggal lama, semua field valid dibandingkan dan
-   tanggal TERAKHIR dipakai sebagai masa aktif sebenarnya.
-
-   Contoh:
-     tanggalBerakhir = 13 November 2026
-     exp             = 11 Maret 2027
-   hasil:
-     11 Maret 2027
+   NORMALISASI TANGGAL
+   Prioritas:
+   1. tanggalBerakhir -> akun registrasi token / sistem baru
+   2. exp             -> Free Trial / sistem lama
+   3. expAt           -> kompatibilitas
+   4. expiredAt       -> kompatibilitas
    ========================================================= */
-
-function getPaketMetadataFIXZY(tokenInfo,hari){
-  const n=Number(hari)||0;
-  const raw=String(
-    tokenInfo?.paketLabel ??
-    tokenInfo?.paketTerakhir ??
-    tokenInfo?.paket ??
-    ""
-  ).trim();
-
-  const low=raw.toLowerCase();
-
-  // Paket token -> jumlah hari yang benar.
-  if(low.includes("tahun")){
-    return {label:"1 Tahun",unit:"tahun",value:1,days:n||360};
-  }
-
-  const m=low.match(/(\d+)\s*bulan/);
-  if(m){
-    const bulan=Number(m[1]);
-    return {label:bulan+" Bulan",unit:"bulan",value:bulan,days:n||bulan*30};
-  }
-
-  if(n===30) return {label:"1 Bulan",unit:"bulan",value:1,days:30};
-  if(n===60) return {label:"2 Bulan",unit:"bulan",value:2,days:60};
-  if(n===90) return {label:"3 Bulan",unit:"bulan",value:3,days:90};
-  if(n===180) return {label:"6 Bulan",unit:"bulan",value:6,days:180};
-  if(n===360) return {label:"1 Tahun",unit:"tahun",value:1,days:360};
-
-  return {label:n+" Hari",unit:"hari",value:n,days:n};
-}
-
 function parseDateValue(v){
   if(v===undefined || v===null || v==="") return null;
 
@@ -358,47 +178,29 @@ function parseDateValue(v){
       return isNaN(v.getTime()) ? null : v;
     }
 
-    const str=String(v).trim();
-    const m=str.match(/^(\d{4})-(\d{2})-(\d{2})(?:[T\s].*)?$/);
-
-    if(m){
-      const d=new Date(
-        Number(m[1]),
-        Number(m[2])-1,
-        Number(m[3])
-      );
-
-      if(str.length>10){
-        const parsed=new Date(str);
-        if(!isNaN(parsed.getTime())) return parsed;
-      }
-
-      return isNaN(d.getTime()) ? null : d;
-    }
-
-    const d=new Date(str);
+    const d=new Date(v);
     return isNaN(d.getTime()) ? null : d;
   }catch(e){
     return null;
   }
 }
 
-/*
-  MASTER DATA AKTIVASI:
-  Hanya tanggalBerakhir dari users/{uid}.
-  Tidak membandingkan exp, expAt, expiredAt, atau field tanggal lain.
-*/
 function getExpirationFromUser(data){
   if(!data) return null;
 
-  const d=parseDateValue(data.tanggalBerakhir);
+  const candidates=[
+    ["tanggalBerakhir",data.tanggalBerakhir],
+    ["exp",data.exp],
+    ["expAt",data.expAt],
+    ["expiredAt",data.expiredAt]
+  ];
 
-  if(!d) return null;
+  for(const [field,value] of candidates){
+    const d=parseDateValue(value);
+    if(d) return {date:d,field};
+  }
 
-  return {
-    field:"tanggalBerakhir",
-    date:d
-  };
+  return null;
 }
 
 function formatTanggal(d){
@@ -450,13 +252,11 @@ function tampilkanAktivasi(data){
     sisaEl.innerHTML='<span class="badge red">Kadaluarsa</span>';
   }
 
-  /*
-    Tampilkan field yang dipakai.
-    Kalau beberapa field berbeda, beri keterangan bahwa FIXZY
-    memilih tanggal terbaru agar mudah dicek oleh Owner.
-  */
-  sumberEl.textContent="Sumber: tanggalBerakhir dari users/{uid} di Firebase.";
-
+  if(hasil.field==="tanggalBerakhir"){
+    sumberEl.textContent="Sumber: tanggalBerakhir akun Firebase.";
+  }else{
+    sumberEl.textContent="Sumber: "+hasil.field+" (kompatibilitas akun lama / Free Trial).";
+  }
 }
 
 async function ambilUserAktif(){
@@ -515,6 +315,8 @@ window.loadData=async function(){
 
 /* =========================================================
    AUTH
+   TIDAK DIUBAH.
+   Tetap membaca akun Firebase yang sedang login.
    ========================================================= */
 onAuthStateChanged(auth,async user=>{
   authReady=true;
@@ -530,8 +332,112 @@ onAuthStateChanged(auth,async user=>{
 });
 
 /* =========================================================
-   TOKEN PERPANJANGAN
+   FUNGSI 2 — TOKEN PERPANJANGAN
+   ATURAN:
+   1. Token registrasi baru TIDAK boleh dipakai memperpanjang.
+   2. Token dari collection "tokens" boleh memperpanjang.
+   3. Token dari "resellerTokens" yang SUDAH DIBELI reseller
+      boleh dijual umum dan dipakai oleh akun pembeli token.
+   4. Token reseller TIDAK dikunci ke UID reseller pembeli.
+   5. Token baru menjadi used setelah berhasil dipakai.
    ========================================================= */
+
+/* Cek apakah token reseller sudah dibeli/terjual.
+   Field-field yang diperiksa dibuat kompatibel dengan data lama.
+*/
+function resellerTokenSudahDibeli(data){
+  if(!data) return false;
+
+  if(
+    data.purchasedByReseller===true ||
+    data.soldToReseller===true ||
+    data.assigned===true ||
+    data.purchased===true ||
+    data.isPurchased===true ||
+    data.sudahDibeli===true ||
+    data.dibeli===true ||
+    data.terjual===true
+  ){
+    return true;
+  }
+
+  const status=String(
+    data.status||
+    data.tokenStatus||
+    data.purchaseStatus||
+    ""
+  ).trim().toLowerCase();
+
+  const statusBeli=[
+    "dibeli_reseller",
+    "dibeli reseller",
+    "dibeli",
+    "terjual",
+    "terjual_reseller",
+    "terjual reseller",
+    "sold",
+    "sold_reseller",
+    "sold reseller",
+    "owned",
+    "purchased",
+    "purchased_by_reseller",
+    "purchased by reseller"
+  ];
+
+  if(statusBeli.includes(status)) return true;
+
+  /* Jika ada UID reseller yang menandakan token sudah dialokasikan,
+     token dianggap sudah dibeli. UID tersebut TIDAK dipakai untuk
+     mengunci pemakaian token ke reseller tersebut. */
+  const owner=String(
+    data.resellerUid||
+    data.assignedTo||
+    data.ownerUid||
+    data.purchasedBy||
+    data.buyerUid||
+    ""
+  ).trim();
+
+  if(owner) return true;
+
+  return false;
+}
+
+function tokenSudahTerpakai(data){
+  if(!data) return false;
+
+  return(
+    data.used===true||
+    data.terpakai===true||
+    data.dipakai===true||
+    data.isUsed===true||
+    String(data.status||"").trim().toLowerCase()==="terpakai"||
+    String(data.status||"").trim().toLowerCase()==="used"
+  );
+}
+
+function tokenKhususRegistrasi(data){
+  if(!data) return false;
+
+  const tipe=String(
+    data.tipe||
+    data.tokenType||
+    data.jenisToken||
+    data.type||
+    ""
+  ).trim().toLowerCase();
+
+  return(
+    tipe==="registrasi_baru"||
+    tipe==="aktivasi_baru"||
+    tipe==="registrasi"||
+    tipe==="registration"||
+    tipe==="registration_new"||
+    data.hanyaRegistrasiBaru===true||
+    data.untukRegistrasi===true
+  );
+}
+
 window.pakaiToken=async function(){
   const input=document.getElementById("tokenInput");
   const msg=document.getElementById("tokenMsg");
@@ -552,51 +458,94 @@ window.pakaiToken=async function(){
   }
 
   btn.disabled=true;
-  msg.textContent="Memeriksa token perpanjangan...";
+  msg.textContent="Memeriksa token...";
   msg.style.color="#2563eb";
 
   try{
-    const q=query(
-      collection(db,"tokens"),
+    let tokenDoc=null;
+    let tokenInfo=null;
+    let tokenSource="";
+
+    /* ========================================================
+       A. TOKEN RESELLER
+       Token yang sudah dibeli reseller boleh dijual umum.
+       JANGAN membandingkan resellerUid/ownerUid dengan currentUid.
+       ======================================================== */
+    const resellerQuery=query(
+      collection(db,"resellerTokens"),
       where("token","==",tokenStr)
     );
 
-    const snap=await getDocs(q);
+    const resellerSnap=await getDocs(resellerQuery);
 
-    if(snap.empty){
-      throw new Error("Token perpanjangan tidak ditemukan.");
-    }
-
-    let tokenDoc=null;
-    let tokenInfo=null;
-
-    for(const d of snap.docs){
+    for(const d of resellerSnap.docs){
       const data=d.data()||{};
 
-      const used=
-        data.used===true ||
-        String(data.status||"").toLowerCase()==="terpakai" ||
-        String(data.status||"").toLowerCase()==="used";
+      if(tokenSudahTerpakai(data)) continue;
 
-      if(!used){
+      /* Token reseller harus sudah dibeli/terjual dahulu.
+         Tetapi siapa yang membeli TIDAK menjadi pembatas pemakaian. */
+      if(!resellerTokenSudahDibeli(data)) continue;
+
+      /* Token registrasi tetap ditolak sebagai token perpanjangan. */
+      if(tokenKhususRegistrasi(data)) continue;
+
+      tokenDoc=d;
+      tokenInfo=data;
+      tokenSource="resellerTokens";
+      break;
+    }
+
+    /* ========================================================
+       B. TOKEN BIASA
+       Collection "tokens" tetap seperti sistem sebelumnya.
+       Token yang memang ditugaskan ke reseller tertentu tetap
+       mengikuti aturan assignedTo/resellerUid yang sudah ada.
+       ======================================================== */
+    if(!tokenDoc){
+      const normalQuery=query(
+        collection(db,"tokens"),
+        where("token","==",tokenStr)
+      );
+
+      const normalSnap=await getDocs(normalQuery);
+
+      for(const d of normalSnap.docs){
+        const data=d.data()||{};
+
+        if(tokenSudahTerpakai(data)) continue;
+
+        /* Token registrasi tidak boleh untuk perpanjangan. */
+        if(tokenKhususRegistrasi(data)){
+          continue;
+        }
+
+        const assignedTo=String(
+          data.assignedTo||
+          data.resellerUid||
+          ""
+        ).trim();
+
+        if(assignedTo && assignedTo!==currentUid) continue;
+
         tokenDoc=d;
         tokenInfo=data;
+        tokenSource="tokens";
         break;
       }
     }
 
     if(!tokenDoc){
-      throw new Error("Token perpanjangan sudah terpakai.");
+      throw new Error(
+        "Token tidak ditemukan, belum dibeli reseller, sudah terpakai, atau token tersebut khusus registrasi akun baru."
+      );
     }
 
-    const tipe=String(tokenInfo.tipe||tokenInfo.tokenType||"").toLowerCase();
-
-    if(
-      tipe==="registrasi_baru" ||
-      tipe==="aktivasi_baru" ||
-      tokenInfo.hanyaRegistrasiBaru===true
-    ){
-      throw new Error("Token ini khusus registrasi akun baru, bukan token perpanjangan.");
+    /* Pengaman tambahan: token registrasi TIDAK boleh lolos. */
+    if(tokenKhususRegistrasi(tokenInfo)){
+      throw new Error(
+        "Token ini khusus registrasi akun baru, bukan token perpanjangan."
+      );
     }
 
     const userRef=doc(db,"users",currentUid);
@@ -609,10 +558,6 @@ window.pakaiToken=async function(){
     const userData=userSnap.data()||{};
     currentUserData=userData;
 
-    /*
-      Masa aktif sebelumnya hanya dibaca dari tanggalBerakhir
-      yang tersimpan di users/{uid} Firebase.
-    */
     const oldExpInfo=getExpirationFromUser(userData);
     const now=new Date();
 
@@ -622,69 +567,59 @@ window.pakaiToken=async function(){
       baseDate=oldExpInfo.date;
     }
 
-    /*
-      Durasi token:
-      - Prioritas paketHari/durasiHari/masaAktifHari dari dokumen token.
-      - Jika token hanya menyimpan label paket, konversi label dilakukan
-        dengan benar: 1 Tahun = 360 hari, bukan 1 hari.
-    */
     let hari=Number(
-      tokenInfo.paketHari ??
-      tokenInfo.durasiHari ??
-      tokenInfo.masaAktifHari ??
+      tokenInfo.paketHari??
+      tokenInfo.packageDays??
+      tokenInfo.durasiHari??
+      tokenInfo.masaAktifHari??
       0
     );
 
-    const paketText=String(
-      tokenInfo.paketLabel ??
-      tokenInfo.paketTerakhir ??
-      tokenInfo.paket ??
-      tokenInfo.durasi ??
-      tokenInfo.masaAktif ??
-      ""
-    ).trim().toLowerCase();
+    if(!hari){
+      const bulan=Number(
+        tokenInfo.paketBulan??
+        tokenInfo.packageMonths??
+        tokenInfo.durasiBulan??
+        0
+      );
+
+      if(bulan>0)hari=bulan*30;
+    }
 
     if(!hari){
-      const tahun=paketText.match(/(\d+)\s*tahun/);
-      const bulan=paketText.match(/(\d+)\s*bulan/);
-      const angkaHari=paketText.match(/(\d+)\s*hari/);
+      const paketText=String(
+        tokenInfo.packageLabel||
+        tokenInfo.paketLabel||
+        tokenInfo.paket||
+        tokenInfo.durasi||
+        tokenInfo.masaAktif||
+        ""
+      ).toLowerCase();
 
-      if(tahun){
-        hari=Number(tahun[1])*360;
-      }else if(bulan){
-        hari=Number(bulan[1])*30;
-      }else if(angkaHari){
-        hari=Number(angkaHari[1]);
+      const matchHari=paketText.match(/(\d+)\s*hari/);
+      const matchBulan=paketText.match(/(\d+)\s*bulan/);
+
+      if(matchHari){
+        hari=Number(matchHari[1]);
+      }else if(matchBulan){
+        hari=Number(matchBulan[1])*30;
       }
     }
 
-    if(!hari || hari<=0){
-      throw new Error("Durasi token tidak valid. Periksa paketHari/durasiHari di Firebase tokens.");
-    }
+    if(!hari || hari<=0)hari=30;
 
     const newExp=new Date(baseDate);
     newExp.setDate(newExp.getDate()+hari);
 
-    /*
-      Sinkronkan semua field tanggal.
-      Setelah token berhasil, keempat field akan mempunyai
-      tanggal yang sama sehingga halaman FIXZY tidak berbeda-beda.
-    */
-    const newExpISO=newExp.toISOString();
-
-    const paketMeta=getPaketMetadataFIXZY(tokenInfo,hari);
-
-    /*
-      FIREBASE = MASTER.
-      Field aktivasi yang dipakai seluruh halaman FIXZY:
-        tanggalBerakhir
-        masaAktifHari
-        paketTerakhir
-    */
+    /* ========================================================
+       PERPANJANG USER TERLEBIH DAHULU.
+       Token baru ditandai terpakai setelah update user berhasil.
+       ======================================================== */
     await updateDoc(userRef,{
-      tanggalBerakhir:newExpISO,
-      masaAktifHari:hari,
-      paketTerakhir:paketMeta.label,
+      tanggalBerakhir:newExp.toISOString(),
+      exp:newExp.toISOString(),
+      expAt:newExp.toISOString(),
+      expiredAt:newExp.toISOString(),
 
       status:"aktif",
       active:true,
@@ -695,21 +630,52 @@ window.pakaiToken=async function(){
 
       lastActivationToken:tokenStr,
       lastActivationTokenId:tokenDoc.id,
+      lastActivationTokenSource:tokenSource,
       lastActivationDays:hari
     });
 
-    await updateDoc(doc(db,"tokens",tokenDoc.id),{
-      used:true,
-      status:"terpakai",
-      usedBy:currentUid,
-      usedAt:serverTimestamp()
-    });
+    const tokenRef=doc(db,tokenSource,tokenDoc.id);
+
+    if(tokenSource==="resellerTokens"){
+      await updateDoc(tokenRef,{
+        used:true,
+        terpakai:true,
+        dipakai:true,
+        isUsed:true,
+
+        status:"terpakai",
+        tokenStatus:"terpakai",
+
+        usedBy:currentUid,
+        usedByEmail:auth.currentUser?.email||"",
+        usedAt:serverTimestamp(),
+
+        activationStatus:"used",
+        activationType:"perpanjangan",
+        activationDays:hari,
+
+        updatedAt:serverTimestamp()
+      });
+    }else{
+      await updateDoc(tokenRef,{
+        used:true,
+        terpakai:true,
+        status:"terpakai",
+        usedBy:currentUid,
+        usedAt:serverTimestamp(),
+        updatedAt:serverTimestamp()
+      });
+    }
 
     input.value="";
 
     msg.textContent=
-      "Berhasil! Masa aktif bertambah "+hari+
-      " hari.\nAktif sampai "+formatTanggal(newExp);
+      "Berhasil! Token "+
+      (tokenSource==="resellerTokens"?"RESELLER ":"")+
+      "digunakan.\n"+
+      "Masa aktif bertambah "+hari+
+      " hari.\n"+
+      "Aktif sampai "+formatTanggal(newExp);
 
     msg.style.color="#16a34a";
 
@@ -729,7 +695,7 @@ window.pakaiToken=async function(){
     let pesan=err?.message||"Gagal memperpanjang masa aktif.";
 
     if(err?.code==="permission-denied"){
-      pesan="Firebase menolak akses. Periksa Firestore Rules untuk users dan tokens.";
+      pesan="Firebase menolak akses. Periksa Firestore Rules untuk users, resellerTokens, dan tokens.";
     }
 
     msg.textContent=pesan;
@@ -742,130 +708,45 @@ window.pakaiToken=async function(){
 
 
 /* =========================================================
-   REQUEST TOKEN + QRIS + WHATSAPP
+   REQUEST TOKEN
+   Klik tombol -> tampilkan QRIS di bawahnya.
+   WhatsApp diarahkan ke 082319264646.
    ========================================================= */
-const REQUEST_WA_NUMBER="6282319264646";
-let pendingRequestMessage="";
-let pendingRequestType="";
+window.toggleRequestToken=function(){
+  const box=document.getElementById("requestTokenBox");
+  const btn=document.getElementById("btnRequestToken");
 
-function getCurrentAccountName(){
-  const d=currentUserData||{};
-  return String(
-    d.namaKonter ||
-    d.namaToko ||
-    d.tokoName ||
-    d.nama ||
-    d.name ||
-    "Akun Fixzy"
-  ).trim();
-}
+  const buka=box.style.display==="none" || box.style.display==="";
 
-function getCurrentAccountEmail(){
-  const d=currentUserData||{};
-  return String(d.email || auth.currentUser?.email || "-").trim();
-}
+  if(buka){
+    box.style.display="block";
+    btn.textContent="🔑 Tutup Request Token";
 
-function getCurrentAccountUid(){
-  return String(currentUid || auth.currentUser?.uid || "-").trim();
-}
+    const nama=
+      currentUserData?.namaKonter||
+      currentUserData?.namaToko||
+      currentUserData?.tokoName||
+      currentUserData?.nama||
+      currentUserData?.name||
+      "Akun Fixzy";
 
-function formatRequestMessage(paket){
-  return [
-    "Halo Admin FIXZY, saya ingin request token perpanjangan.",
-    "",
-    "Data akun:",
-    "Nama Konter: "+getCurrentAccountName(),
-    "Email: "+getCurrentAccountEmail(),
-    "UID: "+getCurrentAccountUid(),
-    "",
-    "Request Token: "+paket,
-    "",
-    "Mohon diproses. Terima kasih."
-  ].join("\n");
-}
+    const waText=
+      "Halo FIXZY, saya ingin request token.%0A"+
+      "Nama Konter: "+encodeURIComponent(nama)+"%0A"+
+      "UID: "+encodeURIComponent(currentUid||"-")+"%0A"+
+      "Mohon informasi token yang tersedia.";
 
-function bukaRequestPopup(title,text,type,message){
-  pendingRequestType=type||"";
-  pendingRequestMessage=message||"";
-  document.getElementById("fixzyRequestTitle").textContent=title||"Konfirmasi";
-  document.getElementById("fixzyRequestText").textContent=text||"";
-  document.getElementById("fixzyRequestModal").classList.add("show");
-}
+    document.getElementById("btnWhatsApp").href=
+      "https://wa.me/6282319264646?text="+waText;
 
-function tutupRequestPopup(){
-  document.getElementById("fixzyRequestModal").classList.remove("show");
-  pendingRequestType="";
-  pendingRequestMessage="";
-}
-
-function bukaWhatsAppRequest(message){
-  const url="https://wa.me/"+REQUEST_WA_NUMBER+"?text="+encodeURIComponent(message);
-  window.open(url,"_blank","noopener,noreferrer");
-}
-
-function tampilkanQRIS(){
-  document.getElementById("qrisRequestBox").classList.add("show");
-  document.getElementById("qrisRequestBox").scrollIntoView({
-    behavior:"smooth",
-    block:"center"
-  });
-}
-
-document.getElementById("btnRequestToken").addEventListener("click",function(){
-  const select=document.getElementById("requestTokenPackage");
-  const option=select.options[select.selectedIndex];
-  const paket=option.value;
-  const hari=option.dataset.days||"";
-
-  if(!currentUid){
-    bukaRequestPopup(
-      "Belum Login",
-      "Akun belum terdeteksi. Silakan login terlebih dahulu sebelum request token.",
-      "close",
-      ""
-    );
-    return;
+    setTimeout(()=>{
+      box.scrollIntoView({behavior:"smooth",block:"start"});
+    },80);
+  }else{
+    box.style.display="none";
+    btn.textContent="🔑 Request Token";
   }
-
-  tampilkanQRIS();
-});
-
-document.getElementById("btnPesanWARequest").addEventListener("click",function(){
-  const select=document.getElementById("requestTokenPackage");
-  const paket=select.options[select.selectedIndex].value;
-  const message=formatRequestMessage(paket);
-
-  bukaRequestPopup(
-    "Kirim Request via WhatsApp?",
-    "Pesan berikut akan dikirim ke 082319264646:\n\n"+message,
-    "whatsapp",
-    message
-  );
-});
-
-document.getElementById("btnRequestCancel").addEventListener("click",function(){
-  tutupRequestPopup();
-});
-
-document.getElementById("btnRequestSend").addEventListener("click",function(){
-  const type=pendingRequestType;
-  const message=pendingRequestMessage;
-
-  if(type==="whatsapp" || type==="request"){
-    if(!message){
-      tutupRequestPopup();
-      return;
-    }
-    bukaWhatsAppRequest(message);
-  }
-
-  tutupRequestPopup();
-});
-
-document.getElementById("fixzyRequestModal").addEventListener("click",function(e){
-  if(e.target===this) tutupRequestPopup();
-});
-
+};
 
 document.getElementById("tokenInput").addEventListener("input",function(){
   this.value=this.value.toUpperCase();
