@@ -253,7 +253,7 @@ const $=id=>document.getElementById(id);
 function esc(v){
   return String(v??"").replace(/[&<>"']/g,m=>({
     "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"
-  }[m]);
+  }[m]));
 }
 function rupiah(v){
   return "Rp "+Number(v||0).toLocaleString("id-ID");
@@ -273,22 +273,6 @@ function getParentSession(){
     }
   }catch(e){}
   return null;
-}
-
-async function loadProfileByUid(id){
-  if(!id)return false;
-
-  try{
-    const snap=await getDoc(doc(db,"users",id));
-    if(snap.exists()){
-      profile=snap.data()||{};
-      return true;
-    }
-  }catch(e){
-    console.error("users/{UID}:",e);
-  }
-
-  return false;
 }
 
 function applySession(s){
@@ -316,7 +300,13 @@ async function loadAuthDirect(){
   uid=u.uid;
   email=u.email||"";
 
-  await loadProfileByUid(u.uid);
+  try{
+    const snap=await getDoc(doc(db,"users",u.uid));
+    profile=snap.exists()?snap.data()||{}:{};
+  }catch(e){
+    console.error("users/{UID}:",e);
+    profile={};
+  }
 
   applySession({
     uid:u.uid,
@@ -324,43 +314,6 @@ async function loadAuthDirect(){
     role:profile.role||"reseller",
     profile
   });
-
-  await loadBalance();
-  await loadHistory();
-  return true;
-}
-
-async function loadUserFromParentSession(s){
-  if(!s?.uid)return false;
-
-  applySession(s);
-
-  // Sesi Index adalah sumber UID. Jika profile dari Index belum lengkap,
-  // ambil users/{UID} seperti halaman Request Token Reseller.
-  if(
-    !email ||
-    !profile.namaKonter &&
-    !profile.namaPemilik &&
-    !profile.namaToko &&
-    !profile.nama &&
-    !profile.displayName &&
-    !profile.name
-  ){
-    await loadProfileByUid(uid);
-
-    const sessionEmail=String(s.profile?.email||s.email||"");
-    if(!email)email=sessionEmail||auth.currentUser?.email||"";
-
-    applySession({
-      uid,
-      email,
-      role:s.role||profile.role||"reseller",
-      profile
-    });
-  }
-
-  await loadBalance();
-  await loadHistory();
   return true;
 }
 
@@ -369,11 +322,15 @@ async function waitForIndexSession(){
     const s=getParentSession();
 
     if(s){
-      await loadUserFromParentSession(s);
+      applySession(s);
+      try{await loadBalance();}catch(e){console.error("Saldo:",e)}
+      try{await loadHistory();}catch(e){console.error("Riwayat:",e)}
       return true;
     }
 
     if(await loadAuthDirect()){
+      try{await loadBalance();}catch(e){console.error("Saldo:",e)}
+      try{await loadHistory();}catch(e){console.error("Riwayat:",e)}
       return true;
     }
 
@@ -390,7 +347,7 @@ async function waitForIndexSession(){
 
   showModal(
     "Sesi Belum Siap",
-    "Sesi Firebase belum ditemukan. Halaman ini menggunakan UID akun yang sama dengan Index FIXZY. Silakan kembali ke Index, pastikan login aktif, lalu buka halaman Pembelian Token Tunai kembali."
+    "Sesi Firebase belum ditemukan. Halaman ini menggunakan UID akun yang sama dengan halaman Request Token Reseller. Silakan kembali ke Index, pastikan login aktif, lalu buka halaman ini kembali."
   );
 
   return false;
@@ -749,7 +706,7 @@ $("refreshBtn").onclick=async()=>{
     const s=getParentSession();
 
     if(s){
-      await loadUserFromParentSession(s);
+      applySession(s);
     }else if(auth.currentUser){
       await loadAuthDirect();
     }else{
@@ -763,8 +720,8 @@ $("refreshBtn").onclick=async()=>{
       return;
     }
 
-    await loadBalance();
-    await loadHistory();
+    try{await loadBalance();}catch(e){console.error("Saldo:",e)}
+    try{await loadHistory();}catch(e){console.error("Riwayat:",e)}
 
     showModal("Berhasil","Data akun, saldo, dan riwayat sudah diperbarui.");
   }catch(e){
@@ -780,11 +737,9 @@ $("darkBtn").onclick=()=>document.body.classList.toggle("dark");
 
 onAuthStateChanged(auth,async u=>{
   if(!uid && u){
-    try{
-      await loadAuthDirect();
-    }catch(e){
-      console.error("Auth load:",e);
-    }
+    await loadAuthDirect();
+    try{await loadBalance();}catch(e){console.error("Saldo:",e)}
+    try{await loadHistory();}catch(e){console.error("Riwayat:",e)}
   }
 });
 
