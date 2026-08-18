@@ -265,9 +265,9 @@ function showModal(title,text){
 }
 window.closeModal=()=>$("modal").classList.remove("show");
 
-function sessionParent(){
+function getParentSession(){
   try{
-    if(window.parent&&window.parent!==window){
+    if(window.parent && window.parent!==window){
       const s=window.parent.fixzySession;
       if(s?.uid)return s;
     }
@@ -275,61 +275,125 @@ function sessionParent(){
   return null;
 }
 
-async function loadUser(){
-  const u=auth.currentUser;
-  if(!u)return false;
-
-  uid=u.uid;
-  email=u.email||"";
+async function loadProfileByUid(id){
+  if(!id)return false;
 
   try{
-    const s=await getDoc(doc(db,"users",uid));
-    profile=s.exists()?s.data()||{}:{};
+    const snap=await getDoc(doc(db,"users",id));
+    if(snap.exists()){
+      profile=snap.data()||{};
+      return true;
+    }
   }catch(e){
-    console.error("users/{UID}",e);
-    profile={};
+    console.error("users/{UID}:",e);
   }
 
-  applyUser();
-  await loadBalance();
-  await loadHistory();
-  return true;
+  return false;
 }
 
-function applyParentSession(s){
-  if(!s?.uid)return false;
-
+function applySession(s){
   uid=String(s.uid||"");
   email=String(s.profile?.email||s.email||"");
   profile={...(s.profile||{})};
-
-  applyUser();
-  return true;
-}
-
-function applyUser(){
-  $("connectionState").textContent="● TERHUBUNG • UID: "+uid.slice(0,8)+"...";
-  $("connectionState").style.color="#166534";
 
   $("email").textContent=email||"-";
   $("nama").textContent=
     profile.namaKonter||profile.namaPemilik||profile.namaToko||
     profile.nama||profile.displayName||profile.name||
     email.split("@")[0]||"-";
-  $("role").textContent=String(profile.role||"reseller").toUpperCase();
+
+  $("role").textContent=String(s.role||profile.role||"reseller").toUpperCase();
   $("status").textContent=profile.status||"aktif";
+
+  $("connectionState").textContent="● TERHUBUNG • UID: "+uid.slice(0,8)+"...";
+  $("connectionState").style.color="#166534";
 }
 
-async function loadBalance(){
-  if(!uid)return;
-  try{
-    const s=await getDoc(doc(db,"resellerBalances",uid));
-    balance=s.exists()?Number(s.data()?.balance||0):0;
-  }catch(e){
-    console.error("loadBalance",e);
-    balance=0;
+async function loadAuthDirect(){
+  const u=auth.currentUser;
+  if(!u)return false;
+
+  uid=u.uid;
+  email=u.email||"";
+
+  await loadProfileByUid(u.uid);
+
+  applySession({
+    uid:u.uid,
+    email:u.email||"",
+    role:profile.role||"reseller",
+    profile
+  });
+
+  await loadBalance();
+  await loadHistory();
+  return true;
+}
+
+async function loadUserFromParentSession(s){
+  if(!s?.uid)return false;
+
+  applySession(s);
+
+  // Sesi Index adalah sumber UID. Jika profile dari Index belum lengkap,
+  // ambil users/{UID} seperti halaman Request Token Reseller.
+  if(
+    !email ||
+    !profile.namaKonter &&
+    !profile.namaPemilik &&
+    !profile.namaToko &&
+    !profile.nama &&
+    !profile.displayName &&
+    !profile.name
+  ){
+    await loadProfileByUid(uid);
+
+    const sessionEmail=String(s.profile?.email||s.email||"");
+    if(!email)email=sessionEmail||auth.currentUser?.email||"";
+
+    applySession({
+      uid,
+      email,
+      role:s.role||profile.role||"reseller",
+      profile
+    });
   }
-  $("balance").textContent=rupiah(balance);
+
+  await loadBalance();
+  await loadHistory();
+  return true;
+}
+
+async function waitForIndexSession(){
+  for(let i=0;i<30;i++){
+    const s=getParentSession();
+
+    if(s){
+      await loadUserFromParentSession(s);
+      return true;
+    }
+
+    if(await loadAuthDirect()){
+      return true;
+    }
+
+    await new Promise(r=>setTimeout(r,250));
+  }
+
+  $("email").textContent="-";
+  $("nama").textContent="Belum login di Firebase";
+  $("role").textContent="RESELLER";
+  $("status").textContent="Belum login";
+  $("balance").textContent="Rp 0";
+  $("connectionState").textContent="● BELUM TERHUBUNG KE FIREBASE";
+  $("connectionState").style.color="#991b1b";
+
+  showModal(
+    "Sesi Belum Siap",
+    "Sesi Firebase belum ditemukan. Halaman ini menggunakan UID akun yang sama dengan Index FIXZY. Silakan kembali ke Index, pastikan login aktif, lalu buka halaman Pembelian Token Tunai kembali."
+  );
+
+  return false;
 }
 
 function updatePurchase(){
@@ -680,88 +744,52 @@ $("refreshBtn").onclick=async()=>{
   const btn=$("refreshBtn");
   btn.disabled=true;
   btn.textContent="↻";
-  try{
-    const parent=sessionParent();
 
-    if(parent?.uid){
-      applyParentSession(parent);
+  try{
+    const s=getParentSession();
+
+    if(s){
+      await loadUserFromParentSession(s);
     }else if(auth.currentUser){
-      await loadUser();
+      await loadAuthDirect();
     }else{
       uid="";
-      await waitForSession();
+      await waitForIndexSession();
       return;
     }
 
     if(!uid){
-      await waitForSession();
+      await waitForIndexSession();
       return;
     }
 
     await loadBalance();
     await loadHistory();
-    showModal("Berhasil","Akun, saldo, dan riwayat sudah diperbarui.");
+
+    showModal("Berhasil","Data akun, saldo, dan riwayat sudah diperbarui.");
   }catch(e){
-    console.error("Refresh",e);
+    console.error("Refresh:",e);
     showModal("Refresh Gagal",e?.message||String(e));
   }finally{
-    btn.disabled=false;btn.textContent="↻";
+    btn.disabled=false;
+    btn.textContent="↻";
   }
 };
 
 $("darkBtn").onclick=()=>document.body.classList.toggle("dark");
 
-async function waitForSession(){
-  // Tunggu sesi dari Index terlebih dahulu. Ini penting saat halaman
-  // dibuka melalui shell/iframe karena Firebase Auth belum tentu siap
-  // pada saat script pertama dijalankan.
-  for(let i=0;i<40;i++){
-    const parent=sessionParent();
-
-    if(parent?.uid){
-      applyParentSession(parent);
-      await loadBalance();
-      await loadHistory();
-      return true;
-    }
-
-    if(auth.currentUser){
-      if(await loadUser())return true;
-    }
-
-    await new Promise(r=>setTimeout(r,250));
-  }
-
-  $("email").textContent="-";
-  $("nama").textContent="Sesi Firebase belum ditemukan";
-  $("role").textContent="RESELLER";
-  $("status").textContent="Belum terhubung";
-  $("balance").textContent="Rp 0";
-  $("connectionState").textContent="● BELUM TERHUBUNG KE FIREBASE";
-  $("connectionState").style.color="#991b1b";
-  showModal(
-    "Belum Terhubung",
-    "Sesi login Firebase belum siap. Kembali ke Index FIXZY, pastikan akun sudah login, lalu buka halaman ini kembali atau tekan tombol refresh."
-  );
-  return false;
-}
-
 onAuthStateChanged(auth,async u=>{
-  if(u){
-    if(!uid){
-      try{ await loadUser(); }catch(e){ console.error("Auth load",e); }
-    }else{
-      // Jika UID sudah didapat dari Index, cukup segarkan saldo/riwayat.
-      try{
-        await loadBalance();
-        await loadHistory();
-      }catch(e){ console.error("Refresh auth",e); }
+  if(!uid && u){
+    try{
+      await loadAuthDirect();
+    }catch(e){
+      console.error("Auth load:",e);
     }
   }
 });
 
 updatePurchase();
-waitForSession();
+waitForIndexSession();
 </script>
 </body>
 </html>
