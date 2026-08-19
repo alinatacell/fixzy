@@ -81,8 +81,46 @@ function getPendapatan(r){if(getStatus(r)!=="diambil")return 0;return getTotal(r
 function nomorWA(v){let s=String(v||"").replace(/[^0-9]/g,"");if(!s)return"";if(s.startsWith("0"))s="62"+s.slice(1);else if(s.startsWith("8"))s="62"+s;else if(!s.startsWith("62"))s="62"+s;return s}
 function konterName(){return profile.namaKonter||profile.namaToko||"FIXZY - "+(profile.namaPemilik||"Service HP")}
 
-async function loadProfile(user){const snap=await getDoc(doc(db,"users",user.uid));if(!snap.exists())throw new Error("Profil tidak ditemukan");profile=snap.data()||{};const role=String(profile.role||"").toLowerCase();ownerUid=(role==="owner"||profile.isOwner===true)?user.uid:(profile.ownerUid||profile.ownerId||user.uid);uid=user.uid;$("konterInfo").textContent=konterName()+" • "+ownerUid.slice(0,6)+" • "+role}
-async function getOwnedServis(){const map=new Map();async function ambil(field,value){if(!value)return;try{const q=query(collection(db,"servis"),where(field,"==",value));const snap=await getDocsFromServer(q);snap.docs.forEach(d=>map.set(d.id,{id:d.id,...d.data()}))}catch(e){console.warn(e.message)}}await ambil("ownerUid",ownerUid);await ambil("ownerId",ownerUid);await ambil("uid",ownerUid);if(ownerUid!==uid){await ambil("ownerUid",uid);await ambil("uid",uid)}return[...map.values()].sort((a,b)=>String(b.tanggal||b.createdAt||"").localeCompare(String(a.tanggal||a.createdAt||"")))}
+async function loadProfile(user){
+ const snap=await getDoc(doc(db,"users",user.uid));
+ if(!snap.exists())throw new Error("Profil akun tidak ditemukan.");
+ profile=snap.data()||{};
+ const role=String(profile.role||"").toLowerCase();
+ if(!["owner","employee","kasir","superadmin"].includes(role))throw new Error("Akun tidak memiliki akses Data Servis.");
+ uid=user.uid;
+ ownerUid=(role==="owner"||profile.isOwner===true)?user.uid:(profile.ownerUid||profile.ownerId||"");
+ if(!ownerUid)throw new Error("Owner akun tidak ditemukan.");
+ ownerUid=String(ownerUid);
+ $("konterInfo").textContent=konterName()+" • "+ownerUid.slice(0,6)+" • "+role;
+}
+
+async function getOwnedServis(){
+ const map=new Map();
+ async function ambil(field,value){
+   if(!value)return;
+   try{
+     const q=query(collection(db,"servis"),where(field,"==",value));
+     const snap=await getDocsFromServer(q);
+     snap.docs.forEach(d=>{
+       const data=d.data()||{};
+       // Filter kedua di sisi aplikasi: dokumen harus benar-benar menunjuk ke owner aktif.
+       const ownerA=data.ownerUid?String(data.ownerUid):"";
+       const ownerB=data.ownerId?String(data.ownerId):"";
+       const legacyUid=(field==="uid"&&data.uid)?String(data.uid):"";
+       const conflicting=(ownerA&&ownerA!==ownerUid)||(ownerB&&ownerB!==ownerUid);
+       const docOwner=ownerA||ownerB||legacyUid;
+       if(!conflicting&&docOwner===ownerUid)map.set(d.id,{id:d.id,...data});
+     });
+   }catch(e){console.warn(e.message)}
+ }
+ // Untuk akun bawahan, HANYA ambil berdasarkan ownerUid/ownerId milik owner.
+ // Tidak lagi mengambil data berdasarkan UID akun bawahan, agar data owner lain tidak ikut masuk.
+ await ambil("ownerUid",ownerUid);
+ await ambil("ownerId",ownerUid);
+ // Dokumen lama yang hanya memakai uid masih boleh dibaca HANYA oleh akun owner sendiri.
+ if(uid===ownerUid)await ambil("uid",ownerUid);
+ return[...map.values()].sort((a,b)=>String(b.tanggal||b.createdAt||"").localeCompare(String(a.tanggal||a.createdAt||"")));
+}
 async function muatSemua(){if(!uid)return;$("statusMsg").textContent="⏳ Membaca data servis...";try{const rows=await getOwnedServis();allRows=rows;render();const totalNilai=rows.reduce((s,r)=>s+getTotal(r),0),totalPendapatan=rows.reduce((s,r)=>s+getPendapatan(r),0);$("dataStats").innerHTML=`<b>${rows.length}</b> data servis • Total nilai ${money(totalNilai)} • Pendapatan <span class="income">${money(totalPendapatan)}</span> • Konter: ${esc(konterName())} • Produk kosong: ${rows.filter(r=>!parseProduk(r).has).length}`;$("statusMsg").textContent=`✅ ${rows.length} servis - Produk dibaca dari semua format (items, produk, sparepart, manual)`}catch(e){$("statusMsg").textContent="❌ "+e.message}}
 function render(){const q=($("q").value||"").toLowerCase().trim(),st=($("fStatus").value||"").toLowerCase().trim(),tg=$("fTanggal").value||"",filtered=allRows.filter(r=>{if(q){const prodText=getProdukText(r).toLowerCase(),hay=[getNota(r),getNama(r),getWa(r),getTipe(r),getKerusakan(r),prodText].join(" ").toLowerCase();if(!hay.includes(q))return false}if(st&&getStatus(r)!==st)return false;if(tg&&!String(dateVal(r)).startsWith(tg))return false;return true});
  if(!filtered.length){$("tbody").innerHTML='<tr><td colspan="8" class="empty">Belum ada servis untuk filter ini. Coba cek Produk kosong di input-servis (belum pilih stok?).</td></tr>';$("cards").innerHTML='<div class="card empty">Belum ada data</div>';return}
@@ -100,14 +138,15 @@ function buildPesanWA(r,newStatus){const namaKonter=konterName(),nama=getNama(r)
 
 function bukaWhatsApp(nomor,pesan){
  if(!nomor)return;
- const msg=encodeURIComponent(pesan||"");
- const waUrl="https://wa.me/"+nomor+"?text="+msg;
+ const teks=encodeURIComponent(pesan||"");
+ const waUrl="https://api.whatsapp.com/send?phone="+encodeURIComponent(nomor)+"&text="+teks;
  try{
-   // Buka langsung pada halaman utama agar tidak dimuat sebagai iframe.
-   // Ini mencegah pesan "menolak terhubung" pada browser/webview tertentu.
-   window.top.location.assign(waUrl);
+   const win=window.open(waUrl,"_blank");
+   if(!win){
+     window.location.href=waUrl;
+   }
  }catch(e){
-   window.location.assign(waUrl);
+   window.location.href=waUrl;
  }
 }
 
