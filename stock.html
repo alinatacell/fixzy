@@ -219,7 +219,7 @@ function tutupHalaman(){
   
 <div class="card excel-box" id="excelCard">
   <div class="title">📤 Import Stok dari Excel</div>
-  <div class="sub">Format kolom: <b>nama | kategori | hargaBeli | hargaJual | stok | sku | deskripsi</b>. Baris pertama harus header. Support .xlsx, .xls, .csv</div>
+  <div class="sub">Format kolom: <b>nama | kategori | hargaBeli | hargaJual | stok | sku | deskripsi</b>. Baris pertama harus header. Support .xlsx, .xls, .csv. <b>Produk yang sama tidak akan dimasukkan dua kali.</b></div>
   <div class="excel-row" style="margin-top:10px">
     <input type="file" id="excelFile" accept=".xlsx,.xls,.csv" class="excel-input" style="padding:10px;border:1px solid #d1d5db;border-radius:10px;background:#fff">
     <button class="btn dark" onclick="previewExcel()">👁️ Preview</button>
@@ -266,56 +266,82 @@ function previewExcel(){
 async function uploadExcelToFirebase(){
   if(typeof XLSX==='undefined'){ showPopup('Library Excel belum loaded. Refresh halaman.','Error'); return; }
   if(!excelData.length){ showPopup('Preview dulu file nya - klik Preview','FIXZY'); return; }
-  if(!confirm(`Upload ${excelData.length} data stok ke Firebase fixzy-update?`)) return;
   const statusEl=document.getElementById('excelStatus');
-  statusEl.textContent='Mengupload...';
+  statusEl.textContent='Memeriksa duplikat...';
   statusEl.style.color='#16a34a';
   const dbRef=window.db||window.firestoreDb;
   const owner=window.ownerUid||window.uid||ownerUid||uid||'';
   if(!dbRef){ showPopup('Firebase belum siap, tunggu login','Error'); return; }
   if(!owner){ showPopup('ownerUid tidak ditemukan','Error'); return; }
-  let ok=0,fail=0;
+  showLoading(true,'Memeriksa produk Excel...');
+  let ok=0,skip=0,fail=0;
+  const skipped=[];
   try{
-    const { collection, addDoc, serverTimestamp, getDocs, updateDoc, doc } = await import("https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js");
+    const { collection, addDoc, serverTimestamp, getDocs, updateDoc, doc, query, where } = await import("https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js");
     const ref=collection(dbRef,"stok");
     const snap=await getDocs(ref);
-    const existing=new Map();
-    snap.forEach(d=>{ const x=d.data(); if(x.kode) existing.set(String(x.kode).trim().toLowerCase(), d.id); });
+    const existingByCode=new Map();
+    const existingProducts=[];
+    snap.forEach(d=>{
+      const x=d.data()||{};
+      const ownerOf=String(x.ownerUid||x.uid||x.ownerId||'');
+      if(ownerOf && ownerOf!==String(owner)) return;
+      existingProducts.push({id:d.id,...x});
+      const c=normalizeProductText(x.kode||x.sku||'');
+      if(c) existingByCode.set(c,{id:d.id,...x});
+    });
+    const seenInFile=new Map();
     for(const row of excelData){
       try{
-        const nama=String(row.nama||row.Nama||row.produk||'').trim();
+        const nama=String(row.nama||row.Nama||row.produk||row.Produk||'').trim();
         if(!nama){ fail++; continue; }
-        const toNum=v=>{ let s=String(v||'').replace(/[^0-9.-]/g,''); let n=parseFloat(s); return isNaN(n)?0:n; };
-        const kode=String(row.kode||row.sku||'').trim() || 'STK'+Date.now()+ok;
-        const payload={
-          kode:kode,
-          nama:nama,
-          kategori:String(row.kategori||row.Kategori||'LAINNYA').toUpperCase(),
-          hargaModal:toNum(row.hargaModal||row.hargaBeli||0),
-          hargaJual:toNum(row.hargaJual||0)||Math.round(toNum(row.hargaModal||0)*1.25),
-          sisa:Math.max(0,Math.round(toNum(row.sisa||row.stok||0))),
-          merk:String(row.merk||'').trim(),
-          catatan:String(row.catatan||row.deskripsi||'').trim(),
-          uid:owner,ownerUid:owner,ownerId:owner,
-          updatedAt:serverTimestamp(),sumber:"EXCEL"
-        };
-        const key=payload.kode.toLowerCase();
-        if(key && existing.has(key)){
-          await updateDoc(doc(dbRef,"stok",existing.get(key)),payload);
-        }else{
-          await addDoc(ref,{...payload,createdAt:serverTimestamp()});
+        const toNum=v=>{ let s=String(v??'').replace(/[^0-9.-]/g,''); let n=parseFloat(s); return isNaN(n)?0:n; };
+        const rawKode=String(row.kode||row.sku||row.SKU||'').trim();
+        const kode=rawKode || 'STK'+Date.now()+ok+Math.floor(Math.random()*1000);
+        const kategori=String(row.kategori||row.Kategori||'LAINNYA').trim().toUpperCase();
+        const merk=String(row.merk||row.Merk||row.brand||'').trim();
+        const identity=productIdentity(nama,kategori,merk);
+        const codeKey=normalizeProductText(kode);
+        const duplicateInFile=seenInFile.get(codeKey)||seenInFile.get(identity);
+        if(duplicateInFile){
+          skip++; skipped.push(`${nama} — duplikat di file Excel`); continue;
         }
+        seenInFile.set(identity,nama);
+        if(codeKey) seenInFile.set(codeKey,nama);
+
+        const sameCode=rawKode ? existingByCode.get(codeKey) : null;
+        const sameProduct=existingProducts.find(p=>productIdentity(p.nama||'',p.kategori||'LAINNYA',p.merk||'')===identity);
+        if(sameCode || sameProduct){
+          skip++;
+          skipped.push(`${nama} — ${duplicateMessage(sameCode?{type:'kode',product:sameCode}:{type:'produk',product:sameProduct})}`);
+          continue;
+        }
+        const payload={
+          kode:kode,nama:nama,kategori:kategori,
+          hargaModal:toNum(row.hargaModal||row.hargaBeli||0),
+          hargaJual:toNum(row.hargaJual||0)||Math.round(toNum(row.hargaModal||row.hargaBeli||0)*1.25),
+          sisa:Math.max(0,Math.round(toNum(row.sisa||row.stok||0))),
+          merk:merk,catatan:String(row.catatan||row.deskripsi||'').trim(),
+          uid:owner,ownerUid:owner,ownerId:owner,updatedAt:serverTimestamp(),sumber:'EXCEL'
+        };
+        await addDoc(ref,{...payload,createdAt:serverTimestamp()});
+        existingProducts.push({id:'new-'+ok,...payload});
+        if(codeKey) existingByCode.set(codeKey,{id:'new-'+ok,...payload});
         ok++;
-        statusEl.textContent=`Progress: ${ok}/${excelData.length} OK`;
+        statusEl.textContent=`Progress: ${ok+skip+fail}/${excelData.length}`;
       }catch(err){ console.error(err); fail++; }
     }
-    statusEl.textContent=`✅ Selesai: ${ok} berhasil, ${fail} gagal`;
+    statusEl.textContent=`Selesai: ${ok} ditambahkan, ${skip} duplikat dilewati, ${fail} gagal`;
     if(window.loadProducts) await window.loadProducts();
+    showLoading(false);
+    let detail=`Excel selesai diproses.\n\nDitambahkan: ${ok}\nDuplikat dilewati: ${skip}\nGagal: ${fail}`;
+    if(skipped.length) detail+=`\n\nProduk yang tidak dimasukkan:\n• ${skipped.slice(0,15).join('\n• ')}${skipped.length>15?`\n• ...dan ${skipped.length-15} lainnya`:''}`;
+    showPopup(detail,'Hasil Import Excel');
   }catch(e){
-    statusEl.textContent='❌ Error: '+e.message;
-    showPopup('Error: '+e.message,'Error');
+    console.error(e); statusEl.textContent='❌ Error: '+e.message; showLoading(false); showPopup('Error: '+e.message,'Error');
   }
 }
+
 window.uploadExcelToFirebase=uploadExcelToFirebase;
 
 </script>
@@ -341,7 +367,7 @@ window.uploadExcelToFirebase=uploadExcelToFirebase;
     <div class="note">
       Google Sheets harus dipublikasikan sebagai <b>Link</b>. Cara nya, buka sheet produk,pilih tab file,lalu bagikan spreadsheet sebagai publish, pilih dokumen/sheet, lalu publish, lalu salin link dan paste ke kolom di atas; perubahan pada spreadsheet yang dipublish dapat diperbarui otomatis.
       <br><br>
-      Setelah Link terbaca, data akan ditampilkan sebagai preview. Klik <b>SIMPAN KE DATA STOCK</b> untuk memasukkannya ke koleksi stok.
+      Setelah Link terbaca, data akan ditampilkan sebagai preview. Klik <b>SIMPAN HASIL CSV KE FIREBASE</b>. Produk yang sudah ada di stok, termasuk yang sebelumnya dimasukkan dari Excel atau Manual, akan dilewati agar tidak terjadi duplikat.
     </div>
     <div id="csvMsg" class="msg"></div>
     <div id="preview" class="preview">
@@ -452,6 +478,47 @@ function msg(text,type="info"){
   const el=$("csvMsg");el.className="msg show "+type;el.textContent=text;
 }
 function clearMsg(){ $("csvMsg").className="msg";$("csvMsg").textContent=""; }
+
+/* ===== PEMBATASAN PRODUK DUPLIKAT =====
+   Semua sumber (Excel, Google Sheet/CSV, dan Manual) memakai aturan yang sama.
+   Produk dianggap sama jika nama + kategori + merk sama setelah dinormalisasi,
+   atau jika kode/SKU yang dipakai sudah dimiliki produk lain.
+*/
+function normalizeProductText(v){
+  return String(v??'').trim().toLowerCase()
+    .normalize('NFKD').replace(/[\u0300-\u036f]/g,'')
+    .replace(/[^a-z0-9]+/g,'');
+}
+function productIdentity(nama,kategori,merk){
+  const n=normalizeProductText(nama);
+  const c=normalizeProductText(kategori||'LAINNYA');
+  const m=normalizeProductText(merk);
+  return n+'|'+c+'|'+m;
+}
+function findDuplicateProduct({nama,kode,kategori,merk,excludeId=''}){
+  const name=String(nama||'').trim();
+  const code=normalizeProductText(kode);
+  const identity=productIdentity(name,kategori,merk);
+  for(const p of (products||[])){
+    if(!p || String(p.id||'')===String(excludeId||'')) continue;
+    const pCode=normalizeProductText(p.kode||p.sku||'');
+    const pIdentity=productIdentity(p.nama||p.produk||'',p.kategori||'LAINNYA',p.merk||'');
+    if(code && pCode===code){
+      return {type:'kode',product:p};
+    }
+    if(name && identity===pIdentity){
+      return {type:'produk',product:p};
+    }
+  }
+  return null;
+}
+function duplicateMessage(dup){
+  if(!dup)return '';
+  const p=dup.product||{};
+  return dup.type==='kode'
+    ? `Kode/SKU ${p.kode||'-'} sudah digunakan oleh produk "${p.nama||'-'}".`
+    : `Produk "${p.nama||'-'}" sudah ada di stok dengan kategori ${p.kategori||'LAINNYA'}${p.merk?` dan merk ${p.merk}`:''}.`;
+}
 
 function cleanKey(s){
   return String(s??"").trim().toLowerCase().replace(/[\s_\-()./]+/g,"");
@@ -698,30 +765,43 @@ async function saveCSVToFirebase(){
   if(!punyaIzinStock()){showPopup("Akses Stock tidak diberikan oleh Owner.");return;}
   if(!uid){msg("Belum login Firebase. Silakan login terlebih dahulu.","err");return}
   if(!csvRows.length){msg("Belum ada data CSV.","err");return}
-  if(!confirm(`Simpan ${csvRows.length} produk ke Firebase?\\n\\nJika kode produk sudah ada, data akan diperbarui. Jika belum ada, akan dibuat baru.`))return;
-  showLoading(true,"Menyimpan stok ke Firebase...");
+  showLoading(true,"Memeriksa duplikat produk...");
   try{
     const ref=collection(db,"stok");
     const snap=await getDocs(query(ref,where("uid","==",ownerUid)));
-    const existing=new Map();
-    snap.forEach(d=>{const x=d.data();if(x.kode)existing.set(String(x.kode).trim().toLowerCase(),d.id)});
-    let baru=0,update=0;
+    const existing=[];
+    snap.forEach(d=>existing.push({id:d.id,...d.data()}));
+    const seen=new Set();
+    let baru=0,skip=0;
+    const skipped=[];
     for(const r of csvRows){
-      const data={...r,uid,updatedAt:serverTimestamp(),sumber:"CSV"};
-      const key=r.kode.toLowerCase();
-      if(key && existing.has(key)){
-        await updateDoc(doc(db,"stok",existing.get(key)),data);update++;
-      }else{
-        await addDoc(ref,{...data,createdAt:serverTimestamp()});baru++;
+      const identity=productIdentity(r.nama,r.kategori,r.merk);
+      const codeKey=normalizeProductText(r.kode);
+      if(seen.has(identity)||(codeKey&&seen.has('CODE:'+codeKey))){
+        skip++; skipped.push(`${r.nama} — duplikat di Google Sheet/CSV`); continue;
       }
+      seen.add(identity); if(codeKey)seen.add('CODE:'+codeKey);
+      const sameCode=codeKey?existing.find(p=>normalizeProductText(p.kode||p.sku||'')===codeKey):null;
+      const sameProduct=existing.find(p=>productIdentity(p.nama||'',p.kategori||'LAINNYA',p.merk||'')===identity);
+      if(sameCode||sameProduct){
+        skip++; skipped.push(`${r.nama} — ${duplicateMessage(sameCode?{type:'kode',product:sameCode}:{type:'produk',product:sameProduct})}`); continue;
+      }
+      const data={...r,uid:ownerUid,ownerUid:ownerUid,ownerId:ownerUid,updatedAt:serverTimestamp(),sumber:"CSV"};
+      const newRef=await addDoc(ref,{...data,createdAt:serverTimestamp()});
+      existing.push({id:newRef.id,...data});
+      baru++;
     }
-    msg(`Berhasil disimpan ke Firebase.\\nProduk baru: ${baru}\\nProduk diperbarui: ${update}`,"ok");
-    csvRows=[];$("saveCsvBtn").style.display="none";$("preview").style.display="none";
     await loadProducts();
+    showLoading(false);
+    csvRows=[];$('saveCsvBtn').style.display='none';$('preview').style.display='none';
+    let detail=`Google Sheet/CSV selesai diproses.\n\nProduk baru: ${baru}\nDuplikat dilewati: ${skip}`;
+    if(skipped.length) detail+=`\n\nProduk yang tidak dimasukkan:\n• ${skipped.slice(0,15).join('\n• ')}${skipped.length>15?`\n• ...dan ${skipped.length-15} lainnya`:''}`;
+    msg(detail,"ok");
+    showPopup(detail,'Hasil Import Produk');
   }catch(e){
-    console.error(e);
-    msg("Gagal menyimpan ke Firebase:\\n"+e.message+"\\n\\nJika muncul 'Missing or insufficient permissions', periksa Firestore Rules agar user login boleh membaca/menulis koleksi stok.","err");
-  }finally{showLoading(false)}
+    console.error(e); showLoading(false);
+    msg("Gagal menyimpan ke Firebase:\n"+e.message,"err");
+  }
 }
 
 function punyaIzinStock(){
@@ -872,15 +952,24 @@ window.editProduct=async id=>{
 window.saveManual=async()=>{
   if(!uid){toast("Belum login");return}
   const nama=$("fNama").value.trim(),modal=num($("fModal").value),kode=$("fKode").value.trim();
+  const kategori=$("fCat").value,merk=$("fMerk").value.trim();
   if(!nama||modal<=0){toast("Nama dan harga modal wajib diisi");return}
-  const data={uid:ownerUid, ownerUid:ownerUid, ownerId:ownerUid, kode,nama,kategori:$("fCat").value,hargaModal:modal,hargaJual:num($("fJual").value)||Math.round(modal*2+50000),sisa:Math.max(0,num($("fSisa").value)),merk:$("fMerk").value.trim(),catatan:$("fNote").value.trim(),updatedAt:serverTimestamp(),sumber:"manual"};
+  if(!editingId){
+    const dup=findDuplicateProduct({nama,kode,kategori,merk});
+    if(dup){showPopup(duplicateMessage(dup)+"\n\nProduk yang sama tidak boleh dimasukkan dua kali. Jika ingin mengubah stok/harga, gunakan tombol Edit pada produk yang sudah ada.",'Produk Sudah Ada');return;}
+  }else{
+    const dup=findDuplicateProduct({nama,kode,kategori,merk,excludeId:editingId});
+    if(dup){showPopup(duplicateMessage(dup)+"\n\nGunakan kode/nama produk yang berbeda atau edit produk yang sudah ada.",'Duplikat Produk');return;}
+  }
+  const data={uid:ownerUid,ownerUid:ownerUid,ownerId:ownerUid,kode,nama,kategori,hargaModal:modal,hargaJual:num($("fJual").value)||Math.round(modal*2+50000),sisa:Math.max(0,num($("fSisa").value)),merk,catatan:$("fNote").value.trim(),updatedAt:serverTimestamp(),sumber:"manual"};
   showLoading(true,editingId?"Memperbarui stok...":"Menyimpan stok...");
   try{
     if(editingId)await updateDoc(doc(db,"stok",editingId),data);
     else await addDoc(collection(db,"stok"),{...data,createdAt:serverTimestamp()});
     closeManual();toast(editingId?"Stok diperbarui":"Stok ditambahkan");await loadProducts();
-  }catch(e){showPopup("Gagal menyimpan:\\n"+e.message)}finally{showLoading(false)}
+  }catch(e){showPopup("Gagal menyimpan:\n"+e.message)}finally{showLoading(false)}
 }
+
 window.deleteProduct=async id=>{
   if(!confirm("Hapus produk ini dari Firebase?"))return;
   try{await deleteDoc(doc(db,"stok",id));toast("Produk dihapus");await loadProducts()}catch(e){showPopup("Gagal menghapus:\\n"+e.message)}
