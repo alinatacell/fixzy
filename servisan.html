@@ -206,7 +206,7 @@ let uid=null;let businessUid=null;let profile={};let role="";let products=[];let
 const $=id=>document.getElementById(id);const num=id=>Number(String($(id)?.value||"").replace(/[^\d]/g,""))||0;const rupiah=n=>"Rp "+(Number(n)||0).toLocaleString("id-ID");const esc=s=>String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 function setNotice(text,type=""){const el=$("accessNotice");el.textContent=text;el.className="notice"+(type?" "+type:"");}
 function roleAllowed(r){return ["superadmin","admin","owner","employee","karyawan","kurir"].includes(r);}
-function resolveBusinessUid(data){const r=String(data.role||"").toLowerCase();if(r==="owner" || r==="superadmin") return uid;return String(data.ownerUid||data.ownerId||uid);}
+function resolveBusinessUid(data){const r=String(data.role||"").toLowerCase();if(r==="owner") return uid;return String(data.ownerId||data.ownerUid||uid);}
 function notaBaru(){const d=new Date(),p=n=>String(n).padStart(2,"0");return "SRV-"+d.getFullYear()+p(d.getMonth()+1)+p(d.getDate())+"-"+p(d.getHours())+p(d.getMinutes())+p(d.getSeconds())+String(d.getMilliseconds()).padStart(3,"0");}
 function makeBarcode(nota){return "FX-"+nota.replace(/^SRV-/,"");}
 function namaProduk(p){return String(p.nama||p.namaProduk||"-")}function kodeProduk(p){return String(p.kode||p.kodeProduk||"").trim()}function modalProduk(p){return Number(p.hargaModal??p.modal??0)||0}function dateOnly(){return new Date().toISOString().slice(0,10)}
