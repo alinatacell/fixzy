@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>FIXZY | Data Servis - EDIT STATUS + WA + RESPONSIVE + SCAN BARCODE</title>
+<title>FIXZY | Data Servis - FIX PRODUK TIDAK MUNCUL</title>
 <style>
 *{box-sizing:border-box} :root{--black:#111827;--yellow:#facc15;--bg:#eef2f6;--green:#047857}
 body{margin:0;background:var(--bg);color:#111827;font-family:Arial,Helvetica,sans-serif}
@@ -38,7 +38,7 @@ tr:hover td{background:#fffbeb}
 .servis-card{background:#fff;border:2px solid #111827;border-radius:14px;box-shadow:4px 4px 0 #111827;padding:12px}
 .servis-card .top{display:flex;justify-content:space-between;gap:8px;margin-bottom:8px}
 .servis-card .row{display:flex;justify-content:space-between;gap:8px;padding:4px 0;border-bottom:1px dashed #e5e7eb;font-size:11px}
-.servis-card .row b{font-size:11px}
+.servis-card .row b{font-size:11px;max-width:60%;text-align:right}
 .servis-card .foot{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px}
 .popup{position:fixed;inset:0;background:#0009;display:none;align-items:center;justify-content:center;z-index:1000;padding:12px}
 .popup.show{display:flex}
@@ -48,16 +48,9 @@ tr:hover td{background:#fffbeb}
 .wa-box{margin-top:10px;padding:11px;border:1px solid #e2e8f0;border-radius:10px;background:#f8fafc;white-space:pre-wrap;font-size:11px;max-height:220px;overflow:auto}
 #scanBox{width:min(480px,calc(100% - 20px))}
 #reader{width:100%;border-radius:12px;overflow:hidden;border:2px solid #111827}
-@media(max-width:900px){
-  .search-grid{grid-template-columns:1fr 1fr}
-  table{min-width:900px}
-}
-@media(max-width:700px){
-  .search-grid{grid-template-columns:1fr}
-  .table-wrap{display:none}
-  .cards{display:grid}
-  header{padding:8px 10px}.brand b{font-size:14px}
-}
+.prod-chip{display:inline-block;background:#fef9c3;border:1px solid #facc15;padding:3px 6px;border-radius:6px;margin:2px;font-size:10px;font-weight:700}
+@media(max-width:900px){ .search-grid{grid-template-columns:1fr 1fr} table{min-width:900px}}
+@media(max-width:700px){ .search-grid{grid-template-columns:1fr} .table-wrap{display:none} .cards{display:grid} header{padding:8px 10px}.brand b{font-size:14px}}
 </style>
 <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
 </head>
@@ -75,12 +68,12 @@ tr:hover td{background:#fffbeb}
 <div class="card">
 <div style="font-weight:900;margin-bottom:10px;border-bottom:2px solid #111827;padding-bottom:8px">Pencarian Data Servis</div>
 <div class="search-grid">
-<div><label>CARI NOTA / NAMA / HP</label><input id="q" placeholder="Ketik nota, nama, no HP, barcode..."></div>
+<div><label>CARI NOTA / NAMA / HP</label><input id="q" placeholder="Ketik nota, nama, no HP, barcode, produk..."></div>
 <div><label>STATUS</label><select id="fStatus"><option value="">Semua Status</option><option value="masuk">Masuk</option><option value="nunggu_sparepart">Nunggu Sparepart</option><option value="proses">Proses</option><option value="selesai">Selesai</option><option value="diambil">Diambil</option><option value="batal">Batal</option></select></div>
 <div><label>TANGGAL</label><input id="fTanggal" type="date"></div>
 <div><label>SCAN BARCODE</label><button class="btn btn-scan" onclick="bukaScan()" style="width:100%;height:46px">📷 Scan Barcode</button></div>
 </div>
-<div id="statusMsg" style="font-size:11px;color:#64748b;margin-top:8px">Menunggu login... • Scan barcode nota untuk cari cepat</div>
+<div id="statusMsg" style="font-size:11px;color:#64748b;margin-top:8px">Menunggu login...</div>
 </div>
 
 <div class="table-wrap"><table>
@@ -89,11 +82,9 @@ tr:hover td{background:#fffbeb}
 </tr></thead>
 <tbody id="tbody"><tr><td colspan="8" class="empty">Memuat Firebase...</td></tr></tbody>
 </table></div>
-
 <div class="cards" id="cards"></div>
 </main>
 
-<!-- POPUP SCAN BARCODE - TAMBAHAN SAJA -->
 <div class="popup" id="scanPopup"><div class="popup-box" id="scanBox">
 <h3>📷 Scan Barcode Nota</h3>
 <div style="font-size:11px;color:#64748b;margin-bottom:10px">Arahkan kamera ke barcode nota. Data tidak dirubah, hanya mencari.</div>
@@ -104,7 +95,6 @@ tr:hover td{background:#fffbeb}
 </div>
 </div></div>
 
-<!-- POPUP EDIT STATUS -->
 <div class="popup" id="editPopup"><div class="popup-box">
 <h3 id="editTitle">Edit Status Servis</h3>
 <div id="editBody" style="font-size:12px;line-height:1.6"></div>
@@ -125,7 +115,6 @@ tr:hover td{background:#fffbeb}
 </div>
 </div></div>
 
-<!-- POPUP WA KONFIRMASI -->
 <div class="popup" id="waPopup"><div class="popup-box">
 <h3>📲 Konfirmasi WA Pelanggan</h3>
 <div id="waInfo" style="font-size:12px;line-height:1.5"></div>
@@ -135,7 +124,6 @@ tr:hover td{background:#fffbeb}
 <button class="mini" onclick="salinWA()">📋 Salin</button>
 <button class="mini" onclick="tutupWA()">Tutup</button>
 </div>
-<div style="font-size:10px;color:#64748b;margin-top:8px">Pesan otomatis pakai Nama Konter dari Register (users.namaKonter). Pendapatan dihitung saat status Diambil.</div>
 </div></div>
 
 <script type="module">
@@ -154,18 +142,82 @@ const getStatus=r=>String(r.status||"masuk").toLowerCase();
 const getNota=r=>r.nomorNota||r.nota||r.id||"-";
 const getNama=r=>r.pelanggan?.nama||r.namaPelanggan||r.nama||"-";
 const getWa=r=>r.pelanggan?.wa||r.pelanggan?.noWa||r.noWa||r.wa||r.nomorWa||"";
-const getKerusakan=r=>r.servisan?.jenisKerusakan||r.kerusakan||r.keluhan||"-";
-const getTipe=r=>r.servisan?.brandTipe||r.brandTipe||r.tipeHp||"-";
-const getProduk=r=>r.produkDigunakan||r.sparepart||r.part||r.produk||"-";
-const getEstimasi=r=>Number(r.estimasi||r.estimasiBiaya||r.biayaEstimasi||r.totalEstimasi||0);
+const getKerusakan=r=>r.servisan?.jenisKerusakan||r.kerusakan||r.keluhan||r.jenisKerusakan||"-";
+const getTipe=r=>r.servisan?.brandTipe||r.brandTipe||r.tipeHp||r.merkTipe||"-";
+
+// === FIX PRODUK - BACA SEMUA FORMAT YANG MUNGKIN DARI INPUT SERVIS ===
+function parseProduk(r){
+  // coba semua kemungkinan field
+  const candidates = [
+    r.produkDigunakan,
+    r.produkYangDigunakan,
+    r.sparepart,
+    r.spareparts,
+    r.produk,
+    r.items,
+    r.produkList,
+    r.sparepartList,
+    r.produkTerpakai,
+    r.stokTerpakai,
+    r.barangDigunakan
+  ];
+  let found = null;
+  for(let c of candidates){
+    if(c && (Array.isArray(c) ? c.length>0 : String(c).trim()!=="")){ found=c; break; }
+  }
+  // jika tidak ada, cek field manual yang sering dipakai input-servis FIXZY
+  if(!found){
+    if(r.dataProduk) found=r.dataProduk;
+    if(r.produk_manual) found=r.produk_manual;
+    if(r.manualProduk) found=r.manualProduk;
+  }
+  if(!found) return {text:"-",list:[],has:false};
+
+  // jika string
+  if(typeof found === "string"){
+    const t=found.trim();
+    if(!t || t==="-") return {text:"-",list:[],has:false};
+    return {text:t,list:[{nama:t,qty:1}],has:true};
+  }
+  // jika array
+  if(Array.isArray(found)){
+    const list = found.map(item=>{
+      if(typeof item==="string") return {nama:item,qty:1};
+      if(typeof item==="object"){
+        return {
+          nama: item.nama||item.namaProduk||item.kode||item.kodeProduk||item.title||JSON.stringify(item).slice(0,30),
+          qty: Number(item.qty||item.jumlah||item.qtyProduk||1),
+          harga: Number(item.harga||item.hargaJual||0)
+        };
+      }
+      return {nama:String(item),qty:1};
+    }).filter(x=>x.nama && x.nama!=="-");
+    if(!list.length) return {text:"-",list:[],has:false};
+    const text = list.map(x=>`${x.nama}${x.qty>1?` x${x.qty}`:""}`).join(", ");
+    return {text, list, has:true};
+  }
+  // jika object
+  if(typeof found==="object"){
+    const nama=found.nama||found.namaProduk||found.kode||"-";
+    if(nama==="-") return {text:"-",list:[],has:false};
+    return {text:nama,list:[{nama,qty:Number(found.qty||1)}],has:true};
+  }
+  return {text:"-",list:[],has:false};
+}
+function getProdukText(r){ return parseProduk(r).text; }
+function getProdukChips(r){
+  const p=parseProduk(r);
+  if(!p.has) return '<span style="color:#94a3b8">-</span>';
+  return p.list.map(x=>`<span class="prod-chip">${esc(x.nama)}${x.qty>1?` x${x.qty}`:""}</span>`).join("");
+}
+
+const getEstimasi=r=>Number(r.estimasi||r.estimasiBiaya||r.biayaEstimasi||r.totalEstimasi||r.biayaServis||0);
 const getDiskon=r=>Number(r.diskon||r.potongan||0);
 const getDP=r=>Number(r.dp||r.uangMuka||r.panjar||0);
-const getTotal=r=>Number(r.total||r.totalBiaya||r.estimasi?.total||0);
+const getTotal=r=>Number(r.total||r.totalBiaya||r.estimasi?.total||r.totalBayar||0);
 function getPendapatan(r){
   if(getStatus(r)!=="diambil") return 0;
-  const total=getTotal(r);
-  const diskon=getDiskon(r);
-  return total - diskon;
+  return getTotal(r) - getDiskon(r);
 }
 function nomorWA(v){
   let s=String(v||"").replace(/[^0-9]/g,"");
@@ -175,9 +227,8 @@ function nomorWA(v){
   else if(!s.startsWith("62")) s="62"+s;
   return s;
 }
-function konterName(){
-  return profile.namaKonter||profile.namaToko||"FIXZY - "+(profile.namaPemilik||"Service HP");
-}
+function konterName(){ return profile.namaKonter||profile.namaToko||"FIXZY - "+(profile.namaPemilik||"Service HP"); }
+
 async function loadProfile(user){
   const snap=await getDoc(doc(db,"users",user.uid));
   if(!snap.exists()) throw new Error("Profil tidak ditemukan");
@@ -212,8 +263,8 @@ async function muatSemua(){
     render();
     const totalNilai=rows.reduce((s,r)=>s+getTotal(r),0);
     const totalPendapatan=rows.reduce((s,r)=>s+getPendapatan(r),0);
-    $("dataStats").innerHTML=`<b>${rows.length}</b> data servis • Total nilai ${money(totalNilai)} • Pendapatan <span class="income">${money(totalPendapatan)}</span> • Konter: ${esc(konterName())}`;
-    $("statusMsg").textContent=`✅ ${rows.length} servis - klik Edit untuk ubah status (masuk → nunggu_sparepart → proses → selesai → diambil) • Scan barcode untuk cari cepat`;
+    $("dataStats").innerHTML=`<b>${rows.length}</b> data servis • Total nilai ${money(totalNilai)} • Pendapatan <span class="income">${money(totalPendapatan)}</span> • Konter: ${esc(konterName())} • Produk kosong: ${rows.filter(r=>!parseProduk(r).has).length}`;
+    $("statusMsg").textContent=`✅ ${rows.length} servis - Produk dibaca dari semua format (items, produk, sparepart, manual)`;
   }catch(e){$("statusMsg").textContent="❌ "+e.message;}
 }
 function render(){
@@ -222,7 +273,8 @@ function render(){
   const tg=$("fTanggal").value||"";
   const filtered=allRows.filter(r=>{
     if(q){
-      const hay=[getNota(r),getNama(r),getWa(r),getTipe(r),getKerusakan(r)].join(" ").toLowerCase();
+      const prodText=getProdukText(r).toLowerCase();
+      const hay=[getNota(r),getNama(r),getWa(r),getTipe(r),getKerusakan(r),prodText].join(" ").toLowerCase();
       if(!hay.includes(q)) return false;
     }
     if(st && getStatus(r)!==st) return false;
@@ -230,7 +282,7 @@ function render(){
     return true;
   });
   if(!filtered.length){
-    $("tbody").innerHTML='<tr><td colspan="8" class="empty">Belum ada servis untuk filter ini.</td></tr>';
+    $("tbody").innerHTML='<tr><td colspan="8" class="empty">Belum ada servis untuk filter ini. Coba cek Produk kosong di input-servis (belum pilih stok?).</td></tr>';
     $("cards").innerHTML='<div class="card empty">Belum ada data</div>';
     return;
   }
@@ -241,10 +293,10 @@ function render(){
     const pendapatan=getPendapatan(r);
     return `<tr>
       <td>${esc(dateVal(r))}</td>
-      <td><b>${esc(nota)}</b><br><span class="barcode">${esc(nota)}</span><br><small>📷 barcode</small></td>
+      <td><b>${esc(nota)}</b><br><span class="barcode">${esc(nota)}</span></td>
       <td><b>${esc(getNama(r))}</b><br><small>${esc(wa)}</small></td>
       <td><b>${esc(getTipe(r))}</b><br><small>${esc(getKerusakan(r))}</small></td>
-      <td>${esc(getProduk(r))}</td>
+      <td>${getProdukChips(r)}</td>
       <td>
         Estimasi: ${money(getEstimasi(r))}<br>
         Diskon: ${money(getDiskon(r))}<br>
@@ -255,7 +307,7 @@ function render(){
       <td>
         <span class="badge status-${s}">${esc(s.replace('_',' '))}</span><br><br>
         <div class="actions">
-          <button class="mini" onclick="bukaEdit('${r.id}')">✏️ Edit Status</button>
+          <button class="mini" onclick="bukaEdit('${r.id}')">✏️ Edit</button>
           <button class="mini" onclick="kirimWALangsung('${r.id}')">📲 WA</button>
         </div>
       </td>
@@ -269,7 +321,7 @@ function render(){
       <div class="row"><span>👤 Pelanggan</span><b>${esc(getNama(r))} - ${esc(getWa(r))}</b></div>
       <div class="row"><span>📱 Servisan</span><b>${esc(getTipe(r))}</b></div>
       <div class="row"><span>🔧 Kerusakan</span><b>${esc(getKerusakan(r))}</b></div>
-      <div class="row"><span>📦 Produk</span><b>${esc(getProduk(r))}</b></div>
+      <div class="row"><span>📦 Produk</span><b>${getProdukText(r)}</b></div>
       <div class="row"><span>💰 Total</span><b>${money(getTotal(r))}</b></div>
       <div class="row"><span>🎁 Diskon</span><b>${money(getDiskon(r))}</b></div>
       <div class="row"><span>💵 DP</span><b>${money(getDP(r))}</b></div>
@@ -284,22 +336,20 @@ function render(){
 function buildPesanWA(r,newStatus){
   const namaKonter=konterName();
   const nama=getNama(r);const nota=getNota(r);const tipe=getTipe(r);const kerusakan=getKerusakan(r);
-  const total=getTotal(r);const produk=getProduk(r);const estimasi=getEstimasi(r);const diskon=getDiskon(r);const dp=getDP(r);
-  const statusLabel=newStatus.replace('_',' ');
+  const total=getTotal(r);const produk=getProdukText(r);const estimasi=getEstimasi(r);const diskon=getDiskon(r);const dp=getDP(r);
   let pesan="";
   if(newStatus==="masuk"){
-    pesan=`Halo Kak ${nama} 👋\n\nServisan HP ${tipe} (${kerusakan}) sudah kami terima di *${namaKonter}*.\n\n📄 Nota: ${nota}\n📅 Tgl: ${dateVal(r)}\n🔧 Keluhan: ${kerusakan}\n\nEstimasi: ${money(estimasi)}\nKami cek dulu ya, update selanjutnya akan kami infokan.\n\nTerima kasih 🙏\n*${namaKonter}*`;
+    pesan=`Halo Kak ${nama} 👋\n\nServisan HP ${tipe} (${kerusakan}) sudah kami terima di *${namaKonter}*.\n\n📄 Nota: ${nota}\n📅 Tgl: ${dateVal(r)}\n🔧 Keluhan: ${kerusakan}\n\nEstimasi: ${money(estimasi)}\nKami cek dulu ya.\n\nTerima kasih 🙏\n*${namaKonter}*`;
   }else if(newStatus==="nunggu_sparepart"){
-    pesan=`Halo Kak ${nama} 👋\n\nUpdate servisan *${nota}* di *${namaKonter}*:\n\nStatus: ⏳ *NUNGGU SPAREPART*\nHP: ${tipe}\nKerusakan: ${kerusakan}\nProduk dibutuhkan: ${produk}\n\nKami sedang menunggu sparepart datang. Akan segera diproses setelah part ready.\n\nTerima kasih 🙏\n*${namaKonter}*`;
+    pesan=`Halo Kak ${nama} 👋\n\nUpdate servisan *${nota}* di *${namaKonter}*:\n\nStatus: ⏳ *NUNGGU SPAREPART*\nHP: ${tipe}\nKerusakan: ${kerusakan}\nProduk dibutuhkan: ${produk}\n\nMenunggu sparepart datang.\n\nTerima kasih 🙏\n*${namaKonter}*`;
   }else if(newStatus==="proses"){
-    pesan=`Halo Kak ${nama} 👋\n\nUpdate servisan *${nota}* di *${namaKonter}*:\n\nStatus: 🔧 *PROSES*\nHP: ${tipe} - ${kerusakan}\nTeknisi sedang mengerjakan.\n\nEstimasi biaya: ${money(total)}\n\nMohon ditunggu ya Kak.\n*${namaKonter}*`;
+    pesan=`Halo Kak ${nama} 👋\n\nUpdate servisan *${nota}* di *${namaKonter}*:\n\nStatus: 🔧 *PROSES*\nHP: ${tipe} - ${kerusakan}\nProduk: ${produk}\n\nEstimasi biaya: ${money(total)}\n\nMohon ditunggu ya Kak.\n*${namaKonter}*`;
   }else if(newStatus==="selesai"){
-    pesan=`Halo Kak ${nama} 🎉\n\nServisan HP *${tipe}* Nota *${nota}* di *${namaKonter}* sudah *SELESAI* ✅\n\nDetail:\nKerusakan: ${kerusakan}\nProduk dipakai: ${produk}\nTotal: ${money(total)}\nDiskon: ${money(diskon)}\nDP: ${money(dp)}\nSisa bayar: ${money(total-diskon-dp)}\n\nSilakan ambil di konter kami ya Kak.\n\nTerima kasih 🙏\n*${namaKonter}*`;
+    pesan=`Halo Kak ${nama} 🎉\n\nServisan HP *${tipe}* Nota *${nota}* di *${namaKonter}* sudah *SELESAI* ✅\n\nDetail:\nKerusakan: ${kerusakan}\nProduk dipakai: ${produk}\nTotal: ${money(total)}\nDiskon: ${money(diskon)}\nDP: ${money(dp)}\nSisa bayar: ${money(total-diskon-dp)}\n\nSilakan ambil di konter kami ya Kak.\n\n*${namaKonter}*`;
   }else if(newStatus==="diambil"){
-    const pendapatan=getPendapatan({...r,status:'diambil'});
-    pesan=`Halo Kak ${nama} 🙏\n\nTerima kasih sudah mengambil HP *${tipe}* Nota *${nota}* di *${namaKonter}*.\n\nStatus: 📦 *DIAMBIL* ✅\nTotal bayar: ${money(total)}\n\nSemoga puas dengan layanan kami. Ditunggu servis berikutnya ya Kak!\n\n*${namaKonter}*`;
+    pesan=`Halo Kak ${nama} 🙏\n\nTerima kasih sudah mengambil HP *${tipe}* Nota *${nota}* di *${namaKonter}*.\n\nStatus: 📦 *DIAMBIL* ✅\nTotal bayar: ${money(total)}\nProduk: ${produk}\n\nSemoga puas, ditunggu servis berikutnya!\n*${namaKonter}*`;
   }else{
-    pesan=`Halo Kak ${nama},\n\nStatus servisan Nota ${nota} di ${namaKonter} diupdate menjadi: *${statusLabel.toUpperCase()}*.\n\nHP: ${tipe}\nKerusakan: ${kerusakan}\n\nTerima kasih.\n*${namaKonter}*`;
+    pesan=`Halo Kak ${nama},\n\nStatus servisan Nota ${nota} di ${namaKonter} diupdate menjadi: *${newStatus.toUpperCase()}*.\n\nHP: ${tipe}\nProduk: ${produk}\n\nTerima kasih.\n*${namaKonter}*`;
   }
   return pesan;
 }
@@ -312,10 +362,9 @@ window.bukaEdit=id=>{
     <b>Nota:</b> ${esc(getNota(r))} <span class="barcode">${esc(getNota(r))}</span><br>
     <b>Pelanggan:</b> ${esc(getNama(r))} - ${esc(getWa(r))}<br>
     <b>HP:</b> ${esc(getTipe(r))} - ${esc(getKerusakan(r))}<br>
-    <b>Produk:</b> ${esc(getProduk(r))}<br>
+    <b>Produk:</b> ${getProdukChips(r)}<br>
     <b>Total:</b> ${money(getTotal(r))} | Diskon: ${money(getDiskon(r))} | DP: ${money(getDP(r))}<br>
     <b>Status sekarang:</b> <span class="badge status-${getStatus(r)}">${esc(getStatus(r))}</span><br>
-    <b>Pendapatan (jika Diambil):</b> ${money(getPendapatan({...r,status:'diambil'}))}
   `;
   $("newStatus").value=getStatus(r);
   $("editPopup").classList.add("show");
@@ -332,14 +381,13 @@ window.simpanStatus=async()=>{
     await muatSemua();
     const pesan=buildPesanWA(r,newSt);
     const waNomor=nomorWA(getWa(r));
-    if(!waNomor){ alert("No WA pelanggan kosong, status sudah disimpan: "+newSt); return; }
-    pendingWA={phone:waNomor,message:pesan,nama:getNama(r),nota:getNota(r)};
+    if(!waNomor){ alert("No WA kosong, status disimpan: "+newSt); return; }
+    pendingWA={phone:waNomor,message:pesan};
     $("waInfo").innerHTML=`Status <b>${esc(newSt)}</b> disimpan ✅<br>Konfirmasi WA ke <b>${esc(getNama(r))}</b> (${esc(waNomor)})<br>Konter: <b>${esc(konterName())}</b>`;
     $("waText").textContent=pesan;
-    const link="https://wa.me/"+waNomor+"?text="+encodeURIComponent(pesan);
-    $("waLinkBtn").href=link;
+    $("waLinkBtn").href="https://wa.me/"+waNomor+"?text="+encodeURIComponent(pesan);
     $("waPopup").classList.add("show");
-  }catch(e){alert("Gagal update status: "+e.message);}
+  }catch(e){alert("Gagal update: "+e.message);}
 };
 window.kirimWALangsung=id=>{
   const r=allRows.find(x=>x.id===id);
@@ -358,43 +406,30 @@ window.tutupWA=()=>{$("waPopup").classList.remove("show");pendingWA=null};
 window.salinWA=async()=>{
   if(!pendingWA) return;
   try{ await navigator.clipboard.writeText(pendingWA.message); alert("Pesan disalin ✅"); }
-  catch{ 
-    const range=document.createRange();range.selectNode($("waText"));window.getSelection().removeAllRanges();window.getSelection().addRange(range);
-    document.execCommand("copy");alert("Pesan disalin ✅");
-  }
+  catch{ const range=document.createRange();range.selectNode($("waText"));window.getSelection().removeAllRanges();window.getSelection().addRange(range);document.execCommand("copy");alert("Pesan disalin ✅"); }
 };
-// === TAMBAHAN SCAN BARCODE SAJA - TIDAK RUBAH DATA LAIN ===
 window.bukaScan=()=>{
   $("scanPopup").classList.add("show");
   $("scanResult").textContent="Menyalakan kamera...";
   html5Qr = new Html5Qrcode("reader");
-  html5Qr.start(
-    { facingMode: "environment" },
-    { fps: 10, qrbox: { width: 250, height: 250 } },
+  html5Qr.start({ facingMode: "environment" },{ fps: 10, qrbox: { width: 250, height: 250 } },
     (decodedText)=>{
       $("scanResult").textContent="✅ Terdeteksi: "+decodedText;
       $("q").value=decodedText;
       render();
-      // auto tutup setelah 1 detik
       setTimeout(()=>{ tutupScan(); }, 1000);
     },
     (err)=>{}
-  ).catch(e=>{
-    $("scanResult").textContent="❌ Gagal buka kamera: "+e;
-  });
+  ).catch(e=>{ $("scanResult").textContent="❌ Gagal buka kamera: "+e; });
 };
 window.tutupScan=()=>{
   $("scanPopup").classList.remove("show");
-  if(html5Qr){
-    html5Qr.stop().then(()=>{ html5Qr.clear(); html5Qr=null; }).catch(()=>{});
-  }
+  if(html5Qr){ html5Qr.stop().then(()=>{ html5Qr.clear(); html5Qr=null; }).catch(()=>{}); }
 };
-
 window.refreshData=()=>location.reload();
 $("q").addEventListener("input",render);
 $("fStatus").addEventListener("change",render);
 $("fTanggal").addEventListener("change",render);
-
 onAuthStateChanged(auth, async user=>{
   if(!user){ location.replace("login.html"); return; }
   try{ await loadProfile(user); await muatSemua(); }
