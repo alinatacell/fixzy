@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0,viewport-fit=cover">
 <meta name="theme-color" content="#111827">
-<title>Dashboard Admin</title>
+<title>Dashboard Admin - FIXED ISOLASI</title>
 <style>
 *{box-sizing:border-box}
 :root{--navy:#0d1728;--blue:#0d6efd;--green:#16a34a;--red:#dc2626;--muted:#64748b;--line:#e2e8f0}
@@ -26,238 +26,190 @@ button,input,select{font:inherit;max-width:100%}
 .section{width:100%;margin-top:11px;min-width:0}.section-head{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-bottom:10px}.section-head h2{margin:0;font-size:17px}
 .grid2{display:grid;grid-template-columns:1fr;gap:12px}.grid3{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}
 .kpiMini{min-width:0;background:#fff;border:1px solid var(--line);border-radius:13px;padding:11px;overflow:hidden}.kpiMini small{color:var(--muted);font-weight:800;font-size:10px}.kpiMini b{display:block;font-size:17px;margin-top:6px;overflow-wrap:anywhere}
-.tabs{display:flex;gap:6px;overflow-x:auto;padding:2px 0 5px;margin:12px 0;-webkit-overflow-scrolling:touch}.tab{flex:0 0 auto;border:0;border-radius:12px;padding:9px 11px;background:#e2e8f0;font-weight:800;font-size:12px;white-space:nowrap;cursor:pointer}.tab.active{background:var(--navy);color:#fff}
+.tabs{display:flex;gap:6px;overflow-x:auto;padding:2px 0 5px;margin:12px 0}.tab{flex:0 0 auto;border:0;border-radius:12px;padding:9px 11px;background:#e2e8f0;font-weight:800;font-size:12px;white-space:nowrap;cursor:pointer}.tab.active{background:var(--navy);color:#fff}
 .panel{display:none;min-width:0}.panel.active{display:block}
 .filters{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:10px}.filters input,.filters select{min-width:0;flex:1 1 100%;width:100%;padding:10px 12px;border:1px solid #cbd5e1;border-radius:12px;background:#fff}.filters .btn{width:100%}
-.table-wrap{width:100%;max-width:100%;overflow-x:auto;overflow-y:hidden;border:1px solid var(--line);border-radius:14px;-webkit-overflow-scrolling:touch}
+.table-wrap{width:100%;max-width:100%;overflow-x:auto;overflow-y:hidden;border:1px solid var(--line);border-radius:14px}
 table{width:100%;border-collapse:collapse;min-width:700px}th{background:#172235;color:#fff;text-align:left;padding:9px;font-size:12px}td{padding:9px;border-bottom:1px solid #edf1f5;font-size:12px;vertical-align:top}.num{text-align:right;white-space:nowrap}.empty{text-align:center;color:var(--muted);padding:28px}
 .badge{display:inline-block;padding:5px 8px;border-radius:999px;font-weight:800;font-size:11px;background:#e2e8f0;color:#334155}.badge.ok{background:#dcfce7;color:#166534}.badge.bad{background:#fee2e2;color:#991b1b}.badge.wait{background:#fef3c7;color:#92400e}
-.product-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}.prod h3{margin:0 0 8px;font-size:14px;overflow-wrap:anywhere}.prod div{font-size:11px;color:#475569;margin:4px 0;overflow-wrap:anywhere}.prod .stock{font-size:16px;color:#111;font-weight:900}
-.progress{height:9px;background:#e2e8f0;border-radius:99px;overflow:hidden;margin-top:8px}.progress i{display:block;height:100%;background:var(--blue)}
-.finance-detail{margin-top:11px}.finance-summary{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px;margin-bottom:12px}.finance-summary .kpiMini{padding:9px}.finance-summary .kpiMini b{font-size:16px}.finance-table table{min-width:820px}.finance-table .income{color:#15803d;font-weight:900}.finance-table .expense,.finance-table .loss{color:#dc2626;font-weight:900}.finance-table .profit{color:#15803d;font-weight:900}.finance-note{margin-top:9px;color:#64748b;font-size:12px;line-height:1.5;overflow-wrap:anywhere}
-#fixzyAlertOverlay{display:none;position:fixed;inset:0;z-index:100000;background:rgba(15,23,42,.68);align-items:center;justify-content:center;padding:18px;backdrop-filter:blur(3px)}#fixzyAlertOverlay.show{display:flex}
-#fixzyAlertBox{width:min(430px,100%);background:#fff;color:#111827;border-radius:20px;padding:20px;box-shadow:0 24px 70px #0006}#fixzyAlertTitle{font-size:19px;font-weight:900;margin:0 0 10px}#fixzyAlertMessage{font-size:14px;line-height:1.6;white-space:pre-line;color:#475569;max-height:55vh;overflow:auto}#fixzyAlertOk{width:100%;margin-top:16px;background:#111827;color:#fff;border:0;border-radius:12px;padding:12px 15px;font-weight:900}
-
-/* ===== HEADER REFRESH ===== */
-.header-refresh{
-  flex:0 0 44px;
-  width:44px;
-  height:44px;
-  border:0;
-  border-radius:12px;
-  background:#17243a;
-  color:#fff;
-  font-size:25px;
-  font-weight:800;
-  line-height:1;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  cursor:pointer;
-  -webkit-tap-highlight-color:transparent;
-}
-.header-refresh:active{transform:scale(.94)}
-
-@media(min-width:821px){
- .top{min-height:78px;padding:12px 18px;gap:14px}.top:before{flex-basis:42px}.header-refresh{flex-basis:44px;width:44px;height:44px}.brand h1{font-size:22px}.brand p{font-size:13px}
- .wrap{padding:18px}.toolbar{align-items:center;padding:13px;flex-wrap:wrap}.toolbar label{width:auto}.toolbar select,.toolbar input{flex:0 1 auto}.toolbar .btn{flex:0 0 auto}.status{width:auto;margin-left:auto;text-align:right}
- .cards{grid-template-columns:repeat(6,minmax(0,1fr));gap:12px}.card{padding:16px;border-radius:18px}.metric small{font-size:12px}.metric b{font-size:22px}.metric span{font-size:12px}
- .grid2{grid-template-columns:minmax(0,1.4fr) minmax(0,1fr);gap:16px}.grid3{grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}.kpiMini{padding:14px}.kpiMini small{font-size:inherit}.kpiMini b{font-size:20px}
- .tabs{gap:8px}.tab{padding:11px 14px;font-size:inherit}.filters input,.filters select{flex:1 1 auto;width:auto}.filters .btn{width:auto}.product-grid{grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
-}
-@media(min-width:821px) and (max-width:1200px){.cards{grid-template-columns:repeat(3,minmax(0,1fr))}.product-grid{grid-template-columns:repeat(3,minmax(0,1fr))}.grid2{grid-template-columns:1fr}}
+.header-refresh{flex:0 0 44px;width:44px;height:44px;border:0;border-radius:12px;background:#17243a;color:#fff;font-size:25px;font-weight:800;display:flex;align-items:center;justify-content:center;cursor:pointer}
 </style>
 </head>
 <body>
-<header class="top">
-<div class="brand"><h1 id="storeName">FIXZY</h1><p>Dashboard Admin • Informasi keseluruhan akun</p></div>
-<button class="header-refresh" type="button" onclick="muatSemua()" aria-label="Refresh Firebase">↻</button>
-</header>
-
-<main class="wrap">
-<div class="toolbar">
-<label>Periode</label>
-<select id="periode"><option value="akun" selected>Sejak akun aktif</option><option value="hari">Hari ini</option><option value="bulan">Bulan ini</option><option value="tahun">Tahun ini</option></select>
-<button class="btn btn-blue" onclick="muatSemua()">↻ Refresh Firebase</button>
-<button class="btn btn-light" onclick="location.reload()">⟳ Reload</button>
-<span class="status" id="statusApp">Menunggu login...</span>
-</div>
+<div class="top"><div class="brand"><h1>Dashboard Admin - FIXED ISOLASI</h1><p id="userInfo">Memuat sesi...</p></div><button class="header-refresh" onclick="muatSemua()">↻</button></div>
+<div class="wrap">
+<div class="toolbar"><label>Periode</label><select id="periode"><option value="hari">Hari ini</option><option value="bulan" selected>Bulan ini</option><option value="tahun">Tahun ini</option></select><button class="btn btn-blue" onclick="muatSemua()">Muat Ulang (hanya konter ini)</button><div class="status" id="statusApp">Menunggu Firebase...</div></div>
 
 <div class="cards">
-<div class="card metric"><small>TOTAL PENDAPATAN</small><b id="omzet">Rp 0</b><span>Pendapatan servis + penjualan</span></div>
-<div class="card metric"><small>BIAYA LANGSUNG</small><b id="modal">Rp 0</b><span>Modal barang + sparepart</span></div>
-<div class="card metric"><small>LABA KOTOR</small><b id="labaKotor" class="green">Rp 0</b><span>Pendapatan − biaya langsung</span></div>
-<div class="card metric"><small>TOTAL PENGELUARAN</small><b id="pengeluaran" class="red">Rp 0</b><span>Operasional + upah • kasbon terpisah</span></div>
-<div class="card metric"><small>LABA BERSIH</small><b id="labaBersih" class="green">Rp 0</b><span>Laba kotor − operasional − upah</span></div>
-<div class="card metric"><small>PIUTANG</small><b id="piutang" class="red">Rp 0</b><span>Sisa tagihan aktif</span></div>
-<div class="card metric"><small>UPAH KARYAWAN</small><b id="upahBiaya" class="red">Rp 0</b><span>Biaya upah periode</span></div>
-</div>
-<div class="cards" style="margin-top:12px">
-<div class="card metric"><small>SERVIS</small><b id="jmlServis">0</b><span>Transaksi aktif</span></div>
-<div class="card metric"><small>PENJUALAN</small><b id="jmlPenjualan">0</b><span>Transaksi aktif</span></div>
-<div class="card metric"><small>STOK PRODUK</small><b id="jmlProduk">0</b><span>Semua produk</span></div>
-<div class="card metric"><small>READY STOCK</small><b id="readyStock">0</b><span>Stok &gt; 0</span></div>
-<div class="card metric"><small>NILAI MODAL STOK</small><b id="nilaiStok">Rp 0</b><span>Sisa × harga modal</span></div>
-<div class="card metric"><small>KARYAWAN AKTIF</small><b id="karyawanAktif">0</b><span>Data karyawan</span></div>
-<div class="card metric"><small>UPAH KARYAWAN</small><b id="upahBersih" class="red">Rp 0</b><span>Sisa upah setelah kasbon</span></div>
+<div class="card metric"><small>Pendapatan</small><b id="mPendapatan">Rp 0</b><span id="mPendapatanSub">-</span></div>
+<div class="card metric"><small>Pengeluaran</small><b id="mPengeluaran" class="red">Rp 0</b><span id="mPengeluaranSub">-</span></div>
+<div class="card metric"><small>Laba</small><b id="mLaba" class="green">Rp 0</b><span id="mLabaSub">-</span></div>
+<div class="card metric"><small>Transaksi</small><b id="mTrx">0</b><span>Servis + Penjualan</span></div>
 </div>
 
-<section class="section"><div class="grid2">
-<div class="card"><div class="section-head"><h2>📊 Ringkasan Keuangan</h2></div><div class="grid3">
-<div class="kpiMini"><small>Servis</small><b id="omzetServis">Rp 0</b></div><div class="kpiMini"><small>Penjualan</small><b id="omzetPenjualan">Rp 0</b></div><div class="kpiMini"><small>Kasbon</small><b id="kasbon" class="red">Rp 0</b></div><div class="kpiMini"><small>Kas Masuk</small><b id="kasMasuk" class="blue">Rp 0</b></div><div class="kpiMini"><small>Transaksi Batal</small><b id="batal">0</b></div><div class="kpiMini"><small>Transaksi Aktif</small><b id="aktif">0</b></div><div class="kpiMini"><small>Total Upah</small><b id="upahGross">Rp 0</b></div><div class="kpiMini"><small>Kasbon Upah</small><b id="upahKasbon" class="red">Rp 0</b></div><div class="kpiMini"><small>Sisa Upah</small><b id="upahNet" class="red">Rp 0</b></div>
-</div></div>
-<div class="card"><div class="section-head"><h2>🔧 Status Servis</h2></div><div id="statusServis"></div></div>
-</div></section>
+<div class="tabs"><button class="tab active" data-tab="tabRingkasan">Ringkasan</button><button class="tab" data-tab="tabServis">Servis</button><button class="tab" data-tab="tabPenjualan">Penjualan</button><button class="tab" data-tab="tabStok">Stok</button><button class="tab" data-tab="tabPengeluaran">Pengeluaran</button><button class="tab" data-tab="tabKaryawan">Karyawan</button><button class="tab" data-tab="tabUpah">Upah</button></div>
 
-<section class="section finance-detail"><div class="card">
-<div class="section-head"><h2>💰 Rincian Pendapatan, Pengeluaran & Laba</h2></div>
-<div class="finance-summary"><div class="kpiMini"><small>Total Pendapatan</small><b id="detailPendapatan" class="income">Rp 0</b></div><div class="kpiMini"><small>Total Biaya Langsung</small><b id="detailModal">Rp 0</b></div><div class="kpiMini"><small>Total Pengeluaran</small><b id="detailPengeluaran" class="expense">Rp 0</b></div><div class="kpiMini"><small>Laba Bersih</small><b id="detailLaba" class="profit">Rp 0</b></div></div>
-<div class="table-wrap finance-table"><table><thead><tr><th>Sektor</th><th class="num">Pendapatan</th><th class="num">Biaya Langsung</th><th class="num">Pengeluaran</th><th class="num">Laba</th></tr></thead><tbody id="financeDetailBody"></tbody></table></div>
-<div class="finance-note">Hasil akhir: status <b>Tunai</b> dan <b>Diambil</b>. Status <b>Selesai</b> belum menjadi pendapatan akhir. Piutang hanya berasal dari transaksi yang belum berstatus hasil akhir. Pengeluaran operasional + upah dihitung sebagai biaya; kasbon ditampilkan terpisah dan tidak mengurangi laba.</div>
-</div></section>
+<div class="panel active" id="tabRingkasan"><div class="grid3"><div class="kpiMini"><small>Servis Selesai</small><b id="kServis">0</b></div><div class="kpiMini"><small>Penjualan Tunai</small><b id="kPenjualan">0</b></div><div class="kpiMini"><small>Karyawan Aktif</small><b id="kKaryawan">0</b></div></div></div>
+<div class="panel" id="tabServis"><div class="filters"><input id="sSearch" placeholder="Cari servis..."><input id="sDate" type="date"><button class="btn btn-light" onclick="renderServis()">Filter</button></div><div class="table-wrap"><table><thead><tr><th>Tanggal</th><th>Nota</th><th>Pelanggan</th><th>Status</th><th>Total</th></tr></thead><tbody id="servisBody"></tbody></table></div></div>
+<div class="panel" id="tabPenjualan"><div class="filters"><input id="pSearch" placeholder="Cari penjualan..."><input id="pDate" type="date"><button class="btn btn-light" onclick="renderPenjualan()">Filter</button></div><div class="table-wrap"><table><thead><tr><th>Tanggal</th><th>Nota</th><th>Pelanggan</th><th>Total</th><th>Status</th></tr></thead><tbody id="penjualanBody"></tbody></table></div></div>
+<div class="panel" id="tabStok"><div class="table-wrap"><table><thead><tr><th>Produk</th><th>Kategori</th><th>Stok</th><th>Harga</th></tr></thead><tbody id="stokBody"></tbody></table></div></div>
+<div class="panel" id="tabPengeluaran"><div class="filters"><input id="eSearch" placeholder="Cari pengeluaran..."><input id="eDate" type="date"><button class="btn btn-light" onclick="renderPengeluaran()">Filter</button></div><div class="table-wrap"><table><thead><tr><th>Tanggal</th><th>Jenis</th><th>Karyawan</th><th>Keterangan</th><th>Nominal</th></tr></thead><tbody id="pengeluaranBody"></tbody></table></div></div>
+<div class="panel" id="tabKaryawan"><div class="table-wrap"><table><thead><tr><th>Nama</th><th>Jabatan</th><th>HP</th><th>Status</th><th>Upah/Hari</th></tr></thead><tbody id="karyawanBody"></tbody></table></div></div>
+<div class="panel" id="tabUpah"><div class="filters"><input id="uSearch" placeholder="Cari karyawan..."></div><div class="grid3"><div class="kpiMini"><small>Hari Hadir</small><b id="uDays">0</b></div><div class="kpiMini"><small>Total Upah</small><b id="uGross">Rp 0</b></div><div class="kpiMini"><small>Sisa Upah</small><b id="uNet">Rp 0</b></div></div><div class="table-wrap" style="margin-top:10px"><table><thead><tr><th>Nama</th><th>Upah/Hari</th><th>Hadir</th><th>Total</th><th>Kasbon</th><th>Sisa</th></tr></thead><tbody id="upahBody"></tbody></table></div></div>
 
-<div class="tabs">
-<button class="tab active" data-tab="ringkasan">🏠 Ringkasan</button><button class="tab" data-tab="servis">🔧 Data Servis</button><button class="tab" data-tab="penjualan">🛒 Penjualan</button><button class="tab" data-tab="stok">📦 Stok</button><button class="tab" data-tab="pengeluaranTab">💸 Pengeluaran</button><button class="tab" data-tab="karyawan">👥 Karyawan</button><button class="tab" data-tab="upah">💰 Upah Karyawan</button>
 </div>
-
-<section id="ringkasan" class="panel active"><div class="grid2">
-<div class="card"><div class="section-head"><h2>🕘 Transaksi Terbaru</h2></div><div class="table-wrap"><table><thead><tr><th>Jenis</th><th>No. Nota</th><th>Tanggal</th><th>Pelanggan</th><th>Status</th><th class="num">Total</th><th class="num">Sisa</th><th class="num">Pendapatan</th></tr></thead><tbody id="recentBody"></tbody></table></div></div>
-<div class="card"><div class="section-head"><h2>⚠️ Stok Menipis / Kosong</h2></div><div id="lowStock"></div></div>
-</div></section>
-
-<section id="servis" class="panel"><div class="card"><div class="filters"><input id="sSearch" placeholder="Cari nota, pelanggan, HP, IMEI..." oninput="renderServis()"><select id="sStatus" onchange="renderServis()"><option value="">Semua status</option><option value="masuk">Masuk</option><option value="nunggu-sparepart">Nunggu Sparepart</option><option value="proses">Proses</option><option value="selesai">Selesai</option><option value="diambil">Diambil</option><option value="batal">Batal</option></select><input id="sDate" type="date" onchange="renderServis()"></div><div class="table-wrap"><table><thead><tr><th>No. Nota</th><th>Tanggal</th><th>Pelanggan</th><th>HP</th><th>Teknisi</th><th>Status</th><th class="num">Total</th><th class="num">DP</th><th class="num">Sisa</th><th class="num">Pendapatan</th></tr></thead><tbody id="servisBody"></tbody></table></div></div></section>
-
-<section id="penjualan" class="panel"><div class="card"><div class="filters"><input id="pSearch" placeholder="Cari nota, pelanggan, produk..." oninput="renderPenjualan()"><select id="pStatus" onchange="renderPenjualan()"><option value="">Semua status</option><option value="dibayar">Dibayar</option><option value="piutang">Piutang</option><option value="batal">Batal</option></select><input id="pDate" type="date" onchange="renderPenjualan()"></div><div class="table-wrap"><table><thead><tr><th>No. Nota</th><th>Tanggal</th><th>Pelanggan</th><th>Produk</th><th>Status</th><th>Metode</th><th class="num">Total</th><th class="num">Dibayar</th><th class="num">Sisa</th><th class="num">Pendapatan</th></tr></thead><tbody id="penjualanBody"></tbody></table></div></div></section>
-
-<section id="stok" class="panel"><div class="card"><div class="filters"><input id="prodSearch" placeholder="Cari nama, kode, merk, kategori..." oninput="renderStok()"><select id="prodStatus" onchange="renderStok()"><option value="">Semua stok</option><option value="ready">Ready</option><option value="empty">Kosong</option></select><button class="btn btn-dark" onclick="renderStok()">↻ Refresh tampilan</button></div><div class="product-grid" id="productGrid"></div></div></section>
-
-<section id="pengeluaranTab" class="panel"><div class="card"><div class="filters"><input id="eSearch" placeholder="Cari jenis, keterangan, karyawan..." oninput="renderPengeluaran()"><input id="eDate" type="date" onchange="renderPengeluaran()"></div><div class="table-wrap"><table><thead><tr><th>Tanggal</th><th>Jenis</th><th>Karyawan</th><th>Keterangan</th><th class="num">Nominal</th></tr></thead><tbody id="pengeluaranBody"></tbody></table></div></div></section>
-
-<section id="karyawan" class="panel"><div class="card"><div class="grid3" style="margin-bottom:14px"><div class="kpiMini"><small>Total Karyawan</small><b id="kTotal">0</b></div><div class="kpiMini"><small>Aktif</small><b id="kAktif2" class="green">0</b></div><div class="kpiMini"><small>Teknisi</small><b id="kTeknisi">0</b></div></div><div class="table-wrap"><table><thead><tr><th>Nama</th><th>Jabatan</th><th>No. HP</th><th>Status</th><th>Gaji/Hari</th></tr></thead><tbody id="karyawanBody"></tbody></table></div></div></section>
-
-<section id="upah" class="panel"><div class="card"><div class="filters"><input id="uSearch" placeholder="Cari nama karyawan..." oninput="renderUpah()"></div><div class="grid3" style="margin-bottom:14px"><div class="kpiMini"><small>Total Hari Hadir</small><b id="uDays">0</b></div><div class="kpiMini"><small>Total Upah</small><b id="uGross">Rp 0</b></div><div class="kpiMini"><small>Kasbon</small><b id="uTake" class="red">Rp 0</b></div><div class="kpiMini"><small>Sisa Upah</small><b id="uNet" class="red">Rp 0</b></div></div><div class="table-wrap"><table><thead><tr><th>Nama</th><th>Upah/Hari</th><th>Hari Hadir</th><th class="num">Total Upah</th><th class="num">Kasbon</th><th class="num">Sisa Upah</th></tr></thead><tbody id="upahBody"></tbody></table></div></div></section>
-</main>
-
-
 
 <script type="module">
-import {initializeApp} from "https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js";
-import {getAuth,onAuthStateChanged} from "https://www.gstatic.com/firebasejs/11.10.0/firebase-auth.js";
-import {getFirestore,collection,getDocs,query,where,getDoc,doc} from "https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js";
+import { initializeApp } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js";
+import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-auth.js";
+import { getFirestore, doc, getDoc, collection, query, where, getDocs, getDocsFromServer } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js";
 
-const firebaseConfig={apiKey:"AIzaSyC_PcarMTT5Un7qfSLzf92o5OGn5rginsI",authDomain:"fixzy-update.firebaseapp.com",projectId:"fixzy-update",storageBucket:"fixzy-update.firebasestorage.app",messagingSenderId:"995892519622",appId:"1:995892519622:web:fa41047944d8e5b35d6dc7"};
-const app=initializeApp(firebaseConfig),auth=getAuth(app),db=getFirestore(app);
-let uid=null,servis=[],penjualan=[],stok=[],pengeluaran=[],karyawan=[],users=[],absensi=[],upahRows=[],profile={},accountStartDate="";
-const $=id=>document.getElementById(id),num=v=>Number(v)||0,money=v=>"Rp "+num(v).toLocaleString("id-ID");
-const esc=v=>String(v??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]));
-function localDate(d){return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`}
-function todayLocal(){return localDate(new Date())}
-function dateOf(r){for(const v of [r?.tanggal,r?.tanggalServis,r?.tanggalTransaksi,r?.tanggalNota,r?.createdAt,r?.created_at,r?.createdAtISO,r?.waktu,r?.waktuSimpan,r?.disimpanPada,r?.updatedAt,r?.timestamp,r?.nomorNota,r?.idPenjualan,r?.id]){if(v==null||v==="")continue;if(typeof v==="object"&&typeof v.toDate==="function"){const d=v.toDate();if(!isNaN(d))return localDate(d)}if(typeof v==="object"&&Number.isFinite(v.seconds)){const d=new Date(v.seconds*1000);if(!isNaN(d))return localDate(d)}const raw=String(v).trim(),m=raw.match(/(\d{4})[-\/.](\d{1,2})[-\/.](\d{1,2})/);if(m)return `${m[1]}-${String(m[2]).padStart(2,"0")}-${String(m[3]).padStart(2,"0")}`;const d=new Date(raw);if(!isNaN(d))return localDate(d)}return ""}
-const active=r=>String(r?.status||"").toLowerCase()!=="batal"&&r?.omzetEligible!==false;
-const statusLabel=v=>({"masuk":"Masuk","menunggu":"Masuk","nunggu sparepart":"Nunggu Sparepart","nunggu-sparepart":"Nunggu Sparepart","proses":"Proses","dikerjakan":"Proses","selesai":"Selesai","diambil":"Diambil","batal":"Batal","dibayar":"Dibayar","piutang":"Piutang","tempo":"Piutang"}[String(v||"").toLowerCase().trim()]||v||"-");
-const badge=s=>{const x=String(s||"").toLowerCase(),c=x.includes("batal")?"bad":(x.includes("selesai")||x.includes("diambil")||x.includes("dibayar")?"ok":(x.includes("piutang")?"bad":"wait"));return `<span class="badge ${c}">${esc(statusLabel(s))}</span>`};
-const modalServis=r=>(r?.sparepart||[]).reduce((a,x)=>a+num(x.hargaModal)*Math.max(1,num(x.qty)||1),0);
-const modalJual=r=>(r?.items||[]).reduce((a,x)=>a+num(x.hargaModal)*Math.max(1,num(x.qty)||1),0);
-function periodeMatch(r){const d=dateOf(r),p=$("periode").value,t=todayLocal();if(!d)return false;if(p==="akun")return !accountStartDate||d>=accountStartDate;if(p==="hari")return d===t;if(p==="tahun")return d.startsWith(t.slice(0,4));return d.startsWith(t.slice(0,7))}
-async function own(name){try{const s=await getDocs(query(collection(db,name),where("uid","==",uid)));return s.docs.map(d=>({id:d.id,...d.data()}))}catch(e){console.error(name,e);return[]}}
-async function readAll(name){try{const s=await getDocs(collection(db,name));return s.docs.map(d=>({id:d.id,...d.data()}))}catch(e){console.error(name,e);return[]}}
-function profileDate(){for(const v of [profile?.tanggalMulaiAktif,profile?.tanggalAktif,profile?.mulaiAktif,profile?.tanggalAktivasi,profile?.tanggalDaftar,profile?.tanggalRegistrasi,profile?.activeSince,profile?.activatedAt,profile?.createdAt,profile?.created_at,profile?.createdAtISO]){if(!v)continue;if(typeof v==="object"&&typeof v.toDate==="function"){const d=v.toDate();if(!isNaN(d))return localDate(d)}const raw=String(v),m=raw.match(/(\d{4})[-\/.](\d{1,2})[-\/.](\d{1,2})/);if(m)return `${m[1]}-${String(m[2]).padStart(2,"0")}-${String(m[3]).padStart(2,"0")}`;const d=new Date(raw);if(!isNaN(d))return localDate(d)}return ""}
-async function loadProfile(user){try{const s=await getDoc(doc(db,"users",user.uid));if(s.exists())profile=s.data()||{}}catch(e){console.warn(e)}accountStartDate=profileDate();$("storeName").textContent=profile.namaKonter||profile.namaToko||"FIXZY";$("userInfo").textContent=profile.namaPemilik||user.email||"Admin"}
-function employeeName(e){return String(e?.nama||e?.namaKaryawan||e?.namaLengkap||e?.namaTeknisi||e?.name||e?.displayName||e?.username||e?.email||"").trim()}
-function employeeRate(e){return num(e?.upahHarian??e?.upah??e?.gajiHarian??e?.gaji??e?.nominalUpah??e?.rate??e?.upahPerHari)}
-function isHadir(r){return String(r?.status||r?.kehadiran||r?.keteranganStatus||"").toLowerCase().trim()==="hadir"}
-function attendanceMatchesEmployee(x,a){const ids=[x?.userId,x?.uid,x?.karyawanId,x?.employeeId,x?.akunId,x?.idKaryawan].filter(Boolean).map(String),aids=[a?.id,a?.uid,a?.userId,a?.idKaryawan].filter(Boolean).map(String);if(ids.some(id=>aids.includes(id)))return true;const xe=String(x?.email||x?.emailKaryawan||"").toLowerCase().trim(),ae=String(a?.email||"").toLowerCase().trim();if(xe&&ae&&xe===ae)return true;const xn=String(x?.nama||x?.namaKaryawan||x?.namaTeknisi||x?.karyawan||x?.employeeName||"").toLowerCase().trim(),an=employeeName(a).toLowerCase().trim();return !!xn&&!!an&&xn===an}
-function normalizeName(v){return String(v??"").trim().toLowerCase().replace(/\s+/g," ")}
-function withdrawalText(r){return [r?.keterangan,r?.catatan,r?.deskripsi,r?.nama,r?.jenis,r?.type,r?.kategori,r?.perihal,r?.note,r?.notes,r?.memo,r?.uraian].filter(Boolean).join(" ").toLowerCase()}
-function withdrawalName(r){return String(r?.namaKaryawan||r?.namaTeknisi||r?.karyawan||r?.teknisi||r?.nama||"").trim()}
-function withdrawalAmount(r){return num(r?.nominal??r?.jumlah??r?.amount??r?.total??r?.nilai??r?.nominalPengambilan??r?.uang)}
-function isKasbon(r){return String(r?.jenis||"").trim().toLowerCase()==="kasbon karyawan"||/ambil\s+uang|pengambilan\s+uang|kasbon/.test(withdrawalText(r))}
-function buildUpahRows(){return karyawan.map(e=>{const name=employeeName(e),rate=employeeRate(e),dates=[...new Set(absensi.filter(x=>periodeMatch(x)&&isHadir(x)&&attendanceMatchesEmployee(x,e)).map(dateOf).filter(Boolean))].sort(),take=pengeluaran.filter(r=>periodeMatch(r)&&isKasbon(r)&&normalizeName(withdrawalName(r))===normalizeName(name)).reduce((a,r)=>a+withdrawalAmount(r),0),gross=dates.length*rate;return{id:e.id,name,rate,dates,gross,take,net:Math.max(0,gross-take)}}).filter(r=>r.name&&(r.dates.length||r.take>0||r.rate>0))}
-function serviceBiaya(r){return num(r?.estimasi?.biayaService??r?.biayaService??r?.biaya)}
-function serviceDiskon(r){return num(r?.estimasi?.diskon??r?.diskon)}
-function serviceDP(r){return num(r?.estimasi?.dp??r?.dp)}
-function pendapatanServis(r){return active(r)&&String(r?.status||"").toLowerCase().trim()==="diambil"?Math.max(0,serviceBiaya(r)-serviceDiskon(r)):0}
-function pendapatanPenjualan(r){if(!active(r)||String(r?.status||"").toLowerCase().trim()!=="tunai")return 0;return num(r?.pendapatan)||Math.max(0,num(r?.total)-num(r?.diskon??r?.discount))}
-function finalStatus(r){const s=String(r?.status||"").toLowerCase().trim();return s==="tunai"||s==="diambil"}
-function sisaTransaksi(r){if(!active(r)||finalStatus(r))return 0;if(r?._jenis==="Servis")return Math.max(0,serviceBiaya(r)-serviceDiskon(r)-serviceDP(r));return Math.max(0,num(r?.total)-num(r?.dibayar))}
-function transaksi(){return[...servis.map(x=>({...x,_jenis:"Servis",_modal:modalServis(x),_pendapatan:pendapatanServis(x),_dibayar:num(x?.pembayaran?.uangDiterima??x?.uangDiterima??x?.dibayar??x?.dp)})),...penjualan.map(x=>({...x,_jenis:"Penjualan",_modal:modalJual(x),_pendapatan:pendapatanPenjualan(x),_dibayar:num(x?.dibayar??x?.dp)}))]}
-function renderFinanceDetail(s,p,upahGross){const incomeS=s.reduce((a,r)=>a+r._pendapatan,0),incomeP=p.reduce((a,r)=>a+r._pendapatan,0),direct=s.reduce((a,r)=>a+r._modal,0)+p.reduce((a,r)=>a+r._modal,0),ops=pengeluaran.filter(periodeMatch).filter(r=>!isKasbon(r)).reduce((a,r)=>a+withdrawalAmount(r),0),kasbon=pengeluaran.filter(r=>periodeMatch(r)&&isKasbon(r)).reduce((a,r)=>a+withdrawalAmount(r),0),profit=incomeS+incomeP-direct-ops-upahGross; $("detailPendapatan").textContent=money(incomeS+incomeP);$("detailModal").textContent=money(direct);$("detailPengeluaran").textContent=money(ops+upahGross);$("detailLaba").textContent=money(profit);$("detailLaba").className=profit<0?"loss":"profit";$("financeDetailBody").innerHTML=`<tr><td><b>🔧 Servis</b></td><td class="num income">${money(incomeS)}</td><td class="num">${money(s.reduce((a,r)=>a+r._modal,0))}</td><td class="num">Rp 0</td><td class="num profit">${money(incomeS-s.reduce((a,r)=>a+r._modal,0))}</td></tr><tr><td><b>🛒 Penjualan</b></td><td class="num income">${money(incomeP)}</td><td class="num">${money(p.reduce((a,r)=>a+r._modal,0))}</td><td class="num">Rp 0</td><td class="num profit">${money(incomeP-p.reduce((a,r)=>a+r._modal,0))}</td></tr><tr><td><b>💸 Operasional</b></td><td class="num">-</td><td class="num">-</td><td class="num expense">${money(ops)}</td><td class="num loss">${money(-ops)}</td></tr><tr><td><b>👷 Upah Karyawan</b></td><td class="num">-</td><td class="num">-</td><td class="num expense">${money(upahGross)}</td><td class="num loss">${money(-upahGross)}</td></tr><tr><th>TOTAL</th><th class="num income">${money(incomeS+incomeP)}</th><th class="num">${money(direct)}</th><th class="num expense">${money(ops+upahGross)}</th><th class="num ${profit<0?"loss":"profit"}">${money(profit)}</th></tr><tr><td><b>💳 Kasbon Karyawan</b></td><td class="num">-</td><td class="num">-</td><td class="num expense">${money(kasbon)}</td><td class="num">Bukan biaya laba</td></tr>`;return{incomeS,incomeP,direct,ops,kasbon,profit}}
-function renderRingkasan(){const tx=transaksi(),period=tx.filter(periodeMatch),s=period.filter(x=>x._jenis==="Servis"),p=period.filter(x=>x._jenis==="Penjualan"),upahGross=upahRows.reduce((a,r)=>a+r.gross,0),upahTake=upahRows.reduce((a,r)=>a+r.take,0),upahNet=upahRows.reduce((a,r)=>a+r.net,0),d=renderFinanceDetail(s,p,upahGross);$("omzet").textContent=money(d.incomeS+d.incomeP);$("modal").textContent=money(d.direct);$("labaKotor").textContent=money(d.incomeS+d.incomeP-d.direct);$("pengeluaran").textContent=money(d.ops+upahGross);$("labaBersih").textContent=money(d.profit);$("labaBersih").className=d.profit<0?"red":"green";$("piutang").textContent=money(period.reduce((a,r)=>a+sisaTransaksi(r),0));$("upahBiaya").textContent=money(upahGross);$("jmlServis").textContent=s.length;$("jmlPenjualan").textContent=p.length;$("jmlProduk").textContent=stok.length;$("readyStock").textContent=stok.filter(x=>num(x.sisa??x.stok??x.stock)>0).length;$("nilaiStok").textContent=money(stok.reduce((a,x)=>a+num(x.sisa??x.stok??x.stock)*num(x.hargaModal),0));$("karyawanAktif").textContent=karyawan.filter(x=>!["nonaktif","inactive","tidak aktif"].includes(String(x.status||"aktif").toLowerCase())).length;$("upahBersih").textContent=money(upahNet);$("omzetServis").textContent=money(d.incomeS);$("omzetPenjualan").textContent=money(d.incomeP);$("kasbon").textContent=money(d.kasbon);$("kasMasuk").textContent=money(period.reduce((a,r)=>a+r._dibayar,0));$("batal").textContent=tx.filter(r=>!active(r)).length;$("aktif").textContent=period.filter(active).length;$("upahGross").textContent=money(upahGross);$("upahKasbon").textContent=money(upahTake);$("upahNet").textContent=money(upahNet);const counts={};s.forEach(r=>{const k=statusLabel(r.status);counts[k]=(counts[k]||0)+1});$("statusServis").innerHTML=Object.entries(counts).map(([k,v])=>`<div style="margin:9px 0"><div style="display:flex;justify-content:space-between;font-size:13px"><b>${esc(k)}</b><span>${v}</span></div><div class="progress"><i style="width:${Math.round(v/s.length*100)}%"></i></div></div>`).join("")||'<div class="empty">Belum ada servis pada periode ini.</div>';const recent=tx.slice().sort((a,b)=>dateOf(b).localeCompare(dateOf(a))).slice(0,20);$("recentBody").innerHTML=recent.map(r=>`<tr><td>${esc(r._jenis)}</td><td><b>${esc(r.nomorNota||r.id||"-")}</b></td><td>${esc(dateOf(r))}</td><td>${esc(r.pelanggan?.nama||r.namaPelanggan||"Umum")}</td><td>${badge(r.status)}</td><td class="num">${money(r._jenis==="Servis"?serviceBiaya(r):r.total)}</td><td class="num">${money(sisaTransaksi(r))}</td><td class="num income">${money(r._pendapatan)}</td></tr>`).join("")||'<tr><td colspan="8" class="empty">Belum ada transaksi.</td></tr>';const low=stok.filter(x=>num(x.sisa??x.stok??x.stock)<=3).sort((a,b)=>num(a.sisa??a.stok??a.stock)-num(b.sisa??b.stok??b.stock)).slice(0,30);$("lowStock").innerHTML=low.map(x=>{const s=num(x.sisa??x.stok??x.stock);return`<div style="padding:10px 0;border-bottom:1px solid #edf1f5"><b>${esc(x.nama||"-")}</b><div style="font-size:12px;color:#64748b">${esc(x.kode||"-")} • ${esc(x.kategori||"-")}</div><span class="badge ${s>0?"wait":"bad"}">${s} pcs</span></div>`}).join("")||'<div class="empty">Tidak ada stok menipis.</div>'}
-function renderServis(){const q=$("sSearch").value.toLowerCase().trim(),st=$("sStatus").value,d=$("sDate").value,arr=servis.filter(r=>{const t=JSON.stringify(r).toLowerCase();return(!q||t.includes(q))&&(!st||String(r.status||"").toLowerCase()===st)&&(!d||dateOf(r)===d)}).sort((a,b)=>dateOf(b).localeCompare(dateOf(a)));$("servisBody").innerHTML=arr.map(r=>`<tr><td><b>${esc(r.nomorNota||r.id||"-")}</b></td><td>${esc(dateOf(r))}</td><td>${esc(r.pelanggan?.nama||r.namaPelanggan||"Umum")}</td><td>${esc([r.hp?.merk,r.hp?.tipe,r.tipeHp].filter(Boolean).join(" ")||"-")}<br>${esc(r.hp?.imei||r.imei||"")}</td><td>${esc(r.teknisi||r.namaTeknisi||"-")}</td><td>${badge(r.status)}</td><td class="num">${money(serviceBiaya(r))}</td><td class="num">${money(serviceDP(r))}</td><td class="num">${money(sisaTransaksi({...r,_jenis:"Servis"}))}</td><td class="num income">${money(pendapatanServis(r))}</td></tr>`).join("")||'<tr><td colspan="10" class="empty">Belum ada data servis.</td></tr>'}
-function renderPenjualan(){const q=$("pSearch").value.toLowerCase().trim(),st=$("pStatus").value,d=$("pDate").value,arr=penjualan.filter(r=>{const t=JSON.stringify(r).toLowerCase();return(!q||t.includes(q))&&(!st||String(r.status||"").toLowerCase()===st)&&(!d||dateOf(r)===d)}).sort((a,b)=>dateOf(b).localeCompare(dateOf(a)));$("penjualanBody").innerHTML=arr.map(r=>{const items=(r.items||[]).map(x=>`${esc(x.nama||x.produk||"-")} ×${num(x.qty)||1}`).join("<br>")||esc(r.produk||r.namaBarang||"-");return`<tr><td><b>${esc(r.nomorNota||r.idPenjualan||r.id||"-")}</b></td><td>${esc(dateOf(r))}</td><td>${esc(r.pelanggan?.nama||r.namaPelanggan||"Umum")}</td><td>${items}</td><td>${badge(r.status)}</td><td>${esc(r.metode||r.pembayaran||"Tunai")}</td><td class="num">${money(r.total)}</td><td class="num">${money(r.dibayar)}</td><td class="num">${money(sisaTransaksi({...r,_jenis:"Penjualan"}))}</td><td class="num income">${money(pendapatanPenjualan(r))}</td></tr>`}).join("")||'<tr><td colspan="10" class="empty">Belum ada data penjualan.</td></tr>'}
-function renderStok(){const q=$("prodSearch").value.toLowerCase().trim(),st=$("prodStatus").value,arr=stok.filter(p=>{const s=num(p.sisa??p.stok??p.stock),t=[p.kode,p.nama,p.merk,p.kategori].join(" ").toLowerCase();return(!q||t.includes(q))&&(!st||(st==="ready"?s>0:s<=0))}).sort((a,b)=>String(a.nama||"").localeCompare(String(b.nama||"")));$("productGrid").innerHTML=arr.map(p=>{const s=num(p.sisa??p.stok??p.stock);return`<article class="card prod"><h3>${esc(p.nama||"-")}</h3><div>Kode: ${esc(p.kode||"-")}</div><div>Kategori: ${esc(p.kategori||"-")}</div><div>Merk: ${esc(p.merk||"-")}</div><div>Modal: ${money(p.hargaModal)}</div><div>Harga jual: ${money(p.hargaJual||0)}</div><div class="stock">Stok: ${s} pcs</div><div>${s>0?'<span class="badge ok">READY</span>':'<span class="badge bad">KOSONG</span>'}</div></article>`}).join("")||'<div class="empty">Tidak ada produk sesuai filter.</div>'}
-function renderPengeluaran(){const q=$("eSearch").value.toLowerCase().trim(),d=$("eDate").value,arr=pengeluaran.filter(r=>{const t=JSON.stringify(r).toLowerCase();return(!q||t.includes(q))&&(!d||dateOf(r)===d)}).sort((a,b)=>dateOf(b).localeCompare(dateOf(a)));$("pengeluaranBody").innerHTML=arr.map(r=>`<tr><td>${esc(dateOf(r))}</td><td>${esc(r.jenis||"-")}</td><td>${esc(r.namaKaryawan||"-")}</td><td>${esc(r.keterangan||"-")}</td><td class="num">${money(withdrawalAmount(r))}</td></tr>`).join("")||'<tr><td colspan="5" class="empty">Belum ada data pengeluaran.</td></tr>'}
-function renderKaryawan(){const aktif=karyawan.filter(x=>!["nonaktif","inactive","tidak aktif"].includes(String(x.status||"aktif").toLowerCase()));$("kTotal").textContent=karyawan.length;$("kAktif2").textContent=aktif.length;$("kTeknisi").textContent=karyawan.filter(x=>/teknisi/i.test(String(x.jabatan||x.posisi||x.role||""))).length;$("karyawanBody").innerHTML=karyawan.map(x=>`<tr><td><b>${esc(employeeName(x)||"-")}</b></td><td>${esc(x.jabatan||x.posisi||x.role||"-")}</td><td>${esc(x.noHp||x.hp||x.wa||x.whatsapp||"-")}</td><td>${esc(x.status||"Aktif")}</td><td class="num">${money(employeeRate(x))}</td></tr>`).join("")||'<tr><td colspan="5" class="empty">Belum ada data karyawan.</td></tr>'}
-function renderUpah(){const q=normalizeName($("uSearch").value||""),a=upahRows.filter(r=>!q||normalizeName(r.name).includes(q)),days=a.reduce((x,r)=>x+r.dates.length,0),gross=a.reduce((x,r)=>x+r.gross,0),take=a.reduce((x,r)=>x+r.take,0),net=a.reduce((x,r)=>x+r.net,0);$("uDays").textContent=days;$("uGross").textContent=money(gross);$("uTake").textContent=money(take);$("uNet").textContent=money(net);$("upahBody").innerHTML=a.map(r=>`<tr><td><b>${esc(r.name)}</b></td><td>${money(r.rate)}</td><td>${r.dates.length}</td><td class="num">${money(r.gross)}</td><td class="num">${money(r.take)}</td><td class="num"><b>${money(r.net)}</b></td></tr>`).join("")||'<tr><td colspan="6" class="empty">Belum ada data upah pada periode ini.</td></tr>'}
-window.renderServis=renderServis;window.renderPenjualan=renderPenjualan;window.renderStok=renderStok;window.renderPengeluaran=renderPengeluaran;window.renderUpah=renderUpah;
-function renderAll(){upahRows=buildUpahRows();renderRingkasan();renderServis();renderPenjualan();renderStok();renderPengeluaran();renderKaryawan();renderUpah()}
-async function muatSemua(){if(!uid){$("statusApp").textContent="Belum login Firebase.";return}$("statusApp").textContent="Membaca Firebase...";servis=await own("servis");penjualan=await own("penjualan");stok=await own("stok");pengeluaran=await own("pengeluaran");users=await readAll("users");absensi=await readAll("absensi");const ownerId=profile?.ownerUid||profile?.ownerId||uid,roles=["employee","karyawan","kasir","kurir","reseller","teknisi"],uw=users.filter(x=>{const role=String(x?.role||x?.posisi||"").toLowerCase().trim(),jab=String(x?.jabatan||x?.posisi||"").toLowerCase(),owner=String(x?.ownerUid||x?.ownerId||"").trim();return(roles.includes(role)||employeeRate(x)>0||/karyawan|kasir|kurir|teknisi|staff/.test(jab))&&(!owner||owner===uid||owner===ownerId)}),old=await own("karyawan"),m=new Map();[...uw,...old].forEach(x=>{const k=String(x?.uid||x?.userId||x?.id||x?.email||x?.nama||x?.namaKaryawan||"");if(k)m.set(k,x)});karyawan=[...m.values()];upahRows=buildUpahRows();renderAll();$("statusApp").textContent=`Terhubung • Servis ${servis.length} • Penjualan ${penjualan.length} • Pengeluaran ${pengeluaran.length} • Karyawan ${karyawan.length} • Absensi ${absensi.length}`}
-window.muatSemua=muatSemua;
-$("periode").addEventListener("change",()=>{upahRows=buildUpahRows();renderRingkasan();renderUpah()});
-document.querySelectorAll(".tab").forEach(b=>b.addEventListener("click",()=>{document.querySelectorAll(".tab").forEach(x=>x.classList.remove("active"));document.querySelectorAll(".panel").forEach(x=>x.classList.remove("active"));b.classList.add("active");$(b.dataset.tab).classList.add("active")}));
+const cfg={apiKey:"AIzaSyC_PcarMTT5Un7qfSLzf92o5OGn5rginsI",authDomain:"fixzy-update.firebaseapp.com",projectId:"fixzy-update",storageBucket:"fixzy-update.firebasestorage.app",messagingSenderId:"995892519622",appId:"1:995892519622:web:fa41047944d8e5b35d6dc7"};
+const app=initializeApp(cfg);
+const auth=getAuth(app);
+const db=getFirestore(app);
 
-let authHandled=false;
+let uid="", ownerUid="", profile={};
+let servis=[], penjualan=[], stok=[], pengeluaran=[], users=[], absensi=[], karyawan=[], upahRows=[];
+const $=id=>document.getElementById(id);
+function esc(s){return String(s??"").replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
+function money(n){return "Rp "+(Number(n)||0).toLocaleString("id-ID");}
+function dateOf(x){return String(x.tanggal||x.date||"").slice(0,10);}
+function normalizeName(s){return String(s||"").toLowerCase().trim();}
+function employeeName(x){return x.nama||x.namaKaryawan||x.namaLengkap||x.displayName||x.email||"-";}
+function employeeRate(x){return Number(x.upahHarian??x.upah??x.gajiHarian??0)||0;}
+function withdrawalAmount(x){return Number(x.nominal||x.jumlah||x.amount||0)||0;}
 
-/*
-  DASHBOARD TIDAK MEMBUAT LOGIN BARU.
-  Login dilakukan di index. Halaman ini hanya memakai sesi Firebase
-  yang sudah aktif dari index pada project Firebase yang sama.
-*/
-async function gunakanSesiIndex(user){
-  if(!user){
-    $("userInfo").textContent="Sesi dari Index sedang dibaca...";
-    $("statusApp").textContent="Menunggu sesi login dari Index...";
-    return;
-  }
-
-  if(authHandled && uid===user.uid) return;
-
-  authHandled=true;
+async function loadProfile(user){
+  const snap=await getDoc(doc(db,"users",user.uid));
+  if(!snap.exists()) throw new Error("Profil tidak ditemukan");
+  profile=snap.data()||{};
+  const role=String(profile.role||"").toLowerCase();
+  ownerUid = (role==="owner"||profile.isOwner===true) ? user.uid : (profile.ownerUid||profile.ownerId||user.uid);
   uid=user.uid;
+  $("userInfo").textContent=(profile.namaKonter||profile.nama||user.email)+" • ownerUid "+ownerUid.slice(0,6)+" • isolasi aktif";
+}
 
-  $("statusApp").textContent="Sesi Index ditemukan • Memuat data Firebase...";
-  $("userInfo").textContent=profile.namaPemilik||user.email||"Admin";
+// FIX ISOLASI - own() yang benar
+async function own(colName){
+  const map=new Map();
+  async function ambil(field,value){
+    if(!value) return;
+    try{
+      const q=query(collection(db,colName), where(field,"==",value));
+      const snap=await getDocsFromServer(q);
+      snap.docs.forEach(d=>map.set(d.id,{id:d.id,...d.data()}));
+    }catch(e){console.warn(colName,field,e.message);}
+  }
+  await ambil("ownerUid", ownerUid);
+  await ambil("ownerId", ownerUid);
+  await ambil("uid", ownerUid);
+  if(ownerUid!==uid){
+    await ambil("ownerUid", uid);
+    await ambil("uid", uid);
+  }
+  return [...map.values()];
+}
 
+// FIX ISOLASI - readAll yang dulu bocor, sekarang filter ownerUid
+async function readAllOwned(colName){
+  return await own(colName);
+}
+
+function buildUpahRows(){
+  // karyawan & absensi sudah filter ownerUid
+  const period=$("periode").value;
+  // hitung hadir dari absensi
+  const hadirByName={};
+  absensi.forEach(a=>{
+    if(String(a.status||"").toLowerCase()!=="hadir") return;
+    const n=normalizeName(a.nama||a.namaKaryawan||"");
+    if(!n) return;
+    if(!hadirByName[n]) hadirByName[n]=[];
+    hadirByName[n].push(a.tanggal||"");
+  });
+  return karyawan.map(k=>{
+    const name=employeeName(k);
+    const nn=normalizeName(name);
+    const dates=hadirByName[nn]||[];
+    const gross=dates.length*employeeRate(k);
+    // kasbon
+    const takes=pengeluaran.filter(p=>{
+      const j=String(p.jenis||"").toLowerCase();
+      if(!j.includes("kasbon")) return false;
+      const kn=normalizeName(p.namaKaryawan||"");
+      return kn && nn && kn===nn;
+    });
+    const take=takes.reduce((s,x)=>s+withdrawalAmount(x),0);
+    return {name, rate:employeeRate(k), dates, gross, take, net:Math.max(0,gross-take)};
+  });
+}
+
+function renderRingkasan(){
+  const totalPen=penjualan.filter(p=>["tunai","lunas"].includes(String(p.status||"").toLowerCase())).reduce((s,r)=>s+(Number(r.total||0)),0);
+  const totalSer=servis.filter(s=>["selesai","diambil"].includes(String(s.status||"").toLowerCase())).reduce((s,r)=>s+(Number(r.total||0)),0);
+  const totalKel=pengeluaran.reduce((s,r)=>s+withdrawalAmount(r),0);
+  $("mPendapatan").textContent=money(totalPen+totalSer);
+  $("mPengeluaran").textContent=money(totalKel);
+  $("mLaba").textContent=money(totalPen+totalSer-totalKel);
+  $("mTrx").textContent=penjualan.length+servis.length;
+  $("kServis").textContent=servis.length;
+  $("kPenjualan").textContent=penjualan.length;
+  $("kKaryawan").textContent=karyawan.length;
+}
+function renderServis(){const q=$("sSearch").value.toLowerCase().trim(),d=$("sDate").value,arr=servis.filter(r=>{const t=JSON.stringify(r).toLowerCase();return(!q||t.includes(q))&&(!d||dateOf(r)===d)}).sort((a,b)=>dateOf(b).localeCompare(dateOf(a)));$("servisBody").innerHTML=arr.map(r=>`<tr><td>${esc(dateOf(r))}</td><td>${esc(r.nomorNota||"-")}</td><td>${esc(r.pelanggan?.nama||"-")}</td><td>${esc(r.status||"-")}</td><td class="num">${money(r.total||0)}</td></tr>`).join("")||'<tr><td colspan="5" class="empty">Belum ada data servis untuk konter ini.</td></tr>';}
+function renderPenjualan(){const q=$("pSearch").value.toLowerCase().trim(),d=$("pDate").value,arr=penjualan.filter(r=>{const t=JSON.stringify(r).toLowerCase();return(!q||t.includes(q))&&(!d||dateOf(r)===d)}).sort((a,b)=>dateOf(b).localeCompare(dateOf(a)));$("penjualanBody").innerHTML=arr.map(r=>`<tr><td>${esc(dateOf(r))}</td><td>${esc(r.nomorNota||"-")}</td><td>${esc(r.pelanggan?.nama||"-")}</td><td class="num">${money(r.total||0)}</td><td>${esc(r.status||"-")}</td></tr>`).join("")||'<tr><td colspan="5" class="empty">Belum ada penjualan untuk konter ini.</td></tr>';}
+function renderStok(){$("stokBody").innerHTML=stok.map(r=>`<tr><td><b>${esc(r.nama||"-")}</b></td><td>${esc(r.kategori||"-")}</td><td>${esc(r.stok||0)}</td><td class="num">${money(r.harga||0)}</td></tr>`).join("")||'<tr><td colspan="4" class="empty">Belum ada stok untuk konter ini.</td></tr>';}
+function renderPengeluaran(){const q=$("eSearch").value.toLowerCase().trim(),d=$("eDate").value,arr=pengeluaran.filter(r=>{const t=JSON.stringify(r).toLowerCase();return(!q||t.includes(q))&&(!d||dateOf(r)===d)}).sort((a,b)=>dateOf(b).localeCompare(dateOf(a)));$("pengeluaranBody").innerHTML=arr.map(r=>`<tr><td>${esc(dateOf(r))}</td><td>${esc(r.jenis||"-")}</td><td>${esc(r.namaKaryawan||"-")}</td><td>${esc(r.keterangan||"-")}</td><td class="num">${money(withdrawalAmount(r))}</td></tr>`).join("")||'<tr><td colspan="5" class="empty">Belum ada pengeluaran untuk konter ini.</td></tr>';}
+function renderKaryawan(){$("karyawanBody").innerHTML=karyawan.map(x=>`<tr><td><b>${esc(employeeName(x)||"-")}</b></td><td>${esc(x.jabatan||x.posisi||"-")}</td><td>${esc(x.noHp||x.hp||"-")}</td><td>${esc(x.status||"Aktif")}</td><td class="num">${money(employeeRate(x))}</td></tr>`).join("")||'<tr><td colspan="5" class="empty">Belum ada karyawan untuk konter ini.</td></tr>';}
+function renderUpah(){const q=normalizeName($("uSearch").value||""),a=upahRows.filter(r=>!q||normalizeName(r.name).includes(q)),days=a.reduce((x,r)=>x+r.dates.length,0),gross=a.reduce((x,r)=>x+r.gross,0),take=a.reduce((x,r)=>x+r.take,0),net=a.reduce((x,r)=>x+r.net,0);$("uDays").textContent=days;$("uGross").textContent=money(gross);$("uTake").textContent=money(take);$("uNet").textContent=money(net);$("upahBody").innerHTML=a.map(r=>`<tr><td><b>${esc(r.name)}</b></td><td>${money(r.rate)}</td><td>${r.dates.length}</td><td class="num">${money(r.gross)}</td><td class="num">${money(r.take)}</td><td class="num"><b>${money(r.net)}</b></td></tr>`).join("")||'<tr><td colspan="6" class="empty">Belum ada upah.</td></tr>';}
+window.renderServis=renderServis;window.renderPenjualan=renderPenjualan;window.renderStok=renderStok;window.renderPengeluaran=renderPengeluaran;window.renderUpah=renderUpah;
+
+function renderAll(){upahRows=buildUpahRows();renderRingkasan();renderServis();renderPenjualan();renderStok();renderPengeluaran();renderKaryawan();renderUpah();}
+
+async function muatSemua(){
+  if(!uid){$("statusApp").textContent="Belum login";return;}
+  $("statusApp").textContent="Membaca Firebase (hanya ownerUid "+ownerUid.slice(0,6)+")...";
   try{
-    await loadProfile(user);
-    $("statusApp").textContent="Sesi Index aktif • Membaca Firebase...";
-    await muatSemua();
+    servis=await own("servis");
+    penjualan=await own("penjualan");
+    stok=await own("stok");
+    pengeluaran=await own("pengeluaran");
+    users=await readAllOwned("users"); // FIX - dulu readAll tanpa filter
+    absensi=await readAllOwned("absensi"); // FIX - dulu readAll tanpa filter
+    
+    // karyawan dari users + koleksi karyawan lama, tapi hanya yang ownerUid sama
+    const ownerId=ownerUid;
+    const roles=["employee","karyawan","kasir","kurir","reseller","teknisi"];
+    const uw=users.filter(x=>{
+      const role=String(x?.role||"").toLowerCase();
+      const jab=String(x?.jabatan||"").toLowerCase();
+      const owner=String(x?.ownerUid||x?.ownerId||"").trim();
+      return (roles.includes(role)||employeeRate(x)>0||/karyawan|kasir|kurir|teknisi|staff/.test(jab)) && (!owner||owner===ownerUid||owner===uid);
+    });
+    const old=await own("karyawan");
+    const m=new Map();
+    [...uw,...old].forEach(x=>{const k=String(x?.uid||x?.userId||x?.id||x?.email||""); if(k) m.set(k,x);});
+    karyawan=[...m.values()];
+    
+    renderAll();
+    $("statusApp").textContent=`Terhubung • Servis ${servis.length} • Penjualan ${penjualan.length} • Pengeluaran ${pengeluaran.length} • Karyawan ${karyawan.length} • Absensi ${absensi.length} • Isolasi konter aktif`;
   }catch(e){
-    console.error("FIXZY Dashboard:",e);
-    $("statusApp").textContent="Sesi aktif, tetapi data Firebase gagal dibaca.";
+    console.error(e);
+    $("statusApp").textContent="Gagal: "+e.message;
   }
 }
+window.muatSemua=muatSemua;
+$("periode").addEventListener("change",()=>{upahRows=buildUpahRows();renderRingkasan();renderUpah();});
+document.querySelectorAll(".tab").forEach(b=>b.addEventListener("click",()=>{document.querySelectorAll(".tab").forEach(x=>x.classList.remove("active"));document.querySelectorAll(".panel").forEach(x=>x.classList.remove("active"));b.classList.add("active");$(b.dataset.tab).classList.add("active");}));
 
-/*
-  Penting:
-  - Tidak ada redirect ke halaman login.
-  - Tidak ada form login di dashboard.
-  - Tidak ada signIn/signOut di dashboard.
-  - Dashboard hanya mengikuti session Firebase yang sudah dibuat Index.
-*/
-onAuthStateChanged(auth, user=>{
-  gunakanSesiIndex(user);
+onAuthStateChanged(auth, async user=>{
+  if(!user) return;
+  if(uid===user.uid && profile.namaKonter) return;
+  uid=user.uid;
+  try{ await loadProfile(user); await muatSemua(); }catch(e){$("statusApp").textContent="Gagal: "+e.message;}
 });
-
-/* currentUser biasanya sudah tersedia ketika dashboard dibuka dari Index */
-if(auth.currentUser){
-  gunakanSesiIndex(auth.currentUser);
-}
-
-/* Beri waktu Firebase menyelesaikan pemulihan session tanpa meminta login ulang. */
-setTimeout(()=>{
-  if(auth.currentUser && !uid){
-    gunakanSesiIndex(auth.currentUser);
-  }else if(!uid){
-    $("statusApp").textContent="Menunggu sesi Firebase dari Index...";
-    $("userInfo").textContent="Sesi Index belum terbaca";
-  }
-},2000);
-</script>
-
-<div id="fixzyAlertOverlay" aria-hidden="true"><div id="fixzyAlertBox" role="alertdialog" aria-modal="true"><h3 id="fixzyAlertTitle">FIXZY</h3><div id="fixzyAlertMessage"></div><button id="fixzyAlertOk" type="button">Oke</button></div></div>
-<script>
-(function(){function showPopup(m,t){const o=document.getElementById("fixzyAlertOverlay"),x=document.getElementById("fixzyAlertMessage"),h=document.getElementById("fixzyAlertTitle"),b=document.getElementById("fixzyAlertOk");if(!o)return;h.textContent=t||"FIXZY";x.textContent=String(m??"");o.classList.add("show");o.setAttribute("aria-hidden","false");setTimeout(()=>b.focus(),30)}function closePopup(){const o=document.getElementById("fixzyAlertOverlay");if(o){o.classList.remove("show");o.setAttribute("aria-hidden","true")}}window.showPopup=showPopup;window.closePopup=closePopup;document.addEventListener("click",e=>{if(e.target.id==="fixzyAlertOk"||e.target.id==="fixzyAlertOverlay")closePopup()});document.addEventListener("keydown",e=>{if(e.key==="Escape")closePopup()})})();
+if(auth.currentUser){ (async()=>{try{await loadProfile(auth.currentUser); await muatSemua();}catch{}})(); }
 </script>
 </body>
 </html>
