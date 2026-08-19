@@ -32,7 +32,7 @@ button,input,select{font:inherit}
 .account{text-align:right}
 .account b{display:block;color:#e0a500;font-size:14px;text-shadow:1px 1px #111}
 .account span{font-size:11px;color:var(--muted)}
-main{max-width:920px;margin:0 auto;padding:14px}
+main{max-width:920px;margin:0 auto;padding:14px;padding-top:14px}
 .header{
   background:var(--navy);color:#fff;border-radius:0 0 14px 14px;
   padding:12px 14px;display:flex;align-items:center;gap:12px;
@@ -100,7 +100,7 @@ input:focus,select:focus{border-color:#2563eb}
 <body>
 <div class="topbar">
   <button class="menu" type="button" onclick="goHome()">☰</button>
-  <div class="brand"><b>FIXZY</b><span>Stok • Tampilan saja</span></div>
+  <div class="brand"><b>FIXZY</b><span>Stok</span></div>
   <div class="account"><b id="accountName">-</b><span id="accountRole">Memeriksa akun...</span></div>
 </div>
 
@@ -116,14 +116,14 @@ input:focus,select:focus{border-color:#2563eb}
   </div>
 
   <div class="card">
-    <div class="title">Ringkasan Stok</div>
+    <div class="title">Data Produk (Stok)</div>
     <div class="stats">
       <div class="stat"><small>Produk</small><b id="totalProduk">0</b></div>
       <div class="stat ready"><small>Ready</small><b id="readyProduk">0</b></div>
       <div class="stat empty"><small>Stok Kosong</small><b id="emptyProduk">0</b></div>
       <div class="stat"><small>Total Stok</small><b id="totalStok">0</b></div>
     </div>
-    <div class="notice">Data hanya menampilkan stok milik akun/usaha yang sedang login. Halaman ini tidak memiliki fungsi upload, tambah, edit, atau hapus stok.</div>
+    <div class="notice">Data hanya menampilkan stok milik akun/usaha yang sedang login. Halaman ini khusus melihat stok dan tidak menyediakan tambah, upload, edit, atau hapus stok.</div>
   </div>
 
   <div class="card">
@@ -264,17 +264,20 @@ function render(){
     const harga=num(p.harga??p.hargaJual??p.price);
     const stok=p._stok;
     const empty=stok<=0;
-    return `<div class="product">
+    return `<div class="product ${empty?"empty":""}">
       <div class="phead">
-        <div><div class="pname">${esc(nama)}</div><div class="code">${esc(kode)}</div></div>
-        <div class="badge ${empty?"empty":""}">${empty?"HABIS":"READY · "+stok}</div>
-      </div>
-      <div class="meta">
-        <div><small>Kategori</small><span>${esc(kategori)}</span></div>
-        <div><small>Merk</small><span>${esc(merk)}</span></div>
-        <div><small>Modal</small><span>${modal?"Rp "+modal.toLocaleString("id-ID"):"-"}</span></div>
-        <div><small>Harga Jual</small><span>${harga?"Rp "+harga.toLocaleString("id-ID"):"-"}</span></div>
-        <div><small>Sisa</small><span class="stock ${empty?"empty":""}">${stok} pcs</span></div>
+        <div>
+          <div class="pname">${esc(nama)} <span class="code">[${esc(kode)}]</span></div>
+          <div class="meta">
+            <div><span>${esc(kategori)}</span></div>
+            <div><span>•</span></div>
+            <div><span class="stock ${empty?"empty":""}">Stok: ${stok}</span></div>
+          </div>
+        </div>
+        <div style="text-align:right">
+          <div class="price">${harga?"Rp "+harga.toLocaleString("id-ID"):"-"}</div>
+          <div class="badge ${empty?"empty":""}">${empty?"❌ Habis":"✅ Tersedia"}</div>
+        </div>
       </div>
     </div>`;
   }).join("");
