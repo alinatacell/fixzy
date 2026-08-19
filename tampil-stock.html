@@ -17,35 +17,25 @@ html,body{margin:0;padding:0}
 body{font-family:Optimistic,Arial,sans-serif;background:var(--bg);color:var(--text)}
 body.dark{background:#0b0f14;color:#f3f4f6}
 button,input,select{font:inherit}
-.topbar{
-  height:92px;background:#fff;display:flex;align-items:center;
-  padding:14px 16px;gap:14px;border-bottom:2px solid #d8dee8;
-  position:sticky;top:0;z-index:20;
+header{
+  background:#111827 !important;color:#fff !important;
+  padding:10px 14px !important;min-height:72px;height:74px;
+  display:flex;align-items:center;gap:12px;
+  position:fixed;top:0;left:0;right:0;width:100%;z-index:9999;
+  border-bottom:3px solid #ffc107;
 }
-.menu{
-  width:64px;height:64px;border:0;border-radius:18px;background:var(--navy);
-  color:#fbbf00;font-size:34px;line-height:1;cursor:pointer
-}
-.brand{flex:1;min-width:0}
-.brand b{display:block;font-size:17px}
-.brand span{display:block;color:var(--muted);font-size:11px;margin-top:3px}
-.account{text-align:right}
-.account b{display:block;color:#e0a500;font-size:14px;text-shadow:1px 1px #111}
-.account span{font-size:11px;color:var(--muted)}
-main{max-width:920px;margin:0 auto;padding:14px;padding-top:14px}
-.header{
-  background:var(--navy);color:#fff;border-radius:0 0 14px 14px;
-  padding:12px 14px;display:flex;align-items:center;gap:12px;
-  box-shadow:0 4px 0 #000;margin:-14px -14px 14px;
-}
-.logo{width:60px;height:60px;border-radius:14px;background:#000;border:1px solid #334155;padding:4px;object-fit:contain}
-.headinfo{flex:1;min-width:0}.headtitle{font-size:21px;font-weight:800}.headsub{font-size:12px;color:#cbd5e1;margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.role{display:inline-block;margin-left:6px;background:#2563eb;padding:3px 8px;border-radius:999px;font-size:10px;vertical-align:middle}
-.refresh,.darkbtn{
-  height:48px;border:1px solid #475569;border-radius:12px;background:#111c30;color:#fff;
-  padding:0 16px;font-weight:800;cursor:pointer
-}
-.darkbtn{width:48px;padding:0;font-size:22px}
+.head{width:100%;max-width:920px;margin:auto;display:flex;align-items:center;gap:12px;min-height:52px;padding:0;box-sizing:border-box}
+.head-logo{width:52px;height:52px;border-radius:14px;object-fit:contain;background:#000;padding:4px;border:1px solid #ffffff20;flex:0 0 52px}
+.head-info{min-width:0;flex:1;line-height:1.2;overflow:hidden}
+.head-title-row{display:flex;align-items:center;gap:7px;flex-wrap:wrap}
+.head h1{font-size:18px;margin:0;font-weight:900;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.head-email{display:block;margin-top:2px;font-size:11px;color:#9ca3af;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.role-badge{display:none;align-items:center;padding:5px 9px;border-radius:999px;background:#2563eb;color:#fff;font-size:11px;font-weight:900}
+.head-actions{display:flex;align-items:center;gap:8px;flex:none;flex-shrink:0}
+.head button{border-radius:12px;font-weight:800;cursor:pointer}
+.refresh{background:transparent;color:#fff;border:2px solid #334155;height:42px;padding:0 14px;font-size:12px;white-space:nowrap}
+.dark-toggle{background:#1f2937;color:#facc15;border:2px solid #334155;width:44px;height:42px;padding:0;font-size:18px}
+main{max-width:920px;margin:auto;padding:88px 12px 12px 12px}
 .card{
   background:var(--card);border:2px solid var(--border);border-radius:16px;
   padding:16px;margin-bottom:16px;box-shadow:5px 5px 0 var(--border)
@@ -80,41 +70,51 @@ input:focus,select:focus{border-color:#2563eb}
 .emptybox{text-align:center;padding:35px 15px;color:var(--muted)}
 .loading{text-align:center;padding:25px;color:var(--muted)}
 .footer{text-align:center;font-size:10px;color:#94a3b8;padding:8px 0 25px}
-.dark .topbar{background:#111827;border-color:#263244}
-.dark .account span,.dark .brand span{color:#94a3b8}
 .dark .card,.dark .product{background:#111827;color:#f3f4f6;border-color:#334155}
 .dark .stat,.dark .meta div{background:#172033;border-color:#334155}
 .dark input,.dark select{background:#111827;color:#f3f4f6;border-color:#475569}
 .dark label{color:#cbd5e1}
 .dark .notice{color:#94a3b8}
 @media(max-width:700px){
- .topbar{height:92px}.menu{width:58px;height:58px}.account{max-width:120px}
- .header{margin-left:-14px;margin-right:-14px}.logo{width:58px;height:58px}
- .headtitle{font-size:18px}.refresh{padding:0 12px}.darkbtn{display:none}
  .stats{grid-template-columns:repeat(2,1fr)}
  .filters{grid-template-columns:1fr}
  .grid{grid-template-columns:1fr}
 }
+@media(max-width:650px){
+  header{height:68px;min-height:68px}
+  .head{gap:10px}
+  .head-logo{width:52px;height:52px;flex-basis:52px}
+  .head h1{font-size:16px}
+  .role-badge{font-size:10px;padding:4px 8px}
+  .refresh{height:42px;padding:0 10px}
+  .dark-toggle{width:42px;height:42px}
+  main{padding-top:80px}
+}
+.dark header{background:#0b0f14!important;border-bottom-color:#facc15}
+.dark .head-email{color:#9ca3af}
+.dark .refresh{background:transparent;color:#fff;border-color:#334155}
+.dark .dark-toggle{background:#1f2937;color:#facc15;border-color:#334155}
 </style>
 </head>
 <body>
-<div class="topbar">
-  <button class="menu" type="button" onclick="goHome()">☰</button>
-  <div class="brand"><b>FIXZY</b><span>Stok</span></div>
-  <div class="account"><b id="accountName">-</b><span id="accountRole">Memeriksa akun...</span></div>
-</div>
+<header>
+ <div class="head">
+  <img class="head-logo" src="/logo.png" alt="FIXZY">
+  <div class="head-info">
+   <div class="head-title-row">
+    <h1>Data Stok</h1>
+    <span id="roleBadge" class="role-badge"></span>
+   </div>
+   <span id="accountEmail" class="head-email">-</span>
+  </div>
+  <div class="head-actions">
+   <button class="refresh" type="button" onclick="loadStock()">↻ Refresh</button>
+   <button id="darkToggle" class="dark-toggle" type="button" onclick="toggleDark()">🌙</button>
+  </div>
+ </div>
+</header>
 
 <main>
-  <div class="header">
-    <img class="logo" src="/logo.png" alt="FIXZY">
-    <div class="headinfo">
-      <div class="headtitle">Data Stok <span id="roleBadge" class="role">-</span></div>
-      <div class="headsub" id="accountEmail">-</div>
-    </div>
-    <button class="refresh" type="button" onclick="loadStock()">↻ Refresh</button>
-    <button class="darkbtn" type="button" onclick="toggleDark()">🌙</button>
-  </div>
-
   <div class="card">
     <div class="title">Data Produk (Stok)</div>
     <div class="stats">
@@ -288,7 +288,11 @@ $("category").addEventListener("change",render);
 $("status").addEventListener("change",render);
 
 window.loadStock=loadStock;
-window.toggleDark=()=>document.body.classList.toggle("dark");
+window.toggleDark=()=>{
+  document.body.classList.toggle("dark");
+  const dark=document.body.classList.contains("dark");
+  $("darkToggle").textContent=dark?"☀️":"🌙";
+};
 window.goHome=()=>{location.href="index.html"};
 
 onAuthStateChanged(auth,async u=>{
@@ -301,9 +305,8 @@ onAuthStateChanged(auth,async u=>{
     const role=roleOf(profile);
     const displayRole=role?(role==="employee"?"KARYAWAN":role.toUpperCase()):"AKUN";
     $("accountEmail").textContent=u.email||"-";
-    $("accountRole").textContent=displayRole;
     $("roleBadge").textContent=displayRole;
-    $("accountName").textContent=profile.nama||profile.namaKaryawan||profile.displayName||profile.name||u.email?.split("@")[0]||"-";
+    $("roleBadge").style.display="inline-flex";
 
     const allowed=["owner","employee","karyawan","superadmin","admin"];
     if(!allowed.includes(role) && profile.isOwner!==true){
