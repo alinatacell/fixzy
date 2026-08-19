@@ -1,105 +1,831 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>FIXZY | Data Servis - DARK MODE FIX TULISAN HILANG</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>FIXZY | Input Servisan</title>
 <style>
-*{box-sizing:border-box}:root{--black:#0b0f14;--black2:#111827;--yellow:#ffc107;--bg:#eef2f6}
-html,body{margin:0;padding:0;overflow-x:hidden}body{background:var(--bg)!important;background-image:none!important;color:#111827;font-family:Arial,Helvetica,sans-serif;transition:.2s}
-header{position:fixed!important;top:0!important;left:0!important;right:0!important;width:100%!important;z-index:9999!important;background:var(--black)!important;color:#fff;border-bottom:3px solid var(--yellow);height:74px;display:flex;align-items:center}
-.head{max-width:1280px;width:100%;margin:0 auto;padding:0 12px;display:flex;align-items:center;gap:10px;box-sizing:border-box}
-.logo{width:52px;height:52px;flex:0 0 52px;border-radius:13px;background:#000;border:1px solid #334155;padding:4px;object-fit:contain}.brand{flex:1;min-width:0;overflow:hidden}.brand b{display:block;font-size:16px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.brand small{display:block;margin-top:3px;font-size:10px;color:#cbd5e1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.head-btns{display:flex;gap:8px;flex-shrink:0}.head-btn{height:42px;border:1px solid #ffffff30;border-radius:9px;padding:0 14px;font-weight:900;cursor:pointer;white-space:nowrap}.refresh{background:transparent;color:#fff}.moon{background:#1f2937;color:#fff;width:44px;padding:0;font-size:18px}
-main{max-width:1280px;margin:auto;padding:88px 14px 14px 14px;position:relative;z-index:1}
-.card{background:#fff;border:2px solid #111827;border-radius:14px;padding:15px;margin-bottom:15px;box-shadow:4px 4px 0 #111827}.card-title{font-size:16px;font-weight:900;padding-bottom:9px;margin-bottom:12px;border-bottom:2px solid #111827}
-.search-grid{display:grid;grid-template-columns:1.4fr .9fr .7fr auto;gap:9px;align-items:end}label{display:block;font-size:10px;font-weight:900;color:#4b5563;margin:0 0 5px}input,select{width:100%;min-height:43px;padding:9px 10px;border:2px solid #111827;border-radius:9px;background:#fff;font:inherit;color:#111827}
-.summary{background:#111827!important;color:#fff!important;border:2px solid #111827!important;border-radius:14px!important;padding:14px!important;margin-bottom:15px!important;box-shadow:4px 4px 0 #111827!important;font-size:13px!important;line-height:1.6!important}
-.summary b{color:#ffc107}.summary .green{color:#4ade80}.summary .yellow{color:#fde68a}.summary .income{color:#4ade80;font-weight:900}
-.table-wrap{overflow:auto;border:3px solid #111827;border-radius:12px;box-shadow:5px 5px 0 #111827;background:#fff;margin-bottom:15px}
-table{width:100%;border-collapse:collapse;min-width:1180px;font-size:11.5px}th,td{padding:9px 8px;border-bottom:1px solid #d1d5db;text-align:left;vertical-align:top;color:#111827}th{background:#111827;color:#fff;font-size:10px;position:sticky;top:0;z-index:1;white-space:nowrap}tr:hover td{background:#fffbeb}
-.badge{display:inline-block;padding:5px 8px;border-radius:999px;font-weight:900;font-size:9px;border:2px solid #111827;white-space:nowrap}
-.status-masuk{background:#dbeafe;color:#1d4ed8}.status-nunggu_sparepart{background:#ffedd5;color:#c2410c}.status-proses{background:#ede9fe;color:#7c3aed}.status-selesai{background:#dcfce7;color:#15803d}.status-diambil{background:#d1fae5;color:#047857}.status-batal{background:#fee2e2;color:#dc2626}
-.mini{border:2px solid #111827;border-radius:9px;padding:6px 9px;font-weight:900;cursor:pointer;box-shadow:2px 2px 0 #111827;font-size:11px;background:#fff;color:#111827}.barcode{font-family:monospace;font-size:10px;background:#111827;color:#ffc107;padding:3px 6px;border-radius:6px;display:inline-block;margin-top:4px}.prod-chip{display:inline-block;background:#fef9c3;border:1px solid #ffc107;padding:3px 6px;border-radius:6px;margin:2px;font-size:10px;font-weight:700;color:#111827}
-.cards{display:none;gap:10px}.servis-card{background:#fff;border:2px solid #111827;border-radius:14px;box-shadow:4px 4px 0 #111827;padding:12px;color:#111827}.servis-card .top{display:flex;justify-content:space-between;gap:8px;margin-bottom:8px}.servis-card .row{display:flex;justify-content:space-between;gap:8px;padding:4px 0;border-bottom:1px dashed #e5e7eb;font-size:11px}.servis-card .row span{color:#4b5563}.servis-card .row b{max-width:60%;text-align:right;color:#111827}.servis-card .foot{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px}
-.popup{position:fixed;inset:0;background:#0009;display:none;align-items:center;justify-content:center;z-index:2000;padding:12px}.popup.show{display:flex}.popup-box{width:min(620px,calc(100% - 10px));max-height:92vh;overflow:auto;background:#fff;border:3px solid #111827;border-radius:16px;box-shadow:8px 8px 0 #111827;padding:17px;color:#111827}.popup-box h3{background:#111827;color:#fff;margin:-17px -17px 14px;padding:13px 15px;border-radius:12px 12px 0 0}
-.wa-box{margin-top:10px;padding:11px;border:1px solid #e2e8f0;border-radius:10px;background:#f8fafc;white-space:pre-wrap;font-size:11px;max-height:220px;overflow:auto;color:#111827}
-#reader{width:100%;border-radius:12px;overflow:hidden;border:2px solid #111827}
-.btn{border:0;border-radius:9px;padding:10px 13px;font-weight:900;cursor:pointer;box-shadow:3px 3px 0 #111827}.scan{background:#ffc107;color:#111827}.secondary{background:#e5e7eb;color:#111827}
-/* DARK MODE FIX - TULISAN GAK HILANG */
-body.dark{background:#0b0f14!important;color:#e5e7eb!important}
-body.dark .card{background:#1f2937!important;color:#e5e7eb!important;border-color:#334155!important}
-body.dark .card-title{color:#fff!important;border-color:#334155!important}
-body.dark .table-wrap{background:#1f2937!important;border-color:#334155!important}
-body.dark table{color:#e5e7eb}
-body.dark th{background:#0b0f14!important;color:#fff!important}
-body.dark td{color:#e5e7eb!important;border-color:#334155!important;background:#1f2937!important}
-body.dark tr:hover td{background:#111827!important}
-body.dark .servis-card{background:#1f2937!important;color:#e5e7eb!important;border-color:#334155!important}
-body.dark .servis-card .row span{color:#9ca3af!important}
-body.dark .servis-card .row b{color:#fff!important}
-body.dark label{color:#9ca3af!important}
-body.dark input,body.dark select{background:#0b0f14!important;color:#fff!important;border-color:#334155!important}
-body.dark .popup-box{background:#1f2937!important;color:#e5e7eb!important;border-color:#334155!important}
-body.dark .wa-box{background:#0b0f14!important;color:#e5e7eb!important;border-color:#334155!important}
-body.dark .mini{background:#0b0f14!important;color:#fff!important;border-color:#334155!important}
-body.dark .prod-chip{background:#1f2937!important;color:#fde68a!important;border-color:#f59e0b!important}
-body.dark .summary{background:#0b0f14!important;border-color:#334155!important}
-@media(max-width:900px){.search-grid{grid-template-columns:1fr 1fr}table{min-width:900px}}
-@media(max-width:700px){.search-grid{grid-template-columns:1fr}.table-wrap{display:none}.cards{display:grid}header{height:68px}main{padding-top:80px}}
+*{box-sizing:border-box}
+body{margin:0;background:#eef2f6;color:#111827;font-family:Arial,Helvetica,sans-serif}
+header{background:#111827;color:#fff;padding:10px 14px;position:sticky;top:0;z-index:50;border-bottom:2px solid #000;box-shadow:0 3px 0 #000}
+.head{width:100%;max-width:920px;margin:auto;display:flex;align-items:center;gap:12px;min-height:52px}
+.head-logo{width:52px;height:52px;border-radius:14px;object-fit:contain;background:#000;padding:4px;border:1px solid #ffffff20;flex:0 0 52px}
+.head-info{min-width:0;flex:1;line-height:1.2}
+.head-title-row{display:flex;align-items:center;gap:7px;flex-wrap:wrap}
+.head h1{font-size:18px;margin:0;font-weight:900}
+.head-email{display:block;margin-top:2px;font-size:11px;color:#9ca3af;font-weight:700}
+.role-badge{display:none;align-items:center;padding:5px 9px;border-radius:999px;background:#2563eb;color:#fff;font-size:11px;font-weight:900}
+.head-actions{display:flex;align-items:center;gap:8px;flex:none}
+.head button{border-radius:12px;font-weight:800;cursor:pointer}
+.refresh{background:#1e293b;color:#fff;border:2px solid #334155;height:44px;padding:9px 14px;font-size:12px}
+.dark-toggle{background:#020617;color:#facc15;border:2px solid #334155;width:44px;height:44px;padding:0;font-size:21px}
+main{max-width:920px;margin:auto;padding:12px}
+.card{background:#fff;border:2px solid #111827;border-radius:12px;padding:15px;margin-bottom:14px;box-shadow:4px 4px 0 #111827}
+.title{font-size:16px;font-weight:900;border-bottom:2px solid #111827;padding-bottom:9px;margin-bottom:12px}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:11px}
+.full{grid-column:1/-1}
+label{display:block;font-size:12px;font-weight:800;color:#4b5563;margin-bottom:5px}
+input,select,textarea{width:100%;padding:11px;border:2px solid #111827;border-radius:8px;background:#fff;font:inherit;box-shadow:2px 2px 0 #111827}
+textarea{min-height:78px;resize:vertical}
+.info{border:2px solid #111827;border-radius:9px;overflow:hidden;box-shadow:3px 3px 0 #111827}
+.info-row{display:flex;justify-content:space-between;gap:12px;padding:9px 11px;border-bottom:1px solid #eee;font-size:12px}
+.info-row:last-child{border-bottom:0}
+.info-row span{color:#667085;font-weight:700}
+.info-row b{text-align:right}
+.product-search{position:relative}
+.results{display:none;position:absolute;z-index:30;left:0;right:0;top:100%;background:#fff;border:1px solid #ddd;border-radius:0 0 9px 9px;max-height:270px;overflow:auto;box-shadow:0 7px 18px #0002}
+.results.show{display:block}
+.result{display:block;width:100%;text-align:left;border:0;border-bottom:1px solid #eee;background:#fff;padding:10px;cursor:pointer}
+.result:hover{background:#f8fafc}
+.pname{font-weight:900}
+.pmeta{font-size:11px;color:#667085;margin-top:3px}
+.selected{margin-top:7px;padding:9px;border:1px dashed #16a34a;background:#f0fdf4;border-radius:8px;font-size:12px}
+.selected.empty{border-color:#d1d5db;background:#f8fafc;color:#667085}
+.money{font-size:12px;color:#667085;margin-top:7px}
+.actions{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+button.action{border:2px solid #111827;border-radius:9px;padding:12px;font-weight:900;cursor:pointer;box-shadow:3px 3px 0 #111827}
+.primary{background:#111827;color:#fff}
+.secondary{background:#e5e7eb}
+.status-msg{font-size:12px;color:#667085;margin-top:8px}
+.notice{padding:10px;border-radius:9px;border:2px solid #111827;background:#f8fafc;font-size:12px;font-weight:700;margin-bottom:12px}
+.notice.error{background:#fef2f2;border-color:#dc2626;color:#991b1b}
+.notice.ok{background:#f0fdf4;border-color:#16a34a;color:#166534}
+
+/* POPUP */
+.popup{position:fixed;inset:0;background:#0008;display:none;align-items:center;justify-content:center;z-index:100;padding:12px}
+.popup.show{display:flex}
+.popup-box{width:min(560px,calc(100% - 20px));max-height:92vh;overflow:auto;background:#fff;border:3px solid #111827;border-radius:16px;box-shadow:8px 8px 0 #111827;padding:16px}
+.popup-box h3{margin:0 0 10px}
+.template-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.template-card{border:2px solid #111827;border-radius:12px;padding:10px;cursor:pointer;background:#fff}
+.template-card.active{border-color:#facc15;background:#fffbeb;box-shadow:3px 3px 0 #111827}
+.template-card b{display:block;font-size:13px}
+.template-card small{display:block;font-size:10px;color:#667085;margin-top:2px}
+.template-preview{height:80px;border:1px solid #cbd5e1;border-radius:8px;margin-top:8px;padding:6px;background:#fff;overflow:hidden}
+.template-preview .bar{height:14px;border-radius:4px;margin-bottom:6px}
+.template-preview .line{height:4px;background:#e5e7eb;border-radius:2px;margin:4px 0}
+.template-preview .line.w60{width:60%}
+.template-preview .line.w40{width:40%}
+.template-preview .line.w80{width:80%}
+
+/* DARK MODE: tampilan saja */
+body.dark{background:#0b1220;color:#e5e7eb}
+body.dark .card{background:#111827;color:#e5e7eb;border-color:#334155;box-shadow:4px 4px 0 #020617}
+body.dark .title{border-color:#334155}
+body.dark label{color:#cbd5e1}
+body.dark input,body.dark select,body.dark textarea{background:#0f172a;color:#e5e7eb;border-color:#475569;box-shadow:2px 2px 0 #020617}
+body.dark .info{border-color:#475569;box-shadow:3px 3px 0 #020617}
+body.dark .info-row{border-color:#334155}
+body.dark .info-row span{color:#94a3b8}
+body.dark .results,body.dark .result{background:#111827;color:#e5e7eb;border-color:#334155}
+body.dark .result:hover{background:#1e293b}
+body.dark .pmeta,body.dark .money,body.dark .status-msg{color:#94a3b8}
+body.dark .selected.empty{background:#0f172a;border-color:#475569;color:#94a3b8}
+body.dark .secondary{background:#334155;color:#fff;border-color:#475569}
+body.dark .popup-box{background:#111827;color:#e5e7eb;border-color:#475569}
+body.dark .template-card{background:#0f172a;color:#e5e7eb;border-color:#475569}
+body.dark .template-preview{background:#111827;border-color:#475569}
+
+/* PRINT */
+#printArea{display:none}
+@media print{
+ body{background:#fff}
+ header,main,.popup{display:none!important}
+ #printArea{display:block!important}
+ @page{margin:0}
+ .paper-58{width:58mm;padding:3mm;font:8.5px Arial;color:#111}
+ .paper-80{width:80mm;padding:4mm;font:9px Arial;color:#111}
+ .paper-5x8{width:5in;height:8in;padding:6mm;font:10px Arial;color:#111;border:1px solid #eee}
+ .print-modern{border-radius:0}
+ .print-modern .shop-header{padding:10px;border-radius:8px 8px 0 0;text-align:center}
+ .print-modern.blue .shop-header{background:#2563eb;color:#fff}
+ .print-modern.yellow .shop-header{background:#facc15;color:#111}
+ .print-modern.green .shop-header{background:#16a34a;color:#fff}
+ .print-modern.black .shop-header{background:#111827;color:#fff}
+ .print-modern .shop-header h2{margin:0;font-size:14px;text-transform:uppercase;letter-spacing:.5px}
+ .print-modern .shop-header div{font-size:7.5px;opacity:.9;margin-top:2px}
+ .print-meta{display:grid;grid-template-columns:1fr 1fr;gap:2px 8px;padding:6px 0;border-bottom:1px dashed #999;font-size:8px}
+ .print-section{padding:6px 0;border-bottom:1px dashed #999}
+ .print-section b.tt{display:block;font-size:8px;text-transform:uppercase;margin-bottom:3px;color:#555;letter-spacing:.5px}
+ .print-grid{display:grid;grid-template-columns:65px 1fr;gap:2px;font-size:8px}
+ .print-items{width:100%;border-collapse:collapse;margin-top:4px}
+ .print-items th{font-size:7px;text-transform:uppercase;background:#f3f4f6;padding:3px;text-align:left}
+ .print-items td{font-size:8px;padding:3px;border-bottom:1px solid #eee}
+ .print-money{width:100%;border-collapse:collapse}
+ .print-money td{padding:2px 0;font-size:8px}
+ .print-money td:last-child{text-align:right;font-weight:700}
+ .print-total td{border-top:2px solid #111;padding-top:5px!important;font-size:10px;font-weight:900}
+ .print-status{text-align:center;padding:6px;border:2px solid #111;border-radius:6px;margin-top:6px;font-weight:900;font-size:9px;text-transform:uppercase}
+ .print-barcode{text-align:center;padding:8px 0}
+ .print-barcode svg{width:90%!important;height:14mm!important}
+ .print-footer{text-align:center;border-top:1px dashed #999;padding-top:6px;margin-top:6px;font-size:7px;color:#555;line-height:1.4}
+}
+@media(max-width:650px){
+ .grid{grid-template-columns:1fr}
+ .full{grid-column:auto}
+ .template-grid{grid-template-columns:1fr}
+ .head{gap:10px}
+ .head-logo{width:52px;height:52px;flex-basis:52px}
+ .head h1{font-size:18px}
+ .role-badge{font-size:10px;padding:4px 8px}
+ .refresh{height:44px;padding:9px 12px}
+ .dark-toggle{width:44px;height:44px}
+}
 </style>
-<script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
 </head>
 <body>
-<header><div class="head"><img class="logo" src="logo.png" alt="FIXZY"><div class="brand"><b>FIXZY - DATA SERVIS</b><small id="konterInfo">Memuat...</small></div><div class="head-btns"><button class="head-btn refresh" onclick="location.reload()">↻ Refresh</button><button class="head-btn moon" onclick="document.body.classList.toggle('dark')">🌙</button></div></div></header>
+
+<header>
+ <div class="head">
+  <img class="head-logo" src="logo.png" alt="FIXZY">
+  <div class="head-info">
+   <div class="head-title-row">
+    <h1>Input Servisan</h1>
+    <span id="roleBadge" class="role-badge"></span>
+   </div>
+   <span id="headerEmail" class="head-email">-</span>
+  </div>
+  <div class="head-actions">
+   <button class="refresh" type="button" onclick="location.reload()">Refresh</button>
+   <button id="darkToggle" class="dark-toggle" type="button">🌙</button>
+  </div>
+ </div>
+</header>
+
 <main>
-<div class="card summary" id="dataStats">Memuat data servis...</div>
-<div class="card"><div class="card-title">Pencarian Data Servis</div>
-<div class="search-grid"><div><label>CARI NOTA / NAMA / HP</label><input id="q" placeholder="Ketik nota, nama, no HP, barcode, produk..."></div><div><label>STATUS</label><select id="fStatus"><option value="">Semua Status</option><option value="masuk">Masuk</option><option value="nunggu_sparepart">Nunggu Sparepart</option><option value="proses">Proses</option><option value="selesai">Selesai</option><option value="diambil">Diambil</option><option value="batal">Batal</option></select></div><div><label>TANGGAL</label><input id="fTanggal" type="date"></div><div><label>SCAN BARCODE</label><button class="btn scan" onclick="bukaScan()" style="width:100%;height:43px">📷 Scan Barcode</button></div></div>
-<div id="statusMsg" style="font-size:11px;color:#64748b;margin-top:8px">Menunggu login...</div></div>
-<div class="table-wrap"><table><thead><tr><th>Tanggal</th><th>Nota & Barcode</th><th>Pelanggan & WA</th><th>Data Servisan</th><th>Produk Digunakan</th><th>Estimasi / Diskon / DP / Total</th><th>Pendapatan (jika Diambil)</th><th>Status & Aksi</th></tr></thead><tbody id="tbody"><tr><td colspan="8" style="text-align:center;color:#667085;padding:25px">Memuat Firebase...</td></tr></tbody></table></div>
-<div class="cards" id="cards"></div></main>
-<div class="popup" id="scanPopup"><div class="popup-box"><h3>📷 Scan Barcode Nota</h3><div style="font-size:11px;color:#64748b;margin-bottom:10px">Arahkan kamera ke barcode nota. Data tidak dirubah, hanya mencari.</div><div id="reader"></div><div id="scanResult" style="margin-top:10px;font-size:11px;color:#047857;font-weight:900"></div><div style="display:flex;gap:7px;justify-content:flex-end;margin-top:12px"><button class="btn secondary" onclick="tutupScan()">Tutup</button></div></div></div>
-<div class="popup" id="editPopup"><div class="popup-box"><h3 id="editTitle">Edit Status Servis</h3><div id="editBody" style="font-size:12px;line-height:1.6"></div><div style="margin:8px 0"><label>UBAH STATUS</label><select id="newStatus"><option value="masuk">Masuk</option><option value="nunggu_sparepart">Nunggu Sparepart</option><option value="proses">Proses</option><option value="selesai">Selesai</option><option value="diambil">Diambil</option><option value="batal">Batal</option></select></div><div style="display:flex;gap:7px;justify-content:flex-end;margin-top:12px"><button class="btn secondary" onclick="closeEdit()">Batal</button><button class="btn" style="background:#111827;color:#fff" onclick="simpanStatus()">💾 Simpan & Kirim WA</button></div></div></div>
-<div class="popup" id="waPopup"><div class="popup-box"><h3>📲 Konfirmasi WA Pelanggan</h3><div id="waInfo" style="font-size:12px;line-height:1.5"></div><div class="wa-box" id="waText"></div><div style="display:flex;gap:7px;flex-wrap:wrap;margin-top:12px"><button id="waLinkBtn" type="button" style="flex:1;text-align:center;padding:11px;background:#25D366;color:#fff;border-radius:10px;text-decoration:none;font-weight:900;border:2px solid #111827;cursor:pointer">📲 Buka WhatsApp</button><button class="mini" onclick="salinWA()">📋 Salin</button><button class="mini" onclick="tutupWA()">Tutup</button></div></div></div>
+ <div id="accessNotice" class="notice">Memeriksa akun dan isolasi data...</div>
+
+ <div class="card">
+  <div class="title">Informasi Transaksi</div>
+  <input type="hidden" id="nomorNota">
+  <input type="hidden" id="barcode">
+  <input type="hidden" id="tanggalNota">
+  <div class="info">
+   <div class="info-row"><span>Nomor Nota</span><b id="infoNota">-</b></div>
+   <div class="info-row"><span>Tanggal</span><b id="infoTanggal">-</b></div>
+   <div class="info-row"><span>Barcode</span><b id="infoBarcode">-</b></div>
+  </div>
+ </div>
+
+ <div class="card">
+  <div class="title">Data Pelanggan</div>
+  <div class="grid">
+   <div><label>NAMA PELANGGAN *</label><input id="namaPelanggan"></div>
+   <div><label>NO. WA *</label><input id="waPelanggan"></div>
+   <div class="full"><label>ALAMAT</label><textarea id="alamatPelanggan"></textarea></div>
+  </div>
+ </div>
+
+ <div class="card">
+  <div class="title">Data Servisan</div>
+  <div class="grid">
+   <div><label>BRAND / TIPE HP *</label><input id="brandTipe"></div>
+   <div><label>IMEI</label><input id="imei"></div>
+   <div class="full"><label>JENIS KERUSAKAN *</label><textarea id="kerusakan"></textarea></div>
+   <div><label>TEKNISI *</label><select id="teknisi"><option value="">-- Pilih Teknisi --</option></select></div>
+   <div><label>STATUS</label><select id="status">
+    <option value="masuk">Masuk</option>
+    <option value="nunggu sparepart">Nunggu Part</option>
+    <option value="proses">Proses</option>
+    <option value="selesai">Selesai</option>
+    <option value="diambil">Diambil</option>
+   </select></div>
+  </div>
+ </div>
+
+ <div class="card">
+  <div class="title">Sparepart / Produk yang Digunakan</div>
+  <div class="grid">
+   <div class="full">
+    <label>CARI PRODUK STOK</label>
+    <div class="product-search">
+     <input id="cariProduk" placeholder="Ketik nama/kode...">
+     <div id="hasilProduk" class="results"></div>
+    </div>
+    <div id="produkTerpilih" class="selected empty">Belum memilih produk.</div>
+   </div>
+   <div><label>QTY</label><input id="qtyProduk" value="1"></div>
+   <div><label>MANUAL</label><input id="produkManual" placeholder="Jika tidak ada di stok"></div>
+  </div>
+ </div>
+
+ <div class="card">
+  <div class="title">Pembayaran</div>
+  <div class="grid">
+   <div><label>BIAYA SERVIS *</label><input id="biayaService" value="0"></div>
+   <div><label>DISKON</label><input id="diskon" value="0"></div>
+   <div><label>DP</label><input id="dp" value="0"></div>
+   <div class="full"><div class="money">Total: <strong id="previewTotal">Rp 0</strong> • Sisa: <strong id="previewSisa">Rp 0</strong></div></div>
+  </div>
+ </div>
+
+ <div class="card">
+  <div class="title">Simpan & Cetak - TEMPLATE MODERN</div>
+  <div class="actions">
+   <button class="action secondary" type="button" onclick="simpan(false)">💾 Simpan</button>
+   <button class="action primary" type="button" onclick="simpan(true)">🖨️ Simpan & Pilih Template</button>
+  </div>
+  <div id="saveStatus" class="status-msg">Menunggu akun...</div>
+ </div>
+</main>
+
+<div class="popup" id="templatePopup">
+ <div class="popup-box">
+  <h3>🎨 Pilih Template Nota - Modern Warna</h3>
+  <p style="font-size:11px;color:#667085;margin:0 0 10px">Pilih desain + ukuran kertas. Template tidak disimpan ke Firebase.</p>
+  <div class="template-grid" id="templateGrid"></div>
+  <div style="margin-top:12px">
+   <label>UKURAN KERTAS</label>
+   <select id="paperSize">
+    <option value="80">80mm Thermal (Umum Konter)</option>
+    <option value="58">58mm Thermal (Kecil)</option>
+    <option value="5x8">5 x 8 inch (Kertas Nota 5x8)</option>
+   </select>
+  </div>
+  <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:14px">
+   <button class="action secondary" type="button" onclick="tutupTemplate()">Batal</button>
+   <button class="action primary" type="button" onclick="cetakTemplate()">🖨️ Cetak Sekarang</button>
+  </div>
+ </div>
+</div>
+
+<div id="printArea"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.6/dist/JsBarcode.all.min.js"></script>
 <script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js";
-import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-auth.js";
-import { getFirestore, doc, getDoc, collection, query, where, getDocsFromServer, updateDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js";
-const cfg={apiKey:"AIzaSyC_PcarMTT5Un7qfSLzf92o5OGn5rginsI",authDomain:"fixzy-update.firebaseapp.com",projectId:"fixzy-update",storageBucket:"fixzy-update.firebasestorage.app",messagingSenderId:"995892519622",appId:"1:995892519622:web:fa41047944d8e5b35d6dc7"};
-const app=initializeApp(cfg),auth=getAuth(app),db=getFirestore(app);
-let uid="",ownerUid="",profile={},allRows=[],editId=null,pendingWA=null,html5Qr=null;
+import {initializeApp} from "https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js";
+import {getAuth,onAuthStateChanged} from "https://www.gstatic.com/firebasejs/11.10.0/firebase-auth.js";
+import {
+ getFirestore,collection,query,where,getDocs,doc,getDoc,setDoc,
+ runTransaction,serverTimestamp
+} from "https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js";
+
+const cfg={
+ apiKey:"AIzaSyC_PcarMTT5Un7qfSLzf92o5OGn5rginsI",
+ authDomain:"fixzy-update.firebaseapp.com",
+ projectId:"fixzy-update",
+ storageBucket:"fixzy-update.firebasestorage.app",
+ messagingSenderId:"995892519622",
+ appId:"1:995892519622:web:fa41047944d8e5b35d6dc7"
+};
+
+const app=initializeApp(cfg);
+const auth=getAuth(app);
+const db=getFirestore(app);
+
+let uid=null;
+let businessUid=null;
+let profile={};
+let role="";
+let products=[];
+let employees=[];
+let selectedProduct=null;
+let pendingData=null;
+let selectedTemplate=2;
+let pageReady=false;
+
 const $=id=>document.getElementById(id);
-const esc=s=>String(s??"").replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
-const money=n=>"Rp "+(Number(n)||0).toLocaleString("id-ID");
-const dateVal=r=>String(r.tanggal||r.tanggalMasuk||r.createdAt||"").slice(0,10)||new Date().toISOString().slice(0,10);
-const getStatus=r=>String(r.status||"masuk").toLowerCase(),getNota=r=>r.nomorNota||r.nota||r.id||"-",getNama=r=>r.pelanggan?.nama||r.namaPelanggan||r.nama||"-",getWa=r=>r.pelanggan?.wa||r.pelanggan?.noWa||r.noWa||r.wa||r.nomorWa||"",getKerusakan=r=>r.servisan?.jenisKerusakan||r.kerusakan||r.keluhan||r.jenisKerusakan||"-",getTipe=r=>r.servisan?.brandTipe||r.brandTipe||r.tipeHp||r.merkTipe||"-";
-function parseProduk(r){const c=[r.produkDigunakan,r.produkYangDigunakan,r.sparepart,r.spareparts,r.produk,r.items,r.produkList,r.sparepartList,r.produkTerpakai,r.stokTerpakai,r.barangDigunakan];let f=null;for(let c2 of c){if(c2&&(Array.isArray(c2)?c2.length>0:String(c2).trim()!=="")){f=c2;break}}if(!f){if(r.dataProduk)f=r.dataProduk;if(r.produk_manual)f=r.produk_manual;if(r.manualProduk)f=r.manualProduk}if(!f)return{text:"-",list:[],has:false};if(typeof f==="string"){const t=f.trim();if(!t||t==="-")return{text:"-",list:[],has:false};return{text:t,list:[{nama:t,qty:1}],has:true}}if(Array.isArray(f)){const list=f.map(item=>{if(typeof item==="string")return{nama:item,qty:1};if(typeof item==="object")return{nama:item.nama||item.namaProduk||item.kode||item.kodeProduk||item.title||JSON.stringify(item).slice(0,30),qty:Number(item.qty||item.jumlah||item.qtyProduk||1)};return{nama:String(item),qty:1}}).filter(x=>x.nama&&x.nama!=="-");if(!list.length)return{text:"-",list:[],has:false};return{text:list.map(x=>`${x.nama}${x.qty>1?` x${x.qty}`:""}`).join(", "),list,has:true}}if(typeof f==="object"){const nama=f.nama||f.namaProduk||f.kode||"-";if(nama==="-")return{text:"-",list:[],has:false};return{text:nama,list:[{nama,qty:Number(f.qty||1)}],has:true}}return{text:"-",list:[],has:false}}
-function getProdukText(r){return parseProduk(r).text}
-function getProdukChips(r){const p=parseProduk(r);if(!p.has)return'<span style="color:#94a3b8">-</span>';return p.list.map(x=>`<span class="prod-chip">${esc(x.nama)}${x.qty>1?` x${x.qty}`:""}</span>`).join("")}
-const getEstimasi=r=>Number(r.estimasi||r.estimasiBiaya||r.biayaEstimasi||r.totalEstimasi||r.biayaServis||0),getDiskon=r=>Number(r.diskon||r.potongan||0),getDP=r=>Number(r.dp||r.uangMuka||r.panjar||0),getTotal=r=>Number(r.total||r.totalBiaya||r.estimasi?.total||r.totalBayar||0);
-function getPendapatan(r){if(getStatus(r)!=="diambil")return 0;return getTotal(r)-getDiskon(r)}
-function nomorWA(v){let s=String(v||"").replace(/[^0-9]/g,"");if(!s)return"";if(s.startsWith("0"))s="62"+s.slice(1);else if(s.startsWith("8"))s="62"+s;else if(!s.startsWith("62"))s="62"+s;return s}
-function konterName(){return profile.namaKonter||profile.namaToko||"FIXZY - "+(profile.namaPemilik||"Service HP")}
-async function loadProfile(user){const snap=await getDoc(doc(db,"users",user.uid));if(!snap.exists())throw new Error("Profil tidak ditemukan");profile=snap.data()||{};const role=String(profile.role||"").toLowerCase();ownerUid=(role==="owner"||profile.isOwner===true)?user.uid:(profile.ownerUid||profile.ownerId||user.uid);uid=user.uid;$("konterInfo").textContent=konterName()+" • "+ownerUid.slice(0,6)+" • "+role}
-async function getOwnedServis(){const map=new Map();async function ambil(field,value){if(!value)return;try{const q=query(collection(db,"servis"),where(field,"==",value));const snap=await getDocsFromServer(q);snap.docs.forEach(d=>map.set(d.id,{id:d.id,...d.data()}))}catch(e){console.warn(e.message)}}await ambil("ownerUid",ownerUid);await ambil("ownerId",ownerUid);await ambil("uid",ownerUid);if(ownerUid!==uid){await ambil("ownerUid",uid);await ambil("uid",uid)}return[...map.values()].sort((a,b)=>String(b.tanggal||b.createdAt||"").localeCompare(String(a.tanggal||a.createdAt||"")))}
-async function muatSemua(){if(!uid)return;$("statusMsg").textContent="⏳ Membaca data servis...";try{const rows=await getOwnedServis();allRows=rows;render();const totalNilai=rows.reduce((s,r)=>s+getTotal(r),0),totalPendapatan=rows.reduce((s,r)=>s+getPendapatan(r),0);$("dataStats").innerHTML=`💰 <b>${rows.length}</b> data servis • Total nilai <b>${money(totalNilai)}</b> • Pendapatan <span class="income" style="color:#4ade80">${money(totalPendapatan)}</span> • Konter: ${esc(konterName())} • Produk kosong: ${rows.filter(r=>!parseProduk(r).has).length}`;$("statusMsg").textContent=`✅ ${rows.length} servis`}catch(e){$("statusMsg").textContent="❌ "+e.message}}
-function render(){const q=($("q").value||"").toLowerCase().trim(),st=($("fStatus").value||"").toLowerCase().trim(),tg=$("fTanggal").value||"",filtered=allRows.filter(r=>{if(q){const prodText=getProdukText(r).toLowerCase(),hay=[getNota(r),getNama(r),getWa(r),getTipe(r),getKerusakan(r),prodText].join(" ").toLowerCase();if(!hay.includes(q))return false}if(st&&getStatus(r)!==st)return false;if(tg&&!String(dateVal(r)).startsWith(tg))return false;return true});
- if(!filtered.length){$("tbody").innerHTML='<tr><td colspan="8" style="text-align:center;color:#667085;padding:25px">Belum ada servis</td></tr>';$("cards").innerHTML='<div class="card" style="text-align:center">Belum ada data</div>';return}
- $("tbody").innerHTML=filtered.map(r=>{const s=getStatus(r),nota=getNota(r),wa=getWa(r),pendapatan=getPendapatan(r);return`<tr><td>${esc(dateVal(r))}</td><td><b>${esc(nota)}</b><br><span class="barcode">${esc(nota)}</span></td><td><b>${esc(getNama(r))}</b><br><small>${esc(wa)}</small></td><td><b>${esc(getTipe(r))}</b><br><small>${esc(getKerusakan(r))}</small></td><td>${getProdukChips(r)}</td><td>Estimasi: ${money(getEstimasi(r))}<br>Diskon: ${money(getDiskon(r))}<br>DP: ${money(getDP(r))}<br><b>Total: ${money(getTotal(r))}</b></td><td><b style="color:${pendapatan>0?'#047857':'#94a3b8'}">${money(pendapatan)}</b><br><small>${s==='diambil'?'✅ sudah diambil':'⏳ belum diambil'}</small></td><td><span class="badge status-${s}">${esc(s.replace('_',' '))}</span><br><br><div style="display:flex;gap:5px;flex-wrap:wrap"><button class="mini" onclick="bukaEdit('${r.id}')">✏️ Edit</button><button class="mini" style="background:#22c55e;color:#fff" onclick="kirimWALangsung('${r.id}')">📲 WA</button></div></td></tr>`}).join("");
- $("cards").innerHTML=filtered.map(r=>{const s=getStatus(r),nota=getNota(r);return`<div class="servis-card"><div class="top"><b>${esc(nota)}</b><span class="badge status-${s}">${esc(s)}</span></div><div class="row"><span>📅 Tanggal</span><b>${esc(dateVal(r))}</b></div><div class="row"><span>👤 Pelanggan</span><b>${esc(getNama(r))} - ${esc(getWa(r))}</b></div><div class="row"><span>📱 Servisan</span><b>${esc(getTipe(r))}</b></div><div class="row"><span>🔧 Kerusakan</span><b>${esc(getKerusakan(r))}</b></div><div class="row"><span>📦 Produk</span><b>${getProdukText(r)}</b></div><div class="row"><span>💰 Total</span><b>${money(getTotal(r))}</b></div><div class="row"><span>💎 Pendapatan</span><b style="color:${getPendapatan(r)>0?'#047857':'#94a3b8'}">${money(getPendapatan(r))}</b></div><div class="foot"><button class="mini" onclick="bukaEdit('${r.id}')">✏️ Edit Status</button><button class="mini" style="background:#22c55e;color:#fff" onclick="kirimWALangsung('${r.id}')">📲 WA</button></div></div>`}).join("")}
-function buildPesanWA(r,newStatus){const namaKonter=konterName(),nama=getNama(r),nota=getNota(r),tipe=getTipe(r),kerusakan=getKerusakan(r),total=getTotal(r),produk=getProdukText(r),estimasi=getEstimasi(r),diskon=getDiskon(r),dp=getDP(r);let pesan="";if(newStatus==="masuk")pesan=`Halo Kak ${nama} 👋\n\nServisan HP ${tipe} (${kerusakan}) sudah kami terima di *${namaKonter}*.\n\n📄 Nota: ${nota}\n📅 Tgl: ${dateVal(r)}\n🔧 Keluhan: ${kerusakan}\n\nEstimasi: ${money(estimasi)}\nKami cek dulu ya.\n\nTerima kasih 🙏\n*${namaKonter}*`;else if(newStatus==="nunggu_sparepart")pesan=`Halo Kak ${nama} 👋\n\nUpdate servisan *${nota}* di *${namaKonter}*:\n\nStatus: ⏳ *NUNGGU SPAREPART*\nHP: ${tipe}\nKerusakan: ${kerusakan}\nProduk dibutuhkan: ${produk}\n\nMenunggu sparepart datang.\n\nTerima kasih 🙏\n*${namaKonter}*`;else if(newStatus==="proses")pesan=`Halo Kak ${nama} 👋\n\nUpdate servisan *${nota}* di *${namaKonter}*:\n\nStatus: 🔧 *PROSES*\nHP: ${tipe} - ${kerusakan}\nProduk: ${produk}\n\nEstimasi biaya: ${money(total)}\n\nMohon ditunggu ya Kak.\n*${namaKonter}*`;else if(newStatus==="selesai")pesan=`Halo Kak ${nama} 🎉\n\nServisan HP *${tipe}* Nota *${nota}* di *${namaKonter}* sudah *SELESAI* ✅\n\nDetail:\nKerusakan: ${kerusakan}\nProduk dipakai: ${produk}\nTotal: ${money(total)}\nDiskon: ${money(diskon)}\nDP: ${money(dp)}\nSisa bayar: ${money(total-diskon-dp)}\n\nSilakan ambil di konter kami ya Kak.\n\n*${namaKonter}*`;else if(newStatus==="diambil")pesan=`Halo Kak ${nama} 🙏\n\nTerima kasih sudah mengambil HP *${tipe}* Nota *${nota}* di *${namaKonter}*.\n\nStatus: 📦 *DIAMBIL* ✅\nTotal bayar: ${money(total)}\nProduk: ${produk}\n\nSemoga puas, ditunggu servis berikutnya!\n*${namaKonter}*`;else pesan=`Halo Kak ${nama},\n\nStatus servisan Nota ${nota} di ${namaKonter} diupdate menjadi: *${newStatus.toUpperCase()}*.\n\nHP: ${tipe}\nProduk: ${produk}\n\nTerima kasih.\n*${namaKonter}*`;return pesan}
-function bukaWhatsApp(nomor,pesan){if(!nomor)return;const msg=encodeURIComponent(pesan||"");const waUrl="https://wa.me/"+nomor+"?text="+msg;try{const win=window.open(waUrl,"_blank");if(!win){window.location.href=waUrl;}}catch(e){window.location.href=waUrl;}}
-function siapkanTombolWA(nomor,pesan){pendingWA={phone:nomor,message:pesan};$("waLinkBtn").onclick=()=>bukaWhatsApp(nomor,pesan);}
-window.bukaEdit=id=>{const r=allRows.find(x=>x.id===id);if(!r)return;editId=id;$("editTitle").textContent="Edit Status - "+getNota(r);$("editBody").innerHTML=`<b>Nota:</b> ${esc(getNota(r))} <span class="barcode">${esc(getNota(r))}</span><br><b>Pelanggan:</b> ${esc(getNama(r))} - ${esc(getWa(r))}<br><b>HP:</b> ${esc(getTipe(r))} - ${esc(getKerusakan(r))}<br><b>Produk:</b> ${getProdukChips(r)}<br><b>Total:</b> ${money(getTotal(r))} | Diskon: ${money(getDiskon(r))} | DP: ${money(getDP(r))}<br><b>Status sekarang:</b> <span class="badge status-${getStatus(r)}">${esc(getStatus(r))}</span><br>`;$("newStatus").value=getStatus(r);$("editPopup").classList.add("show")};
-window.closeEdit=()=>{$("editPopup").classList.remove("show");editId=null};
-window.simpanStatus=async()=>{if(!editId)return;const r=allRows.find(x=>x.id===editId);if(!r)return;const newSt=$("newStatus").value;try{await updateDoc(doc(db,"servis",editId),{status:newSt,statusTerakhir:newSt,updatedAt:serverTimestamp(),...(newSt==="diambil"?{pendapatan:getPendapatan({...r,status:"diambil"}),tanggalDiambil:new Date().toISOString()}: {})});closeEdit();await muatSemua();const pesan=buildPesanWA(r,newSt),waNomor=nomorWA(getWa(r));if(!waNomor){alert("No WA kosong, status disimpan: "+newSt);return}siapkanTombolWA(waNomor,pesan);$("waInfo").innerHTML=`Status <b>${esc(newSt)}</b> disimpan ✅<br>Konfirmasi WA ke <b>${esc(getNama(r))}</b> (${esc(waNomor)})<br>Konter: <b>${esc(konterName())}</b>`;$("waText").textContent=pesan;$("waPopup").classList.add("show");}catch(e){alert("Gagal update: "+e.message)}};
-window.kirimWALangsung=id=>{const r=allRows.find(x=>x.id===id);if(!r)return;const st=getStatus(r),pesan=buildPesanWA(r,st),waNomor=nomorWA(getWa(r));if(!waNomor){alert("No WA kosong");return}siapkanTombolWA(waNomor,pesan);$("waInfo").innerHTML=`Kirim WA manual - Nota <b>${esc(getNota(r))}</b> Status <b>${esc(st)}</b>`;$("waText").textContent=pesan;$("waPopup").classList.add("show")};
-window.tutupWA=()=>{$("waPopup").classList.remove("show");pendingWA=null;$("waLinkBtn").onclick=null};
-window.salinWA=async()=>{if(!pendingWA)return;try{await navigator.clipboard.writeText(pendingWA.message);alert("Pesan disalin ✅")}catch{const range=document.createRange();range.selectNode($("waText"));window.getSelection().removeAllRanges();window.getSelection().addRange(range);document.execCommand("copy");alert("Pesan disalin ✅")}};
-window.bukaScan=()=>{$("scanPopup").classList.add("show");$("scanResult").textContent="Menyalakan kamera...";html5Qr=new Html5Qrcode("reader");html5Qr.start({facingMode:"environment"},{fps:10,qrbox:{width:250,height:250}},decodedText=>{$("scanResult").textContent="✅ Terdeteksi: "+decodedText;$("q").value=decodedText;render();setTimeout(()=>{tutupScan()},1000)},err=>{}).catch(e=>{$("scanResult").textContent="❌ Gagal buka kamera: "+e})};
-window.tutupScan=()=>{$("scanPopup").classList.remove("show");if(html5Qr){html5Qr.stop().then(()=>{html5Qr.clear();html5Qr=null}).catch(()=>{})}};
-$("q").addEventListener("input",render);$("fStatus").addEventListener("change",render);$("fTanggal").addEventListener("change",render);
-onAuthStateChanged(auth,async user=>{if(!user){location.replace("login.html");return}try{await loadProfile(user);await muatSemua()}catch(e){$("statusMsg").textContent="❌ "+e.message}});
+const num=id=>Number(String($(id)?.value||"").replace(/[^\d]/g,""))||0;
+const rupiah=n=>"Rp "+(Number(n)||0).toLocaleString("id-ID");
+const esc=s=>String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+
+function setNotice(text,type=""){
+ const el=$("accessNotice");
+ el.textContent=text;
+ el.className="notice"+(type?" "+type:"");
+}
+
+function roleAllowed(r){
+ return ["superadmin","admin","owner","employee","karyawan","kurir"].includes(r);
+}
+
+/*
+ ISOLASI AKUN:
+ - owner/superadmin: UID sendiri menjadi businessUid.
+ - admin/karyawan/employee/kurir: ownerUid, lalu ownerId, lalu UID sendiri.
+ - reseller tidak boleh memakai halaman Input Servisan.
+*/
+function resolveBusinessUid(data){
+ const r=String(data.role||"").toLowerCase();
+ if(r==="owner" || r==="superadmin") return uid;
+ return String(data.ownerUid||data.ownerId||uid);
+}
+
+function notaBaru(){
+ const d=new Date(),p=n=>String(n).padStart(2,"0");
+ return "SRV-"+d.getFullYear()+p(d.getMonth()+1)+p(d.getDate())+"-"+
+   p(d.getHours())+p(d.getMinutes())+p(d.getSeconds())+
+   String(d.getMilliseconds()).padStart(3,"0");
+}
+function makeBarcode(nota){return "FX-"+nota.replace(/^SRV-/,"");}
+function namaProduk(p){return String(p.nama||p.namaProduk||"-")}
+function kodeProduk(p){return String(p.kode||p.kodeProduk||"").trim()}
+function modalProduk(p){return Number(p.hargaModal??p.modal??0)||0}
+function dateOnly(){return new Date().toISOString().slice(0,10)}
+
+const TEMPLATES=[
+ {id:1,name:"Klasik Hitam",desc:"Hitam putih minimalis",color:"black",cls:"black"},
+ {id:2,name:"Modern Biru",desc:"🔥 Populer - Biru profesional",color:"#2563eb",cls:"blue"},
+ {id:3,name:"Modern Kuning",desc:"Kuning cerah konter",color:"#facc15",cls:"yellow"},
+ {id:4,name:"Modern Hijau",desc:"Hijau sukses",color:"#16a34a",cls:"green"}
+];
+
+function renderTemplateGrid(){
+ $("templateGrid").innerHTML=TEMPLATES.map(t=>`
+  <div class="template-card ${selectedTemplate===t.id?"active":""}" onclick="pilihTemplate(${t.id})">
+   <b>${t.id}. ${esc(t.name)}</b>
+   <small>${esc(t.desc)}</small>
+   <div class="template-preview">
+    <div class="bar" style="background:${t.color}"></div>
+    <div class="line w80"></div>
+    <div class="line w60"></div>
+    <div class="line w40"></div>
+    <div style="margin-top:6px;border:1px dashed #ccc;height:20px;border-radius:4px"></div>
+   </div>
+  </div>
+ `).join("");
+}
+window.pilihTemplate=id=>{selectedTemplate=id;renderTemplateGrid()};
+window.tutupTemplate=()=>{
+ $("templatePopup").classList.remove("show");
+ pendingData=null;
+};
+
+function setInfo(){
+ $("infoNota").textContent=$("nomorNota").value;
+ $("infoTanggal").textContent=$("tanggalNota").value;
+ $("infoBarcode").textContent=$("barcode").value;
+}
+
+function hitung(){
+ const biaya=num("biayaService"),diskon=num("diskon"),dp=num("dp");
+ const total=Math.max(0,biaya-diskon);
+ const sisa=Math.max(0,total-dp);
+ $("previewTotal").textContent=rupiah(total);
+ $("previewSisa").textContent=rupiah(sisa);
+ return {biaya,diskon,dp,total,sisa};
+}
+["biayaService","diskon","dp"].forEach(id=>$(id).addEventListener("input",hitung));
+
+/*
+ USERS:
+ Hanya teknisi/karyawan yang berada di owner/business yang sama.
+ Query dibatasi dengan ownerUid.
+*/
+async function loadEmployees(){
+ employees=[];
+ const q=query(
+   collection(db,"users"),
+   where("ownerUid","==",businessUid),
+   where("role","in",["employee","karyawan"]),
+   where("status","==","aktif")
+ );
+ const snap=await getDocs(q);
+ employees=snap.docs.map(d=>({id:d.id,...d.data()}));
+ $("teknisi").innerHTML=
+   '<option value="">-- Pilih Teknisi --</option>'+
+   employees.map(x=>`<option value="${x.id}">${esc(x.nama||x.email||x.id)}</option>`).join("");
+}
+
+/*
+ STOK:
+ JANGAN lagi membaca seluruh collection stok.
+ Hanya stok milik businessUid.
+ Kompatibilitas ownerId juga disediakan dengan query kedua.
+ Firestore Rules tetap harus mengunci dokumen.
+*/
+async function loadProducts(){
+ products=[];
+ const map=new Map();
+
+ const queries=[
+   query(collection(db,"stok"),where("ownerUid","==",businessUid)),
+   query(collection(db,"stok"),where("ownerId","==",businessUid))
+ ];
+
+ for(const q of queries){
+   const snap=await getDocs(q);
+   snap.forEach(d=>{
+     const data=d.data()||{};
+     const stokVal=Number(data.sisa ?? data.stok ?? 0)||0;
+     const produk={id:d.id,_stok:stokVal,...data};
+     const key=String(data.kode||data.nama||d.id).toLowerCase();
+     if(!map.has(key)||produk._stok>map.get(key)._stok) map.set(key,produk);
+   });
+ }
+
+ products=Array.from(map.values());
+}
+
+function filterProduk(q=""){
+ const box=$("hasilProduk");
+ const key=String(q).trim().toLowerCase();
+ const list=products.filter(p=>
+   String(p.nama||"").toLowerCase().includes(key) ||
+   String(p.kode||"").toLowerCase().includes(key)
+ ).slice(0,50);
+
+ if(!list.length) box.innerHTML='<div class="result">Tidak ada produk pada stok akun ini.</div>';
+ else box.innerHTML=list.map(p=>`
+  <button type="button" class="result" data-id="${p.id}">
+   <div class="pname">${esc(p.nama||"-")}</div>
+   <div class="pmeta">Kode: ${esc(p.kode||"-")} • Stok: ${p._stok}</div>
+  </button>
+ `).join("");
+
+ box.classList.add("show");
+}
+
+$("cariProduk").addEventListener("input",e=>filterProduk(e.target.value));
+$("cariProduk").addEventListener("focus",e=>filterProduk(e.target.value));
+
+$("hasilProduk").addEventListener("click",e=>{
+ const b=e.target.closest(".result[data-id]");
+ if(!b)return;
+ const p=products.find(x=>x.id===b.dataset.id);
+ if(!p)return;
+ selectedProduct=p;
+ $("cariProduk").value=p.nama;
+ $("produkManual").value="";
+ $("produkTerpilih").className="selected";
+ $("produkTerpilih").innerHTML=`<b>${esc(p.nama)}</b> • Stok: ${p._stok}`;
+ $("hasilProduk").classList.remove("show");
+});
+
+$("produkManual").addEventListener("input",()=>{
+ if($("produkManual").value.trim()){
+   selectedProduct=null;
+   $("cariProduk").value="";
+   $("produkTerpilih").className="selected";
+   $("produkTerpilih").textContent="Manual: "+$("produkManual").value;
+ }
+});
+
+document.addEventListener("click",e=>{
+ const w=document.querySelector(".product-search");
+ if(w&&!w.contains(e.target))$("hasilProduk").classList.remove("show");
+});
+
+function buildData(){
+ const nama=$("namaPelanggan").value.trim();
+ const wa=$("waPelanggan").value.trim();
+ const hp=$("brandTipe").value.trim();
+ const kerusakan=$("kerusakan").value.trim();
+
+ if(!nama)throw new Error("Nama wajib");
+ if(!wa)throw new Error("WA wajib");
+ if(!hp)throw new Error("Brand wajib");
+ if(!kerusakan)throw new Error("Kerusakan wajib");
+
+ const q=Math.max(1,num("qtyProduk")||1);
+ const manual=$("produkManual").value.trim();
+ if(!selectedProduct&&!manual)throw new Error("Pilih produk");
+
+ const pay=hitung();
+
+ const produkObj=selectedProduct
+ ?{
+   produkId:selectedProduct.id,
+   nama:namaProduk(selectedProduct),
+   kode:kodeProduk(selectedProduct),
+   qty:q,
+   modalSatuan:modalProduk(selectedProduct),
+   totalModal:modalProduk(selectedProduct)*q,
+   sumber:"firebase"
+ }
+ :{
+   produkId:null,
+   nama:manual,
+   kode:"",
+   qty:q,
+   modalSatuan:0,
+   totalModal:0,
+   sumber:"manual"
+ };
+
+ const produkText=produkObj.nama+(produkObj.qty>1?` x${produkObj.qty}`:"");
+
+ return {
+   uid:businessUid,
+   ownerUid:businessUid,
+   createdBy:uid,
+   nomorNota:$("nomorNota").value,
+   barcode:$("barcode").value,
+   tanggal:$("tanggalNota").value,
+   namaKonter:profile.namaKonter||"FIXZY",
+   teknisiId:$("teknisi").value,
+   namaTeknisi:$("teknisi").selectedOptions[0]?.textContent||"",
+   pelanggan:{
+     nama,
+     wa,
+     alamat:$("alamatPelanggan").value.trim()
+   },
+   servisan:{
+     brandTipe:hp,
+     imei:$("imei").value.trim(),
+     jenisKerusakan:kerusakan,
+     kelengkapan:[...document.querySelectorAll(".kelengkapan:checked")].map(x=>x.value)
+   },
+   penggunaanProduk:produkObj,
+   produkDigunakan:produkText,
+   produk:produkText,
+   sparepart:produkText,
+   items:[produkObj],
+   produkList:[produkObj],
+   estimasi:{
+     biayaService:pay.biaya,
+     diskon:pay.diskon,
+     total:pay.total,
+     dp:pay.dp,
+     sisa:pay.sisa
+   },
+   total:pay.total,
+   diskon:pay.diskon,
+   dp:pay.dp,
+   biayaService:pay.biaya,
+   status:$("status").value,
+   pendapatan:$("status").value==="diambil"?pay.total:0,
+   createdAt:serverTimestamp(),
+   updatedAt:serverTimestamp()
+ };
+}
+
+async function saveData(d){
+ const notaRef=doc(db,"servis",d.nomorNota);
+
+ if((await getDoc(notaRef)).exists())
+   throw new Error("Nota sudah ada");
+
+ if(d.penggunaanProduk.sumber!=="firebase"){
+   await setDoc(notaRef,{...d,stokDikurangi:false});
+   return;
+ }
+
+ const stockRef=doc(db,"stok",d.penggunaanProduk.produkId);
+
+ await runTransaction(db,async tx=>{
+   const stockSnap=await tx.get(stockRef);
+   if(!stockSnap.exists())throw new Error("Stok tidak ada");
+
+   const notaSnap=await tx.get(notaRef);
+   if(notaSnap.exists())throw new Error("Nota sudah ada");
+
+   const stock=stockSnap.data()||{};
+
+   /*
+    Perlindungan tambahan di client:
+    stok yang dipakai harus milik business yang sedang aktif.
+    Security Rules tetap menjadi pengaman utama.
+   */
+   const stockOwner=String(stock.ownerUid||stock.ownerId||"");
+   if(stockOwner!==businessUid)
+     throw new Error("Stok bukan milik akun ini");
+
+   const lama=Number(stock.sisa ?? stock.stok ?? 0);
+   const qty=Number(d.penggunaanProduk.qty)||1;
+
+   if(lama<qty)throw new Error(`Stok kurang. Sisa ${lama}`);
+
+   const baru=lama-qty;
+
+   tx.update(stockRef,{
+     sisa:baru,
+     stok:baru,
+     status:baru>0?"tersedia":"kosong",
+     updatedAt:serverTimestamp()
+   });
+
+   tx.set(notaRef,{
+     ...d,
+     stokDikurangi:true,
+     stokSebelum:lama,
+     stokSesudah:baru
+   });
+ });
+}
+
+function makePrintHTML(d){
+ const tpl=TEMPLATES.find(x=>x.id===selectedTemplate)||TEMPLATES[1];
+ const paper=$("paperSize").value;
+ const paperClass=paper==="58"?"paper-58":paper==="5x8"?"paper-5x8":"paper-80";
+ const produk=d.penggunaanProduk||{};
+
+ return `
+ <div class="${paperClass} print-modern ${tpl.cls}">
+  <div class="shop-header">
+   <h2>${esc(d.namaKonter)}</h2>
+   <div>${esc(profile.alamat||"")}</div>
+   <div>WA: ${esc(profile.whatsapp||profile.noWa||"")}</div>
+   <div style="margin-top:6px;font-weight:900;letter-spacing:1px">NOTA SERVIS • ${tpl.name.toUpperCase()}</div>
+  </div>
+  <div class="print-meta">
+   <div>No Nota: <b>${esc(d.nomorNota)}</b></div>
+   <div>Tanggal: <b>${esc(d.tanggal)}</b></div>
+   <div>Teknisi: <b>${esc(d.namaTeknisi)}</b></div>
+   <div>Status: <b>${esc(d.status.toUpperCase())}</b></div>
+  </div>
+  <div class="print-section">
+   <b class="tt">Pelanggan</b>
+   <div class="print-grid">
+    <span>Nama</span><b>${esc(d.pelanggan.nama)}</b>
+    <span>WA</span><span>${esc(d.pelanggan.wa)}</span>
+    <span>Alamat</span><span>${esc(d.pelanggan.alamat||"-")}</span>
+   </div>
+  </div>
+  <div class="print-section">
+   <b class="tt">Perangkat</b>
+   <div class="print-grid">
+    <span>HP</span><b>${esc(d.servisan.brandTipe)}</b>
+    <span>IMEI</span><span>${esc(d.servisan.imei||"-")}</span>
+    <span>Kerusakan</span><span>${esc(d.servisan.jenisKerusakan)}</span>
+    <span>Kelengkapan</span><span>${esc(d.servisan.kelengkapan.join(", ")||"-")}</span>
+   </div>
+  </div>
+  <div class="print-section">
+   <b class="tt">Produk & Jasa</b>
+   <table class="print-items">
+    <thead><tr><th>DESK</th><th>QTY</th><th>HARGA</th><th>JUMLAH</th></tr></thead>
+    <tbody>
+     <tr><td>Jasa Servis</td><td>1</td><td>${rupiah(d.estimasi.biayaService)}</td><td>${rupiah(d.estimasi.biayaService)}</td></tr>
+     ${produk.nama?`<tr><td>${esc(produk.nama)}</td><td>${produk.qty}</td><td>${rupiah(produk.modalSatuan)}</td><td>${rupiah(produk.totalModal)}</td></tr>`:""}
+    </tbody>
+   </table>
+   <table class="print-money" style="margin-top:6px">
+    <tr><td>Subtotal</td><td>${rupiah(d.estimasi.total+d.estimasi.diskon)}</td></tr>
+    <tr><td>Diskon</td><td>${rupiah(d.estimasi.diskon)}</td></tr>
+    <tr class="print-total"><td>TOTAL</td><td>${rupiah(d.estimasi.total)}</td></tr>
+    <tr><td>DP</td><td>${rupiah(d.estimasi.dp)}</td></tr>
+    <tr><td>Sisa Bayar</td><td>${rupiah(d.estimasi.sisa)}</td></tr>
+   </table>
+  </div>
+  <div class="print-status">STATUS: ${esc(d.status.toUpperCase())}</div>
+  <div class="print-barcode">
+   <svg id="printBarcode"></svg>
+   <div style="font:8px monospace;margin-top:2px">${esc(d.barcode)}</div>
+  </div>
+  <div class="print-footer">
+   Terima kasih telah servis di ${esc(d.namaKonter)}<br>
+   Garansi sesuai ketentuan toko • Simpan nota ini<br>
+   Dicetak: ${new Date().toLocaleString("id-ID")} • Template ${tpl.name} • ${paper}
+  </div>
+ </div>`;
+}
+
+window.cetakTemplate=()=>{
+ if(!pendingData)return;
+ $("printArea").innerHTML=makePrintHTML(pendingData);
+ $("templatePopup").classList.remove("show");
+
+ try{
+  JsBarcode("#printBarcode",pendingData.barcode,{
+   format:"CODE128",width:1.5,height:40,displayValue:false,margin:0
+  });
+ }catch(e){}
+
+ setTimeout(()=>window.print(),300);
+ pendingData=null;
+};
+
+function resetForm(){
+ ["namaPelanggan","waPelanggan","alamatPelanggan","brandTipe","imei","kerusakan",
+  "cariProduk","produkManual","biayaService","diskon","dp"]
+ .forEach(id=>{
+   const el=$(id);
+   if(el)el.value="";
+ });
+
+ $("qtyProduk").value="1";
+ selectedProduct=null;
+ $("produkTerpilih").className="selected empty";
+ $("produkTerpilih").textContent="Belum memilih produk.";
+ $("nomorNota").value=notaBaru();
+ $("barcode").value=makeBarcode($("nomorNota").value);
+ $("tanggalNota").value=dateOnly();
+ setInfo();
+ hitung();
+}
+
+async function executeSave(printAfter){
+ if(!pageReady){
+  setNotice("Halaman belum siap atau akun tidak memiliki akses.","error");
+  return;
+ }
+
+ let d;
+ try{
+  d=buildData();
+ }catch(e){
+  $("saveStatus").textContent=e.message;
+  setNotice(e.message,"error");
+  return;
+ }
+
+ try{
+  $("saveStatus").textContent="Menyimpan...";
+  setNotice("Menyimpan data servisan...");
+
+  await saveData(d);
+
+  $("saveStatus").textContent=`Berhasil • ${d.nomorNota}`;
+  setNotice(`Servisan ${d.nomorNota} berhasil disimpan pada akun ${businessUid}.`,"ok");
+
+  if(printAfter){
+   pendingData=d;
+   renderTemplateGrid();
+   $("templatePopup").classList.add("show");
+  }
+
+  resetForm();
+ }catch(e){
+  $("saveStatus").textContent="Gagal: "+e.message;
+  setNotice("Gagal menyimpan: "+e.message,"error");
+ }
+}
+
+window.simpan=p=>executeSave(p);
+
+/* Dark mode hanya UI, tidak menggunakan localStorage */
+$("darkToggle").addEventListener("click",()=>{
+ document.body.classList.toggle("dark");
+ const dark=document.body.classList.contains("dark");
+ $("darkToggle").textContent=dark?"☀️":"🌙";
+});
+
+onAuthStateChanged(auth,async user=>{
+ if(!user){
+  pageReady=false;
+  setNotice("Belum login. Silakan login melalui halaman utama FIXZY.","error");
+  $("saveStatus").textContent="Belum login";
+  return;
+ }
+
+ try{
+  uid=user.uid;
+
+  const snap=await getDoc(doc(db,"users",uid));
+  if(!snap.exists())throw new Error("Profil akun tidak ditemukan di users/{UID}.");
+
+  const data=snap.data()||{};
+  profile=data;
+  role=String(data.role||"").toLowerCase();
+
+  if(!roleAllowed(role)){
+   pageReady=false;
+   setNotice("Akun ini tidak memiliki akses ke Input Servisan.","error");
+   $("saveStatus").textContent="Akses ditolak";
+   return;
+  }
+
+  /*
+   businessUid adalah pemisah utama data.
+   Yudi superadmin -> UID Yudi.
+   Admin/karyawan/kurir -> ownerUid/ownerId milik owner.
+  */
+  businessUid=resolveBusinessUid(data);
+
+  $("headerEmail").textContent=user.email||"-";
+
+  const roleLabel={
+   superadmin:"SUPERADMIN",
+   admin:"ADMIN",
+   owner:"OWNER",
+   employee:"KARYAWAN",
+   karyawan:"KARYAWAN",
+   kurir:"KURIR"
+  }[role]||role.toUpperCase();
+
+  const badge=$("roleBadge");
+  badge.textContent=roleLabel;
+  badge.style.display="inline-flex";
+
+  $("nomorNota").value=notaBaru();
+  $("barcode").value=makeBarcode($("nomorNota").value);
+  $("tanggalNota").value=dateOnly();
+  setInfo();
+
+  /*
+   Kedua loader sekarang dibatasi businessUid.
+   Tidak ada lagi getDocs(collection(db,"stok")) seluruh database.
+  */
+  await loadEmployees();
+  await loadProducts();
+
+  pageReady=true;
+  $("saveStatus").textContent=`${products.length} produk • ${employees.length} teknisi • akun terisolasi`;
+  setNotice(
+   `Akun aktif: ${roleLabel} • Business UID: ${businessUid} • Data dibatasi ke owner ini.`,
+   "ok"
+  );
+
+  hitung();
+  renderTemplateGrid();
+
+ }catch(e){
+  pageReady=false;
+  $("saveStatus").textContent="Gagal: "+e.message;
+  setNotice("Gagal memuat akun: "+e.message,"error");
+ }
+});
 </script>
 </body>
 </html>
