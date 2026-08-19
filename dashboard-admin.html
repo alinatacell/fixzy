@@ -1,56 +1,146 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="id">
 <head>
-<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>FIXZY | Data Pengeluaran - HEADER SAMA PENJUALAN</title>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>FIXZY | Dashboard Admin</title>
 <style>
-*{box-sizing:border-box}:root{--black:#0b0f14;--black2:#111827;--yellow:#ffc107;--bg:#eef2f6;--red:#dc2626;--green:#16a34a;--blue:#2563eb}
-html,body{margin:0;padding:0;overflow-x:hidden}body{background:var(--bg)!important;color:#172033;font-family:Arial;transition:.2s}
+:root{--black:#0b0f14;--black2:#111827;--yellow:#ffc107;--bg:#eef2f6}
+*{box-sizing:border-box}html,body{margin:0;padding:0;overflow-x:hidden}body{background:var(--bg)!important;color:#111827;font-family:Arial;transition:.2s}
 header{position:fixed!important;top:0!important;left:0!important;right:0!important;width:100%!important;z-index:9999!important;background:#0b0f14!important;color:#fff;border-bottom:3px solid #ffc107;height:74px;display:flex;align-items:center}
-.head{max-width:1100px;width:100%;margin:0 auto;padding:0 12px;display:flex;align-items:center;gap:12px;box-sizing:border-box}
-.logo{width:52px;height:52px;flex:0 0 52px;border-radius:13px;background:#000;border:1px solid #334155;padding:4px;object-fit:contain}.brand{flex:1;min-width:0;overflow:hidden}.brand b{display:block;font-size:16px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.brand small{display:block;margin-top:3px;font-size:10px;color:#cbd5e1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.owner{text-align:right;max-width:200px;overflow:hidden}.owner b{display:block;font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.owner span{font-size:10px;color:#cbd5e1}
+.head{max-width:1280px;width:100%;margin:0 auto;padding:0 12px;display:flex;align-items:center;gap:10px}
+.logo{width:52px;height:52px;flex:0 0 52px;border-radius:13px;background:#000;border:1px solid #334155;padding:4px;object-fit:contain}.brand{flex:1;min-width:0;overflow:hidden}.brand b{display:block;font-size:17px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.brand small{display:block;margin-top:3px;font-size:10px;color:#cbd5e1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .head-btns{display:flex;gap:8px;flex-shrink:0}.head-btn{height:42px;border:1px solid #ffffff30;border-radius:9px;padding:0 14px;font-weight:900;cursor:pointer;white-space:nowrap}.refresh{background:transparent;color:#fff}.moon{background:#1f2937;color:#fff;width:44px;padding:0;font-size:18px}
-.wrap{max-width:1100px;margin:auto;padding:88px 12px 12px 12px}
-.card{background:#fff;border:2px solid #111827;border-radius:14px;padding:14px;margin-bottom:12px;box-shadow:4px 4px 0 #111827}.title{font-size:16px;font-weight:900;margin:0 0 10px;padding-bottom:8px;border-bottom:2px solid #111827}
-.kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:9px}.kpi{padding:13px;border-radius:14px;color:#fff;border:2px solid #111827;box-shadow:3px 3px 0 #111827}.kpi small{font-size:10px;font-weight:900;opacity:.9}.kpi b{font-size:19px;margin-top:6px;display:block}.k1{background:#2563eb}.k2{background:#dc2626}.k3{background:#16a34a}.k4{background:#7c3aed}
-.formgrid{display:grid;grid-template-columns:1fr 1fr;gap:12px}.field{display:flex;flex-direction:column;gap:6px}.field.full{grid-column:1/-1}label{font-size:11px;font-weight:900;color:#475569}input,select,textarea{width:100%;border:2px solid #111827;border-radius:11px;padding:0 12px;background:#fff;height:44px;box-shadow:2px 2px 0 #111827}textarea{min-height:92px;padding-top:11px;resize:vertical;height:auto}
-.btn{height:44px;border:2px solid #111827;border-radius:11px;padding:0 16px;font-weight:900;cursor:pointer;box-shadow:3px 3px 0 #111827}.primary{background:#ffc107;color:#111}.dark{background:#111827;color:#fff}.light{background:#e5e7eb;color:#111}
-.table-wrap{overflow:auto;border:3px solid #111827;border-radius:12px;box-shadow:5px 5px 0 #111827;background:#fff}.num{text-align:right;white-space:nowrap}.amount{font-weight:900;color:var(--red)}
-table{width:100%;border-collapse:collapse;min-width:780px}th{background:#111827;color:#fff;text-align:left;padding:10px;font-size:11px}td{padding:10px;border-bottom:1px solid #edf1f5;font-size:12px}
-.status{font-size:12px;color:#64748b}.ok{color:#15803d;font-weight:800}.err{color:#b91c1c;font-weight:800}
-body.dark{background:#0b0f14!important;color:#e5e7eb!important}.dark.card,.dark.table-wrap{background:#1f2937!important;color:#e5e7eb!important;border-color:#334155!important}.dark input,.dark select,.dark textarea{background:#0b0f14!important;color:#fff!important;border-color:#334155!important}.dark th{background:#0b0f14!important}
-@media(max-width:800px){.kpis{grid-template-columns:1fr 1fr}.owner{display:none}}
-@media(max-width:600px){.formgrid{grid-template-columns:1fr}.field.full{grid-column:auto}header{height:68px}.wrap{padding-top:80px}}
+main{max-width:1280px;margin:auto;padding:88px 14px 14px 14px}
+.card{background:#fff;border:2px solid #111827;border-radius:14px;padding:15px;margin-bottom:15px;box-shadow:4px 4px 0 #111827}.card-title{font-size:16px;font-weight:900;padding-bottom:9px;margin-bottom:12px;border-bottom:2px solid #111827;display:flex;justify-content:space-between;align-items:center}
+.summary{background:#111827;color:#fff;border:2px solid #111827;border-radius:14px;padding:14px;margin-bottom:15px;box-shadow:4px 4px 0 #111827;font-size:13px;line-height:1.6}.summary b{color:#ffc107}.summary .green{color:#4ade80}.summary .yellow{color:#fde68a}.summary .red{color:#fca5a5}
+.grid4{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}.grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+.stat{background:#fff;border:2px solid #111827;border-radius:14px;padding:14px;box-shadow:4px 4px 0 #111827}.stat small{display:block;font-size:10px;font-weight:900;color:#64748b;margin-bottom:6px;text-transform:uppercase}.stat b{display:block;font-size:20px}.stat i{display:block;font-size:11px;color:#64748b;margin-top:4px;font-style:normal}
+.stat.yellow{background:#fef9c3}.stat.green{background:#dcfce7}.stat.blue{background:#dbeafe}.stat.red{background:#fee2e2}.stat.dark{background:#111827;color:#fff}.stat.dark small{color:#9ca3af}.stat.dark i{color:#cbd5e1}
+.actions{display:flex;gap:8px;flex-wrap:wrap}.btn{border:2px solid #111827;border-radius:9px;padding:10px 13px;font-weight:900;cursor:pointer;box-shadow:3px 3px 0 #111827;text-decoration:none;display:inline-flex;align-items:center;gap:6px}.primary{background:#ffc107;color:#111}.dark{background:#111827;color:#fff}.secondary{background:#e5e7eb;color:#111827}
+.table-wrap{overflow:auto;border:3px solid #111827;border-radius:12px;box-shadow:5px 5px 0 #111827;background:#fff}
+table{width:100%;border-collapse:collapse;min-width:700px;font-size:11.5px}th,td{padding:9px 8px;border-bottom:1px solid #d1d5db;text-align:left;vertical-align:top}th{background:#111827;color:#fff;font-size:10px;white-space:nowrap}
+.badge{display:inline-flex;padding:4px 8px;border-radius:999px;border:2px solid #111827;font-size:9px;font-weight:900;white-space:nowrap}.masuk{background:#dbeafe;color:#1d4ed8}.tagihan{background:#fef3c7;color:#92400e}.tunai{background:#dcfce7;color:#15803d}.batal{background:#fee2e2;color:#b91c1c}.diambil{background:#d1fae5;color:#047857}.proses{background:#ede9fe;color:#7c3aed}.selesai{background:#dcfce7;color:#15803d}
+.chart{width:100%;height:180px;background:#f8fafc;border:2px solid #111827;border-radius:10px;display:flex;align-items:end;gap:4px;padding:8px}.bar{flex:1;background:#111827;border-radius:6px 6px 0 0;min-height:4px;position:relative}.bar span{position:absolute;top:-16px;left:50%;transform:translateX(-50%);font-size:9px;font-weight:900;white-space:nowrap}
+body.dark{background:#0b0f14!important;color:#e5e7eb}.dark .card,.dark .table-wrap,.dark .stat{background:#1f2937!important;color:#e5e7eb!important;border-color:#334155!important}.dark th{background:#0b0f14!important}.dark td{background:#1f2937!important;color:#e5e7eb!important;border-color:#334155!important}.dark .chart{background:#0b0f14!important;border-color:#334155!important}
+@media(max-width:900px){.grid4,.grid3{grid-template-columns:1fr 1fr}.grid2{grid-template-columns:1fr}}
+@media(max-width:600px){.grid4,.grid3{grid-template-columns:1fr}header{height:68px}main{padding-top:80px}}
 </style>
 </head>
 <body>
-<header><div class="head"><img src="logo.png" class="logo" alt="FIXZY"><div class="brand"><b id="konterNameHeader">Memuat...</b><small>FIXZY • DATA PENGELUARAN</small></div><div class="owner"><b id="ownerName">Memuat...</b><span id="ownerEmail">Firebase</span></div><div class="head-btns"><button class="head-btn refresh" onclick="location.reload()">↻</button><button class="head-btn moon" onclick="document.body.classList.toggle('dark')">🌙</button></div></div></header>
-<main class="wrap">
-<section class="card"><div id="status" class="status">Memeriksa sesi Firebase...</div></section>
-<section class="kpis"><div class="kpi k1"><small>TOTAL PENGELUARAN</small><b id="total">Rp 0</b></div><div class="kpi k2"><small>KASBON KARYAWAN (UPAH)</small><b id="kasbon">Rp 0</b></div><div class="kpi k3"><small>PENGELUARAN LAIN</small><b id="lain">Rp 0</b></div><div class="kpi k4"><small>TRANSAKSI</small><b id="jumlah">0</b></div></section>
-<section class="card" style="margin-top:12px"><h2 class="title">➕ Tambah Pengeluaran</h2>
-<div class="formgrid"><div class="field"><label>TANGGAL</label><input id="tanggal" type="date"></div><div class="field"><label>JENIS PENGELUARAN</label><select id="jenis" onchange="ubahJenis()"><option value="Konsumsi">Konsumsi</option><option value="Kasbon Karyawan">Kasbon Karyawan (Upah)</option><option value="Pembayaran">Pembayaran</option><option value="Belanja">Belanja</option><option value="Lain Lain">Lain Lain</option></select></div><div class="field" id="karyawanField" style="display:none"><label>KARYAWAN</label><select id="karyawan"><option value="">Pilih karyawan</option></select></div><div class="field"><label>NOMINAL</label><input id="nominal" type="number" min="1" placeholder="50000"></div><div class="field full"><label>KETERANGAN</label><textarea id="keterangan" placeholder="makan karyawan, bayar listrik, kasbon, dll."></textarea></div></div>
-<div style="display:flex;gap:8px;margin-top:12px"><button class="btn primary" onclick="simpan()">💾 Simpan</button><button class="btn light" onclick="bersihkan()">Bersihkan</button></div></section>
-<section class="card"><div style="display:flex;gap:9px;align-items:end;flex-wrap:wrap"><div class="field" style="min-width:180px;flex:1"><label>FILTER BULAN</label><input id="filterBulan" type="month" onchange="render()"></div><button class="btn dark" onclick="location.reload()">↻ Refresh Data</button></div></section>
-<section class="card"><h2 class="title">📒 Riwayat Pengeluaran</h2><div class="table-wrap"><table><thead><tr><th>No</th><th>Tanggal</th><th>Jenis</th><th>Karyawan</th><th>Keterangan</th><th class="num">Nominal</th></tr></thead><tbody id="tbody"></tbody></table></div></section>
+<header><div class="head"><img class="logo" src="logo.png" alt="FIXZY"><div class="brand"><b>📊 Dashboard Admin FIXZY</b><small id="accountLine">Memuat akun...</small></div><div class="head-btns"><button class="head-btn refresh" onclick="location.reload()">↻ Refresh</button><button class="head-btn moon" onclick="document.body.classList.toggle('dark')">🌙</button></div></div></header>
+<main>
+<div id="loading" class="card">⏳ Memuat dashboard admin...<br><small id="debug" style="color:#64748b"></small></div>
+<div id="page" style="display:none">
+<div id="summary" class="summary">Memuat ringkasan...</div>
+<div class="actions" style="margin-bottom:14px">
+<a class="btn dark" href="input-servis.html">＋ Input Servis</a>
+<a class="btn primary" href="input-penjualan.html">＋ Input Penjualan</a>
+<a class="btn secondary" href="data-servis.html">📋 Data Servis</a>
+<a class="btn secondary" href="data-penjualan.html">🛒 Data Penjualan</a>
+<a class="btn secondary" href="data-pengeluaran.html">💸 Pengeluaran</a>
+</div>
+
+<div class="grid4" id="stats"></div>
+
+<div class="grid2" style="margin-top:14px">
+<div class="card"><div class="card-title">Status Servis <small id="servisCount"></small></div><div class="chart" id="chartServis"></div><div id="servisDetail" style="margin-top:8px;font-size:11px"></div></div>
+<div class="card"><div class="card-title">Status Penjualan <small id="jualCount"></small></div><div class="chart" id="chartJual"></div><div id="jualDetail" style="margin-top:8px;font-size:11px"></div></div>
+</div>
+
+<div class="card"><div class="card-title">💸 Pengeluaran & Upah Karyawan</div><div class="grid3" id="statsKeluar"></div><div id="keluarDetail" style="margin-top:10px;font-size:11px;color:#64748b"></div></div>
+
+<div class="grid2">
+<div class="card"><div class="card-title">Servis Terbaru <a href="data-servis.html" style="font-size:10px">Lihat semua ›</a></div><div class="table-wrap"><table><thead><tr><th>Nota</th><th>Pelanggan</th><th>Tipe</th><th>Status</th></tr></thead><tbody id="recentServis"></tbody></table></div></div>
+<div class="card"><div class="card-title">Penjualan Terbaru <a href="data-penjualan.html" style="font-size:10px">Lihat semua ›</a></div><div class="table-wrap"><table><thead><tr><th>Nota</th><th>Pelanggan</th><th>Produk</th><th>Status</th></tr></thead><tbody id="recentJual"></tbody></table></div></div>
+</div>
+
+<div class="card"><div class="card-title">📒 Pengeluaran Terbaru</div><div class="table-wrap"><table><thead><tr><th>Tgl</th><th>Jenis</th><th>Karyawan</th><th>Keterangan</th><th>Nominal</th></tr></thead><tbody id="recentKeluar"></tbody></table></div></div>
+
+<div class="card"><div class="card-title">Keuangan Hari Ini</div><div id="keuangan" style="font-size:13px;line-height:1.8"></div></div>
+</div>
 </main>
 <script type="module">
-import{initializeApp,getApps,getApp}from"https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js";import{getAuth,onAuthStateChanged}from"https://www.gstatic.com/firebasejs/11.10.0/firebase-auth.js";import{getFirestore,collection,getDocs,getDoc,doc,query,where,addDoc,serverTimestamp}from"https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js";
+import{initializeApp}from"https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js";import{getAuth,onAuthStateChanged}from"https://www.gstatic.com/firebasejs/11.10.0/firebase-auth.js";import{getFirestore,collection,query,where,getDocs,doc,getDoc}from"https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js";
 const cfg={apiKey:"AIzaSyC_PcarMTT5Un7qfSLzf92o5OGn5rginsI",authDomain:"fixzy-update.firebaseapp.com",projectId:"fixzy-update",storageBucket:"fixzy-update.firebasestorage.app",messagingSenderId:"995892519622",appId:"1:995892519622:web:fa41047944d8e5b35d6dc7"};
-const app=getApps().length?getApp():initializeApp(cfg);const auth=getAuth(app);const db=getFirestore(app);const $=id=>document.getElementById(id);
-let uid="",ownerUid="",profile={},namaKonter="",rows=[],employees=[];
-const money=v=>"Rp "+(Number(v)||0).toLocaleString("id-ID");const esc=v=>String(v??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]));
-const today=()=>{const d=new Date();return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`};const monthNow=()=>today().slice(0,7);
-window.ubahJenis=()=>{$("karyawanField").style.display=$("jenis").value==="Kasbon Karyawan"?"flex":"none"};
-window.bersihkan=()=>{$("tanggal").value=today();$("jenis").value="Konsumsi";$("nominal").value="";$("keterangan").value="";$("karyawan").value="";ubahJenis()};
-async function ambilProfile(){if(!uid)return;try{const s=await getDoc(doc(db,"users",uid));if(s.exists())profile=s.data()||{};}catch{}ownerUid=profile.ownerUid||profile.ownerId||uid;namaKonter=String(profile.namaKonter||profile.namaToko||"").trim();if(!namaKonter&&ownerUid!==uid){try{const s=await getDoc(doc(db,"users",ownerUid));if(s.exists()){const p=s.data()||{};namaKonter=String(p.namaKonter||p.namaToko||"").trim();}}catch{}}$("konterNameHeader").textContent=namaKonter||"FIXZY";$("ownerName").textContent=profile.nama||auth.currentUser?.displayName||"Akun";$("ownerEmail").textContent=auth.currentUser?.email||"";}
-async function ambilKaryawan(){employees=[];try{const s=await getDocs(collection(db,"users"));employees=s.docs.map(d=>({id:d.id,...d.data()})).filter(x=>{const r=String(x.role||"").toLowerCase();const isWorker=["employee","karyawan","kasir","kurir","teknisi"].includes(r);const belongs=x.ownerUid===ownerUid||x.id===uid;return isWorker&&(belongs||ownerUid===uid);});}catch{}const sel=$("karyawan");sel.innerHTML='<option value="">Pilih karyawan</option>';employees.forEach(e=>{const n=String(e.nama||e.email||"").trim();if(!n)return;const op=document.createElement("option");op.value=e.id;op.textContent=n;op.dataset.name=n;op.dataset.uid=e.uid||e.id;sel.appendChild(op);});}
-async function ambilData(){rows=[];const map=new Map();for(const field of["ownerUid","uid"]){const value=field==="ownerUid"?ownerUid:uid;if(!value)continue;try{const s=await getDocs(query(collection(db,"pengeluaran"),where(field,"==",value)));s.docs.forEach(d=>map.set(d.id,{id:d.id,...d.data()}));}catch{}}rows=[...map.values()];}
-function render(){const period=$("filterBulan").value||monthNow();const data=rows.filter(r=>String(r.tanggal||"").startsWith(period)).sort((a,b)=>String(b.tanggal||"").localeCompare(String(a.tanggal||"")));const total=data.reduce((s,r)=>s+(Number(r.nominal)||0),0);const kasbon=data.filter(r=>String(r.jenis||"").toLowerCase()==="kasbon karyawan").reduce((s,r)=>s+(Number(r.nominal)||0),0);$("total").textContent=money(total);$("kasbon").textContent=money(kasbon);$("lain").textContent=money(total-kasbon);$("jumlah").textContent=data.length;$("tbody").innerHTML=data.map((r,i)=>`<tr><td>${i+1}</td><td>${esc(r.tanggal||"-")}</td><td>${esc(r.jenis||"-")}</td><td>${esc(r.namaKaryawan||"-")}</td><td>${esc(r.keterangan||"-")}</td><td class="num amount">${money(r.nominal)}</td></tr>`).join("")||'<tr><td colspan="6" style="text-align:center;padding:20px">Belum ada</td></tr>';}
-window.simpan=async()=>{if(!uid)return;const tanggal=$("tanggal").value||today();const jenis=$("jenis").value;const nominal=Number($("nominal").value||0);const keterangan=$("keterangan").value.trim();if(!nominal)return alert("Nominal wajib");let karyawanId="",namaKaryawan="",karyawanUid="";if(jenis==="Kasbon Karyawan"){const op=$("karyawan").selectedOptions[0];karyawanId=$("karyawan").value;namaKaryawan=op?.dataset?.name||"";karyawanUid=op?.dataset?.uid||"";if(!karyawanId)return alert("Pilih karyawan");}try{$("status").textContent="⏳ Menyimpan...";await addDoc(collection(db,"pengeluaran"),{uid,ownerUid,email:auth.currentUser?.email||"",namaKonter:namaKonter||"",tanggal,jenis,nominal,keterangan,karyawanId,karyawanUid,namaKaryawan,createdBy:uid,createdAt:serverTimestamp()});bersihkan();await ambilData();render();$("status").innerHTML=`<span class="ok">✓ Tersimpan • ${jenis} ${money(nominal)}</span>`;}catch(e){$("status").innerHTML=`<span class="err">❌ ${e.message}</span>`;}};
-$("tanggal").value=today();$("filterBulan").value=monthNow();ubahJenis();
-onAuthStateChanged(auth,async user=>{if(!user)return;uid=user.uid;try{await ambilProfile();await ambilKaryawan();await ambilData();render();$("status").innerHTML=`<span class="ok">✓ Firebase aktif • ${rows.length} pengeluaran • ${employees.length} karyawan</span>`;}catch(e){$("status").innerHTML=`<span class="err">❌ ${e.message}</span>`;}});
+const app=initializeApp(cfg),auth=getAuth(app),db=getFirestore(app);
+const $=id=>document.getElementById(id);const rupiah=n=>"Rp "+(Number(n)||0).toLocaleString("id-ID");const esc=s=>String(s??"").replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+let ownerUid="",allServis=[],allJual=[],allKeluar=[];
+const pname=d=>d.pelanggan?.nama||d.namaPelanggan||d.nama||"-";const date=d=>String(d.tanggal||"").slice(0,10)||(d.createdAt?.toDate?d.createdAt.toDate().toISOString().slice(0,10):"");
+async function getAll(colName){
+ let rows=[];let logs=[];const fields=["ownerUid","ownerId","uid","createdBy","businessUid","userId"];
+ for(const f of fields){try{const snap=await getDocs(query(collection(db,colName),where(f,"==",ownerUid)));logs.push(`${f}:${snap.size}`);snap.forEach(d=>rows.push({id:d.id,...d.data()}));}catch{}}
+ try{const allSnap=await getDocs(collection(db,colName));logs.push(`total:${allSnap.size}`);}catch{}
+ let m=new Map();rows.forEach(x=>m.set(x.id,x));return {data:[...m.values()],logs};
+}
+function renderStats(){
+ const totalServis=allServis.length,totalJual=allJual.length;
+ const totalNilaiServis=allServis.reduce((a,r)=>a+Number(r.total||r.totalBiaya||0),0);
+ const totalNilaiJual=allJual.reduce((a,r)=>a+Number(r.total||0),0);
+ const pendServis=allServis.filter(r=>String(r.status).toLowerCase()==="diambil").reduce((a,r)=>a+Number(r.total||0)-Number(r.diskon||0),0);
+ const pendJual=allJual.filter(r=>String(r.status).toLowerCase()==="tunai").reduce((a,r)=>a+Number(r.total||0)-Number(r.diskon||0),0);
+ const tagihanJual=allJual.filter(r=>String(r.status).toLowerCase()==="tagihan").reduce((a,r)=>a+(Number(r.sisa)||Math.max(0,Number(r.total||0)-Number(r.diskon||0)-Number(r.dp||0))),0);
+ const totalKeluar=allKeluar.reduce((a,r)=>a+Number(r.nominal||0),0);
+ const kasbonKeluar=allKeluar.filter(r=>String(r.jenis||"").toLowerCase().includes("kasbon")).reduce((a,r)=>a+Number(r.nominal||0),0);
+ const lainKeluar=totalKeluar-kasbonKeluar;
+ const laba= (pendServis+pendJual) - totalKeluar;
+
+ $("summary").innerHTML=`💰 <b>${totalServis} servis • ${totalJual} penjualan • ${allKeluar.length} pengeluaran</b> • Pendapatan <b class="green">${rupiah(pendServis+pendJual)}</b> • Keluar <b class="red">${rupiah(totalKeluar)}</b> • Laba Bersih <b class="${laba>=0?'green':'red'}">${rupiah(laba)}</b> • Sisa tagihan <b class="yellow">${rupiah(tagihanJual)}</b>`;
+
+ $("stats").innerHTML=`
+  <div class="stat blue"><small>Total Servis</small><b>${totalServis}</b><i>Nilai: ${rupiah(totalNilaiServis)}</i></div>
+  <div class="stat yellow"><small>Total Penjualan</small><b>${totalJual}</b><i>Nilai: ${rupiah(totalNilaiJual)}</i></div>
+  <div class="stat green"><small>Pendapatan</small><b>${rupiah(pendServis+pendJual)}</b><i>Diambil + Tunai</i></div>
+  <div class="stat ${laba>=0?'green':'red'}"><small>Laba Bersih</small><b>${rupiah(laba)}</b><i>Pendapatan - Keluar</i></div>
+ `;
+
+ $("statsKeluar").innerHTML=`
+  <div class="stat red"><small>Total Pengeluaran</small><b>${rupiah(totalKeluar)}</b><i>${allKeluar.length} transaksi</i></div>
+  <div class="stat dark"><small>Kasbon / Upah Karyawan</small><b>${rupiah(kasbonKeluar)}</b><i>Upah karyawan</i></div>
+  <div class="stat"><small>Pengeluaran Lain</small><b>${rupiah(lainKeluar)}</b><i>Konsumsi, belanja, dll</i></div>
+ `;
+
+ const statusServis=["masuk","nunggu_sparepart","proses","selesai","diambil","batal"];
+ const countServis=statusServis.map(s=>allServis.filter(r=>String(r.status).toLowerCase()===s).length);
+ const maxS=Math.max(1,...countServis);
+ $("chartServis").innerHTML=countServis.map((c,i)=>`<div class="bar" style="height:${(c/maxS*100)+10}%;background:${i===4?'#16a34a':i===0?'#2563eb':'#111827'}"><span>${c}</span></div>`).join("");
+ $("servisDetail").innerHTML=statusServis.map((s,i)=>`<span class="badge" style="margin:2px">${s}: ${countServis[i]}</span>`).join("");
+ $("servisCount").textContent=`${totalServis} data`;
+
+ const statusJual=["masuk","tagihan","tunai","batal"];
+ const countJual=statusJual.map(s=>allJual.filter(r=>String(r.status).toLowerCase()===s).length);
+ const maxJ=Math.max(1,...countJual);
+ $("chartJual").innerHTML=countJual.map((c,i)=>`<div class="bar" style="height:${(c/maxJ*100)+10}%;background:${i===2?'#16a34a':i===1?'#f59e0b':'#111827'}"><span>${c}</span></div>`).join("");
+ $("jualDetail").innerHTML=statusJual.map((s,i)=>`<span class="badge ${s}" style="margin:2px">${s}: ${countJual[i]}</span>`).join("");
+ $("jualCount").textContent=`${totalJual} data`;
+
+ $("recentServis").innerHTML=allServis.slice(0,5).map(r=>`<tr><td><b>${esc(r.nomorNota||r.nota||r.id)}</b><br><small>${esc(date(r))}</small></td><td>${esc(pname(r))}</td><td>${esc(r.servisan?.brandTipe||r.brandTipe||"-")}</td><td><span class="badge ${String(r.status).toLowerCase()}">${esc(r.status)}</span></td></tr>`).join("")||'<tr><td colspan="4">Belum ada</td></tr>';
+ $("recentJual").innerHTML=allJual.slice(0,5).map(r=>{const prod=r.produk||r.namaProduk||(Array.isArray(r.items)?r.items.map(i=>i.nama||i.produk).join(", "):"-");return `<tr><td><b>${esc(r.nomorNota||r.nota||r.id)}</b><br><small>${esc(date(r))}</small></td><td>${esc(pname(r))}</td><td>${esc(String(prod).slice(0,30))}</td><td><span class="badge ${String(r.status).toLowerCase()}">${esc(r.status)}</span></td></tr>`}).join("")||'<tr><td colspan="4">Belum ada</td></tr>';
+ $("recentKeluar").innerHTML=allKeluar.slice(0,5).map(r=>`<tr><td>${esc(r.tanggal||"-")}</td><td><span class="badge">${esc(r.jenis||"-")}</span></td><td>${esc(r.namaKaryawan||"-")}</td><td>${esc((r.keterangan||"").slice(0,40))}</td><td style="color:#dc2626;font-weight:900">${rupiah(r.nominal)}</td></tr>`).join("")||'<tr><td colspan="5">Belum ada</td></tr>';
+
+ const today=new Date().toISOString().slice(0,10);
+ const hariServis=allServis.filter(r=>date(r)===today).reduce((a,r)=>a+Number(r.total||0),0);
+ const hariJual=allJual.filter(r=>date(r)===today).reduce((a,r)=>a+Number(r.total||0),0);
+ const hariKeluar=allKeluar.filter(r=>String(r.tanggal||"").startsWith(today)).reduce((a,r)=>a+Number(r.nominal||0),0);
+ $("keuangan").innerHTML=`Hari ini (${today})<br>• Servis: ${rupiah(hariServis)} • Jual: ${rupiah(hariJual)} • Keluar: <span style="color:#dc2626">${rupiah(hariKeluar)}</span><br>• <b>Total hari ini: <span style="color:${(hariServis+hariJual-hariKeluar)>=0?'#16a34a':'#dc2626'}">${rupiah(hariServis+hariJual-hariKeluar)}</span></b>`;
+ $("keluarDetail").textContent=`Jenis: ${[...new Set(allKeluar.map(r=>r.jenis))].join(", ") || "-"}`;
+}
+
+onAuthStateChanged(auth,async u=>{
+ if(!u){location.replace("login.html");return}
+ try{
+  const snap=await getDoc(doc(db,"users",u.uid));
+  if(!snap.exists())throw Error("Profil tidak ditemukan");
+  const p=snap.data()||{};
+  ownerUid=String(p.role).toLowerCase()==="owner"||String(p.role).toLowerCase()==="superadmin"?u.uid:(p.ownerUid||p.ownerId||u.uid);
+  $("accountLine").textContent=`${u.email} • ${p.role} • Owner: ${ownerUid.slice(0,6)}`;
+  const [servisRes,jualRes,keluarRes]=await Promise.all([getAll("servis"),getAll("penjualan"),getAll("pengeluaran")]);
+  allServis=servisRes.data.sort((a,b)=>String(b.tanggal||"").localeCompare(String(a.tanggal||"")));
+  allJual=jualRes.data.sort((a,b)=>String(b.tanggal||"").localeCompare(String(a.tanggal||"")));
+  allKeluar=keluarRes.data.sort((a,b)=>String(b.tanggal||"").localeCompare(String(a.tanggal||"")));
+  $("debug").textContent=`Servis ${servisRes.logs.join(" | ")} • Jual ${jualRes.logs.join(" | ")} • Keluar ${keluarRes.logs.join(" | ")}`;
+  $("loading").style.display="none";$("page").style.display="block";renderStats();
+ }catch(e){$("loading").innerHTML=`<span style="color:#b42318">Gagal: ${esc(e.message)}</span>`}
+});
 </script>
 </body>
 </html>
