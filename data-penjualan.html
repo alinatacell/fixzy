@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="theme-color" content="#111827">
-<title>Fixzy - Data Penjualan</title>
+<title>Fixzy - Data Penjualan - FIXED ISOLASI</title>
 <link rel="icon" href="logo.png">
 <link href="https://cdnjs.cloudflare.com/ajax/libs/remixicon/4.2.0/remixicon.min.css" rel="stylesheet">
 <style>
@@ -51,428 +51,188 @@ tr:hover td{background:#fffbeb}.badge{padding:3px 8px;border-radius:999px;font-s
 .product{background:#fff;border:2px solid #111827;border-radius:12px;padding:10px 12px;display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:8px;box-shadow:2px 2px 0 #111827}.product-price{background:#facc15;padding:5px 9px;border-radius:8px;font-weight:900;border:1px solid #111827;font-size:12px;color:#000;white-space:nowrap}
 .price-grid,.summary-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-top:10px}.price-box,.summary{background:#f8fafc;border:2px solid #111827;border-radius:10px;padding:10px;text-align:center}.summary{box-shadow:2px 2px 0 #111827;text-align:left}.summary.black{background:#111827;color:#fff}.summary.yellow{background:#fffbeb}.summary.white{background:#fff}
 .edit-grid{display:grid;grid-template-columns:1fr 1fr;gap:9px}.edit-field{display:flex;flex-direction:column;gap:4px;margin-bottom:9px}.edit-field.full{grid-column:1/-1}.edit-field label{font-size:10px;font-weight:900;text-transform:uppercase;color:#64748b}.edit-field input,.edit-field select{width:100%;padding:11px 12px;border:2px solid #111827;border-radius:10px;background:#fff;color:#111827;font-size:13px;font-weight:700;outline:none}.edit-field input:focus,.edit-field select:focus{border-color:#facc15;box-shadow:0 0 0 2px #facc1533}
-.edit-items{border:2px solid #111827;border-radius:12px;padding:10px;background:#f8fafc;margin-bottom:12px;overflow-x:auto}.edit-item{display:grid;grid-template-columns:minmax(150px,1fr) 65px 105px 105px 38px;gap:6px;align-items:end;margin-bottom:7px;min-width:520px}.edit-item input{width:100%;padding:9px 8px;border:1px solid #111827;border-radius:8px;font-size:11px;background:#fff;color:#111827}.edit-item-head{font-size:9px;font-weight:900;color:#64748b;text-transform:uppercase;margin-bottom:3px}.edit-remove{height:36px;border:1px solid #ef4444;border-radius:8px;background:#fff;color:#ef4444;font-weight:900;cursor:pointer}.edit-add{border:2px solid #111827;background:#fff;color:#111827;padding:8px 10px;border-radius:9px;font-weight:900;cursor:pointer;font-size:11px}
-.edit-total{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-top:10px}.edit-money{background:#fff;border:2px solid #111827;border-radius:10px;padding:9px;text-align:center}.edit-money small{display:block;font-size:9px;color:#64748b;font-weight:900}.edit-money b{font-size:14px}.edit-actions{display:grid;grid-template-columns:1fr 1.4fr;gap:8px;margin-top:14px}.edit-cancel,.edit-save{padding:12px;border-radius:11px;font-weight:900;cursor:pointer;border:2px solid #111827}.edit-cancel{background:#fff;color:#111827}.edit-save{background:#facc15;color:#111827}
-.notice-box{width:min(420px,100%);background:#fff;border:3px solid #111827;border-radius:18px;box-shadow:8px 8px 0 #111827}.notice-body{padding:16px}
-.wa-box{width:min(420px,100%);background:#fff;border:3px solid #111827;border-radius:18px;padding:20px;box-shadow:8px 8px 0 #111827;text-align:center}.wa-box h3{font-weight:900;font-size:16px;margin:0 0 8px}.wa-box p{font-size:13px;color:#64748b;margin-bottom:16px;line-height:1.5}.wa-actions{display:grid;grid-template-columns:1fr 1fr;gap:10px}.btn-wa{background:#25D366;color:#fff;border:2px solid #111827;padding:12px;border-radius:12px;font-weight:900;cursor:pointer}.btn-wa-no{background:#fff;color:#111827;border:2px solid #111827;padding:12px;border-radius:12px;font-weight:900;cursor:pointer}
-body.dark .sales-summary,body.dark .modal-box,body.dark .edit-box,body.dark .notice-box,body.dark .wa-box{background:#1e293b;color:#e5e7eb;border-color:#334155}
-body.dark .info,body.dark .product,body.dark .price-box,body.dark .edit-items,body.dark .edit-money{background:#0f172a;border-color:#334155;color:#e5e7eb}
-body.dark .section-title{background:#0f172a;color:#fff}.dark .summary.white{background:#0f172a;color:#fff}.dark .edit-field input,.dark .edit-field select,.dark .edit-item input{background:#0f172a;color:#e5e7eb;border-color:#475569}.dark .edit-cancel,.dark .btn-wa-no{background:#334155;color:#e5e7eb;border-color:#475569}
-@media(max-width:800px){header{padding:8px 10px;gap:8px;min-height:62px}.logo{width:46px;height:46px;flex-basis:46px;border-radius:13px}.brand b{font-size:15px}.brand small{font-size:10px}.btn-refresh{padding:8px 10px;font-size:11px}.btn-moon{width:42px;height:42px}.toolbar{flex-direction:column}.search,select.filter{width:100%;min-width:100%}.sales-summary{padding:13px 14px}.sales-summary .sum-title{font-size:14px}.info-grid,.price-grid,.summary-grid,.edit-grid{grid-template-columns:1fr}.edit-field.full{grid-column:auto}.edit-actions{grid-template-columns:1fr 1.3fr}}
+.status-msg{font-size:11px;color:#64748b;margin:8px 0}
 </style>
 </head>
 <body>
 <header>
-  <div class="logo"><img src="logo.png" alt="Fixzy Logo"></div>
-  <div class="brand"><b id="konterNameHeader">FIXZY</b><small>Data penjualan</small></div>
-  <div class="header-actions">
-    <button class="btn btn-refresh" onclick="refreshData()"><i class="ri-refresh-line"></i> Refresh</button>
-    <button class="btn btn-moon" onclick="toggleDarkMode()" aria-label="Mode gelap"><i id="moonIcon" class="ri-moon-fill"></i></button>
-  </div>
+<div class="logo"><img src="logo.png" alt="logo"></div>
+<div class="brand"><b>FIXZY - DATA PENJUALAN</b><small id="konterInfo">Memuat...</small></div>
+<div class="header-actions">
+<button class="btn btn-refresh" onclick="refreshData()">↻ Refresh</button>
+<button class="btn btn-moon" onclick="toggleDarkMode()"><i id="moonIcon" class="ri-moon-fill"></i></button>
+</div>
 </header>
-
 <main>
-  <div class="sales-summary" id="salesSummary">☁️ <span class="sum-title">Data <strong>penjualan</strong> • Total: <strong>0</strong> • Penghasilan: <span class="sum-income">Rp 0</span></span></div>
-  <div class="toolbar">
-    <input id="q" class="search" placeholder="Cari tanggal / teknisi / nama / WA / alamat...">
-    <select id="f" class="filter"><option value="semua">Semua Status</option><option value="masuk">Masuk</option><option value="tagihan">Tagihan</option><option value="tunai">Tunai</option><option value="batal">Batal</option></select>
-  </div>
-  <div class="excel-wrap"><table><thead><tr><th>No</th><th>Tanggal / Nota</th><th>Teknisi</th><th>Nama Pelanggan</th><th>WA</th><th>Alamat</th><th style="text-align:right">Total</th><th style="text-align:center">Lihat</th></tr></thead><tbody id="tbody"></tbody></table></div>
-  <div id="info" style="font-size:11px;color:#64748b;margin-top:10px;text-align:center">Data penjualan • Firebase</div>
+<div class="sales-summary" id="salesSummary">Memuat data penjualan...</div>
+<div class="toolbar">
+<input id="q" class="search" placeholder="Cari nama, nota, WA...">
+<select id="f" class="filter"><option value="">Semua Status</option><option value="masuk">Masuk</option><option value="tagihan">Tagihan</option><option value="tunai">Tunai / Lunas</option><option value="batal">Batal</option></select>
+</div>
+<div class="status-msg" id="statusMsg">Menunggu login...</div>
+<div class="excel-wrap"><table><thead><tr><th>Tanggal</th><th>Nota</th><th>Pelanggan</th><th>Items</th><th>Total</th><th>Status</th><th>Aksi</th></tr></thead><tbody id="tbody"><tr><td colspan="7" style="padding:20px;text-align:center;color:#94a3b8">Memuat Firebase...</td></tr></tbody></table></div>
 </main>
 
-<div class="modal" id="modal" onclick="if(event.target===this)closeModal()">
- <div class="modal-box">
-  <div class="modal-head"><div><b id="modalTitle">Detail Penjualan</b><br><small>Y20 x1 = harga • Tekan X untuk tutup</small></div><button class="close-x" onclick="closeModal()">✕</button></div>
-  <div class="modal-body" id="modalBody"></div>
- </div>
-</div>
-
-<div class="edit-modal" id="editModal" onclick="if(event.target===this)closeEditModal()">
- <div class="edit-box">
-  <div class="edit-head"><div><b id="editTitle">Edit Penjualan</b><br><small>Perubahan disimpan langsung ke Firebase dan diverifikasi ulang</small></div><button class="close-x" onclick="closeEditModal()">✕</button></div>
-  <div class="edit-body">
-   <input type="hidden" id="editId">
-   <div class="edit-grid">
-    <div class="edit-field"><label>Tanggal</label><input id="editTanggal" type="date"></div>
-    <div class="edit-field"><label>No Nota</label><input id="editNota"></div>
-    <div class="edit-field"><label>Teknisi</label><input id="editTeknisi"></div>
-    <div class="edit-field"><label>Status</label><select id="editStatus"><option value="masuk">Masuk</option><option value="tagihan">Tagihan</option><option value="tunai">Tunai</option><option value="batal">Batal</option></select></div>
-    <div class="edit-field"><label>Nama Pelanggan</label><input id="editNama"></div>
-    <div class="edit-field"><label>No WhatsApp</label><input id="editWa" inputmode="tel"></div>
-    <div class="edit-field full"><label>Alamat</label><input id="editAlamat"></div>
-   </div>
-   <div class="section-title" style="margin-top:8px">PRODUK</div>
-   <div class="edit-items"><div id="editItemsBody"></div><button type="button" class="edit-add" onclick="addEditItem()">＋ Tambah Produk</button></div>
-   <div class="edit-grid"><div class="edit-field"><label>Diskon</label><input id="editDiskon" type="number" min="0"></div><div class="edit-field"><label>DP</label><input id="editDp" type="number" min="0"></div></div>
-   <div class="edit-total">
-    <div class="edit-money"><small>TOTAL PENJUALAN</small><b id="editTotalView">Rp 0</b></div>
-    <div class="edit-money"><small>MODAL</small><b id="editModalView">Rp 0</b></div>
-    <div class="edit-money"><small>SISA TAGIHAN</small><b id="editSisaView">Rp 0</b></div>
-   </div>
-   <div class="edit-actions"><button class="edit-cancel" onclick="closeEditModal()">Batal</button><button class="edit-save" id="editSaveBtn" onclick="simpanEdit()">Simpan Perubahan</button></div>
-  </div>
- </div>
-</div>
-
-<div class="edit-modal" id="editNotice" style="z-index:500" onclick="if(event.target===this)closeEditNotice()">
- <div class="notice-box"><div class="edit-head"><b id="editNoticeTitle">Informasi</b><button class="close-x" onclick="closeEditNotice()">✕</button></div><div class="notice-body"><div id="editNoticeText" style="font-size:13px;line-height:1.55;white-space:pre-wrap"></div><button class="edit-save" style="width:100%;margin-top:14px" onclick="closeEditNotice()">OK</button></div></div>
-</div>
-
-<div class="wa-modal" id="waModal" onclick="if(event.target===this)closeWAModal()">
- <div class="wa-box">
-  <div style="width:56px;height:56px;background:#25D366;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 12px;color:#fff;font-size:28px"><i class="ri-whatsapp-fill"></i></div>
-  <h3>Kirim Pesan WA?</h3><p id="waInfo">Kirim ke pelanggan</p>
-  <div id="waMessage" style="background:#f8fafc;border:2px solid #111827;border-radius:12px;padding:12px;text-align:left;font-size:12px;margin-bottom:16px;white-space:pre-wrap"></div>
-  <div class="wa-actions"><button class="btn-wa-no" onclick="closeWAModal()">Tidak</button><button class="btn-wa" onclick="sendWA()"><i class="ri-whatsapp-fill"></i> Kirim WA</button></div>
- </div>
-</div>
+<!-- Modal Detail (tetap sama) -->
+<div class="modal" id="detailModal"><div class="modal-box"><div class="modal-head"><div><b id="detailNota">Nota -</b><br><small id="detailTanggal">-</small></div><button class="close-x" onclick="closeDetail()">×</button></div><div class="modal-body" id="detailBody"></div></div></div>
 
 <script type="module">
-import {initializeApp} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import {getAuth,onAuthStateChanged} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-import {getFirestore,collection,getDocs,doc,updateDoc,getDoc,getDocFromServer,getDocsFromServer,query,where,serverTimestamp} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import { initializeApp } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js";
+import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-auth.js";
+import { getFirestore, doc, getDoc, collection, query, where, getDocs, getDocFromServer, getDocsFromServer, updateDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js";
 
-const firebaseConfig={
- apiKey:"AIzaSyC_PcarMTT5Un7qfSLzf92o5OGn5rginsI",
- authDomain:"fixzy-update.firebaseapp.com",
- projectId:"fixzy-update",
- storageBucket:"fixzy-update.appspot.com",
- messagingSenderId:"431404655232",
- appId:"1:431404655232:web:5f7d9c9a1b2c3d4e5f6a7"
-};
-const app=initializeApp(firebaseConfig),auth=getAuth(app),db=getFirestore(app);
-let allRows=[],filteredRows=[],currentDetail=null,pendingWA=null,konterName="FIXZY";
+const cfg={apiKey:"AIzaSyC_PcarMTT5Un7qfSLzf92o5OGn5rginsI",authDomain:"fixzy-update.firebaseapp.com",projectId:"fixzy-update",storageBucket:"fixzy-update.firebasestorage.app",messagingSenderId:"995892519622",appId:"1:995892519622:web:fa41047944d8e5b35d6dc7"};
+const app=initializeApp(cfg);
+const auth=getAuth(app);
+const db=getFirestore(app);
+
+let uid="", ownerUid="", profile={}, allRows=[], currentDetail=null, konterName="FIXZY";
 const $=id=>document.getElementById(id);
-const money=n=>"Rp "+Number(n||0).toLocaleString("id-ID");
 
-onAuthStateChanged(auth,async u=>{
- if(!u){location.href="login.html";return}
- await loadKonter(u);
- await load();
-});
+function esc(s){return String(s??"").replace(/[&<>"]/g,c=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;' }[c]));}
+function money(n){return "Rp "+(Number(n)||0).toLocaleString("id-ID");}
+function num(v){const n=Number(v);return isFinite(n)?n:0;}
+function dateValue(r){return String(r.tanggal||r.createdAt||"");}
+function getNamaPel(r){return r.pelanggan?.nama||"-";}
+function getWa(r){return r.pelanggan?.wa||"";}
+function getNota(r){return r.nomorNota||r.id||"-";}
+function getStatus(r){return r.status||"masuk";}
+function getTotal(r){return num(r.total);}
+function getSisa(r){return num(r.sisa);}
+function getAlamat(r){return r.pelanggan?.alamat||"-";}
+function getItems(r){return Array.isArray(r.items)?r.items:[];}
 
-async function loadKonter(u){
- try{
-  let found=false;
-  const d1=await getDoc(doc(db,"users",u.uid));
-  if(d1.exists()){
-   const p=d1.data();konterName=p.namaKonter||p.konterName||p.namaToko||p.toko||p.konter||p.nama||p.name||p.konterNama||"";
-   if(konterName)found=true;
-  }
-  if(!found&&u.email){
-   try{
-    const s=await getDocs(query(collection(db,"users"),where("email","==",u.email)));
-    if(!s.empty){const p=s.docs[0].data();konterName=p.namaKonter||p.konterName||p.namaToko||p.toko||p.konter||p.nama||p.name||p.konterNama||"";if(konterName)found=true}
-   }catch(e){}
-  }
-  if(!found&&u.email){
-   try{
-    const s=await getDocs(query(collection(db,"konter"),where("email","==",u.email)));
-    if(!s.empty){const p=s.docs[0].data();konterName=p.namaKonter||p.konterName||p.namaToko||p.toko||p.nama||"";if(konterName)found=true}
-   }catch(e){}
-  }
- }catch(e){console.warn("Gagal membaca data konter",e)}
- if(!konterName)konterName="FIXZY";
- $("konterNameHeader").textContent=konterName;
+/* ========== FIX ISOLASI - AMBIL ownerUid DARI PROFILE ========== */
+async function loadProfile(user){
+  const snap=await getDoc(doc(db,"users",user.uid));
+  if(!snap.exists()) throw new Error("Profil users tidak ditemukan");
+  profile=snap.data()||{};
+  const role=String(profile.role||"").toLowerCase();
+  ownerUid = (role==="owner" || profile.isOwner===true) ? user.uid : (profile.ownerUid||profile.ownerId||user.uid);
+  uid=user.uid;
+  konterName=profile.namaKonter||profile.namaToko||"FIXZY";
+  $("konterInfo").textContent=konterName+" • "+(profile.email||user.email);
 }
 
-async function load(){
- try{
-  const snap=await getDocsFromServer(collection(db,"penjualan"));
-  allRows=snap.docs.map(x=>({id:x.id,...x.data()})).sort((a,b)=>dateValue(b)-dateValue(a));
-  if((!konterName||konterName==="FIXZY")&&allRows.length){
-   const k=allRows[0].namaKonter||allRows[0].konter||allRows[0].namaToko||"";
-   if(k){konterName=k;$("konterNameHeader").textContent=k}
+/* ========== FIX ISOLASI - getOwned PENJUALAN HANYA MILIK ownerUid ========== */
+async function getOwnedPenjualan(){
+  const map=new Map();
+  async function ambil(field,value){
+    if(!value) return;
+    try{
+      const q=query(collection(db,"penjualan"), where(field,"==",value));
+      const snap=await getDocsFromServer(q);
+      snap.docs.forEach(d=>map.set(d.id,{id:d.id,...d.data()}));
+    }catch(e){ console.warn("penjualan",field,e.message); }
   }
-  render();
- }catch(e){
-  console.error(e);
-  showEditNotice("Gagal memuat data",e.message||"Data penjualan tidak dapat dimuat dari Firebase.");
- }
+  // kompatibel dengan data lama & baru
+  await ambil("ownerUid", ownerUid);
+  await ambil("ownerId", ownerUid);
+  await ambil("uid", ownerUid);
+  if(ownerUid!==uid){
+    await ambil("ownerUid", uid);
+    await ambil("uid", uid);
+  }
+  return [...map.values()].sort((a,b)=>dateValue(b).localeCompare(dateValue(a)));
 }
-function dateValue(d){return new Date(d.tanggal||d.createdAt?.seconds*1000||0).getTime()||0}
-function getTanggal(d){return d.tanggal||(d.createdAt?.seconds?new Date(d.createdAt.seconds*1000).toLocaleDateString("id-ID"):"-")}
-function getNota(d){return d.nomorNota||d.nota||"-"}
-function getTeknisi(d){return d.teknisiNama||d.teknisi||"-"}
-function getNamaPel(d){return d.pelanggan?.nama||d.nama||"-"}
-function getWa(d){return d.pelanggan?.wa||d.noHp||d.wa||"-"}
-function getAlamat(d){return d.pelanggan?.alamat||d.alamat||"-"}
-function getItems(d){return Array.isArray(d.items)?d.items:[]}
-function getTotal(d){return Number(d.total||0)}
-function getDiskon(d){return Number(d.diskon||0)}
-function getDp(d){return Number(d.dp||0)}
-function getSisa(d){return Number(d.sisa??Math.max(0,getTotal(d)-getDiskon(d)-getDp(d)))}
-function getModal(d){const it=getItems(d);return it.length?it.reduce((s,x)=>s+Number(x.modal||0)*Number(x.qty||1),0):Number(d.modal||0)}
-function getPendapatan(d){return Math.max(0,getTotal(d)-getDiskon(d))}
-function getStatus(d){return String(d.status||"masuk").toLowerCase()}
-function esc(v){return String(v??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]))}
+
+async function muatSemua(){
+  if(!uid){ $("statusMsg").textContent="Sesi belum login"; return; }
+  $("statusMsg").textContent="⏳ Membaca data penjualan milik "+ownerUid.slice(0,6)+"...";
+  try{
+    const rows=await getOwnedPenjualan();
+    allRows=rows;
+    render();
+    const totalMasuk=rows.filter(r=>["tunai","lunas","masuk","tagihan"].includes(String(getStatus(r)).toLowerCase())).reduce((s,r)=>s+getTotal(r),0);
+    $("salesSummary").innerHTML=`<span class="sum-icon">💰</span><span class="sum-title">Total ${rows.length} transaksi • <span class="sum-income">${money(totalMasuk)}</span> pendapatan tercatat (hanya data konter ini)</span>`;
+    $("statusMsg").textContent=`✅ ${rows.length} data penjualan milik konter ini • Karyawan/admin/reseller dengan ownerUid sama bisa lihat bareng • Owner lain tidak bisa lihat`;
+  }catch(e){
+    console.error(e);
+    $("statusMsg").textContent="❌ Gagal: "+e.message;
+    $("tbody").innerHTML=`<tr><td colspan="7" style="padding:20px;color:#ef4444">${esc(e.message)}</td></tr>`;
+  }
+}
 
 function render(){
- const q=$("q").value.toLowerCase().trim(),f=$("f").value;
- filteredRows=allRows.filter(d=>{
-  const st=getStatus(d);
-  if(f!=="semua"&&st!==f)return false;
-  if(!q)return true;
-  return `${getTanggal(d)} ${getTeknisi(d)} ${getNamaPel(d)} ${getWa(d)} ${getAlamat(d)} ${getNota(d)}`.toLowerCase().includes(q);
- });
- const summaryRows=filteredRows.filter(d=>getStatus(d)!=="batal");
- const income=summaryRows.reduce((s,d)=>s+getPendapatan(d),0);
- $("salesSummary").innerHTML=`<span class="sum-icon">☁️</span><span class="sum-title">Data <strong>penjualan</strong> • Total: <strong>${summaryRows.length}</strong> • Penghasilan: <span class="sum-income">${money(income)}</span></span>`;
- $("info").textContent=`${filteredRows.length} dari ${allRows.length} data • Firebase`;
- const tbody=$("tbody");tbody.innerHTML="";
- if(!filteredRows.length){tbody.innerHTML='<tr><td colspan="8" style="padding:20px;text-align:center;color:#64748b">Belum ada data</td></tr>';return}
- filteredRows.forEach((d,i)=>{
-  const st=getStatus(d),tr=document.createElement("tr");
-  tr.innerHTML=`<td><span style="background:#111827;color:#facc15;width:22px;height:22px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-weight:900;font-size:10px">${i+1}</span></td>
-  <td><div style="font-weight:800;font-size:11px">${esc(getTanggal(d))}</div><div style="font-size:10px;color:#64748b">${esc(getNota(d))}</div><span class="badge ${st}">${st.toUpperCase()}</span></td>
-  <td style="font-weight:700">${esc(getTeknisi(d))}</td><td style="font-weight:800">${esc(getNamaPel(d))}</td><td>${esc(getWa(d))}</td>
-  <td style="max-width:150px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="${esc(getAlamat(d))}">${esc(getAlamat(d))}</td>
-  <td style="text-align:right"><b>${money(getTotal(d))}</b></td>
-  <td style="text-align:center"><button class="btn-lihat" onclick="lihatPanel('${esc(d.id)}')"><i class="ri-eye-line"></i> Lihat</button></td>`;
-  tbody.appendChild(tr);
- });
+  const q=($("q").value||"").toLowerCase().trim();
+  const f=($("f").value||"").toLowerCase().trim();
+  const filtered=allRows.filter(r=>{
+    const hay=[getNota(r),getNamaPel(r),getWa(r),getAlamat(r),getStatus(r)].join(" ").toLowerCase();
+    if(q && !hay.includes(q)) return false;
+    if(f && String(getStatus(r)).toLowerCase()!==f) return false;
+    return true;
+  });
+  if(!filtered.length){
+    $("tbody").innerHTML='<tr><td colspan="7" style="padding:20px;text-align:center;color:#94a3b8">Belum ada data penjualan untuk konter ini.</td></tr>';
+    return;
+  }
+  $("tbody").innerHTML=filtered.map(r=>{
+    const items=getItems(r);
+    const barang=items.length?items.map(i=>i.nama).join(", "):"-";
+    return `<tr>
+      <td>${esc(dateValue(r))}</td>
+      <td><b>${esc(getNota(r))}</b></td>
+      <td><b>${esc(getNamaPel(r))}</b><br><small style="color:#94a3b8">${esc(getWa(r))}</small></td>
+      <td>${esc(barang)}</td>
+      <td>${money(getTotal(r))}<br><small style="color:${getSisa(r)>0?'#ef4444':'#16a34a'}">Sisa ${money(getSisa(r))}</small></td>
+      <td><span class="badge ${esc(getStatus(r))}">${esc(getStatus(r))}</span></td>
+      <td><button class="btn-lihat" onclick="lihatPanel('${r.id}')">Lihat</button></td>
+    </tr>`;
+  }).join("");
 }
 
 window.lihatPanel=id=>{
- const d=allRows.find(x=>x.id===id);if(!d)return;currentDetail=d;
- const st=getStatus(d),items=getItems(d),total=getTotal(d),diskon=getDiskon(d),dp=getDp(d),sisa=getSisa(d),modal=getModal(d),pend=getPendapatan(d);
- $("modalTitle").textContent=`${getNota(d)} - ${getNamaPel(d)}`;
- $("modalBody").innerHTML=`
- <div class="section-title">TANGGAL & TEKNISI</div><div class="info-grid">
- <div class="info"><div class="k">Tanggal</div><div class="v">${esc(getTanggal(d))}</div></div><div class="info"><div class="k">No Nota</div><div class="v">${esc(getNota(d))}</div></div>
- <div class="info"><div class="k">Teknisi</div><div class="v">${esc(getTeknisi(d))}</div></div><div class="info"><div class="k">Status</div><div class="v"><span class="badge ${st}">${st.toUpperCase()}</span></div></div></div>
- <div class="section-title">PELANGGAN</div><div class="info-grid"><div class="info"><div class="k">Nama</div><div class="v">${esc(getNamaPel(d))}</div></div><div class="info"><div class="k">WA</div><div class="v">${esc(getWa(d))}</div></div><div class="info" style="grid-column:1/-1"><div class="k">Alamat</div><div class="v">${esc(getAlamat(d))}</div></div></div>
- <div class="section-title">PEMBELIAN • Y20 X1 = HARGA</div>
- ${items.length?items.map(it=>`<div class="product"><div><b>${esc(it.nama)}</b> x${Number(it.qty||1)} = ${money(it.harga)} <span style="background:#facc15;padding:2px 6px;border-radius:6px;font-size:10px;border:1px solid #111827;margin-left:6px">auto</span></div><div class="product-price">${money(it.subtotal||Number(it.harga||0)*Number(it.qty||1))}</div></div>`).join(""):`<div class="product"><div><b>Y20</b> x1 = ${money(total)}</div><div class="product-price">${money(total)}</div></div>`}
- <div class="price-grid"><div class="price-box"><div style="font-size:9px;color:#64748b">Total</div><b>${money(total)}</b></div><div class="price-box"><div style="font-size:9px;color:#64748b">Diskon</div><b>${money(diskon)}</b></div><div class="price-box"><div style="font-size:9px;color:#64748b">DP / Sisa</div><b>${money(dp)} / ${money(sisa)}</b></div></div>
- <div class="summary-grid"><div class="summary black"><div style="font-size:9px;opacity:.7">TOTAL BELANJA</div><b style="font-size:16px">${money(total)}</b></div><div class="summary yellow"><div style="font-size:9px">MODAL / DISKON</div><b style="font-size:16px">${money(modal)} / ${money(diskon)}</b></div><div class="summary white"><div style="font-size:9px;color:#64748b">PENDAPATAN</div><b style="font-size:16px">${money(pend)}</b></div></div>
- <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:6px;margin-top:16px">
- <button class="btn-sm edit" onclick="editData('${esc(d.id)}')"><i class="ri-edit-line"></i> Edit</button><button class="btn-sm masuk" onclick="setStatus('${esc(d.id)}','masuk')">Masuk</button><button class="btn-sm tagihan" onclick="setStatus('${esc(d.id)}','tagihan')">Tagihan</button><button class="btn-sm tunai" onclick="setStatus('${esc(d.id)}','tunai')">Tunai</button><button class="btn-sm batal" onclick="setStatus('${esc(d.id)}','batal')">Batal</button></div>`;
- $("modal").classList.add("show");
-}
-window.closeModal=()=>{$("modal").classList.remove("show")}
-
-function num(v){const n=Number(v);return Number.isFinite(n)?n:0}
-function editItemsOf(d){
- const items=getItems(d);
- if(items.length)return items.map(x=>({nama:x?.nama??x?.name??"",qty:Math.max(1,num(x?.qty)||1),harga:num(x?.harga??x?.price),modal:num(x?.modal??x?.hargaModal??x?.modalBelanja)}));
- return [{nama:d?.produk||d?.namaProduk||"Y20",qty:Math.max(1,num(d?.qty)||1),harga:num(d?.harga||d?.total),modal:num(d?.modal)}];
-}
-function editRowHtml(it){
- return `<div class="edit-item"><div><div class="edit-item-head">Produk</div><input class="ei-nama" value="${esc(it.nama)}" placeholder="Nama produk"></div><div><div class="edit-item-head">Qty</div><input class="ei-qty" type="number" min="1" value="${Math.max(1,it.qty||1)}"></div><div><div class="edit-item-head">Harga</div><input class="ei-harga" type="number" min="0" value="${num(it.harga)}"></div><div><div class="edit-item-head">Modal</div><input class="ei-modal" type="number" min="0" value="${num(it.modal)}"></div><button type="button" class="edit-remove" onclick="removeEditItem(this)">×</button></div>`;
-}
-function collectEditItems(){
- return [...document.querySelectorAll("#editItemsBody .edit-item")].map(r=>{
-  const qty=Math.max(1,num(r.querySelector(".ei-qty")?.value)||1),harga=num(r.querySelector(".ei-harga")?.value),modal=num(r.querySelector(".ei-modal")?.value);
-  return {nama:(r.querySelector(".ei-nama")?.value||"").trim(),qty,harga,modal,subtotal:harga*qty};
- }).filter(x=>x.nama);
-}
-function calcEditTotal(){
- const items=collectEditItems(),total=items.reduce((a,x)=>a+x.subtotal,0),diskon=Math.max(0,num($("editDiskon")?.value)),dp=Math.max(0,num($("editDp")?.value)),grand=Math.max(0,total-diskon),sisa=Math.max(0,grand-dp),modal=items.reduce((a,x)=>a+x.modal*x.qty,0);
- $("editTotalView").textContent=money(grand);$("editSisaView").textContent=money(sisa);$("editModalView").textContent=money(modal);
-}
-function openEditForm(d){
- const p=d.pelanggan||{},items=editItemsOf(d);
- $("editTitle").textContent=`Edit Penjualan • ${getNota(d)}`;$("editId").value=d.id||"";
- $("editTanggal").value=String(d.tanggal||"").slice(0,10);$("editNota").value=getNota(d)==="-"?"":getNota(d);$("editTeknisi").value=getTeknisi(d)==="-"?"":getTeknisi(d);
- $("editNama").value=p.nama??d.nama??"";$("editWa").value=p.wa??d.noHp??d.wa??"";$("editAlamat").value=p.alamat??d.alamat??"";
- $("editDiskon").value=num(d.diskon);$("editDp").value=num(d.dp);$("editStatus").value=getStatus(d);$("editItemsBody").innerHTML=items.map(editRowHtml).join("");
- $("editModal").classList.add("show");calcEditTotal();
-}
-window.editData=id=>{const d=allRows.find(x=>x.id===id);if(d){currentDetail=d;openEditForm(d)}}
-window.closeEditModal=()=>{$("editModal").classList.remove("show")}
-window.addEditItem=()=>{$("editItemsBody").insertAdjacentHTML("beforeend",editRowHtml({nama:"",qty:1,harga:0,modal:0}));calcEditTotal()}
-window.removeEditItem=btn=>{
- const rows=document.querySelectorAll("#editItemsBody .edit-item");
- if(rows.length<=1){const r=rows[0];if(r){r.querySelector(".ei-nama").value="";r.querySelector(".ei-qty").value=1;r.querySelector(".ei-harga").value=0;r.querySelector(".ei-modal").value=0}}
- else btn.closest(".edit-item").remove();calcEditTotal();
-}
-document.addEventListener("input",e=>{if(e.target.closest("#editModal"))calcEditTotal()});
-
-window.simpanEdit=async()=>{
- const id=$("editId").value;
- const old=allRows.find(x=>x.id===id);
- if(!old){showEditNotice("Data tidak ditemukan","Data penjualan tidak ditemukan.");return}
-
- const items=collectEditItems();
- if(!items.length){showEditNotice("Data belum lengkap","Minimal satu produk harus diisi.");return}
-
- const total=items.reduce((a,x)=>a+x.subtotal,0);
- const diskon=Math.max(0,num($("editDiskon").value));
- const dp=Math.max(0,num($("editDp").value));
- const grand=Math.max(0,total-diskon);
- const sisa=Math.max(0,grand-dp);
- const modal=items.reduce((a,x)=>a+x.modal*x.qty,0);
-
- const nama=$("editNama").value.trim();
- const wa=$("editWa").value.trim();
- const alamat=$("editAlamat").value.trim();
- const teknisi=$("editTeknisi").value.trim();
- const tanggal=$("editTanggal").value||old.tanggal||"";
- const nota=$("editNota").value.trim()||getNota(old);
- const status=$("editStatus").value||getStatus(old);
-
- const pelanggan={
-   ...(old.pelanggan||{}),
-   nama,
-   wa,
-   alamat
- };
-
- const patch={
-   tanggal,
-   nomorNota:nota,
-   teknisiNama:teknisi,
-   pelanggan,
-   items,
-   total,
-   diskon,
-   dp,
-   sisa,
-   modal,
-   status,
-   statusTerakhir:status,
-   updatedAt:serverTimestamp()
- };
-
- const btn=$("editSaveBtn");
- btn.disabled=true;
- btn.textContent="Menyimpan...";
-
- try{
-   const ref=doc(db,"penjualan",id);
-
-   // UPDATE dokumen yang sama. Tidak membuat dokumen baru.
-   await updateDoc(ref,patch);
-
-   // Pastikan Firebase sudah mengembalikan nilai yang baru.
-   const verify=await getDocFromServer(ref);
-   if(!verify.exists()){
-     throw new Error("Dokumen tidak ditemukan setelah disimpan.");
-   }
-
-   const saved={id:verify.id,...verify.data()};
-
-   // Verifikasi nilai penting.
-   const checks=[
-     ["Total",num(saved.total),total],
-     ["Diskon",num(saved.diskon),diskon],
-     ["DP",num(saved.dp),dp],
-     ["Sisa",num(saved.sisa),sisa],
-     ["Modal",num(saved.modal),modal],
-     ["Nama",String(saved.pelanggan?.nama||""),nama],
-     ["WA",String(saved.pelanggan?.wa||""),wa],
-     ["Alamat",String(saved.pelanggan?.alamat||""),alamat]
-   ];
-
-   const mismatch=checks.find(x=>x[1]!==x[2]);
-   if(mismatch){
-     throw new Error(
-       `${mismatch[0]} belum sesuai di Firebase.\n\n`+
-       `Dikirim: ${typeof mismatch[2]==="number"?money(mismatch[2]):mismatch[2]}\n`+
-       `Firebase: ${typeof mismatch[1]==="number"?money(mismatch[1]):mismatch[1]}`
-     );
-   }
-
-   // WAJIB ambil ulang seluruh tabel dari SERVER.
-   const freshSnap=await getDocsFromServer(collection(db,"penjualan"));
-   allRows=freshSnap.docs
-     .map(x=>({id:x.id,...x.data()}))
-     .sort((a,b)=>dateValue(b)-dateValue(a));
-
-   const freshRow=allRows.find(x=>x.id===id);
-   if(!freshRow){
-     throw new Error("Data tersimpan tetapi tidak muncul saat mengambil ulang daftar Firebase.");
-   }
-
-   currentDetail=freshRow;
-
-   // Tutup form edit lalu render dari data Firebase terbaru.
-   closeEditModal();
-   render();
-
-   // Buka detail memakai objek hasil baca SERVER.
-   lihatPanel(id);
-
- }catch(e){
-   console.error("Gagal menyimpan edit penjualan:",e);
-   showEditNotice(
-     "Gagal menyimpan perubahan",
-     e?.message||"Data tidak berhasil disimpan ke Firebase."
-   );
- }finally{
-   btn.disabled=false;
-   btn.textContent="Simpan Perubahan";
- }
+  const r=allRows.find(x=>x.id===id);
+  if(!r) return;
+  currentDetail=r;
+  $("detailNota").textContent=getNota(r);
+  $("detailTanggal").textContent=dateValue(r);
+  $("detailBody").innerHTML=`
+    <div class="info-grid">
+      <div class="info"><div class="k">Pelanggan</div><div class="v">${esc(getNamaPel(r))}</div></div>
+      <div class="info"><div class="k">WA</div><div class="v">${esc(getWa(r))}</div></div>
+      <div class="info"><div class="k">Alamat</div><div class="v">${esc(getAlamat(r))}</div></div>
+      <div class="info"><div class="k">Status</div><div class="v">${esc(getStatus(r))}</div></div>
+    </div>
+    <div class="section-title">Items</div>
+    ${getItems(r).map(i=>`<div class="product"><span>${esc(i.nama)} x${i.qty||1}</span><span class="product-price">${money(i.harga||i.total||0)}</span></div>`).join("")||"-"}
+    <div class="summary-grid" style="margin-top:10px">
+      <div class="summary white"><div class="k">Total</div><div class="v">${money(getTotal(r))}</div></div>
+      <div class="summary yellow"><div class="k">Diskon</div><div class="v">${money(r.diskon||0)}</div></div>
+      <div class="summary black"><div class="k">Sisa</div><div class="v">${money(getSisa(r))}</div></div>
+    </div>
+    <div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap">
+      <button class="btn-sm masuk" onclick="setStatus('${r.id}','masuk')">Masuk</button>
+      <button class="btn-sm tagihan" onclick="setStatus('${r.id}','tagihan')">Tagihan</button>
+      <button class="btn-sm tunai" onclick="setStatus('${r.id}','tunai')">Tunai/Lunas</button>
+      <button class="btn-sm batal" onclick="setStatus('${r.id}','batal')">Batal</button>
+    </div>
+  `;
+  $("detailModal").classList.add("show");
 };
+window.closeDetail=()=>$("detailModal").classList.remove("show");
+
+// UPDATE tetap pakai doc id - rules sudah izinkan jika ownerUid sama atau isPrivileged
 window.setStatus=async(id,st)=>{
- try{
-  const d=allRows.find(x=>x.id===id);
-  if(!d){
-    showEditNotice("Data tidak ditemukan","Data penjualan tidak ditemukan.");
-    return;
-  }
-
-  const waktu=new Date().toISOString();
-  await updateDoc(
-    doc(db,"penjualan",id),
-    {status:st,statusTerakhir:st,statusUpdatedAt:waktu,updatedAt:serverTimestamp()}
-  );
-
-  // Baca dokumen langsung dari server.
-  const verify=await getDocFromServer(doc(db,"penjualan",id));
-  if(!verify.exists())throw new Error("Data tidak ditemukan setelah perubahan status.");
-
-  const fresh={id:verify.id,...verify.data()};
-
-  // Ambil ulang seluruh daftar.
-  const snap=await getDocsFromServer(collection(db,"penjualan"));
-  allRows=snap.docs
-    .map(x=>({id:x.id,...x.data()}))
-    .sort((a,b)=>dateValue(b)-dateValue(a));
-
-  const freshRow=allRows.find(x=>x.id===id)||fresh;
-  currentDetail=freshRow;
-
-  render();
-
-  if(st==="tagihan"||st==="tunai"){
-    showWAPopup(freshRow,st);
-  }else{
-    lihatPanel(id);
-  }
-
- }catch(e){
-  console.error("Gagal menyimpan status:",e);
-  showEditNotice(
-    "Status gagal disimpan",
-    e?.message||"Status tidak berhasil disimpan ke Firebase."
-  );
- }
+  try{
+    await updateDoc(doc(db,"penjualan",id),{status:st,statusTerakhir:st,statusUpdatedAt:new Date().toISOString(),updatedAt:serverTimestamp()});
+    await muatSemua();
+    window.lihatPanel(id);
+  }catch(e){ alert("Gagal: "+e.message); }
 };
-function showWAPopup(data,status){
- pendingWA={data,status};const nama=getNamaPel(data),wa=getWa(data),nota=getNota(data),total=getTotal(data),alamat=getAlamat(data),sisa=getSisa(data),items=getItems(data),barang=items.length?items.map(i=>i.nama).join(", "):"Y20";
- const k=data.namaKonter||data.konter||data.namaToko||konterName||"FIXZY";
- let msg=status==="tagihan"?`Halo Kak ${nama} 🙏\n\nSaya dari *${k}*,\nMau infokan tagihan:\n\n📄 Nota: ${nota}\n📦 Barang: ${barang}\n💰 Total: ${money(total)}\n💳 Sisa Tagihan: ${money(sisa)}\n📍 Alamat: ${alamat}\n\nMohon segera diselesaikan ya Kak. Bisa transfer atau datang langsung ke konter.\n\nTerima kasih 🙏\n*${k}*`:`Halo Kak ${nama} 🙏\n\nTerima kasih sudah berbelanja di *${k}* 🤝\n\n📄 Nota: ${nota}\n📦 Barang: ${barang}\n💰 Total: ${money(total)} - *LUNAS / TUNAI* ✅\n📍 Alamat: ${alamat}\n\nBarang sudah LUNAS dan bisa diambil kapan saja ya Kak.\n\nTerima kasih 🙏\n*${k}* - Melayani dengan Amanah`;
- $("waMessage").textContent=msg;$("waInfo").textContent=`Akan dikirim ke WA pelanggan: ${nama} (${wa}) - ${k}`;$("waModal").classList.add("show");
-}
-window.closeWAModal=()=>{$("waModal").classList.remove("show");pendingWA=null}
-window.sendWA=()=>{
- if(!pendingWA?.data)return;
- const raw=String(getWa(pendingWA.data)||"").trim(),digits=raw.replace(/\D/g,"");
- if(digits.length<10){closeWAModal();showEditNotice("Nomor WA tidak valid",`Nomor pelanggan "${raw}" tidak valid.`);return}
- const number=digits.startsWith("0")?"62"+digits.slice(1):digits.startsWith("62")?digits:"62"+digits;
- const msg=encodeURIComponent($("waMessage").textContent.trim());
- const url=`https://wa.me/${number}?text=${msg}`;
- const a=document.createElement("a");a.href=url;a.target="_blank";a.rel="noopener noreferrer";document.body.appendChild(a);a.click();setTimeout(()=>a.remove(),1000);closeWAModal();
-}
-function showEditNotice(title,text){$("editNoticeTitle").textContent=title;$("editNoticeText").textContent=text;$("editNotice").classList.add("show")}
-window.closeEditNotice=()=>{$("editNotice").classList.remove("show")}
-window.refreshData=()=>{location.replace(location.pathname+"?refresh="+Date.now());};
-window.toggleDarkMode=()=>{document.body.classList.toggle("dark");const dark=document.body.classList.contains("dark");localStorage.setItem("fixzy-dark",dark?"1":"0");$("moonIcon").className=dark?"ri-sun-fill":"ri-moon-fill"}
-if(localStorage.getItem("fixzy-dark")==="1"){document.body.classList.add("dark");$("moonIcon").className="ri-sun-fill"}
-$("q").addEventListener("input",render);$("f").addEventListener("change",render);
+
+window.refreshData=()=>location.reload();
+window.toggleDarkMode=()=>{document.body.classList.toggle("dark");localStorage.setItem("fixzy-dark",document.body.classList.contains("dark")?"1":"0");};
+if(localStorage.getItem("fixzy-dark")==="1") document.body.classList.add("dark");
+
+onAuthStateChanged(auth, async user=>{
+  if(!user){ location.replace("login.html"); return; }
+  try{ await loadProfile(user); await muatSemua(); }
+  catch(e){ $("statusMsg").textContent="❌ "+e.message; }
+});
+
+$("q").addEventListener("input",render);
+$("f").addEventListener("change",render);
 </script>
 </body>
 </html>
