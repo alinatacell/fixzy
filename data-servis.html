@@ -3,75 +3,128 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<link href="https://cdnjs.cloudflare.com/ajax/libs/remixicon/4.2.0/remixicon.min.css" rel="stylesheet">
-<title>FIXZY | Data Servis - FIXED ISOLASI</title>
+<title>FIXZY | Data Servis - EDIT STATUS + WA + RESPONSIVE</title>
 <style>
-*{box-sizing:border-box}
-:root{--black:#111827;--yellow:#facc15;--bg:#eef2f6}
+*{box-sizing:border-box} :root{--black:#111827;--yellow:#facc15;--bg:#eef2f6;--green:#047857}
 body{margin:0;background:var(--bg);color:#111827;font-family:Arial,Helvetica,sans-serif}
-header{background:#111827;color:#fff;padding:10px 14px;position:sticky;top:0;z-index:50}
-.penjualan-style-header{margin:0;padding:10px 14px;background:#111827;color:#fff;display:flex;align-items:center;gap:12px;position:sticky;top:0;z-index:100;border-bottom:1px solid #1e293b}
+header{background:#111827;color:#fff;padding:10px 14px;position:sticky;top:0;z-index:90;display:flex;align-items:center;gap:12px}
 .logo{width:52px;height:52px;background:#000;border-radius:14px;display:flex;align-items:center;justify-content:center;border:2px solid #facc15;overflow:hidden;flex:0 0 52px}
 .logo img{width:100%;height:100%;object-fit:contain;padding:4px;background:#000;border-radius:10px}
-.brand{line-height:1.2;min-width:0}
-.brand b{color:#fff;font-weight:900;font-size:18px;letter-spacing:.5px}
-.brand small{display:block;margin-top:2px;color:#9ca3af;font-size:11px;font-weight:700}
+.brand{line-height:1.2;min-width:0}.brand b{font-size:18px}.brand small{display:block;margin-top:2px;color:#9ca3af;font-size:11px;font-weight:700}
 .header-right{margin-left:auto;display:flex;gap:8px;align-items:center}
 .btn{padding:9px 14px;border-radius:12px;font-weight:800;font-size:12px;border:2px solid #111827;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:6px}
-.btn-refresh{background:#1e293b;color:#fff;border-color:#334155}.btn-refresh:hover,.btn-moon:hover{background:#facc15;color:#000}
-.btn-moon{background:#1e293b;color:#fff;border-color:#334155;width:44px;height:44px;padding:0;font-size:18px}
-main{max-width:1180px;margin:auto;padding:14px}
-.card,.dataStats,.status-filter-card{background:#fff;border:2px solid var(--black);border-radius:14px;box-shadow:4px 4px 0 var(--black);margin-bottom:14px}
-.dataStats{padding:12px 14px;font-size:13px}.dataStats b{font-weight:900}.incomeText{color:#047857!important}
-.status-filter-card{padding:15px}
-.search-panel-title{font-size:16px;font-weight:900;margin-bottom:12px;padding-bottom:9px;border-bottom:2px solid #111827}
-.search-panel-grid{display:grid;grid-template-columns:minmax(0,1.4fr) minmax(150px,.8fr) minmax(170px,.9fr);gap:10px;align-items:end}
-.searchLabel,.status-box>label{display:block;font-size:11px;font-weight:900;margin-bottom:5px}
-input,select,textarea{width:100%;padding:11px;border:2px solid var(--black);border-radius:10px;background:#fff;font:inherit;box-shadow:2px 2px 0 var(--black)}
+.btn-refresh{background:#1e293b;color:#fff;border-color:#334155}.btn-moon{background:#1e293b;color:#fff;border-color:#334155;width:44px;height:44px;padding:0;font-size:18px}
+main{max-width:1280px;margin:auto;padding:14px}
+.card{background:#fff;border:2px solid var(--black);border-radius:14px;box-shadow:4px 4px 0 var(--black);margin-bottom:14px;padding:12px 14px}
+.dataStats{padding:12px 14px;font-size:13px}.income{color:var(--green);font-weight:900}
+.search-grid{display:grid;grid-template-columns:1.4fr .9fr .7fr;gap:10px;align-items:end}
+label{font-size:11px;font-weight:900;margin-bottom:5px;display:block}
+input,select{width:100%;padding:11px;border:2px solid var(--black);border-radius:10px;background:#fff;font:inherit;box-shadow:2px 2px 0 var(--black)}
 select{height:46px;font-weight:800}
-button.action,.mini{border:2px solid var(--black);border-radius:9px;padding:10px 13px;font-weight:900;cursor:pointer;box-shadow:2px 2px 0 var(--black)}
-button.action:active,.mini:active,.btn:active{transform:translate(2px,2px);box-shadow:none}
-.primary{background:var(--black);color:#fff}.secondary{background:#fff;color:#111827}.danger{background:#fee2e2;color:#991b1b;border-color:#991b1b!important}
-.table-wrap{overflow:auto;border:3px solid var(--black);border-radius:12px;box-shadow:5px 5px 0 var(--black)}
-table{width:100%;border-collapse:collapse;min-width:1260px;font-size:12px}
-th,td{padding:9px;border-bottom:1px solid #d1d5db;text-align:left;vertical-align:middle}
-th{background:var(--black);color:#fff;font-size:11px;position:sticky;top:0;z-index:1}
+.table-wrap{overflow:auto;border:3px solid var(--black);border-radius:12px;box-shadow:5px 5px 0 var(--black);background:#fff}
+table{width:100%;border-collapse:collapse;min-width:1180px;font-size:11.5px}
+th,td{padding:9px 8px;border-bottom:1px solid #d1d5db;text-align:left;vertical-align:top}
+th{background:var(--black);color:#fff;font-size:10px;position:sticky;top:0;z-index:1;white-space:nowrap}
 tr:hover td{background:#fffbeb}
-.badge{display:inline-block;padding:5px 8px;border-radius:999px;font-weight:900;font-size:10px;border:2px solid var(--black);white-space:nowrap}
-.status-masuk{background:#dbeafe;color:#1d4ed8}.status-nunggu{background:#ffedd5;color:#c2410c}.status-proses{background:#ede9fe;color:#7c3aed}.status-selesai{background:#dcfce7;color:#15803d}.status-diambil{background:#d1fae5;color:#047857}.status-batal{background:#fee2e2;color:#dc2626}
-.muted,.info{color:#667085}.actions{display:flex;gap:5px;flex-wrap:wrap}.mini{padding:6px 8px;font-size:11px;white-space:nowrap}
+.badge{display:inline-block;padding:5px 8px;border-radius:999px;font-weight:900;font-size:9px;border:2px solid var(--black);white-space:nowrap}
+.status-masuk{background:#dbeafe;color:#1d4ed8}.status-nunggu_sparepart,.status-nunggu{background:#ffedd5;color:#c2410c}.status-proses{background:#ede9fe;color:#7c3aed}.status-selesai{background:#dcfce7;color:#15803d}.status-diambil{background:#d1fae5;color:#047857}.status-batal{background:#fee2e2;color:#dc2626}
+.mini{border:2px solid var(--black);border-radius:9px;padding:6px 9px;font-weight:900;cursor:pointer;box-shadow:2px 2px 0 var(--black);font-size:11px;background:#fff}
+.mini:active{transform:translate(2px,2px);box-shadow:none}
+.actions{display:flex;gap:5px;flex-wrap:wrap}
+.barcode{font-family:monospace;font-size:11px;background:#111827;color:#facc15;padding:3px 6px;border-radius:6px;display:inline-block;margin-top:4px}
 .empty{text-align:center;color:#667085;padding:25px}
+
+/* RESPONSIVE CARD */
+.cards{display:none;gap:10px}
+.servis-card{background:#fff;border:2px solid #111827;border-radius:14px;box-shadow:4px 4px 0 #111827;padding:12px}
+.servis-card .top{display:flex;justify-content:space-between;gap:8px;margin-bottom:8px}
+.servis-card .row{display:flex;justify-content:space-between;gap:8px;padding:4px 0;border-bottom:1px dashed #e5e7eb;font-size:11px}
+.servis-card .row b{font-size:11px}
+.servis-card .foot{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px}
+
+/* POPUP */
 .popup{position:fixed;inset:0;background:#0009;display:none;align-items:center;justify-content:center;z-index:1000;padding:12px}
 .popup.show{display:flex}
 .popup-box{width:min(620px,calc(100% - 10px));max-height:92vh;overflow:auto;background:#fff;border:3px solid var(--black);border-radius:16px;box-shadow:8px 8px 0 var(--black);padding:17px}
 .popup-box h3{background:var(--black);color:#fff;margin:-17px -17px 14px;padding:13px 15px;border-radius:12px 12px 0 0}
-.status-msg{font-size:11px;color:#64748b;margin:8px 0}
+.status-select{margin:8px 0}
+.wa-box{margin-top:10px;padding:11px;border:1px solid #e2e8f0;border-radius:10px;background:#f8fafc;white-space:pre-wrap;font-size:11px;max-height:220px;overflow:auto}
+@media(max-width:900px){
+  .search-grid{grid-template-columns:1fr 1fr}
+  table{min-width:900px}
+}
+@media(max-width:700px){
+  .search-grid{grid-template-columns:1fr}
+  .table-wrap{display:none}
+  .cards{display:grid}
+  header{padding:8px 10px}.brand b{font-size:14px}
+}
 </style>
 </head>
 <body>
-<header class="penjualan-style-header">
+<header>
 <div class="logo"><img src="logo.png" alt="logo"></div>
 <div class="brand"><b>FIXZY - DATA SERVIS</b><small id="konterInfo">Memuat...</small></div>
 <div class="header-right">
 <button class="btn btn-refresh" onclick="refreshData()">↻ Refresh</button>
-<button class="btn btn-moon" onclick="toggleDark()">🌙</button>
+<button class="btn btn-moon" onclick="document.body.classList.toggle('dark')">🌙</button>
 </div>
 </header>
 <main>
-<div class="dataStats" id="dataStats">Memuat data servis...</div>
-<div class="status-filter-card">
-<div class="search-panel-title">Filter Data Servis (hanya konter ini)</div>
-<div class="search-panel-grid">
-<div class="search-name-box"><label class="searchLabel">CARI NAMA / NOTA / HP</label><input id="q" placeholder="Ketik nama, nota, no HP..."></div>
-<div><label>CARI STATUS</label><select id="fStatus"><option value="">Semua Status</option><option value="masuk">Masuk</option><option value="nunggu_sparepart">Nunggu Sparepart</option><option value="proses">Proses</option><option value="selesai">Selesai</option><option value="diambil">Diambil</option><option value="batal">Batal</option></select></div>
+<div class="card dataStats" id="dataStats">Memuat data servis...</div>
+<div class="card">
+<div style="font-weight:900;margin-bottom:10px;border-bottom:2px solid #111827;padding-bottom:8px">Filter Data Servis (hanya konter ini)</div>
+<div class="search-grid">
+<div><label>CARI NOTA / NAMA / HP</label><input id="q" placeholder="Ketik nota, nama, no HP, barcode..."></div>
+<div><label>STATUS</label><select id="fStatus"><option value="">Semua Status</option><option value="masuk">Masuk</option><option value="nunggu_sparepart">Nunggu Sparepart</option><option value="proses">Proses</option><option value="selesai">Selesai</option><option value="diambil">Diambil</option><option value="batal">Batal</option></select></div>
 <div><label>TANGGAL</label><input id="fTanggal" type="date"></div>
 </div>
-<div class="status-msg" id="statusMsg">Menunggu login...</div>
+<div id="statusMsg" style="font-size:11px;color:#64748b;margin-top:8px">Menunggu login...</div>
 </div>
-<div class="table-wrap"><table><thead><tr><th>Tanggal</th><th>Nota</th><th>Pelanggan</th><th>HP / Kerusakan</th><th>Total</th><th>Status</th><th>Aksi</th></tr></thead><tbody id="tbody"><tr><td colspan="7" class="empty">Memuat Firebase...</td></tr></tbody></table></div>
+
+<div class="table-wrap"><table>
+<thead><tr>
+<th>Tanggal</th><th>Nota & Barcode</th><th>Pelanggan & WA</th><th>Data Servisan</th><th>Produk Digunakan</th><th>Estimasi / Diskon / DP / Total</th><th>Pendapatan (jika Diambil)</th><th>Status & Aksi</th>
+</tr></thead>
+<tbody id="tbody"><tr><td colspan="8" class="empty">Memuat Firebase...</td></tr></tbody>
+</table></div>
+
+<div class="cards" id="cards"></div>
 </main>
 
-<div class="popup" id="detailPopup"><div class="popup-box"><h3 id="detailTitle">Detail Servis</h3><div id="detailBody"></div><div style="display:flex;justify-content:flex-end;margin-top:12px"><button class="btn secondary" onclick="closeDetail()">Tutup</button></div></div></div>
+<!-- POPUP EDIT STATUS -->
+<div class="popup" id="editPopup"><div class="popup-box">
+<h3 id="editTitle">Edit Status Servis</h3>
+<div id="editBody" style="font-size:12px;line-height:1.6"></div>
+<div class="status-select">
+<label>UBAH STATUS</label>
+<select id="newStatus">
+<option value="masuk">Masuk</option>
+<option value="nunggu_sparepart">Nunggu Sparepart</option>
+<option value="proses">Proses</option>
+<option value="selesai">Selesai</option>
+<option value="diambil">Diambil</option>
+<option value="batal">Batal</option>
+</select>
+</div>
+<div style="display:flex;gap:7px;justify-content:flex-end;margin-top:12px">
+<button class="btn secondary" onclick="closeEdit()">Batal</button>
+<button class="btn" style="background:#111827;color:#fff" onclick="simpanStatus()">💾 Simpan & Kirim WA</button>
+</div>
+</div></div>
+
+<!-- POPUP WA KONFIRMASI -->
+<div class="popup" id="waPopup"><div class="popup-box">
+<h3>📲 Konfirmasi WA Pelanggan</h3>
+<div id="waInfo" style="font-size:12px;line-height:1.5"></div>
+<div class="wa-box" id="waText"></div>
+<div style="display:flex;gap:7px;flex-wrap:wrap;margin-top:12px">
+<a id="waLinkBtn" href="#" target="_blank" style="flex:1;text-align:center;padding:11px;background:#25D366;color:#fff;border-radius:10px;text-decoration:none;font-weight:900;border:2px solid #111827">📲 Buka WhatsApp</a>
+<button class="mini" onclick="salinWA()">📋 Salin</button>
+<button class="mini" onclick="tutupWA()">Tutup</button>
+</div>
+<div style="font-size:10px;color:#64748b;margin-top:8px">Pesan otomatis pakai Nama Konter dari Register (users.namaKonter). Pendapatan dihitung saat status Diambil.</div>
+</div></div>
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js";
@@ -79,19 +132,41 @@ import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/
 import { getFirestore, doc, getDoc, collection, query, where, getDocs, getDocsFromServer, updateDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js";
 
 const cfg={apiKey:"AIzaSyC_PcarMTT5Un7qfSLzf92o5OGn5rginsI",authDomain:"fixzy-update.firebaseapp.com",projectId:"fixzy-update",storageBucket:"fixzy-update.firebasestorage.app",messagingSenderId:"995892519622",appId:"1:995892519622:web:fa41047944d8e5b35d6dc7"};
-const app=initializeApp(cfg);
-const auth=getAuth(app);
-const db=getFirestore(app);
-
-let uid="", ownerUid="", profile={}, allRows=[];
+const app=initializeApp(cfg);const auth=getAuth(app);const db=getFirestore(app);
+let uid="",ownerUid="",profile={},allRows=[],editId=null,pendingWA=null;
 const $=id=>document.getElementById(id);
-function esc(s){return String(s??"").replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
-function money(n){return "Rp "+(Number(n)||0).toLocaleString("id-ID");}
-function dateVal(r){return String(r.tanggal||r.createdAt||"").slice(0,10);}
-function getStatus(r){return String(r.status||"masuk").toLowerCase();}
-function getNota(r){return r.nomorNota||r.id||"-";}
-function getNama(r){return r.pelanggan?.nama||r.namaPelanggan||"-";}
-function getHp(r){return r.servisan?.brandTipe||r.brandTipe||"-";}
+const esc=s=>String(s??"").replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const money=n=>"Rp "+(Number(n)||0).toLocaleString("id-ID");
+const dateVal=r=>String(r.tanggal||r.tanggalMasuk||r.createdAt||"").slice(0,10)||new Date().toISOString().slice(0,10);
+const getStatus=r=>String(r.status||"masuk").toLowerCase();
+const getNota=r=>r.nomorNota||r.nota||r.id||"-";
+const getNama=r=>r.pelanggan?.nama||r.namaPelanggan||r.nama||"-";
+const getWa=r=>r.pelanggan?.wa||r.pelanggan?.noWa||r.noWa||r.wa||r.nomorWa||"";
+const getKerusakan=r=>r.servisan?.jenisKerusakan||r.kerusakan||r.keluhan||"-";
+const getTipe=r=>r.servisan?.brandTipe||r.brandTipe||r.tipeHp||"-";
+const getProduk=r=>r.produkDigunakan||r.sparepart||r.part||r.produk||"-";
+const getEstimasi=r=>Number(r.estimasi||r.estimasiBiaya||r.biayaEstimasi||r.totalEstimasi||0);
+const getDiskon=r=>Number(r.diskon||r.potongan||0);
+const getDP=r=>Number(r.dp||r.uangMuka||r.panjar||0);
+const getTotal=r=>Number(r.total||r.totalBiaya||r.estimasi?.total||0);
+function getPendapatan(r){
+  if(getStatus(r)!=="diambil") return 0;
+  // pendapatan = total - diskon (atau total bersih)
+  const total=getTotal(r);
+  const diskon=getDiskon(r);
+  return total - diskon;
+}
+function nomorWA(v){
+  let s=String(v||"").replace(/[^0-9]/g,"");
+  if(!s) return "";
+  if(s.startsWith("0")) s="62"+s.slice(1);
+  else if(s.startsWith("8")) s="62"+s;
+  else if(!s.startsWith("62")) s="62"+s;
+  return s;
+}
+function konterName(){
+  return profile.namaKonter||profile.namaToko||"FIXZY - "+(profile.namaPemilik||"Service HP");
+}
 
 async function loadProfile(user){
   const snap=await getDoc(doc(db,"users",user.uid));
@@ -100,9 +175,8 @@ async function loadProfile(user){
   const role=String(profile.role||"").toLowerCase();
   ownerUid = (role==="owner" || profile.isOwner===true) ? user.uid : (profile.ownerUid||profile.ownerId||user.uid);
   uid=user.uid;
-  $("konterInfo").textContent=(profile.namaKonter||"FIXZY")+" • "+ownerUid.slice(0,6);
+  $("konterInfo").textContent=(konterName())+" • "+ownerUid.slice(0,6)+" • "+role;
 }
-
 async function getOwnedServis(){
   const map=new Map();
   async function ambil(field,value){
@@ -111,42 +185,34 @@ async function getOwnedServis(){
       const q=query(collection(db,"servis"), where(field,"==",value));
       const snap=await getDocsFromServer(q);
       snap.docs.forEach(d=>map.set(d.id,{id:d.id,...d.data()}));
-    }catch(e){console.warn("servis",field,e.message);}
+    }catch(e){console.warn(e.message)}
   }
   await ambil("ownerUid", ownerUid);
   await ambil("ownerId", ownerUid);
   await ambil("uid", ownerUid);
-  if(ownerUid!==uid){
-    await ambil("ownerUid", uid);
-    await ambil("uid", uid);
-  }
-  return [...map.values()].sort((a,b)=>String(b.tanggal||"").localeCompare(String(a.tanggal||"")));
+  if(ownerUid!==uid){ await ambil("ownerUid", uid); await ambil("uid", uid); }
+  return [...map.values()].sort((a,b)=>String(b.tanggal||b.createdAt||"").localeCompare(String(a.tanggal||a.createdAt||"")));
 }
-
 async function muatSemua(){
   if(!uid) return;
-  $("statusMsg").textContent="⏳ Membaca data servis milik konter ini...";
+  $("statusMsg").textContent="⏳ Membaca data servis...";
   try{
     const rows=await getOwnedServis();
     allRows=rows;
     render();
-    const total=rows.reduce((s,r)=>s+(Number(r.total||r.estimasi?.total||0)),0);
-    $("dataStats").innerHTML=`<b>${rows.length}</b> data servis • Total nilai <span class="incomeText">${money(total)}</span> • Hanya milik konter ini (ownerUid: ${esc(ownerUid.slice(0,8))}...)`;
-    $("statusMsg").textContent=`✅ ${rows.length} servis - isolasi ownerUid aktif. Karyawan dengan ownerUid sama bisa lihat bareng.`;
-  }catch(e){
-    console.error(e);
-    $("statusMsg").textContent="❌ "+e.message;
-    $("tbody").innerHTML=`<tr><td colspan="7" style="color:#ef4444;padding:20px">${esc(e.message)}</td></tr>`;
-  }
+    const totalNilai=rows.reduce((s,r)=>s+getTotal(r),0);
+    const totalPendapatan=rows.reduce((s,r)=>s+getPendapatan(r),0);
+    $("dataStats").innerHTML=`<b>${rows.length}</b> data servis • Total nilai ${money(totalNilai)} • Pendapatan Diambil <span class="income">${money(totalPendapatan)}</span> • Konter: ${esc(konterName())}`;
+    $("statusMsg").textContent=`✅ ${rows.length} servis - klik Edit untuk ubah status (masuk → nunggu_sparepart → proses → selesai → diambil)`;
+  }catch(e){$("statusMsg").textContent="❌ "+e.message;}
 }
-
 function render(){
   const q=($("q").value||"").toLowerCase().trim();
   const st=($("fStatus").value||"").toLowerCase().trim();
   const tg=$("fTanggal").value||"";
   const filtered=allRows.filter(r=>{
     if(q){
-      const hay=[getNota(r),getNama(r),r.pelanggan?.wa||"",getHp(r),r.servisan?.imei||""].join(" ").toLowerCase();
+      const hay=[getNota(r),getNama(r),getWa(r),getTipe(r),getKerusakan(r)].join(" ").toLowerCase();
       if(!hay.includes(q)) return false;
     }
     if(st && getStatus(r)!==st) return false;
@@ -154,53 +220,148 @@ function render(){
     return true;
   });
   if(!filtered.length){
-    $("tbody").innerHTML='<tr><td colspan="7" class="empty">Belum ada servis untuk konter ini.</td></tr>';return;
+    $("tbody").innerHTML='<tr><td colspan="8" class="empty">Belum ada servis untuk filter ini.</td></tr>';
+    $("cards").innerHTML='<div class="card empty">Belum ada data</div>';
+    return;
   }
+  // TABLE
   $("tbody").innerHTML=filtered.map(r=>{
     const s=getStatus(r);
+    const nota=getNota(r);
+    const wa=getWa(r);
+    const pendapatan=getPendapatan(r);
     return `<tr>
       <td>${esc(dateVal(r))}</td>
-      <td><b>${esc(getNota(r))}</b></td>
-      <td>${esc(getNama(r))}<br><small style="color:#94a3b8">${esc(r.pelanggan?.wa||"")}</small></td>
-      <td>${esc(getHp(r))}<br><small>${esc(r.servisan?.jenisKerusakan||"")}</small></td>
-      <td>${money(r.total||r.estimasi?.total||0)}</td>
-      <td><span class="badge status-${s}">${esc(s)}</span></td>
-      <td><button class="mini" onclick="lihat('${r.id}')">Lihat</button></td>
+      <td><b>${esc(nota)}</b><br><span class="barcode">${esc(nota)}</span><br><small>📷 barcode</small></td>
+      <td><b>${esc(getNama(r))}</b><br><small>${esc(wa)}</small></td>
+      <td><b>${esc(getTipe(r))}</b><br><small>${esc(getKerusakan(r))}</small></td>
+      <td>${esc(getProduk(r))}</td>
+      <td>
+        Estimasi: ${money(getEstimasi(r))}<br>
+        Diskon: ${money(getDiskon(r))}<br>
+        DP: ${money(getDP(r))}<br>
+        <b>Total: ${money(getTotal(r))}</b>
+      </td>
+      <td><b style="color:${pendapatan>0?'#047857':'#94a3b8'}">${money(pendapatan)}</b><br><small>${s==='diambil'?'✅ sudah diambil':'⏳ belum diambil'}</small></td>
+      <td>
+        <span class="badge status-${s}">${esc(s.replace('_',' '))}</span><br><br>
+        <div class="actions">
+          <button class="mini" onclick="bukaEdit('${r.id}')">✏️ Edit Status</button>
+          <button class="mini" onclick="kirimWALangsung('${r.id}')">📲 WA</button>
+        </div>
+      </td>
     </tr>`;
+  }).join("");
+  // CARDS RESPONSIVE
+  $("cards").innerHTML=filtered.map(r=>{
+    const s=getStatus(r);const nota=getNota(r);
+    return `<div class="servis-card">
+      <div class="top"><b>${esc(nota)}</b><span class="badge status-${s}">${esc(s)}</span></div>
+      <div class="row"><span>📅 Tanggal</span><b>${esc(dateVal(r))}</b></div>
+      <div class="row"><span>👤 Pelanggan</span><b>${esc(getNama(r))} - ${esc(getWa(r))}</b></div>
+      <div class="row"><span>📱 Servisan</span><b>${esc(getTipe(r))}</b></div>
+      <div class="row"><span>🔧 Kerusakan</span><b>${esc(getKerusakan(r))}</b></div>
+      <div class="row"><span>📦 Produk</span><b>${esc(getProduk(r))}</b></div>
+      <div class="row"><span>💰 Total</span><b>${money(getTotal(r))}</b></div>
+      <div class="row"><span>🎁 Diskon</span><b>${money(getDiskon(r))}</b></div>
+      <div class="row"><span>💵 DP</span><b>${money(getDP(r))}</b></div>
+      <div class="row"><span>💎 Pendapatan</span><b style="color:${getPendapatan(r)>0?'#047857':'#94a3b8'}">${money(getPendapatan(r))}</b></div>
+      <div class="foot">
+        <button class="mini" onclick="bukaEdit('${r.id}')">✏️ Edit Status</button>
+        <button class="mini" onclick="kirimWALangsung('${r.id}')">📲 WA</button>
+      </div>
+    </div>`;
   }).join("");
 }
 
-window.lihat=id=>{
+function buildPesanWA(r,newStatus){
+  const namaKonter=konterName();
+  const nama=getNama(r);const nota=getNota(r);const tipe=getTipe(r);const kerusakan=getKerusakan(r);
+  const total=getTotal(r);const produk=getProduk(r);const estimasi=getEstimasi(r);const diskon=getDiskon(r);const dp=getDP(r);
+  const statusLabel=newStatus.replace('_',' ');
+  let pesan="";
+  if(newStatus==="masuk"){
+    pesan=`Halo Kak ${nama} 👋\n\nServisan HP ${tipe} (${kerusakan}) sudah kami terima di *${namaKonter}*.\n\n📄 Nota: ${nota}\n📅 Tgl: ${dateVal(r)}\n🔧 Keluhan: ${kerusakan}\n\nEstimasi: ${money(estimasi)}\nKami cek dulu ya, update selanjutnya akan kami infokan.\n\nTerima kasih 🙏\n*${namaKonter}*`;
+  }else if(newStatus==="nunggu_sparepart"){
+    pesan=`Halo Kak ${nama} 👋\n\nUpdate servisan *${nota}* di *${namaKonter}*:\n\nStatus: ⏳ *NUNGGU SPAREPART*\nHP: ${tipe}\nKerusakan: ${kerusakan}\nProduk dibutuhkan: ${produk}\n\nKami sedang menunggu sparepart datang. Akan segera diproses setelah part ready.\n\nTerima kasih 🙏\n*${namaKonter}*`;
+  }else if(newStatus==="proses"){
+    pesan=`Halo Kak ${nama} 👋\n\nUpdate servisan *${nota}* di *${namaKonter}*:\n\nStatus: 🔧 *PROSES*\nHP: ${tipe} - ${kerusakan}\nTeknisi sedang mengerjakan.\n\nEstimasi biaya: ${money(total)}\n\nMohon ditunggu ya Kak.\n*${namaKonter}*`;
+  }else if(newStatus==="selesai"){
+    pesan=`Halo Kak ${nama} 🎉\n\nServisan HP *${tipe}* Nota *${nota}* di *${namaKonter}* sudah *SELESAI* ✅\n\nDetail:\nKerusakan: ${kerusakan}\nProduk dipakai: ${produk}\nTotal: ${money(total)}\nDiskon: ${money(diskon)}\nDP: ${money(dp)}\nSisa bayar: ${money(total-diskon-dp)}\n\nSilakan ambil di konter kami ya Kak.\n\nTerima kasih 🙏\n*${namaKonter}*`;
+  }else if(newStatus==="diambil"){
+    const pendapatan=getPendapatan({...r,status:'diambil'});
+    pesan=`Halo Kak ${nama} 🙏\n\nTerima kasih sudah mengambil HP *${tipe}* Nota *${nota}* di *${namaKonter}*.\n\nStatus: 📦 *DIAMBIL* ✅\nTotal bayar: ${money(total)}\nPendapatan konter: ${money(pendapatan)}\n\nSemoga puas dengan layanan kami. Ditunggu servis berikutnya ya Kak!\n\n*${namaKonter}*`;
+  }else{
+    pesan=`Halo Kak ${nama},\n\nStatus servisan Nota ${nota} di ${namaKonter} diupdate menjadi: *${statusLabel.toUpperCase()}*.\n\nHP: ${tipe}\nKerusakan: ${kerusakan}\n\nTerima kasih.\n*${namaKonter}*`;
+  }
+  return pesan;
+}
+
+window.bukaEdit=id=>{
   const r=allRows.find(x=>x.id===id);
   if(!r) return;
-  $("detailTitle").textContent=getNota(r)+" - "+getNama(r);
-  $("detailBody").innerHTML=`
-    <div style="font-size:12px;line-height:1.6">
-      <b>Pelanggan:</b> ${esc(getNama(r))} (${esc(r.pelanggan?.wa||"")})<br>
-      <b>HP:</b> ${esc(getHp(r))}<br>
-      <b>Kerusakan:</b> ${esc(r.servisan?.jenisKerusakan||"-")}<br>
-      <b>Status:</b> ${esc(getStatus(r))}<br>
-      <b>Total:</b> ${money(r.total||0)}<br>
-      <b>ownerUid:</b> ${esc(r.ownerUid||r.ownerId||"")}<br>
-    </div>
-    <div style="margin-top:10px;display:flex;gap:6px;flex-wrap:wrap">
-      <button class="mini" onclick="setStatus('${r.id}','proses')">Proses</button>
-      <button class="mini" style="background:#dcfce7" onclick="setStatus('${r.id}','selesai')">Selesai</button>
-      <button class="mini" style="background:#d1fae5" onclick="setStatus('${r.id}','diambil')">Diambil</button>
-    </div>
+  editId=id;
+  $("editTitle").textContent="Edit Status - "+getNota(r);
+  $("editBody").innerHTML=`
+    <b>Nota:</b> ${esc(getNota(r))} <span class="barcode">${esc(getNota(r))}</span><br>
+    <b>Pelanggan:</b> ${esc(getNama(r))} - ${esc(getWa(r))}<br>
+    <b>HP:</b> ${esc(getTipe(r))} - ${esc(getKerusakan(r))}<br>
+    <b>Produk:</b> ${esc(getProduk(r))}<br>
+    <b>Total:</b> ${money(getTotal(r))} | Diskon: ${money(getDiskon(r))} | DP: ${money(getDP(r))}<br>
+    <b>Status sekarang:</b> <span class="badge status-${getStatus(r)}">${esc(getStatus(r))}</span><br>
+    <b>Pendapatan (jika Diambil):</b> ${money(getPendapatan({...r,status:'diambil'}))}
   `;
-  $("detailPopup").classList.add("show");
+  $("newStatus").value=getStatus(r);
+  $("editPopup").classList.add("show");
 };
-window.closeDetail=()=>$("detailPopup").classList.remove("show");
-window.setStatus=async(id,st)=>{
+window.closeEdit=()=>{$("editPopup").classList.remove("show");editId=null};
+
+window.simpanStatus=async()=>{
+  if(!editId) return;
+  const r=allRows.find(x=>x.id===editId);
+  if(!r) return;
+  const newSt=$("newStatus").value;
   try{
-    await updateDoc(doc(db,"servis",id),{status:st,statusTerakhir:st,updatedAt:serverTimestamp()});
+    await updateDoc(doc(db,"servis",editId),{status:newSt,statusTerakhir:newSt,updatedAt:serverTimestamp(), ...(newSt==="diambil"?{pendapatan:getPendapatan({...r,status:'diambil'}),tanggalDiambil:new Date().toISOString()}:{})});
+    closeEdit();
     await muatSemua();
-    closeDetail();
-  }catch(e){alert("Gagal: "+e.message);}
+    // Tampilkan popup WA konfirmasi
+    const pesan=buildPesanWA(r,newSt);
+    const waNomor=nomorWA(getWa(r));
+    if(!waNomor){ alert("No WA pelanggan kosong, status sudah disimpan: "+newSt); return; }
+    pendingWA={phone:waNomor,message:pesan,nama:getNama(r),nota:getNota(r)};
+    $("waInfo").innerHTML=`Status <b>${esc(newSt)}</b> disimpan ✅<br>Konfirmasi WA ke <b>${esc(getNama(r))}</b> (${esc(waNomor)})<br>Konter: <b>${esc(konterName())}</b>`;
+    $("waText").textContent=pesan;
+    const link="https://wa.me/"+waNomor+"?text="+encodeURIComponent(pesan);
+    $("waLinkBtn").href=link;
+    $("waPopup").classList.add("show");
+  }catch(e){alert("Gagal update status: "+e.message);}
 };
+
+window.kirimWALangsung=id=>{
+  const r=allRows.find(x=>x.id===id);
+  if(!r) return;
+  const st=getStatus(r);
+  const pesan=buildPesanWA(r,st);
+  const waNomor=nomorWA(getWa(r));
+  if(!waNomor){ alert("No WA kosong"); return; }
+  pendingWA={phone:waNomor,message:pesan};
+  $("waInfo").innerHTML=`Kirim WA manual - Nota <b>${esc(getNota(r))}</b> Status <b>${esc(st)}</b>`;
+  $("waText").textContent=pesan;
+  $("waLinkBtn").href="https://wa.me/"+waNomor+"?text="+encodeURIComponent(pesan);
+  $("waPopup").classList.add("show");
+};
+window.tutupWA=()=>{$("waPopup").classList.remove("show");pendingWA=null};
+window.salinWA=async()=>{
+  if(!pendingWA) return;
+  try{ await navigator.clipboard.writeText(pendingWA.message); alert("Pesan disalin ✅"); }
+  catch{ 
+    const range=document.createRange();range.selectNode($("waText"));window.getSelection().removeAllRanges();window.getSelection().addRange(range);
+    document.execCommand("copy");alert("Pesan disalin ✅");
+  }
+};
+
 window.refreshData=()=>location.reload();
-window.toggleDark=()=>document.body.classList.toggle("dark");
 $("q").addEventListener("input",render);
 $("fStatus").addEventListener("change",render);
 $("fTanggal").addEventListener("change",render);
