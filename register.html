@@ -583,6 +583,93 @@ function validasiToken(){
   return false;
 }
 
+
+/* =========================
+   CEK DUPLIKAT AKUN LAMA
+   Hanya membaca collection users.
+   Tidak mengubah alur Auth/token yang sudah berjalan.
+   ========================= */
+function normalizeDuplicateText(v){
+  return String(v ?? "")
+    .trim()
+    .replace(/\s+/g," ")
+    .toLowerCase();
+}
+
+function normalizeDuplicatePhone(v){
+  let x=String(v ?? "").replace(/\D/g,"");
+  if(x.startsWith("0062")) x=x.slice(2);
+  if(x.startsWith("62")) x="0"+x.slice(2);
+  if(!x.startsWith("0") && x.startsWith("8")) x="0"+x;
+  return x;
+}
+
+async function cekDuplikatAkunLama({namaKonter,namaPemilik,whatsapp,email,alamat}){
+  const snap=await getDocs(collection(db,"users"));
+
+  const targetKonter=normalizeDuplicateText(namaKonter);
+  const targetPemilik=normalizeDuplicateText(namaPemilik);
+  const targetWa=normalizeDuplicatePhone(whatsapp);
+  const targetEmail=normalizeDuplicateText(email);
+  const targetAlamat=normalizeDuplicateText(alamat);
+
+  for(const d of snap.docs){
+    const data=d.data()||{};
+
+    const oldKonter=normalizeDuplicateText(
+      data.namaKonter || data.namaToko || data.tokoName || ""
+    );
+    const oldPemilik=normalizeDuplicateText(data.namaPemilik || "");
+    const oldWa=normalizeDuplicatePhone(
+      data.whatsapp || data.noWa || data.nomorWa || ""
+    );
+    const oldEmail=normalizeDuplicateText(data.email || "");
+    const oldAlamat=normalizeDuplicateText(data.alamat || "");
+
+    if(targetEmail && oldEmail && targetEmail===oldEmail){
+      return {
+        duplicate:true,
+        field:"Email",
+        message:"Email tersebut sudah terdaftar pada akun Fixzy."
+      };
+    }
+
+    if(targetWa && oldWa && targetWa===oldWa){
+      return {
+        duplicate:true,
+        field:"No WhatsApp",
+        message:"Nomor WhatsApp tersebut sudah terdaftar pada akun Fixzy."
+      };
+    }
+
+    if(targetKonter && oldKonter && targetKonter===oldKonter){
+      return {
+        duplicate:true,
+        field:"Nama Konter",
+        message:"Nama konter tersebut sudah terdaftar pada akun Fixzy."
+      };
+    }
+
+    if(targetPemilik && oldPemilik && targetPemilik===oldPemilik){
+      return {
+        duplicate:true,
+        field:"Nama Pemilik",
+        message:"Nama pemilik tersebut sudah terdaftar pada akun Fixzy."
+      };
+    }
+
+    if(targetAlamat && oldAlamat && targetAlamat===oldAlamat){
+      return {
+        duplicate:true,
+        field:"Alamat",
+        message:"Alamat tersebut sudah terdaftar pada akun Fixzy."
+      };
+    }
+  }
+
+  return {duplicate:false};
+}
+
 /* =========================
    SUBMIT
    ========================= */
@@ -633,6 +720,23 @@ form.addEventListener("submit",async e=>{
   let authCreatedUid=null;
 
   try{
+    /* ========================================================
+       CEK AKUN LAMA SEBELUM MEMBUAT AUTH BARU
+       Email dan WhatsApp juga tetap divalidasi oleh Firebase Auth
+       dan validasi form di atas.
+       ======================================================== */
+    const duplicate=await cekDuplikatAkunLama({
+      namaKonter,
+      namaPemilik,
+      whatsapp,
+      email,
+      alamat
+    });
+
+    if(duplicate.duplicate){
+      throw new Error(duplicate.message);
+    }
+
     const q=query(
       collection(db,"registrationTokens"),
       where("token","==",tokenAktivasi)
