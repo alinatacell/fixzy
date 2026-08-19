@@ -103,12 +103,11 @@ function bukaWhatsApp(nomor,pesan){
  const msg=encodeURIComponent(pesan||"");
  const waUrl="https://wa.me/"+nomor+"?text="+msg;
  try{
-   const win=window.open(waUrl,"_blank");
-   if(!win){
-     window.location.href=waUrl;
-   }
+   // Buka langsung pada halaman utama agar tidak dimuat sebagai iframe.
+   // Ini mencegah pesan "menolak terhubung" pada browser/webview tertentu.
+   window.top.location.assign(waUrl);
  }catch(e){
-   window.location.href=waUrl;
+   window.location.assign(waUrl);
  }
 }
 
