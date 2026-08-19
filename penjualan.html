@@ -117,7 +117,7 @@ body.dark input,body.dark select,body.dark textarea{background:#1e293b;border-co
 body.dark .card{background:#1e293b;border-color:#ffffff10}
 .card-header{font-weight:900;font-size:13px;margin-bottom:10px;padding-bottom:8px;border-bottom:1px solid #e5e7eb;display:flex;justify-content:space-between;align-items:center}
 body.dark .card-header{border-color:#ffffff10;color:#e5e7eb}
-.produk-dropdown{position:absolute;left:0;right:0;top:100%;margin-top:4px;background:#fff;border:1px solid #e5e7eb;border-radius:12px;box-shadow:0 12px 24px rgba(0,0,0,.15);max-height:240px;overflow:auto;z-index:30;display:none}
+.produk-dropdown{position:absolute;left:0;right:0;top:calc(100% + 6px);margin-top:0;background:#fff;border:1px solid #e5e7eb;border-radius:12px;box-shadow:0 12px 24px rgba(0,0,0,.15);max-height:260px;overflow:auto;z-index:9999;display:none}
 body.dark .produk-dropdown{background:#0f172a;border-color:#ffffff15}
 .produk-dropdown.show{display:block}
 .produk-item{padding:10px 12px;cursor:pointer;border-bottom:1px solid #f1f5f9;display:flex;justify-content:space-between;align-items:center}
@@ -373,7 +373,7 @@ async function loadProduk(){
 }
 
 function filterProduk(keyword){
-  if(!keyword){ hideProdukDropdown(); return; }
+  if(!keyword){ showProdukDropdown(allProduk); return; }
   const kw=keyword.toLowerCase();
   const filtered=allProduk.filter(p=>{
     const nama=(p.nama||p.namaProduk||p.name||'').toLowerCase();
@@ -780,7 +780,10 @@ window.alert = function(msg){ showKonterPopup(msg, 'info'); };
 window.regenerate=()=>{ autoGenerateNotaBarcode(); showKonterPopup('Nota & Barcode baru: ' + document.getElementById('notaField').value + ' | Konter: ' + konterName, 'success'); }
 
 document.addEventListener('DOMContentLoaded', ()=>{
-  document.getElementById('produkSearch').addEventListener('input', (e)=>filterProduk(e.target.value));
+  const produkSearchEl=document.getElementById('produkSearch');
+  produkSearchEl.addEventListener('input', (e)=>filterProduk(e.target.value));
+  produkSearchEl.addEventListener('focus', ()=>filterProduk(produkSearchEl.value));
+  produkSearchEl.addEventListener('click', ()=>filterProduk(produkSearchEl.value));
   document.getElementById('hargaAuto').addEventListener('input', hitungSubtotalAuto);
   document.getElementById('qtyAuto').addEventListener('input', hitungSubtotalAuto);
   document.getElementById('hargaManual').addEventListener('input', hitungSubtotalManual);
