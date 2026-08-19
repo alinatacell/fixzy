@@ -27,7 +27,7 @@ input,textarea{width:100%;min-height:44px;border:2px solid #111827;border-radius
 .qty-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}.primary,.secondary{border:0;border-radius:10px;padding:13px;font-weight:900;box-shadow:3px 3px 0 #111827;cursor:pointer}.primary{width:100%;background:#111827;color:#fff}.secondary{background:#e5e7eb;color:#111}
 button:disabled{opacity:.5;cursor:not-allowed}.notice{font-size:11px;color:#64748b;line-height:1.5;margin-top:9px}
 .qris-wrap{text-align:center;border:2px dashed #d9b000;border-radius:12px;background:#fffdf0;padding:14px;margin-bottom:14px}.qris-wrap img{display:block;width:min(330px,100%);margin:0 auto;border-radius:10px;border:1px solid #dbe2ea;background:#fff;min-height:120px;object-fit:contain}.qris-title{font-weight:900;font-size:16px}.qris-note{font-size:11px;color:#92400e;margin-top:7px;line-height:1.5}
-.request{border:1px solid #dbe2ea;border-radius:11px;padding:12px;background:#fff;margin-top:10px}.request-top{display:flex;justify-content:space-between;gap:8px;align-items:flex-start}.badge{font-size:10px;font-weight:900;padding:5px 8px;border-radius:999px;white-space:nowrap}.pending{background:#fef3c7;color:#92400e}.approved{background:#dcfce7;color:#166534}.rejected{background:#fee2e2;color:#991b1b}.request-meta{font-size:11px;color:#64748b;margin-top:4px}.request-total{font-size:13px;margin-top:8px}.request-note{font-size:11px;color:#64748b;margin-top:6px}
+.request{border:1px solid #dbe2ea;border-radius:11px;padding:12px;background:#fff;margin-top:10px}.request-top{display:flex;justify-content:space-between;gap:8px;align-items:flex-start}.badge{font-size:10px;font-weight:900;padding:5px 8px;border-radius:999px;white-space:nowrap}.pending{background:#fef3c7;color:#92400e}.approved{background:#dcfce7;color:#166534}.rejected{background:#fee2e2;color:#991b1b}.token-owned{background:#fef3c7;color:#92400e}.token-used{background:#fee2e2;color:#991b1b}.request-meta{font-size:11px;color:#64748b;margin-top:4px}.request-total{font-size:13px;margin-top:8px}.request-note{font-size:11px;color:#64748b;margin-top:6px}
 .token-result{margin-top:12px;background:#ecfdf5;border:2px solid #86efac;border-radius:12px;padding:12px}.token-result-title{font-size:12px;font-weight:900;color:#166534;margin-bottom:7px}.token-list{display:grid;gap:7px}.token-item{background:#fff;border:1px solid #bbf7d0;border-radius:9px;padding:9px;font-family:monospace;font-size:12px;font-weight:900;word-break:break-all;color:#111827}.token-copy{margin-top:8px;width:100%;border:0;border-radius:9px;padding:10px;background:#166534;color:#fff;font-weight:900;cursor:pointer}
 .owned-group{margin-top:12px;border:2px solid #86efac;border-radius:12px;background:#ecfdf5;padding:12px}.owned-group-head{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:8px}.owned-group-title{font-size:14px;font-weight:900;color:#166534}.owned-group-copy{border:0;border-radius:9px;background:#64748b;color:#fff;padding:10px 12px;font-weight:900;cursor:pointer;box-shadow:2px 2px 0 #111827}.owned-package{font-size:11px;color:#166534;font-weight:900;margin:0 0 9px}.owned-token-row{display:grid;grid-template-columns:38px 1fr 64px;gap:8px;align-items:center;padding:8px 0;border-top:1px solid #bbf7d0}.owned-token-row:first-child{border-top:0}.owned-token-check{width:22px;height:22px;justify-self:center;accent-color:#16a34a}.owned-token-code{font-family:monospace;font-size:13px;font-weight:900;word-break:break-all;color:#111827}.owned-token-copy{border:2px solid #111827;border-radius:9px;background:#fff;color:#111827;padding:8px 5px;font-weight:900;cursor:pointer;box-shadow:2px 2px 0 #111827}.owned-hint{font-size:10px;color:#166534;margin-top:9px;line-height:1.5;font-weight:700}
 body.dark .owned-group{background:#0f2118;border-color:#166534}body.dark .owned-token-row{border-top-color:#166534}body.dark .owned-token-code{color:#f3f4f6}body.dark .owned-token-copy{background:#151b23;color:#f3f4f6;border-color:#334155}
@@ -120,7 +120,7 @@ const firebaseConfig={apiKey:"AIzaSyC_PcarMTT5Un7qfSLzf92o5OGn5rginsI",authDomai
 const app=getApps().length?getApp():initializeApp(firebaseConfig),auth=getAuth(app),db=getFirestore(app);
 
 let uid="",email="",profile={},balance=0,selectedPlan={month:3,days:90,price:30000},pendingWaUrl="";
-let sessionReady=false,myOwnedPurchases=[];
+let sessionReady=false,myOwnedPurchases=[],resellerTokenMap=new Map();
 
 const $=id=>document.getElementById(id);
 const esc=v=>String(v??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[m]));
@@ -204,6 +204,21 @@ function purchaseDays(x){
  const n=Number(x.packageDays??x.days??x.durasiHari??x.paketHari??0);if(n)return n;
  const m=String(x.packageLabel||"").match(/(\d+)\s*hari/i);return m?Number(m[1]):0;
 }
+function getLiveTokenState(token){
+ const key=String(token||"").trim().toUpperCase();
+ const x=resellerTokenMap.get(key);
+ if(!x)return {status:"unknown",label:"STATUS BELUM TERBACA"};
+ if(x.used===true||x.terpakai===true||x.dipakai===true||x.isUsed===true||["used","terpakai","dipakai"].includes(String(x.status||x.tokenStatus||"").toLowerCase())){
+  return {status:"used",label:"SUDAH DIPAKAI"};
+ }
+ const st=String(x.status||x.tokenStatus||"").toLowerCase();
+ if(x.purchasedByReseller===true||x.soldToReseller===true||x.resellerPurchased===true||x.dibeliReseller===true||["dibeli_reseller","dimiliki_reseller","owned","sold","reseller_sold"].includes(st)){
+  return {status:"owned",label:"TERJUAL • DIBELI RESELLER"};
+ }
+ if(st==="tersedia"||st==="available"||!st)return {status:"available",label:"TERSEDIA"};
+ return {status:"unknown",label:String(x.status||x.tokenStatus||"STATUS BELUM TERBACA").toUpperCase()};
+}
+
 function renderMyTokens(){
  const box=$("myTokensBox"),list=$("myTokensList"),hint=$("myTokensHint");
  if(!myOwnedPurchases.length){box.classList.add("hidden");list.innerHTML="";hint.textContent="";return}
@@ -211,11 +226,17 @@ function renderMyTokens(){
  list.innerHTML=myOwnedPurchases.map((p,pi)=>{
   const tokens=getPurchaseTokens(p),m=purchaseMonths(p),d=purchaseDays(p);
   const label=m?`${m} Bulan${d?" / "+d+" Hari":""}`:(p.packageLabel||"Paket Token");
-  return `<div class="owned-group"><div class="owned-group-head"><div class="owned-group-title">TOKEN ANDA • ${tokens.length} TOKEN</div><button class="owned-group-copy" data-copy-group="${pi}" type="button">📋 Salin</button></div><div class="owned-package">📦 PAKET: ${esc(label)}</div>${tokens.map((t,ti)=>`<div class="owned-token-row"><input class="owned-token-check" type="checkbox"><div class="owned-token-code">${esc(t)}</div><button class="owned-token-copy" data-copy-one="${pi}:${ti}" type="button">Salin</button></div>`).join("")}<div class="owned-hint">Token ini milik reseller dan belum terpakai untuk aktivasi.</div></div>`;
+  const liveStates=tokens.map(t=>getLiveTokenState(t));
+  const usedCount=liveStates.filter(x=>x.status==="used").length;
+  const ownedCount=liveStates.filter(x=>x.status==="owned").length;
+  const availableCount=liveStates.filter(x=>x.status==="available").length;
+  const groupStatus=usedCount===tokens.length?"SUDAH DIPAKAI":(ownedCount>0?"TERJUAL • DIBELI RESELLER":(availableCount===tokens.length?"TERSEDIA":"CEK STATUS"));
+  const groupClass=usedCount===tokens.length?"token-used":(ownedCount>0?"token-owned":"");
+  return `<div class="owned-group"><div class="owned-group-head"><div class="owned-group-title">TOKEN ANDA • ${tokens.length} TOKEN</div><button class="owned-group-copy" data-copy-group="${pi}" type="button">📋 Salin</button></div><div class="owned-package">📦 PAKET: ${esc(label)}</div>${tokens.map((t,ti)=>{const st=liveStates[ti];const cls=st.status==="used"?"token-used":st.status==="owned"?"token-owned":"";return `<div class="owned-token-row"><input class="owned-token-check" type="checkbox"><div class="owned-token-code">${esc(t)} <span class="badge ${cls}" style="display:inline-block;margin-left:5px;vertical-align:middle">${esc(st.label)}</span></div><button class="owned-token-copy" data-copy-one="${pi}:${ti}" type="button">Salin</button></div>`}).join("")}<div class="owned-hint">Status token dibaca langsung dari <b>resellerTokens</b>. Jika sudah dibeli, tampil <b>TERJUAL</b>; jika sudah digunakan, tampil <b>SUDAH DIPAKAI</b>. <span class="badge ${groupClass}" style="display:inline-block;margin-left:4px">${groupStatus}</span></div></div>`;
  }).join("");
  list.querySelectorAll("[data-copy-one]").forEach(b=>b.onclick=async()=>{const [pi,ti]=b.dataset.copyOne.split(":").map(Number);await copyText(getPurchaseTokens(myOwnedPurchases[pi])[ti],b)});
  list.querySelectorAll("[data-copy-group]").forEach(b=>b.onclick=async()=>{const pi=Number(b.dataset.copyGroup);await copyText(getPurchaseTokens(myOwnedPurchases[pi]).join("\n"),b)});
- hint.textContent="Token reseller tetap bisa digunakan untuk aktivasi/perpanjangan.";
+ hint.textContent="Status token diperbarui dari data token asli. Jika token sudah dipakai untuk aktivasi/perpanjangan, status akan berubah menjadi SUDAH DIPAKAI.";
 }
 async function copyText(text,b){try{await navigator.clipboard.writeText(text);const o=b.textContent;b.textContent="✓ Tersalin";setTimeout(()=>b.textContent=o,1500)}catch(e){showModal("Gagal Menyalin","Silakan tekan lama token lalu pilih Salin.")}}
 
@@ -225,6 +246,20 @@ async function loadHistory(){
  let deposits=[],purchases=[];
  try{(await getDocs(query(collection(db,"saldoRequests"),where("resellerUid","==",uid)))).forEach(d=>deposits.push({id:d.id,type:"deposit",...d.data()}))}catch(e){console.error(e)}
  try{(await getDocs(query(collection(db,"tokenPurchases"),where("resellerUid","==",uid)))).forEach(d=>purchases.push({id:d.id,type:"purchase",...d.data()}))}catch(e){console.error(e)}
+
+ /* tokenPurchases = riwayat pembelian; resellerTokens = status token terkini. */
+ resellerTokenMap=new Map();
+ try{
+  const tokenSnap=await getDocs(collection(db,"resellerTokens"));
+  tokenSnap.forEach(d=>{
+   const x=d.data()||{};
+   const token=String(x.token??x.kodeToken??x.registrationToken??x.tokenCode??x.code??d.id).trim().toUpperCase();
+   if(token)resellerTokenMap.set(token,{id:d.id,...x});
+  });
+ }catch(e){
+  console.error("Gagal membaca status resellerTokens:",e);
+ }
+
  const all=[...deposits,...purchases].sort((a,b)=>(b.createdAt?.seconds||0)-(a.createdAt?.seconds||0));
  myOwnedPurchases=purchases.filter(x=>String(x.status||"approved").toLowerCase()!=="rejected").filter(x=>getPurchaseTokens(x).length).sort((a,b)=>(b.createdAt?.seconds||0)-(a.createdAt?.seconds||0));
  renderMyTokens();
@@ -234,7 +269,7 @@ async function loadHistory(){
  const dt=x=>{try{return x.createdAt?.toDate?x.createdAt.toDate().toLocaleString("id-ID"):"-"}catch(e){return "-"}};
  el.innerHTML=all.map(x=>x.type==="deposit"
  ?`<div class="request"><div class="request-top"><div><b>💰 Request Saldo</b><div class="request-meta">${esc(dt(x))}</div></div><span class="badge ${sc(x.status||x.requestStatus)}">${sl(x.status||x.requestStatus)}</span></div><div class="request-total">Nominal: <b>${rupiah(x.amount??x.jumlahSaldo)}</b></div><div class="request-meta">Metode: ${esc(x.metode||"QRIS")}</div>${x.catatan?`<div class="request-note">Catatan: ${esc(x.catatan)}</div>`:""}${x.adminNote?`<div class="request-note">Admin: ${esc(x.adminNote)}</div>`:""}</div>`
- :`<div class="request"><div class="request-top"><div><b>🛒 Pembelian Token Reseller</b><div class="request-meta">${esc(dt(x))}</div></div><span class="badge approved">DISETUJUI</span></div><div class="request-total">${esc(x.packageLabel||"-")} • <b>${Number(x.quantity||getPurchaseTokens(x).length||0)} Token</b> • Total <b>${rupiah(x.totalPrice)}</b></div>${getPurchaseTokens(x).length?`<div class="result-token-line"><b>🔑 TOKEN</b><code>${getPurchaseTokens(x).map(t=>esc(t)).join("<br>")}</code></div>`:""}<div class="request-note">Status token: <b style="color:#166534">DIBELI RESELLER • BELUM TERPAKAI</b></div></div>`
+ :`<div class="request"><div class="request-top"><div><b>🛒 Pembelian Token Reseller</b><div class="request-meta">${esc(dt(x))}</div></div><span class="badge approved">DISETUJUI</span></div><div class="request-total">${esc(x.packageLabel||"-")} • <b>${Number(x.quantity||getPurchaseTokens(x).length||0)} Token</b> • Total <b>${rupiah(x.totalPrice)}</b></div>${getPurchaseTokens(x).length?`<div class="result-token-line"><b>🔑 TOKEN</b>${getPurchaseTokens(x).map(t=>{const st=getLiveTokenState(t);const cls=st.status==="used"?"token-used":st.status==="owned"?"token-owned":"";return `<div style="margin-bottom:7px"><code>${esc(t)}</code><span class="badge ${cls}" style="display:inline-block;margin-top:4px">${esc(st.label)}</span></div>`}).join("")}</div>`:""}<div class="request-note">Status token diambil dari <b>resellerTokens</b>, bukan hanya dari riwayat pembelian.</div></div>`
  ).join("");
 }
 
