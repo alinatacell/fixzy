@@ -59,7 +59,7 @@ main{
 }
 .stats{
   display:grid;
-  grid-template-columns:repeat(4,minmax(0,1fr));
+  grid-template-columns:repeat(4,minmax(180px,1fr));
   gap:10px;
 }
 .stat{
@@ -96,6 +96,34 @@ input:focus,select:focus{border-color:#2563eb}
   display:grid;
   grid-template-columns:repeat(4,minmax(0,1fr));
   gap:12px;
+}
+
+/* TAMPILAN STOCK READ-ONLY COMPACT */
+.product{
+  min-height:150px;
+}
+.product .meta{
+  grid-template-columns:1fr 1fr;
+}
+.product .pname{
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+@media(min-width:1101px){
+  main{max-width:1100px}
+  .card{padding:12px;margin-bottom:12px}
+  .title{font-size:18px;margin-bottom:10px}
+  .grid{gap:8px}
+  .product{padding:10px;border-radius:12px}
+  .product .phead{gap:6px}
+  .product .pname{font-size:14px}
+  .product .code{font-size:9px}
+  .product .price{font-size:13px}
+  .product .badge{font-size:9px;padding:5px 7px}
+  .product .meta{gap:5px;margin-top:8px}
+  .product .meta div{padding:6px}
+  .product .meta span{font-size:10px}
 }
 .product{
   min-width:0;
