@@ -73,7 +73,7 @@ tr:hover td{background:#fffbeb}
 <main>
 <div class="card dataStats" id="dataStats">Memuat data servis...</div>
 <div class="card">
-<div style="font-weight:900;margin-bottom:10px;border-bottom:2px solid #111827;padding-bottom:8px">Filter Data Servis (hanya konter ini)</div>
+<div style="font-weight:900;margin-bottom:10px;border-bottom:2px solid #111827;padding-bottom:8px">Pencarian Data Servis</div>
 <div class="search-grid">
 <div><label>CARI NOTA / NAMA / HP</label><input id="q" placeholder="Ketik nota, nama, no HP, barcode..."></div>
 <div><label>STATUS</label><select id="fStatus"><option value="">Semua Status</option><option value="masuk">Masuk</option><option value="nunggu_sparepart">Nunggu Sparepart</option><option value="proses">Proses</option><option value="selesai">Selesai</option><option value="diambil">Diambil</option><option value="batal">Batal</option></select></div>
@@ -202,7 +202,7 @@ async function muatSemua(){
     render();
     const totalNilai=rows.reduce((s,r)=>s+getTotal(r),0);
     const totalPendapatan=rows.reduce((s,r)=>s+getPendapatan(r),0);
-    $("dataStats").innerHTML=`<b>${rows.length}</b> data servis • Total nilai ${money(totalNilai)} • Pendapatan Diambil <span class="income">${money(totalPendapatan)}</span> • Konter: ${esc(konterName())}`;
+    $("dataStats").innerHTML=`<b>${rows.length}</b> data servis • Total nilai ${money(totalNilai)} • Pendapatan <span class="income">${money(totalPendapatan)}</span> • Konter: ${esc(konterName())}`;
     $("statusMsg").textContent=`✅ ${rows.length} servis - klik Edit untuk ubah status (masuk → nunggu_sparepart → proses → selesai → diambil)`;
   }catch(e){$("statusMsg").textContent="❌ "+e.message;}
 }
@@ -290,7 +290,7 @@ function buildPesanWA(r,newStatus){
     pesan=`Halo Kak ${nama} 🎉\n\nServisan HP *${tipe}* Nota *${nota}* di *${namaKonter}* sudah *SELESAI* ✅\n\nDetail:\nKerusakan: ${kerusakan}\nProduk dipakai: ${produk}\nTotal: ${money(total)}\nDiskon: ${money(diskon)}\nDP: ${money(dp)}\nSisa bayar: ${money(total-diskon-dp)}\n\nSilakan ambil di konter kami ya Kak.\n\nTerima kasih 🙏\n*${namaKonter}*`;
   }else if(newStatus==="diambil"){
     const pendapatan=getPendapatan({...r,status:'diambil'});
-    pesan=`Halo Kak ${nama} 🙏\n\nTerima kasih sudah mengambil HP *${tipe}* Nota *${nota}* di *${namaKonter}*.\n\nStatus: 📦 *DIAMBIL* ✅\nTotal bayar: ${money(total)}\nPendapatan konter: ${money(pendapatan)}\n\nSemoga puas dengan layanan kami. Ditunggu servis berikutnya ya Kak!\n\n*${namaKonter}*`;
+    pesan=`Halo Kak ${nama} 🙏\n\nTerima kasih sudah mengambil HP *${tipe}* Nota *${nota}* di *${namaKonter}*.\n\nStatus: 📦 *DIAMBIL* ✅\nTotal bayar: ${money(total)}\n\nSemoga puas dengan layanan kami. Ditunggu servis berikutnya ya Kak!\n\n*${namaKonter}*`;
   }else{
     pesan=`Halo Kak ${nama},\n\nStatus servisan Nota ${nota} di ${namaKonter} diupdate menjadi: *${statusLabel.toUpperCase()}*.\n\nHP: ${tipe}\nKerusakan: ${kerusakan}\n\nTerima kasih.\n*${namaKonter}*`;
   }
