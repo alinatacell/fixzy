@@ -88,14 +88,14 @@ body{background:#0d0d0d;background-image:radial-gradient(circle at top,rgba(255,
 <div class="input-box">
 <label>No WhatsApp</label>
 <input type="tel" id="whatsapp" placeholder="08xxxxxxxxxx" maxlength="15" inputmode="numeric" autocomplete="tel" required>
-<span class="field-help">Contoh: 081234567890 atau +6281234567890</span>
+<span class="field-help">Contoh: 081234567890 atau +6281234567890. Nomor dinormalisasi ke format 08 dan tidak boleh sama dengan akun yang pernah terdaftar.</span>
 <div class="field-error" id="errWhatsapp"></div>
 </div>
 
 <div class="input-box">
 <label>Email Login</label>
 <input type="email" id="email" placeholder="email@gmail.com" maxlength="120" inputmode="email" autocomplete="email" autocapitalize="none" spellcheck="false" required>
-<span class="field-help">Email ini digunakan untuk login ke Firebase.</span>
+<span class="field-help">Email wajib valid, tidak boleh sama dengan email akun yang pernah terdaftar, dan digunakan untuk login Firebase.</span>
 <div class="field-error" id="errEmail"></div>
 </div>
 
@@ -299,7 +299,87 @@ function validWhatsapp(v){
   if(!/^08\d{8,11}$/.test(x)){
     return {ok:false,message:"Nomor WhatsApp harus 10–13 digit dan diawali 08.",value:x};
   }
+  // Tolak pola nomor yang jelas tidak wajar/placeholder.
+  if(/^0(8)\1{7,10}$/.test(x)){
+    return {ok:false,message:"Nomor WhatsApp tidak valid.",value:x};
+  }
   return {ok:true,message:"",value:x};
+}
+
+/* =========================================================
+   CEK DUPLIKASI AKUN — SEMUA DATA REGISTRASI
+   Membandingkan data dengan SEMUA dokumen users yang pernah
+   terdaftar. Password tidak ikut diperiksa karena Firebase Auth
+   tidak menyimpan password di users/{uid}.
+   ========================================================= */
+function normText(v){
+  return cleanSpaces(String(v??"")).toLowerCase();
+}
+
+function normEmail(v){
+  return String(v??"").trim().toLowerCase();
+}
+
+function normPhone(v){
+  return normalisasiWhatsapp(v);
+}
+
+function normCompact(v){
+  return normText(v).replace(/[^a-z0-9]/g,"");
+}
+
+function nilaiSama(field,a,b){
+  if(field==="email") return normEmail(a)!=="" && normEmail(a)===normEmail(b);
+  if(field==="whatsapp") return normPhone(a)!=="" && normPhone(a)===normPhone(b);
+  if(field==="tokenAktivasi") return normCompact(a)!=="" && normCompact(a)===normCompact(b);
+  return normText(a)!=="" && normText(a)===normText(b);
+}
+
+function namaPemilikUntukPesan(u){
+  return cleanSpaces(u?.namaPemilik||u?.nama||u?.displayName||"Akun sebelumnya") || "Akun sebelumnya";
+}
+
+function ringkasAkun(u){
+  const nama=namaPemilikUntukPesan(u);
+  const konter=cleanSpaces(u?.namaKonter||"");
+  return konter ? `${nama} (${konter})` : nama;
+}
+
+async function cekDuplikatAkun(dataBaru){
+  const snap=await getDocs(collection(db,"users"));
+  const fieldDefs=[
+    {field:"namaKonter",label:"Nama konter"},
+    {field:"namaPemilik",label:"Nama pemilik"},
+    {field:"whatsapp",label:"Nomor WhatsApp",aliases:["whatsapp","noWa","nomorWa","noWhatsapp","nomorWhatsapp"]},
+    {field:"email",label:"Email",aliases:["email","emailLogin"]},
+    {field:"alamat",label:"Alamat"},
+    {field:"tokenAktivasi",label:"Token registrasi",aliases:["tokenAktivasi","token","kodeToken"]}
+  ];
+
+  const hasil=[];
+  snap.forEach(d=>{
+    const u=d.data()||{};
+    // Akun tanpa data registrasi yang relevan dilewati.
+    for(const def of fieldDefs){
+      const vals=[def.field,...(def.aliases||[])];
+      let ada=false;
+      for(const key of vals){
+        if(nilaiSama(def.field,dataBaru[def.field],u[key])){
+          ada=true; break;
+        }
+      }
+      if(ada){
+        hasil.push({
+          label:def.label,
+          akun:ringkasAkun(u),
+          uid:d.id
+        });
+        break;
+      }
+    }
+  });
+
+  return hasil;
 }
 
 function validAlamat(v){
@@ -346,6 +426,35 @@ function validasiAlamat(show=true){
   fields.alamat.value=normalized;
   const msg=validAlamat(normalized);
   return setFieldState(fields.alamat,errors.alamat,msg,!msg);
+}
+
+async function validasiDuplikatRegistrasi(dataBaru){
+  try{
+    const hasil=await cekDuplikatAkun(dataBaru);
+    if(!hasil.length)return {ok:true,hasil:[]};
+
+    const unik=[];
+    const seen=new Set();
+    for(const x of hasil){
+      const key=x.label+"|"+x.akun;
+      if(!seen.has(key)){seen.add(key);unik.push(x);}
+    }
+
+    const daftar=unik.slice(0,5).map(x=>`• ${x.label}: sudah dipakai oleh ${x.akun}`).join("\n");
+    const lebih=unik.length>5?`\n• +${unik.length-5} data lainnya`:"";
+    return {
+      ok:false,
+      hasil:unik,
+      pesan:"Data sudah pernah terdaftar di akun Fixzy lain.\n\n"+daftar+lebih+"\n\nGunakan data yang belum pernah terdaftar."
+    };
+  }catch(err){
+    console.error("CEK DUPLIKASI USERS:",err);
+    return {
+      ok:false,
+      systemError:true,
+      pesan:"Data akun lama belum dapat diverifikasi. Pastikan koneksi dan izin Firestore users tersedia, lalu coba lagi."
+    };
+  }
 }
 
 function validasiPassword(){
@@ -633,6 +742,41 @@ form.addEventListener("submit",async e=>{
   let authCreatedUid=null;
 
   try{
+    // Cek seluruh data registrasi terhadap semua akun yang pernah terdaftar.
+    // Dilakukan SEBELUM createUser agar akun baru tidak terbentuk jika data
+    // sudah pernah digunakan.
+    const cekDuplikat=await validasiDuplikatRegistrasi({
+      namaKonter,
+      namaPemilik,
+      whatsapp,
+      email,
+      alamat,
+      tokenAktivasi
+    });
+
+    if(cekDuplikat.systemError){
+      throw new Error(cekDuplikat.pesan);
+    }
+
+    if(!cekDuplikat.ok){
+      popup("Data Sudah Terdaftar",cekDuplikat.pesan);
+      return;
+    }
+
+    // Validasi email/WA final setelah normalisasi.
+    const emailFinal=validEmail(email);
+    const waFinal=validWhatsapp(whatsapp);
+    if(emailFinal){
+      setFieldState(fields.email,errors.email,emailFinal,false);
+      popup("Email Tidak Valid",emailFinal);
+      return;
+    }
+    if(!waFinal.ok){
+      setFieldState(fields.whatsapp,errors.whatsapp,waFinal.message,false);
+      popup("Nomor WhatsApp Tidak Valid",waFinal.message);
+      return;
+    }
+
     const q=query(
       collection(db,"registrationTokens"),
       where("token","==",tokenAktivasi)
@@ -702,6 +846,23 @@ form.addEventListener("submit",async e=>{
     const tanggalAktivasi=new Date();
     const tanggalBerakhir=new Date(tanggalAktivasi);
     tanggalBerakhir.setDate(tanggalBerakhir.getDate()+90);
+
+    // Guard kedua: cek ulang sesaat sebelum users/{uid} ditulis.
+    // Ini mengurangi risiko dua pendaftaran hampir bersamaan.
+    const cekDuplikatFinal=await validasiDuplikatRegistrasi({
+      namaKonter,
+      namaPemilik,
+      whatsapp,
+      email,
+      alamat,
+      tokenAktivasi
+    });
+    if(cekDuplikatFinal.systemError){
+      throw new Error(cekDuplikatFinal.pesan);
+    }
+    if(!cekDuplikatFinal.ok){
+      throw new Error(cekDuplikatFinal.pesan);
+    }
 
     await setDoc(doc(db,"users",uid),{
       uid,
