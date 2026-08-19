@@ -619,81 +619,83 @@ form.addEventListener("submit",async e=>{
   const email=fields.email.value.trim().toLowerCase();
   const alamat=cleanSpaces(fields.alamat.value);
   const password=fields.password.value;
+  const konfirmasi=password;
   const tokenAktivasi=tokenInput.value.trim().toUpperCase();
 
-  if(btn.disabled) return;
+  if(password!==konfirmasi){
+    popup("Fixzy","Konfirmasi password tidak sama.");
+    return;
+  }
+
   btn.disabled=true;
-  btn.textContent="Mengecek duplikat...";
   loading.style.display="block";
-  loading.textContent="Validasi akun...";
 
   let authCreatedUid=null;
 
   try{
-    // === CEK 1: DUPLIKAT EMAIL DI FIRESTORE USERS ===
-    const cekEmailSnap = await getDocs(query(collection(db,"users"), where("email","==",email)));
-    if(!cekEmailSnap.empty){
-      throw new Error("DUPLIKAT_EMAIL");
-    }
+    const q=query(
+      collection(db,"registrationTokens"),
+      where("token","==",tokenAktivasi)
+    );
 
-    // === CEK 2: DUPLIKAT WHATSAPP DI FIRESTORE USERS ===
-    const cekWa1 = await getDocs(query(collection(db,"users"), where("whatsapp","==",whatsapp)));
-    const cekWa2 = await getDocs(query(collection(db,"users"), where("noWa","==",whatsapp)));
-    const cekWa3 = await getDocs(query(collection(db,"users"), where("nomorWa","==",whatsapp)));
-    if(!cekWa1.empty || !cekWa2.empty || !cekWa3.empty){
-      throw new Error("DUPLIKAT_WA");
-    }
-
-    // === CEK 3: DUPLIKAT NAMA KONTER ===
-    const cekKonterSnap = await getDocs(query(collection(db,"users"), where("namaKonter","==",namaKonter)));
-    if(!cekKonterSnap.empty){
-      const dup = cekKonterSnap.docs.some(d=>{
-        const data=d.data();
-        return String(data.namaKonter||"").trim().toLowerCase()===namaKonter.toLowerCase();
-      });
-      if(dup) throw new Error("DUPLIKAT_KONTER");
-    }
-
-    // === CEK 4: TOKEN ===
-    btn.textContent="Mengecek token...";
-    const q=query(collection(db,"registrationTokens"), where("token","==",tokenAktivasi));
     const snap=await getDocs(q);
+
     if(snap.empty){
       throw new Error("Token tidak ditemukan di registrationTokens.");
     }
+
     let tokenDoc=null;
     let tokenInfo=null;
+
     snap.forEach(d=>{
-      if(!tokenDoc){ tokenDoc=d; tokenInfo=d.data()||{}; }
+      if(!tokenDoc){
+        tokenDoc=d;
+        tokenInfo=d.data()||{};
+      }
     });
-    const used=tokenInfo.used===true || String(tokenInfo.used||"").toLowerCase()==="true" || ["terpakai","used"].includes(String(tokenInfo.status||"").toLowerCase());
+
+    const used=tokenInfo.used===true ||
+      String(tokenInfo.used||"").toLowerCase()==="true" ||
+      ["terpakai","used"].includes(String(tokenInfo.status||"").toLowerCase());
+
     if(used)throw new Error("Token sudah pernah digunakan.");
 
-    const hari=Number(tokenInfo.paketHari??tokenInfo.durasiHari??tokenInfo.masaAktifHari??0);
-    const paket=String(tokenInfo.paket??tokenInfo.durasi??tokenInfo.masaAktif??"").toLowerCase();
-    const is90Hari= hari===90 || hari===3 || paket.includes("3 bulan") || paket.includes("3bulan") || paket.includes("90 hari") || paket.includes("90hari");
+    const hari=Number(
+      tokenInfo.paketHari??
+      tokenInfo.durasiHari??
+      tokenInfo.masaAktifHari??
+      0
+    );
+
+    const paket=String(
+      tokenInfo.paket??
+      tokenInfo.durasi??
+      tokenInfo.masaAktif??
+      ""
+    ).toLowerCase();
+
+    const is90Hari=
+      hari===90 ||
+      hari===3 ||
+      paket.includes("3 bulan") ||
+      paket.includes("3bulan") ||
+      paket.includes("90 hari") ||
+      paket.includes("90hari");
+
     if(!is90Hari)throw new Error("Token registrasi harus 3 bulan / 90 hari.");
 
     const tipe=String(tokenInfo.tipe||"").toLowerCase();
     const hanya=tokenInfo.hanyaRegistrasiBaru;
+
     if(tipe&&tipe!=="registrasi_baru"&&tipe!=="aktivasi_baru"){
       throw new Error("Token ini bukan token registrasi pengguna baru.");
     }
+
     if(hanya!==undefined&&hanya!==true){
       throw new Error("Token ini bukan token registrasi pengguna baru.");
     }
 
-    // === BUAT AKUN AUTH - DENGAN CEK EMAIL SUDAH ADA ===
-    btn.textContent="Membuat akun...";
-    let cred;
-    try{
-      cred=await createUserWithEmailAndPassword(auth,email,password);
-    }catch(authErr){
-      if(authErr.code==="auth/email-already-in-use"){
-        throw new Error("DUPLIKAT_EMAIL_AUTH");
-      }
-      throw authErr;
-    }
+    const cred=await createUserWithEmailAndPassword(auth,email,password);
     const uid=cred.user.uid;
     authCreatedUid=uid;
 
@@ -701,11 +703,11 @@ form.addEventListener("submit",async e=>{
     const tanggalBerakhir=new Date(tanggalAktivasi);
     tanggalBerakhir.setDate(tanggalBerakhir.getDate()+90);
 
-    // === TULIS USERS DENGAN TRANSACTION ID UNIK ===
     await setDoc(doc(db,"users",uid),{
       uid,
       idKonter:"FX-"+Date.now(),
       aplikasi:"Fixzy",
+
       namaKonter,
       namaPemilik,
       whatsapp,
@@ -713,45 +715,52 @@ form.addEventListener("submit",async e=>{
       nomorWa:whatsapp,
       email,
       alamat,
+
       paket:"3 Bulan",
       jenisLisensi:"Token Registrasi",
       durasi:"3 Bulan",
       harga:Number(tokenInfo.harga||0),
+
       status:"aktif",
       statusPembayaran:"free",
       masaAktif:"aktif",
+
       trial:false,
       perpanjangan:false,
       perpanjanganStatus:"none",
+
       role:"owner",
       ownerUid:uid,
+
       tokenAktivasi,
       tokenType:"registrasi_baru",
       tokenId:tokenDoc.id,
+
       createdAt:serverTimestamp(),
       tanggalDaftar:serverTimestamp(),
       tanggalAktivasi:tanggalAktivasi.toISOString(),
       tanggalBerakhir:tanggalBerakhir.toISOString(),
-      exp:tanggalBerakhir.toISOString(),
+
       device:navigator.userAgent,
-      versi:"Fixzy V1 - FIXED ANTI DOBEL",
+      versi:"Fixzy V1",
       lastLogin:null
     });
 
-    // === TANDAI TOKEN TERPAKAI ===
     await updateDoc(doc(db,"registrationTokens",tokenDoc.id),{
       used:true,
       status:"terpakai",
       usedBy:uid,
       usedByEmail:email,
-      usedByKonter:namaKonter,
       usedAt:serverTimestamp()
     });
 
     tokenLoaded=false;
     tokenData=[];
 
-    popup("Fixzy","Pendaftaran berhasil!\n\nAkun OWNER aktif 3 bulan / 90 hari.\nToken sudah ditandai TERPAKAI.\n\nSilakan login.");
+    popup(
+      "Fixzy",
+      "Pendaftaran berhasil!\n\nAkun OWNER aktif selama 3 bulan / 90 hari.\nToken registrasi sudah ditandai TERPAKAI.\n\nSilakan login sekarang."
+    );
 
     setTimeout(async()=>{
       try{await signOut(auth)}catch(_){}
@@ -763,34 +772,32 @@ form.addEventListener("submit",async e=>{
 
   }catch(err){
     console.error("REGISTER ERROR:",err);
+
     let pesan=err.message||"Terjadi kesalahan.";
 
-    if(pesan==="DUPLIKAT_EMAIL" || pesan==="DUPLIKAT_EMAIL_AUTH" || err.code==="auth/email-already-in-use"){
-      pesan="Email sudah terdaftar sebagai akun FIXZY.\nGunakan email lain atau login dengan email tersebut.\n\nJika lupa password, gunakan 'Lupa Password' di halaman login.";
-      setFieldState(fields.email,errors.email,"Email sudah terdaftar.",false);
-    }else if(pesan==="DUPLIKAT_WA"){
-      pesan="Nomor WhatsApp sudah terdaftar untuk konter lain.\nSatu nomor WA hanya untuk satu konter.\nGunakan nomor WA lain.";
-      setFieldState(fields.whatsapp,errors.whatsapp,"No WA sudah terdaftar.",false);
-    }else if(pesan==="DUPLIKAT_KONTER"){
-      pesan="Nama konter sudah terdaftar.\nGunakan nama konter lain yang unik.";
-      setFieldState(fields.namaKonter,errors.namaKonter,"Nama konter sudah ada.",false);
+    if(err.code==="auth/email-already-in-use"){
+      pesan="Email sudah digunakan.";
     }else if(err.code==="auth/invalid-email"){
       pesan="Format email tidak valid.";
     }else if(err.code==="auth/weak-password"){
-      pesan="Password terlalu lemah, minimal 6 karakter kombinasi huruf dan angka.";
+      pesan="Password terlalu lemah.";
     }else if(err.code==="permission-denied"){
-      pesan="Firebase menolak akses. Pastikan Rules Firestore sudah di-PUBLISH di project fixzy-update.";
+      pesan="Firebase menolak akses ke registrationTokens. Pastikan Rules Firestore sudah di-PUBLISH pada project fixzy-update.";
     }
 
+    /*
+      Jika pembuatan Auth berhasil tetapi penulisan users gagal,
+      akun Auth tetap ada. Tidak menghapus akun otomatis agar tidak
+      berisiko menghapus akun yang sudah terbentuk.
+    */
     if(authCreatedUid){
-      console.warn("Auth sudah dibuat UID:",authCreatedUid," tapi gagal tulis users - akun akan tetap ada, cek manual");
+      console.warn("Auth sudah dibuat dengan UID:",authCreatedUid);
     }
 
     popup("Gagal Registrasi",pesan);
 
   }finally{
     resetFormState();
-    btn.textContent="Daftar Sekarang";
   }
 });
 </script>
