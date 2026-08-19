@@ -10,45 +10,87 @@
 <style>
 *{box-sizing:border-box}
 body{margin:0;background:#f1f5f9;color:#111827;font-family:Inter,system-ui,Arial,sans-serif}
-header{background:#111827;color:#fff;padding:10px 14px;display:flex;align-items:center;gap:12px;position:sticky;top:0;z-index:100;border-bottom:2px solid #facc15;min-height:68px}
+body.dark{background:#0f172a;color:#e5e7eb}
+header{background:#111827;color:#fff;padding:10px 14px;display:flex;align-items:center;gap:12px;position:sticky;top:0;z-index:100;border-bottom:2px solid #facc15;box-shadow:0 1px 6px rgba(15,23,42,.18);min-height:68px}
 .logo{width:52px;height:52px;background:#000;border-radius:14px;display:flex;align-items:center;justify-content:center;border:2px solid #facc15;overflow:hidden;flex:0 0 52px}
+.logo img{width:100%;height:100%;object-fit:contain;padding:4px;background:#000;display:block}
+.brand{line-height:1.15;min-width:0}
+.brand b{color:#fff;font-weight:900;font-size:18px;white-space:nowrap}
+.brand small{display:block;margin-top:4px;color:#94a3b8;font-size:11px;font-weight:700}
+.header-actions{margin-left:auto;display:flex;gap:8px;align-items:center}
+.btn{padding:9px 14px;border-radius:12px;font-weight:800;font-size:12px;border:2px solid #111827;cursor:pointer;display:inline-flex;align-items:center;gap:6px}
+.btn-refresh,.btn-moon{background:#1e293b;color:#fff;border-color:#334155}
+.btn-moon{width:44px;height:44px;justify-content:center;font-size:18px}
 main{max-width:1400px;margin:auto;padding:12px}
 .sales-summary{width:100%;min-height:72px;display:flex;align-items:center;gap:10px;padding:14px 18px;margin:0 0 14px;background:#fff;border:2px solid #111827;border-radius:16px;box-shadow:5px 5px 0 #111827;color:#64748b;font-size:13px}
+.sales-summary .sum-income{color:#047857;font-weight:900}
 .toolbar{display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap}
-.search{flex:1;min-width:260px;background:#fff;border:2px solid #111827;padding:11px 14px;border-radius:12px;box-shadow:2px 2px 0 #111827}
+.search{flex:1;min-width:260px;background:#fff;border:2px solid #111827;padding:11px 14px;border-radius:12px;font-weight:600;box-shadow:2px 2px 0 #111827;outline:none}
 select.filter{background:#fff;border:2px solid #111827;padding:11px 14px;border-radius:12px;font-weight:700;min-width:150px;box-shadow:2px 2px 0 #111827}
 .excel-wrap{background:#fff;border:2px solid #111827;border-radius:16px;overflow:auto;box-shadow:4px 4px 0 #111827;max-height:75vh}
 table{width:100%;border-collapse:collapse;min-width:1100px}
-th{background:#111827;color:#fff;font-size:10px;font-weight:900;text-transform:uppercase;padding:12px 10px;position:sticky;top:0;text-align:left}
+th{background:#111827;color:#fff;font-size:10px;font-weight:900;text-transform:uppercase;padding:12px 10px;white-space:nowrap;position:sticky;top:0;z-index:10;text-align:left}
 td{padding:10px;border-bottom:1px solid #e5e7eb;font-size:11.5px;vertical-align:top}
+tr:hover td{background:#fffbeb}
 .badge{padding:3px 8px;border-radius:999px;font-size:9px;font-weight:900;border:1px solid #111827;display:inline-block}
-.badge.masuk{background:#fff}.badge.tagihan{background:#fef3c7}.badge.tunai{background:#facc15}.badge.batal{background:#111827;color:#fff}.badge.lunas{background:#dcfce7}
-.btn-lihat{background:#facc15;color:#000;border:2px solid #111827;padding:6px 12px;border-radius:8px;font-weight:900;font-size:11px;cursor:pointer}
+.badge.masuk{background:#fff;color:#111827}.badge.tagihan{background:#fef3c7;color:#92400e}.badge.tunai{background:#facc15;color:#000}.badge.batal{background:#111827;color:#fff}.badge.lunas{background:#dcfce7;color:#15803d}
+.btn-lihat{background:#facc15;color:#000;border:2px solid #111827;padding:6px 12px;border-radius:8px;font-weight:900;font-size:11px;cursor:pointer;box-shadow:1px 1px 0 #111827}
 .btn-sm{padding:6px 9px;border-radius:9px;font-size:10px;font-weight:900;border:1px solid #111827;cursor:pointer;margin:2px}
-.prod-chip{display:inline-block;background:#fef9c3;border:1px solid #facc15;padding:3px 6px;border-radius:6px;margin:2px;font-size:10px;font-weight:700}
+.btn-sm.edit{background:#111827;color:#fff}.btn-sm.masuk{background:#fff;color:#111827}.btn-sm.tagihan{background:#fef3c7;color:#92400e}.btn-sm.tunai{background:#facc15;color:#000}.btn-sm.batal{background:#fff;color:#ef4444;border-color:#ef4444}
 .modal,.wa-modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.68);z-index:200;align-items:center;justify-content:center;padding:12px}
 .modal.show,.wa-modal.show{display:flex}
 .modal-box{width:min(680px,100%);max-height:92vh;overflow:auto;background:#fff;border:3px solid #111827;border-radius:18px;box-shadow:8px 8px 0 #111827}
+.modal-head{position:sticky;top:0;z-index:5;padding:14px 16px;background:#111827;color:#fff;display:flex;justify-content:space-between;align-items:center;border-bottom:2px solid #facc15}
+.modal-body{padding:16px}
+.close-x{background:#facc15;color:#000;border:2px solid #000;width:40px;height:40px;border-radius:10px;font-weight:900;font-size:20px;cursor:pointer}
+.section-title{font-size:10px;font-weight:900;text-transform:uppercase;background:#fff;padding:6px 10px;border-radius:8px;border:1px solid #111827;border-left:4px solid #facc15;width:fit-content;margin:0 0 8px}
+.info-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px}.info{background:#f8fafc;border:2px solid #111827;border-radius:10px;padding:10px}.info .k{font-size:9px;color:#64748b;font-weight:800;text-transform:uppercase}.info .v{font-size:13px;font-weight:800;margin-top:3px}
+.product{background:#fff;border:2px solid #111827;border-radius:12px;padding:10px 12px;display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:8px;box-shadow:2px 2px 0 #111827}.product-price{background:#facc15;padding:5px 9px;border-radius:8px;font-weight:900;border:1px solid #111827;font-size:12px;color:#000;white-space:nowrap}
+.summary-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-top:10px}.summary{border:2px solid #111827;border-radius:10px;padding:10px;box-shadow:2px 2px 0 #111827;text-align:left}.summary.black{background:#111827;color:#fff}.summary.yellow{background:#fffbeb}.summary.white{background:#fff}
+.status-msg{font-size:11px;color:#64748b;margin:8px 0}
+.wa-box{background:#fff;border:3px solid #111827;border-radius:16px;box-shadow:8px 8px 0 #111827;padding:16px;width:min(560px,100%);max-height:90vh;overflow:auto}
+.wa-text{margin-top:10px;padding:11px;border:1px solid #e2e8f0;border-radius:10px;background:#f8fafc;white-space:pre-wrap;font-size:11.5px;max-height:220px;overflow:auto}
+.barcode{font-family:monospace;font-size:10px;background:#111827;color:#facc15;padding:3px 6px;border-radius:6px;display:inline-block;margin-top:4px}
+.prod-chip{display:inline-block;background:#fef9c3;border:1px solid #facc15;padding:3px 6px;border-radius:6px;margin:2px;font-size:10px;font-weight:700}
+.cards{display:none;gap:10px;margin-top:12px}
+.penj-card{background:#fff;border:2px solid #111827;border-radius:14px;box-shadow:4px 4px 0 #111827;padding:12px}
+.penj-card .top{display:flex;justify-content:space-between;gap:8px;margin-bottom:8px}
+.penj-card .row{display:flex;justify-content:space-between;gap:8px;padding:4px 0;border-bottom:1px dashed #e5e7eb;font-size:11px}
+.penj-card .row b{font-size:11px;max-width:60%;text-align:right}
+.penj-card .foot{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px}
+@media(max-width:900px){ .excel-wrap{display:none} .cards{display:grid} }
 </style>
 </head>
 <body>
 <header>
-<div class="logo"><img src="logo.png"></div>
-<div><b>FIXZY - DATA PENJUALAN</b><br><small id="konterInfo" style="color:#94a3b8">Memuat...</small></div>
-<div style="margin-left:auto"><button onclick="location.reload()" style="background:#1e293b;color:#fff;padding:9px 14px;border-radius:12px">↻ Refresh</button></div>
+<div class="logo"><img src="logo.png" alt="logo"></div>
+<div class="brand"><b>FIXZY - DATA PENJUALAN</b><small id="konterInfo">Memuat...</small></div>
+<div class="header-actions">
+<button class="btn btn-refresh" onclick="location.reload()">↻ Refresh</button>
+<button class="btn btn-moon" onclick="document.body.classList.toggle('dark')">🌙</button>
+</div>
 </header>
 <main>
-<div class="sales-summary" id="salesSummary">Memuat...</div>
+<div class="sales-summary" id="salesSummary">Memuat data penjualan...</div>
 <div class="toolbar">
-<input id="q" class="search" placeholder="Cari nota, nama, WA, produk (ref Data Servis)...">
-<select id="f" class="filter"><option value="">Semua Status</option><option value="masuk">Masuk</option><option value="tagihan">Tagihan</option><option value="tunai">Tunai</option><option value="batal">Batal</option></select>
-<input id="fTanggal" type="date" class="filter">
+<input id="q" class="search" placeholder="Cari nota, nama, WA, produk...">
+<select id="f" class="filter"><option value="">Semua Status</option><option value="masuk">Masuk</option><option value="tagihan">Tagihan</option><option value="tunai">Tunai / Lunas</option><option value="batal">Batal</option></select>
+<input id="fTanggal" type="date" class="filter" style="min-width:140px">
 </div>
-<div id="statusMsg" style="font-size:11px;color:#64748b;margin-bottom:8px">Produk pakai referensi Data Servis</div>
-<div class="excel-wrap"><table><thead><tr><th>Tanggal</th><th>Nota & Barcode</th><th>Pelanggan</th><th>Produk (Ref Servis)</th><th>Total</th><th>Pendapatan</th><th>Aksi</th></tr></thead><tbody id="tbody"></tbody></table></div>
+<div class="status-msg" id="statusMsg">Menunggu login...</div>
+<div class="excel-wrap"><table><thead><tr><th>Tanggal</th><th>Nota & Barcode</th><th>Pelanggan & WA</th><th>Produk (Ref Servis)</th><th>Total / Diskon / DP / Sisa</th><th>Pendapatan (Tunai)</th><th>Status & Aksi</th></tr></thead><tbody id="tbody"></tbody></table></div>
+<div class="cards" id="cards"></div>
 </main>
-<div class="modal" id="detailModal"><div class="modal-box"><div style="background:#111827;color:#fff;padding:14px;display:flex;justify-content:space-between"><b id="detailNota">Nota</b><button onclick="document.getElementById('detailModal').classList.remove('show')" style="background:#facc15">×</button></div><div id="detailBody" style="padding:16px"></div></div></div>
-<div class="wa-modal" id="waModal"><div style="background:#fff;border:3px solid #111827;border-radius:16px;padding:16px;width:min(560px,100%)"><div id="waInfo"></div><div id="waText" style="white-space:pre-wrap;background:#f8fafc;padding:10px;border-radius:10px;margin-top:10px"></div><div style="display:flex;gap:8px;margin-top:12px"><a id="waLinkBtn" href="#" target="_blank" style="flex:1;text-align:center;padding:11px;background:#25D366;color:#fff;border-radius:10px;text-decoration:none;font-weight:900">📲 Buka WhatsApp</a><button onclick="document.getElementById('waModal').classList.remove('show')">Tutup</button></div></div></div>
+<div class="modal" id="detailModal"><div class="modal-box"><div class="modal-head"><div><b id="detailNota">Nota -</b><br><small id="detailTanggal">-</small></div><button class="close-x" onclick="document.getElementById('detailModal').classList.remove('show')">×</button></div><div class="modal-body" id="detailBody"></div></div></div>
+<div class="wa-modal" id="waModal"><div class="wa-box">
+<div style="background:#111827;color:#fff;margin:-16px -16px 12px;padding:12px 16px;border-radius:13px 13px 0 0;font-weight:900;display:flex;justify-content:space-between"><span>📲 WA - Status Berubah</span><button class="close-x" style="width:30px;height:30px;font-size:14px" onclick="document.getElementById('waModal').classList.remove('show')">×</button></div>
+<div id="waInfo" style="font-size:12px;line-height:1.5"></div>
+<div class="wa-text" id="waText"></div>
+<div style="display:flex;gap:7px;flex-wrap:wrap;margin-top:12px">
+<a id="waLinkBtn" href="#" target="_blank" style="flex:1;text-align:center;padding:11px;background:#25D366;color:#fff;border-radius:10px;text-decoration:none;font-weight:900;border:2px solid #111827">📲 Buka WhatsApp</a>
+<button onclick="navigator.clipboard.writeText(document.getElementById('waText').textContent)" style="padding:10px;background:#fff;border:2px solid #111827;border-radius:10px">📋 Salin</button>
+</div>
+</div></div>
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js";
 import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-auth.js";
@@ -60,39 +102,50 @@ const $=id=>document.getElementById(id);
 const esc=s=>String(s??"").replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const money=n=>"Rp "+(Number(n)||0).toLocaleString("id-ID");
 const num=v=>{const n=Number(v);return isFinite(n)?n:0;}
-// ===== REF DATA SERVIS UNTUK PRODUK =====
+const dateValue=r=>String(r.tanggal||r.createdAt||"").slice(0,10);
+// ===== FIX REF DATA SERVIS =====
 function parseProduk(r){
-  const candidates=[r.penggunaanProduk,r.produkDigunakan,r.produk,r.items,r.produkList,r.sparepartList,r.namaProduk];
+  const candidates=[r.penggunaanProduk,r.produkDigunakan,r.produkYangDigunakan,r.sparepart,r.spareparts,r.produk,r.items,r.produkList,r.sparepartList,r.namaProduk];
   let found=null;
   for(let c of candidates){if(c && (Array.isArray(c)?c.length>0:String(c).trim()!==""&&String(c)!=="-")){found=c;break;}}
   if(!found) return {text:"-",list:[],has:false};
-  if(typeof found==="string") return {text:found,list:[{nama:found,qty:1}],has:true};
+  if(typeof found==="string") return {text:found,list:[{nama:found,qty:1,subtotal:0}],has:true};
   if(Array.isArray(found)){
-    const list=found.map(it=>typeof it==="string"?{nama:it,qty:1}:{nama:it.nama||it.namaProduk||"-",qty:Number(it.qty||1),subtotal:Number(it.subtotal||0)}).filter(x=>x.nama!=="-");
+    const list=found.map(it=>{
+      if(typeof it==="string") return {nama:it,qty:1,subtotal:0};
+      return {nama:it.nama||it.namaProduk||"-",qty:Number(it.qty||1),harga:Number(it.harga||0),subtotal:Number(it.subtotal||0),barcode:it.barcode||""};
+    }).filter(x=>x.nama!=="-");
     return {text:list.map(x=>`${x.nama}${x.qty>1?` x${x.qty}`:""}`).join(", "),list,has:true};
   }
   return {text:"-",list:[],has:false};
 }
 function getProdukText(r){return parseProduk(r).text;}
-function getProdukChips(r){const p=parseProduk(r);if(!p.has) return '-';return p.list.map(x=>`<span style="display:inline-block;background:#fef9c3;border:1px solid #facc15;padding:2px 6px;border-radius:6px;margin:2px;font-size:10px">${x.nama}</span>`).join("");}
+function getProdukChips(r){const p=parseProduk(r);if(!p.has) return '-';return p.list.map(x=>`<span class="prod-chip">${x.nama}${x.qty>1?` x${x.qty}`:""}</span>`).join("");}
 function getNamaPel(r){return r.pelanggan?.nama||r.nama||"-";}
 function getWa(r){return r.pelanggan?.wa||r.noHp||"";}
 function getNota(r){return r.nomorNota||"-";}
 function getStatus(r){return String(r.status||"masuk").toLowerCase();}
 function getTotal(r){return num(r.total||0);}
+function getDiskon(r){return num(r.diskon||0);}
+function getDP(r){return num(r.dp||0);}
+function getSisa(r){return num(r.sisa||0);}
+function getModal(r){return num(r.modal||0);}
+function getPendapatan(r){const st=getStatus(r);if(!["tunai","lunas","diambil"].includes(st)) return 0;const total=getTotal(r);const modal=getModal(r);return modal>0?Math.max(0,total-modal):total-getDiskon(r);}
 function nomorWA(v){let s=String(v||"").replace(/[^0-9]/g,"");if(!s) return "";if(s.startsWith("0")) s="62"+s.slice(1);else if(s.startsWith("8")) s="62"+s;return s;}
-async function loadProfile(user){const snap=await getDoc(doc(db,"users",user.uid));profile=snap.data()||{};ownerUid=(profile.role==="owner"||profile.isOwner)?user.uid:(profile.ownerUid||user.uid);uid=user.uid;document.getElementById('konterInfo').textContent=profile.namaKonter||"FIXZY";}
-async function getOwnedPenjualan(){const map=new Map();async function ambil(f,val){try{const q=query(collection(db,"penjualan"),where(f,"==",val));const s=await getDocsFromServer(q);s.docs.forEach(d=>map.set(d.id,{id:d.id,...d.data()}));}catch(e){} }await ambil("ownerUid",ownerUid);return [...map.values()];}
-async function muatSemua(){const rows=await getOwnedPenjualan();allRows=rows;render();}
+function konterNm(){return profile.namaKonter||"FIXZY";}
+async function loadProfile(user){const snap=await getDoc(doc(db,"users",user.uid));profile=snap.data()||{};ownerUid=(profile.role==="owner"||profile.isOwner)?user.uid:(profile.ownerUid||user.uid);uid=user.uid;$("konterInfo").textContent=profile.namaKonter||"FIXZY";}
+async function getOwnedPenjualan(){const map=new Map();async function ambil(f,v){try{const q=query(collection(db,"penjualan"),where(f,"==",v));const s=await getDocsFromServer(q);s.docs.forEach(d=>map.set(d.id,{id:d.id,...d.data()}));}catch(e){}}await ambil("ownerUid",ownerUid);return [...map.values()];}
+async function muatSemua(){const rows=await getOwnedPenjualan();allRows=rows;render();$("salesSummary").innerHTML=`Total ${rows.length} transaksi • Pendapatan <b style="color:#047857">${money(rows.reduce((s,r)=>s+getPendapatan(r),0))}</b>`;$("statusMsg").textContent=`✅ ${rows.length} data • Produk ref Data Servis`;}
 function render(){
-  const q=(document.getElementById('q').value||"").toLowerCase();
-  const f=(document.getElementById('f').value||"").toLowerCase();
+  const q=($("q").value||"").toLowerCase();const f=($("f").value||"").toLowerCase();
   const filtered=allRows.filter(r=>{const prod=getProdukText(r).toLowerCase();const hay=[getNota(r),getNamaPel(r),prod].join(" ").toLowerCase();if(q&&!hay.includes(q)) return false;if(f&&getStatus(r)!==f) return false;return true;});
-  document.getElementById('tbody').innerHTML=filtered.map(r=>`<tr><td>${r.tanggal||""}</td><td><b>${getNota(r)}</b></td><td>${getNamaPel(r)}<br><small>${getWa(r)}</small></td><td>${getProdukChips(r)}</td><td>${money(getTotal(r))}</td><td>${money(getTotal(r))}</td><td><button onclick="lihat('${r.id}')" style="background:#facc15;padding:6px 10px;border-radius:8px">Lihat</button></td></tr>`).join("");
+  $("tbody").innerHTML=filtered.map(r=>`<tr><td>${r.tanggal||""}</td><td><b>${getNota(r)}</b><br><span class="barcode">${r.barcode||""}</span></td><td>${getNamaPel(r)}<br><small>${getWa(r)}</small></td><td>${getProdukChips(r)}</td><td>Total: ${money(getTotal(r))}<br>Sisa: ${money(getSisa(r))}</td><td style="color:#047857;font-weight:900">${money(getPendapatan(r))}</td><td><span class="badge ${getStatus(r)}">${getStatus(r)}</span><br><button class="btn-lihat" onclick="lihat('${r.id}')">Lihat</button></td></tr>`).join("");
+  $("cards").innerHTML=filtered.map(r=>`<div class="penj-card"><div class="top"><b>${getNota(r)}</b><span class="badge ${getStatus(r)}">${getStatus(r)}</span></div><div class="row"><span>Pelanggan</span><b>${getNamaPel(r)}</b></div><div class="row"><span>Produk</span><b>${getProdukText(r)}</b></div><div class="row"><span>Total</span><b>${money(getTotal(r))}</b></div><div class="foot"><button class="btn-lihat" style="width:100%" onclick="lihat('${r.id}')">Lihat</button></div></div>`).join("");
 }
-window.lihat=id=>{const r=allRows.find(x=>x.id===id);document.getElementById('detailNota').textContent=getNota(r);document.getElementById('detailBody').innerHTML=`Produk: ${getProdukChips(r)}<br>Total: ${money(getTotal(r))}<br><br><button onclick="setStatus('${r.id}','tunai')" style="background:#facc15;padding:8px;border-radius:8px">Tunai</button> <button onclick="kirimWA('${r.id}')">WA</button>`;document.getElementById('detailModal').classList.add('show');}
-window.setStatus=async(id,st)=>{const r=allRows.find(x=>x.id===id);await updateDoc(doc(db,"penjualan",id),{status:st});const pesan=`Halo Kak ${getNamaPel(r)} Produk: ${getProdukText(r)} Status: ${st} - ${r.nomorNota}`;const wa=nomorWA(getWa(r));document.getElementById('waInfo').textContent=`Kirim ke ${wa}`;document.getElementById('waText').textContent=pesan;document.getElementById('waLinkBtn').href="https://wa.me/"+wa+"?text="+encodeURIComponent(pesan);document.getElementById('waModal').classList.add('show');}
-window.kirimWA=id=>{const r=allRows.find(x=>x.id===id);const pesan=`Halo Kak ${getNamaPel(r)} Nota ${getNota(r)} Produk ${getProdukText(r)}`;const wa=nomorWA(getWa(r));document.getElementById('waText').textContent=pesan;document.getElementById('waLinkBtn').href="https://wa.me/"+wa+"?text="+encodeURIComponent(pesan);document.getElementById('waModal').classList.add('show');}
+function buildPesanWA(r,st){return `Halo Kak ${getNamaPel(r)} 👋%0AStatus ${getNota(r)} di ${konterNm()} jadi ${st.toUpperCase()}%0AProduk: ${getProdukText(r)}%0ATotal: ${money(getTotal(r))}`;}
+window.lihat=id=>{const r=allRows.find(x=>x.id===id);document.getElementById('detailNota').textContent=getNota(r);document.getElementById('detailBody').innerHTML=`<div class="product"><span>${getProdukChips(r)}</span><span class="product-price">${money(getTotal(r))}</span></div><br><button class="btn-sm tunai" onclick="setStatus('${r.id}','tunai')">Tunai</button> <button class="btn-sm" onclick="kirimWA('${r.id}')">WA</button>`;document.getElementById('detailModal').classList.add('show');}
+window.setStatus=async(id,st)=>{const r=allRows.find(x=>x.id===id);await updateDoc(doc(db,"penjualan",id),{status:st,updatedAt:serverTimestamp()});const wa=nomorWA(getWa(r));const pesan=`Halo Kak ${getNamaPel(r)} Nota ${getNota(r)} jadi ${st} Produk: ${getProdukText(r)}`;document.getElementById('waInfo').innerHTML=`Status ${st} disimpan ✅ ke ${getNamaPel(r)}`;document.getElementById('waText').textContent=pesan;document.getElementById('waLinkBtn').href="https://wa.me/"+wa+"?text="+encodeURIComponent(pesan);document.getElementById('waModal').classList.add('show');}
+window.kirimWA=id=>{const r=allRows.find(x=>x.id===id);const wa=nomorWA(getWa(r));const pesan=`Halo Kak ${getNamaPel(r)} Nota ${getNota(r)} Produk ${getProdukText(r)}`;document.getElementById('waText').textContent=pesan;document.getElementById('waLinkBtn').href="https://wa.me/"+wa+"?text="+encodeURIComponent(pesan);document.getElementById('waModal').classList.add('show');}
 onAuthStateChanged(auth,async u=>{if(!u){location.replace("login.html");return;}await loadProfile(u);await muatSemua();});
 document.getElementById('q').addEventListener('input',render);
 document.getElementById('f').addEventListener('change',render);
