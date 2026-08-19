@@ -100,8 +100,8 @@ function buildPesanWA(r,newStatus){const namaKonter=konterName(),nama=getNama(r)
 
 function bukaWhatsApp(nomor,pesan){
  if(!nomor)return;
- const teks=encodeURIComponent(pesan||"");
- const waUrl="https://api.whatsapp.com/send?phone="+encodeURIComponent(nomor)+"&text="+teks;
+ const msg=encodeURIComponent(pesan||"");
+ const waUrl="https://wa.me/"+nomor+"?text="+msg;
  try{
    const win=window.open(waUrl,"_blank");
    if(!win){
