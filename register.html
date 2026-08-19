@@ -583,97 +583,6 @@ function validasiToken(){
   return false;
 }
 
-
-/* =========================
-   CEK DATA DUPLIKAT AKUN LAMA
-   =========================
-   Semua data identitas yang sudah pernah tersimpan di users
-   diperiksa sebelum Firebase Auth membuat akun baru.
-*/
-function normText(v){
-  return cleanSpaces(String(v||"")).toLowerCase();
-}
-
-function normEmail(v){
-  return String(v||"").trim().toLowerCase();
-}
-
-async function cekDuplikatAkun({namaKonter,namaPemilik,whatsapp,email,alamat}){
-  const snap=await getDocs(collection(db,"users"));
-
-  const target={
-    namaKonter:normText(namaKonter),
-    namaPemilik:normText(namaPemilik),
-    whatsapp:normalisasiWhatsapp(whatsapp),
-    email:normEmail(email),
-    alamat:normText(alamat)
-  };
-
-  for(const d of snap.docs){
-    const data=d.data()||{};
-
-    const oldNamaKonter=normText(
-      data.namaKonter||data.namaToko||data.tokoName||""
-    );
-
-    const oldNamaPemilik=normText(
-      data.namaPemilik||data.pemilik||data.ownerName||""
-    );
-
-    const oldWhatsapp=normalisasiWhatsapp(
-      data.whatsapp||data.noWa||data.nomorWa||data.phone||""
-    );
-
-    const oldEmail=normEmail(data.email||"");
-
-    const oldAlamat=normText(
-      data.alamat||data.address||""
-    );
-
-    if(target.namaKonter && oldNamaKonter===target.namaKonter){
-      return {
-        ok:false,
-        field:"namaKonter",
-        message:"Nama konter sudah terdaftar. Gunakan nama konter lain."
-      };
-    }
-
-    if(target.namaPemilik && oldNamaPemilik===target.namaPemilik){
-      return {
-        ok:false,
-        field:"namaPemilik",
-        message:"Nama pemilik sudah terdaftar. Gunakan nama pemilik lain."
-      };
-    }
-
-    if(target.whatsapp && oldWhatsapp===target.whatsapp){
-      return {
-        ok:false,
-        field:"whatsapp",
-        message:"Nomor WhatsApp sudah terdaftar. Gunakan nomor WhatsApp lain."
-      };
-    }
-
-    if(target.email && oldEmail===target.email){
-      return {
-        ok:false,
-        field:"email",
-        message:"Email sudah terdaftar. Gunakan email lain."
-      };
-    }
-
-    if(target.alamat && oldAlamat===target.alamat){
-      return {
-        ok:false,
-        field:"alamat",
-        message:"Alamat sudah terdaftar. Periksa kembali alamat yang digunakan."
-      };
-    }
-  }
-
-  return {ok:true};
-}
-
 /* =========================
    SUBMIT
    ========================= */
@@ -724,68 +633,6 @@ form.addEventListener("submit",async e=>{
   let authCreatedUid=null;
 
   try{
-    /* ========================================================
-       CEK DUPLIKAT DATA AKUN LAMA
-       Dilakukan SEBELUM createUserWithEmailAndPassword agar
-       tidak membuat akun Auth baru jika identitas sudah ada.
-       ======================================================== */
-    let cekDuplikat;
-
-    try{
-      cekDuplikat=await cekDuplikatAkun({
-        namaKonter,
-        namaPemilik,
-        whatsapp,
-        email,
-        alamat
-      });
-    }catch(checkErr){
-      console.error("CEK DATA AKUN LAMA:",checkErr);
-
-      if(checkErr?.code==="permission-denied"){
-        throw new Error(
-          "Data akun lama belum dapat diverifikasi. Pastikan Firestore Rules mengizinkan pembacaan collection users, lalu coba lagi."
-        );
-      }
-
-      throw new Error(
-        "Data akun lama belum dapat diverifikasi. Periksa koneksi Firebase lalu coba lagi."
-      );
-    }
-
-    if(!cekDuplikat.ok){
-      const fieldMap={
-        namaKonter:"namaKonter",
-        namaPemilik:"namaPemilik",
-        whatsapp:"whatsapp",
-        email:"email",
-        alamat:"alamat"
-      };
-
-      const fieldEl=fields[fieldMap[cekDuplikat.field]];
-      const errorEl=errors[fieldMap[cekDuplikat.field]];
-
-      if(fieldEl && errorEl){
-        setFieldState(
-          fieldEl,
-          errorEl,
-          cekDuplikat.message,
-          false
-        );
-      }
-
-      popup("Data Sudah Terdaftar",cekDuplikat.message);
-      return;
-    }
-
-    /* ========================================================
-       VERIFIKASI TOKEN
-       Tetap menggunakan registrationTokens seperti sistem asli.
-       ======================================================== */
-    const q=query(
-      collection(db,"registrationTokens"),
-      where("token","==",tokenAktivasi)
-    );
     const q=query(
       collection(db,"registrationTokens"),
       where("token","==",tokenAktivasi)
@@ -935,7 +782,7 @@ form.addEventListener("submit",async e=>{
     }else if(err.code==="auth/weak-password"){
       pesan="Password terlalu lemah.";
     }else if(err.code==="permission-denied"){
-      pesan="Firebase menolak akses Firestore. Pastikan Rules Firestore untuk users dan registrationTokens sudah di-PUBLISH pada project fixzy-update.";
+      pesan="Firebase menolak akses ke registrationTokens. Pastikan Rules Firestore sudah di-PUBLISH pada project fixzy-update.";
     }
 
     /*
