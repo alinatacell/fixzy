@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>FIXZY | Data Servis - EDIT STATUS + WA + RESPONSIVE</title>
+<title>FIXZY | Data Servis - EDIT STATUS + WA + RESPONSIVE + SCAN BARCODE</title>
 <style>
 *{box-sizing:border-box} :root{--black:#111827;--yellow:#facc15;--bg:#eef2f6;--green:#047857}
 body{margin:0;background:var(--bg);color:#111827;font-family:Arial,Helvetica,sans-serif}
@@ -14,10 +14,11 @@ header{background:#111827;color:#fff;padding:10px 14px;position:sticky;top:0;z-i
 .header-right{margin-left:auto;display:flex;gap:8px;align-items:center}
 .btn{padding:9px 14px;border-radius:12px;font-weight:800;font-size:12px;border:2px solid #111827;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:6px}
 .btn-refresh{background:#1e293b;color:#fff;border-color:#334155}.btn-moon{background:#1e293b;color:#fff;border-color:#334155;width:44px;height:44px;padding:0;font-size:18px}
+.btn-scan{background:#facc15;color:#111827;border-color:#111827}
 main{max-width:1280px;margin:auto;padding:14px}
 .card{background:#fff;border:2px solid var(--black);border-radius:14px;box-shadow:4px 4px 0 var(--black);margin-bottom:14px;padding:12px 14px}
 .dataStats{padding:12px 14px;font-size:13px}.income{color:var(--green);font-weight:900}
-.search-grid{display:grid;grid-template-columns:1.4fr .9fr .7fr;gap:10px;align-items:end}
+.search-grid{display:grid;grid-template-columns:1.4fr .9fr .7fr auto;gap:10px;align-items:end}
 label{font-size:11px;font-weight:900;margin-bottom:5px;display:block}
 input,select{width:100%;padding:11px;border:2px solid var(--black);border-radius:10px;background:#fff;font:inherit;box-shadow:2px 2px 0 var(--black)}
 select{height:46px;font-weight:800}
@@ -33,22 +34,20 @@ tr:hover td{background:#fffbeb}
 .actions{display:flex;gap:5px;flex-wrap:wrap}
 .barcode{font-family:monospace;font-size:11px;background:#111827;color:#facc15;padding:3px 6px;border-radius:6px;display:inline-block;margin-top:4px}
 .empty{text-align:center;color:#667085;padding:25px}
-
-/* RESPONSIVE CARD */
 .cards{display:none;gap:10px}
 .servis-card{background:#fff;border:2px solid #111827;border-radius:14px;box-shadow:4px 4px 0 #111827;padding:12px}
 .servis-card .top{display:flex;justify-content:space-between;gap:8px;margin-bottom:8px}
 .servis-card .row{display:flex;justify-content:space-between;gap:8px;padding:4px 0;border-bottom:1px dashed #e5e7eb;font-size:11px}
 .servis-card .row b{font-size:11px}
 .servis-card .foot{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px}
-
-/* POPUP */
 .popup{position:fixed;inset:0;background:#0009;display:none;align-items:center;justify-content:center;z-index:1000;padding:12px}
 .popup.show{display:flex}
 .popup-box{width:min(620px,calc(100% - 10px));max-height:92vh;overflow:auto;background:#fff;border:3px solid var(--black);border-radius:16px;box-shadow:8px 8px 0 var(--black);padding:17px}
 .popup-box h3{background:var(--black);color:#fff;margin:-17px -17px 14px;padding:13px 15px;border-radius:12px 12px 0 0}
 .status-select{margin:8px 0}
 .wa-box{margin-top:10px;padding:11px;border:1px solid #e2e8f0;border-radius:10px;background:#f8fafc;white-space:pre-wrap;font-size:11px;max-height:220px;overflow:auto}
+#scanBox{width:min(480px,calc(100% - 20px))}
+#reader{width:100%;border-radius:12px;overflow:hidden;border:2px solid #111827}
 @media(max-width:900px){
   .search-grid{grid-template-columns:1fr 1fr}
   table{min-width:900px}
@@ -60,6 +59,7 @@ tr:hover td{background:#fffbeb}
   header{padding:8px 10px}.brand b{font-size:14px}
 }
 </style>
+<script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
 </head>
 <body>
 <header>
@@ -78,8 +78,9 @@ tr:hover td{background:#fffbeb}
 <div><label>CARI NOTA / NAMA / HP</label><input id="q" placeholder="Ketik nota, nama, no HP, barcode..."></div>
 <div><label>STATUS</label><select id="fStatus"><option value="">Semua Status</option><option value="masuk">Masuk</option><option value="nunggu_sparepart">Nunggu Sparepart</option><option value="proses">Proses</option><option value="selesai">Selesai</option><option value="diambil">Diambil</option><option value="batal">Batal</option></select></div>
 <div><label>TANGGAL</label><input id="fTanggal" type="date"></div>
+<div><label>SCAN BARCODE</label><button class="btn btn-scan" onclick="bukaScan()" style="width:100%;height:46px">📷 Scan Barcode</button></div>
 </div>
-<div id="statusMsg" style="font-size:11px;color:#64748b;margin-top:8px">Menunggu login...</div>
+<div id="statusMsg" style="font-size:11px;color:#64748b;margin-top:8px">Menunggu login... • Scan barcode nota untuk cari cepat</div>
 </div>
 
 <div class="table-wrap"><table>
@@ -91,6 +92,17 @@ tr:hover td{background:#fffbeb}
 
 <div class="cards" id="cards"></div>
 </main>
+
+<!-- POPUP SCAN BARCODE - TAMBAHAN SAJA -->
+<div class="popup" id="scanPopup"><div class="popup-box" id="scanBox">
+<h3>📷 Scan Barcode Nota</h3>
+<div style="font-size:11px;color:#64748b;margin-bottom:10px">Arahkan kamera ke barcode nota. Data tidak dirubah, hanya mencari.</div>
+<div id="reader"></div>
+<div id="scanResult" style="margin-top:10px;font-size:11px;color:#047857;font-weight:900"></div>
+<div style="display:flex;gap:7px;justify-content:flex-end;margin-top:12px">
+<button class="btn secondary" onclick="tutupScan()">Tutup</button>
+</div>
+</div></div>
 
 <!-- POPUP EDIT STATUS -->
 <div class="popup" id="editPopup"><div class="popup-box">
@@ -133,7 +145,7 @@ import { getFirestore, doc, getDoc, collection, query, where, getDocs, getDocsFr
 
 const cfg={apiKey:"AIzaSyC_PcarMTT5Un7qfSLzf92o5OGn5rginsI",authDomain:"fixzy-update.firebaseapp.com",projectId:"fixzy-update",storageBucket:"fixzy-update.firebasestorage.app",messagingSenderId:"995892519622",appId:"1:995892519622:web:fa41047944d8e5b35d6dc7"};
 const app=initializeApp(cfg);const auth=getAuth(app);const db=getFirestore(app);
-let uid="",ownerUid="",profile={},allRows=[],editId=null,pendingWA=null;
+let uid="",ownerUid="",profile={},allRows=[],editId=null,pendingWA=null,html5Qr=null;
 const $=id=>document.getElementById(id);
 const esc=s=>String(s??"").replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const money=n=>"Rp "+(Number(n)||0).toLocaleString("id-ID");
@@ -151,7 +163,6 @@ const getDP=r=>Number(r.dp||r.uangMuka||r.panjar||0);
 const getTotal=r=>Number(r.total||r.totalBiaya||r.estimasi?.total||0);
 function getPendapatan(r){
   if(getStatus(r)!=="diambil") return 0;
-  // pendapatan = total - diskon (atau total bersih)
   const total=getTotal(r);
   const diskon=getDiskon(r);
   return total - diskon;
@@ -167,7 +178,6 @@ function nomorWA(v){
 function konterName(){
   return profile.namaKonter||profile.namaToko||"FIXZY - "+(profile.namaPemilik||"Service HP");
 }
-
 async function loadProfile(user){
   const snap=await getDoc(doc(db,"users",user.uid));
   if(!snap.exists()) throw new Error("Profil tidak ditemukan");
@@ -203,7 +213,7 @@ async function muatSemua(){
     const totalNilai=rows.reduce((s,r)=>s+getTotal(r),0);
     const totalPendapatan=rows.reduce((s,r)=>s+getPendapatan(r),0);
     $("dataStats").innerHTML=`<b>${rows.length}</b> data servis • Total nilai ${money(totalNilai)} • Pendapatan <span class="income">${money(totalPendapatan)}</span> • Konter: ${esc(konterName())}`;
-    $("statusMsg").textContent=`✅ ${rows.length} servis - klik Edit untuk ubah status (masuk → nunggu_sparepart → proses → selesai → diambil)`;
+    $("statusMsg").textContent=`✅ ${rows.length} servis - klik Edit untuk ubah status (masuk → nunggu_sparepart → proses → selesai → diambil) • Scan barcode untuk cari cepat`;
   }catch(e){$("statusMsg").textContent="❌ "+e.message;}
 }
 function render(){
@@ -224,7 +234,6 @@ function render(){
     $("cards").innerHTML='<div class="card empty">Belum ada data</div>';
     return;
   }
-  // TABLE
   $("tbody").innerHTML=filtered.map(r=>{
     const s=getStatus(r);
     const nota=getNota(r);
@@ -252,7 +261,6 @@ function render(){
       </td>
     </tr>`;
   }).join("");
-  // CARDS RESPONSIVE
   $("cards").innerHTML=filtered.map(r=>{
     const s=getStatus(r);const nota=getNota(r);
     return `<div class="servis-card">
@@ -273,7 +281,6 @@ function render(){
     </div>`;
   }).join("");
 }
-
 function buildPesanWA(r,newStatus){
   const namaKonter=konterName();
   const nama=getNama(r);const nota=getNota(r);const tipe=getTipe(r);const kerusakan=getKerusakan(r);
@@ -296,7 +303,6 @@ function buildPesanWA(r,newStatus){
   }
   return pesan;
 }
-
 window.bukaEdit=id=>{
   const r=allRows.find(x=>x.id===id);
   if(!r) return;
@@ -315,7 +321,6 @@ window.bukaEdit=id=>{
   $("editPopup").classList.add("show");
 };
 window.closeEdit=()=>{$("editPopup").classList.remove("show");editId=null};
-
 window.simpanStatus=async()=>{
   if(!editId) return;
   const r=allRows.find(x=>x.id===editId);
@@ -325,7 +330,6 @@ window.simpanStatus=async()=>{
     await updateDoc(doc(db,"servis",editId),{status:newSt,statusTerakhir:newSt,updatedAt:serverTimestamp(), ...(newSt==="diambil"?{pendapatan:getPendapatan({...r,status:'diambil'}),tanggalDiambil:new Date().toISOString()}:{})});
     closeEdit();
     await muatSemua();
-    // Tampilkan popup WA konfirmasi
     const pesan=buildPesanWA(r,newSt);
     const waNomor=nomorWA(getWa(r));
     if(!waNomor){ alert("No WA pelanggan kosong, status sudah disimpan: "+newSt); return; }
@@ -337,7 +341,6 @@ window.simpanStatus=async()=>{
     $("waPopup").classList.add("show");
   }catch(e){alert("Gagal update status: "+e.message);}
 };
-
 window.kirimWALangsung=id=>{
   const r=allRows.find(x=>x.id===id);
   if(!r) return;
@@ -358,6 +361,32 @@ window.salinWA=async()=>{
   catch{ 
     const range=document.createRange();range.selectNode($("waText"));window.getSelection().removeAllRanges();window.getSelection().addRange(range);
     document.execCommand("copy");alert("Pesan disalin ✅");
+  }
+};
+// === TAMBAHAN SCAN BARCODE SAJA - TIDAK RUBAH DATA LAIN ===
+window.bukaScan=()=>{
+  $("scanPopup").classList.add("show");
+  $("scanResult").textContent="Menyalakan kamera...";
+  html5Qr = new Html5Qrcode("reader");
+  html5Qr.start(
+    { facingMode: "environment" },
+    { fps: 10, qrbox: { width: 250, height: 250 } },
+    (decodedText)=>{
+      $("scanResult").textContent="✅ Terdeteksi: "+decodedText;
+      $("q").value=decodedText;
+      render();
+      // auto tutup setelah 1 detik
+      setTimeout(()=>{ tutupScan(); }, 1000);
+    },
+    (err)=>{}
+  ).catch(e=>{
+    $("scanResult").textContent="❌ Gagal buka kamera: "+e;
+  });
+};
+window.tutupScan=()=>{
+  $("scanPopup").classList.remove("show");
+  if(html5Qr){
+    html5Qr.stop().then(()=>{ html5Qr.clear(); html5Qr=null; }).catch(()=>{});
   }
 };
 
