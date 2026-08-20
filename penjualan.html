@@ -638,11 +638,10 @@ onAuthStateChanged(auth, async u=>{
   document.getElementById('namaToko').textContent='Input Penjualan';
   document.getElementById('akunLoginField').value=u.email;
   try{
+    const snap=await getDocs(query(collection(db,"users"), where("__name__","==", u.uid)));
     let p=null;
-    try{ const d=await getDoc(doc(db,"users",u.uid)); if(d.exists()) p=d.data(); }catch(e){}
-    if(!p){
-      try{ const snap=await getDocs(query(collection(db,"users"), where("__name__","==", u.uid))); if(!snap.empty) p=snap.docs[0].data(); }catch(e){}
-    }
+    if(!snap.empty) p=snap.docs[0].data();
+    else{ const d=await getDoc(doc(db,"users",u.uid)); if(d.exists()) p=d.data(); }
     if(!p){
       ownerUid=u.uid; isOwner=true;
       konterName="Fixzy - A Yudi Thea";
@@ -680,45 +679,40 @@ onAuthStateChanged(auth, async u=>{
 async function loadKaryawan(){
   try{
     let list=[];
-    // FIX OWNER & KARYAWAN - query ownerUid & ownerId & uid, filter di JS (gak butuh composite index)
-    try{
-      const q=query(collection(db,"users"), where("ownerUid","==", ownerUid));
-      const s=await getDocs(q);
-      s.forEach(d=>{
-        const data=d.data();
-        const namaK = data.nama || data.namaKaryawan || data.displayName || data.name || data.email?.split('@')[0] || '';
-        if(namaK) list.push({uid:d.id, email:data.email||'', nama:namaK, asal:'users-ownerUid'});
-      });
-    }catch(e){ console.warn("ownerUid", e.message); }
-    try{
-      const q=query(collection(db,"users"), where("ownerId","==", ownerUid));
-      const s=await getDocs(q);
-      s.forEach(d=>{
-        if(list.find(x=>x.uid===d.id)) return;
-        const data=d.data();
-        const namaK = data.nama || data.namaKaryawan || data.displayName || data.name || data.email?.split('@')[0] || '';
-        if(namaK) list.push({uid:d.id, email:data.email||'', nama:namaK, asal:'users-ownerId'});
-      });
-    }catch(e){ console.warn("ownerId", e.message); }
-    try{
-      const q=query(collection(db,"users"), where("uid","==", ownerUid));
-      const s=await getDocs(q);
-      s.forEach(d=>{
-        if(list.find(x=>x.uid===d.id)) return;
-        const data=d.data();
-        const namaK = data.nama || data.namaKaryawan || data.displayName || data.name || data.email?.split('@')[0] || '';
-        if(namaK) list.push({uid:d.id, email:data.email||'', nama:namaK, asal:'users-uid'});
-      });
-    }catch(e){}
     try{
       const sK=await getDocs(collection(db,"karyawan"));
       sK.forEach(d=>{
         const data=d.data();
-        const namaK = data.nama || data.namaKaryawan || '';
-        if(namaK && !list.find(x=>x.uid===d.id)) list.push({uid:d.id, email:data.email||'', nama:namaK, asal:'karyawan'});
+        const namaK = data.nama || data.namaKaryawan || data.name || data.displayName || '';
+        if(namaK) list.push({uid:d.id, email:data.email||'', nama:namaK, asal:'karyawan'});
       });
     }catch{}
-
+    try{
+      const q=query(collection(db,"users"), where("ownerId","==", ownerUid));
+      const s=await getDocs(q);
+      s.forEach(d=>{
+        const data=d.data();
+        const namaK = data.nama || data.namaKaryawan || data.displayName || data.name || '';
+        if(namaK){
+          list.push({uid:d.id, email:data.email||'', nama:namaK, asal:'users'});
+        }else if(data.email){
+          const fallbackNama = data.email.split('@')[0];
+          list.push({uid:d.id, email:data.email, nama:fallbackNama, asal:'users-fallback'});
+        }
+      });
+    }catch{}
+    if(list.length===0){
+      try{
+        const s2=await getDocs(collection(db,"users"));
+        s2.forEach(d=>{
+          const data=d.data();
+          if((data.role||'').toLowerCase().includes('karyawan')){
+            const namaK = data.nama || data.namaKaryawan || data.displayName || data.name || data.email?.split('@')[0] || '';
+            if(namaK) list.push({uid:d.id, email:data.email||'', nama:namaK, asal:'users-all'});
+          }
+        });
+      }catch{}
+    }
     if(!list.find(x=>x.email===currentUser.email)){
       try{
         const curSnap = await getDoc(doc(db,"users", currentUser.uid));
@@ -814,11 +808,16 @@ async function loadProduk(){
     for(let col of stokCols){
       try{
         let snaps=[];
-        // FIX: query 3 field (ownerUid, uid, ownerId) biar stok punya Zaka (uid=jm3q...) kebaca owner & karyawan
-        try{ const s=await getDocs(query(collection(db,col), where("ownerUid","==", ownerUid))); if(s.size>0) snaps.push(s); }catch(e){ console.warn("stok ownerUid", e.message); }
-        try{ const s=await getDocs(query(collection(db,col), where("uid","==", ownerUid))); if(s.size>0) snaps.push(s); }catch(e){ console.warn("stok uid", e.message); }
-        try{ const s=await getDocs(query(collection(db,col), where("ownerId","==", ownerUid))); if(s.size>0) snaps.push(s); }catch(e){ console.warn("stok ownerId", e.message); }
-
+        // Coba filter owner dulu
+        try{ const s=await getDocs(query(collection(db,col), where("ownerUid","==", ownerUid))); if(s.size>0) snaps.push(s); }catch(e){}
+        try{ const s=await getDocs(query(collection(db,col), where("uid","==", ownerUid))); if(s.size>0) snaps.push(s); }catch(e){}
+        try{ const s=await getDocs(query(collection(db,col), where("ownerId","==", ownerUid))); if(s.size>0) snaps.push(s); }catch(e){}
+        // IZINKAN SEMUA: kalau hasil filter kosong atau untuk karyawan, ambil semua
+        try{
+          const allSnap=await getDocs(collection(db,col));
+          console.log(`[PENJUALAN] Total ${col}: ${allSnap.size}, filtered: ${snaps.reduce((a,s)=>a+s.size,0)}`);
+          if(allSnap.size>0) snaps.push(allSnap);
+        }catch(e){}
         
         const mapId = new Map();
         snaps.forEach(snap=>{
@@ -1110,7 +1109,16 @@ async function simpanData(cetakMode){
       createdBy:currentUser.email,
       uid:ownerUid,
       ownerId:ownerUid,
+      businessUid:ownerUid,
+      uid:ownerUid,
+      ownerId:ownerUid,
+      ownerId:ownerUid,
+      businessUid:ownerUid,
+      uid:ownerUid,
       ownerUid:ownerUid,
+      ownerId:ownerUid,
+      businessUid:ownerUid,
+      uid:ownerUid,
       createdAt:serverTimestamp(),
       updatedAt:new Date().toISOString()
     });
@@ -1598,7 +1606,11 @@ body.dark #manualToggle + label{
     digunakan oleh JavaScript/Firebase untuk menyimpan transaksi.
     Hanya tidak ditampilkan pada bagian informasi.
   -->
-  <div style="display:none"><input id="akunLoginField" readonly><input id="konterField" readonly></div>
+  <div style="display:none" aria-hidden="true">
+    <input id="akunLoginField" readonly>
+    <input id="konterField" readonly>
+    <select id="teknisiSelect"><option>Memuat karyawan...</option></select>
+  </div>
 
   <div class="info-transaksi-box">
 
@@ -1618,7 +1630,14 @@ body.dark #manualToggle + label{
     </div>
 
     <div class="info-row">
-      <span class="info-label">Barcode</span><div class="info-value info-with-button"><input id="barcodeField" readonly><button type="button" class="info-refresh-btn" onclick="regenerate()">🔄</button></div></div><div class="info-row"><span class="info-label">Nama Teknisi *</span><div class="info-value"><select id="teknisiSelect" style="text-align:left;direction:ltr"><option>Memuat...</option></select></div></div></div>
+      <span class="info-label">Barcode</span>
+      <div class="info-value info-with-button">
+        <input id="barcodeField" readonly>
+        <button type="button" class="info-refresh-btn" onclick="regenerate()" title="Buat ulang barcode">🔄</button>
+      </div>
+    </div>
+
+  </div>
 </div>
 
 <div class="card">
