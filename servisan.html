@@ -238,7 +238,31 @@ window.pilihTemplate=id=>{selectedTemplate=id;renderTemplateGrid()};window.tutup
 function setInfo(){$("infoNota").textContent=$("nomorNota").value;$("infoTanggal").textContent=$("tanggalNota").value;$("infoBarcode").textContent=$("barcode").value;}
 function hitung(){const biaya=num("biayaService"),diskon=num("diskon"),dp=num("dp");const total=Math.max(0,biaya-diskon);const sisa=Math.max(0,total-dp);$("previewTotal").textContent=rupiah(total);$("previewSisa").textContent=rupiah(sisa);return {biaya,diskon,dp,total,sisa};}
 ["biayaService","diskon","dp"].forEach(id=>$(id).addEventListener("input",hitung));
-async function loadEmployees(){employees=[];try{let all=[];try{const q1=query(collection(db,"users"),where("ownerUid","==",businessUid));const s1=await getDocs(q1);s1.forEach(d=>all.push({id:d.id,...d.data()}));}catch(e){}try{const q2=query(collection(db,"users"),where("ownerId","==",businessUid));const s2=await getDocs(q2);s2.forEach(d=>{ if(!all.find(x=>x.id===d.id)) all.push({id:d.id,...d.data()}); });}catch(e){}employees=all.filter(x=>{const r=String(x.role||"").toLowerCase();const s=String(x.status||"").toLowerCase();return (r==="employee"||r==="karyawan") && s==="aktif";});}catch(e){employees=[];}$("teknisi").innerHTML='<option value="">-- Pilih Teknisi --</option>'+employees.map(x=>`<option value="${x.id}">${esc(x.nama||x.email||x.id)}</option>`).join("");}
+async function loadEmployees(){
+  employees=[];
+  try{
+    let all=[];
+    // FIX: query 3 field biar ketemu semua varian ownerUid/ownerId/uid
+    try{ const q1=query(collection(db,"users"),where("ownerUid","==",businessUid)); const s1=await getDocs(q1); s1.forEach(d=>all.push({id:d.id,...d.data()})); }catch(e){ console.warn("ownerUid q fail", e.message); }
+    try{ const q2=query(collection(db,"users"),where("ownerId","==",businessUid)); const s2=await getDocs(q2); s2.forEach(d=>{ if(!all.find(x=>x.id===d.id)) all.push({id:d.id,...d.data()}); }); }catch(e){ console.warn("ownerId q fail", e.message); }
+    try{ const q3=query(collection(db,"users"),where("ownerUid","==",ownerUid)); const s3=await getDocs(q3); s3.forEach(d=>{ if(!all.find(x=>x.id===d.id)) all.push({id:d.id,...d.data()}); }); }catch(e){}
+    // filter di JS - status aktif optional biar tetap muncul walau status beda
+    employees=all.filter(x=>{
+      const r=String(x.role||"").toLowerCase();
+      return (r==="employee"||r==="karyawan"||r==="teknisi"||r==="kurir");
+    });
+    // kalau status ada, filter aktif tapi kalau 0 hasil, tampilkan semua
+    const aktif = employees.filter(x=>String(x.status||"aktif").toLowerCase()==="aktif");
+    if(aktif.length>0) employees=aktif;
+  }catch(e){ console.error("loadEmployees", e); employees=[]; }
+  const sel=$("teknisi");
+  if(employees.length===0){
+    sel.innerHTML='<option value="">-- Tidak ada teknisi (tambah di Izin Akses) --</option>';
+    $("accessNotice").textContent="Teknisi 0 - tambah karyawan di Izin Akses dulu, ownerUid="+businessUid;
+  }else{
+    sel.innerHTML='<option value="">-- Pilih Teknisi ('+employees.length+') --</option>'+employees.map(x=>`<option value="${x.id}">${esc(x.nama||x.namaKaryawan||x.email||x.id)}</option>`).join("");
+  }
+}
 async function loadProducts(){
   products=[];
   const docsById=new Map();
@@ -247,9 +271,10 @@ async function loadProducts(){
   // Jangan pernah mengambil seluruh collection "stok", agar akun tidak
   // bisa melihat produk milik konter/owner lain.
   const queries=[
-    query(collection(db,"stok"),where("ownerUid","==",businessUid)),
-    query(collection(db,"stok"),where("ownerId","==",businessUid))
-  ];
+      query(collection(db,"stok"),where("ownerUid","==",businessUid)),
+      query(collection(db,"stok"),where("ownerId","==",businessUid)),
+      query(collection(db,"stok"),where("uid","==",businessUid))
+    ];
 
   for(const q of queries){
     try{
@@ -294,7 +319,7 @@ async function loadProducts(){
   }
 
   products=Array.from(mapByProduct.values());
-  renderProdukInfo();
+  renderProdukInfo(); console.log("products loaded", products.length, "businessUid", businessUid); if(products.length===0){ $("produkInfo").textContent="0 produk untuk ownerUid="+businessUid+" - cek stok, pastikan stok ada uid="+businessUid; $("produkInfo").style.color="#dc2626"; }
 }
 function renderProdukInfo(){
   const info=$("produkInfo");
