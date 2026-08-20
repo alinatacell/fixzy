@@ -48,7 +48,7 @@ main{max-width:1180px;margin:auto;padding:14px 10px 70px}.card{background:#fff;b
 <div class="popup" id="popup"><div class="popup-box"><h3 id="popupTitle">Tambah Akun</h3><div class="grid">
 <div class="field"><label>NAMA</label><input id="fNama"></div>
 <div class="field"><label>ROLE</label><select id="fRole"><option value="employee">Karyawan</option><option value="reseller">Reseller</option></select></div>
-<div class="field"><label>EMAIL LOGIN</label><input id="fEmail" oninput="try{isValidEmailStrictFixzy(this.value); this.style.borderColor='#cbd5e1';}catch(e){this.style.borderColor='#ef4444';}" type="email"></div>
+<div class="field"><label>EMAIL LOGIN</label><input id="fEmail" type="email"></div>
 <div class="field"><label>NO. WA</label><input id="fWA" type="tel" maxlength="15" placeholder="08xxxxxxxxxx"></div>
 <div class="field" id="passWrap"><label id="passLabel">PASSWORD AWAL</label><input id="fPassword" type="password" placeholder="Minimal 6 karakter"></div>
 <div class="field"><label>JABATAN</label><input id="fJabatan" placeholder="Teknisi / Kasir"></div>
@@ -216,8 +216,7 @@ window.simpanAkun=async()=>{
    }
    // === BUAT BARU - FIX PERMISSIONS ===
    if(pass.length<6)return tampilNotice("⚠️ Password","Password minimal 6 karakter.");
-   isValidEmailStrictFixzy(email);
-       const accountData={ownerUid, role:r, status, nama:n, namaKaryawan:n, email, noWA:wa, wa, noWa:wa, jabatan:j, upahHarian:upah, izin, permissions:izin, tanggalDaftar:new Date().toISOString()};
+   const accountData={ownerUid, role:r, status, nama:n, namaKaryawan:n, email, noWA:wa, wa, noWa:wa, jabatan:j, upahHarian:upah, izin, permissions:izin, tanggalDaftar:new Date().toISOString()};
    const newUid=await buatAuthBaruDanTulisDokumen(email,pass,n,accountData);
    $("popup").classList.remove("show");
    const pesan=`Silahkan login\n\nNama: ${n}\nEmail: ${email}\nPassword: ${pass}\nRole: ${r}\nLink: https://fixzy-olive.vercel.app`;
@@ -233,26 +232,6 @@ window.simpanAkun=async()=>{
  }
 };
 
-
-
-// === FIX TELITI: BLOK gmail.co - THEMA TETAP, CUMA VALIDASI ===
-function isValidEmailStrictFixzy(email){
-  const e = String(email||"").trim().toLowerCase();
-  if(!e) return false;
-  if(e.endsWith('@gmail.co')){
-    throw new Error('Anda ketik '+e+' — domain gmail.co tidak ada. Harus gmail.com (pakai M). Contoh: servis@gmail.com bukan servis@gmail.co');
-  }
-  if(e.endsWith('@yahoo.co')||e.endsWith('@hotmail.co')||e.endsWith('@outlook.co')){
-    throw new Error('Domain '+e.split('@')[1]+' tidak valid. Gunakan .com');
-  }
-  if(e.includes('@gmail.') && !e.endsWith('@gmail.com')){
-    throw new Error('Gunakan @gmail.com bukan @'+e.split('@')[1]+' — Anda ketik '+e);
-  }
-  if(!/^[^@]+@[^@]+\.[^@]+$/.test(e)){
-    throw new Error('Format email tidak valid: '+e);
-  }
-  return true;
-}
 
 function nomorWhatsApp(v){
   let s=String(v||"").replace(/[^0-9]/g,"").trim();
@@ -301,24 +280,28 @@ window.salinPesanWA=async()=>{
     }
   }
 };
+// === FIX WA TIDAK TERKIRIM - cuma ini yang diubah ===
 window.kirimWhatsApp=()=>{
   const d=window._waPending;
   if(!d) return;
-  const link=window._waLink || ("https://wa.me/"+nomorWhatsApp(d.phone)+"?text="+encodeURIComponent(d.message));
-  try{
-    const win=window.open(link,"_blank","noopener");
-    if(!win){
-      // popup diblokir, pakai link langsung
-      document.getElementById("waDirectLink").click();
-    }
-  }catch(e){
-    location.href=link;
+  const nomor = nomorWhatsApp(d.phone);
+  if(!nomor){
+    $("waPopup").classList.remove("show");
+    tampilNotice("⚠️ No. WA Tidak Valid","Nomor "+esc(d.phone||"-")+" tidak valid. Gunakan 08xxxxxxxxxx");
+    return;
   }
-  document.getElementById("waPopup").classList.remove("show");
-  setTimeout(()=>{window._waPending=null;window._waLink=null;},2000);
+  const link = window._waLink || ("https://wa.me/"+nomor+"?text="+encodeURIComponent(d.message));
+  $("waPopup").classList.remove("show");
+  // anchor click biar tidak di-block popup blocker
+  const a=document.createElement('a');
+  a.href=link;
+  a.target='_blank';
+  a.rel='noopener';
+  document.body.appendChild(a);
+  a.click();
+  setTimeout(()=>{ try{a.remove();}catch{} window._waPending=null; window._waLink=null; },1000);
 };
 
-window.kirimWhatsApp=()=>{const d=window._waPending;if(!d)return;const nomor=nomorWhatsApp(d.phone);if(!nomor){$("waPopup").classList.remove("show");tampilNotice("⚠️ No. WA Tidak Valid","Nomor tidak valid.");return}const url="https://wa.me/"+nomor+"?text="+encodeURIComponent(d.message);$("waPopup").classList.remove("show");window.open(url,"_blank");window._waPending=null};
 window.kirimResetPassword=async email=>{try{if(!validEmail(email))throw new Error("Email tidak valid.");await sendPasswordResetEmail(auth,email);tampilNotice("✅ Reset Password","Link reset dikirim ke "+esc(email)+".")}catch(e){tampilNotice("❌ Reset Password",esc(e.message||e))}};
 async function init(){onAuthStateChanged(auth,async u=>{if(!u){location.replace("login.html");return}uid=u.uid;try{const s=await getDoc(doc(db,"users",uid));if(!s.exists())throw new Error("Profil Owner tidak ditemukan.");profile=s.data()||{};if(!["owner","superadmin","admin"].includes(norm(profile.role)))throw new Error("Halaman Izin Akses hanya untuk Owner.");ownerUid=norm(profile.role)==="owner"?uid:(profile.ownerUid||profile.ownerId||uid);ready=true;await loadPermissionsFromIndex();await load()}catch(e){ready=false;$("status").innerHTML=`<span class="err">🔒 ${esc(e.message||e)}</span>`;$("tbody").innerHTML='<tr><td colspan="8" class="empty">Akses tidak tersedia.</td></tr>'}})}
 window.muatSemua=async()=>{if(ready){$("status").textContent="Memuat ulang...";await load()}};
