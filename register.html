@@ -276,30 +276,77 @@ function validNamaPemilik(v){
 
 function validEmail(v){
   const x=String(v||"").trim().toLowerCase();
-  if(!x)return "Email wajib diisi.";
-  if(x.length>120)return "Email terlalu panjang.";
-  if(/\s/.test(x))return "Email tidak boleh mengandung spasi.";
-  if(!/^[A-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[A-Z0-9](?:[A-Z0-9-]{0,61}[A-Z0-9])?(?:\.[A-Z0-9](?:[A-Z0-9-]{0,61}[A-Z0-9])?)+$/i.test(x)){
-    return "Format email tidak valid. Contoh: nama@gmail.com";
-  }
+  if(!x) return "Email wajib diisi.";
+  if(x.length>120) return "Email terlalu panjang (max 120).";
+  if(x.length<6) return "Email terlalu pendek.";
+  if(/\s/.test(x)) return "Email tidak boleh mengandung spasi.";
+  if((x.match(/@/g)||[]).length!==1) return "Email harus mengandung 1 @ saja.";
+  if(x.includes('..')) return "Email tidak boleh ada titik berurutan.";
+  if(x.startsWith('.') || x.endsWith('.')) return "Email tidak boleh diawali/diakhiri titik.";
+  
+  // RFC ketat
+  const re = /^[a-z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-z0-9-]+(?:\.[a-z0-9-]+)+$/i;
+  if(!re.test(x)) return "Format email tidak valid. Contoh: nama@gmail.com";
+
+  const [local, domain] = x.split('@');
+  if(local.length>64) return "Bagian sebelum @ terlalu panjang.";
+  if(domain.length>253) return "Domain email terlalu panjang.";
+  if(!domain.includes('.')) return "Domain harus ada titik (ex: gmail.com).";
+  const tld = domain.split('.').pop();
+  if(tld.length<2 || tld.length>63) return "Ekstensi domain tidak valid.";
+  if(/^[0-9]+$/.test(tld)) return "Ekstensi domain tidak boleh angka semua.";
+  
+  // Blok email disposable / fake
+  const disposable = ['tempmail','10minutemail','guerrillamail','mailinator','yopmail','fakeemail','disposable','trashmail'];
+  if(disposable.some(d=>domain.includes(d))) return "Email disposable tidak boleh dipakai.";
+  
+  // Blok karakter aneh di domain
+  if(domain.startsWith('-') || domain.endsWith('-') || domain.includes('-.') || domain.includes('.-')) return "Format domain tidak valid.";
+
   return "";
 }
 
 function normalisasiWhatsapp(v){
-  let x=String(v||"").replace(/\D/g,"");
-  if(x.startsWith("0062"))x=x.slice(2);
-  if(x.startsWith("62"))x="0"+x.slice(2);
-  if(!x.startsWith("0") && x.startsWith("8"))x="0"+x;
+  let x=String(v||"").trim();
+  // simpan + dulu untuk deteksi
+  const hasPlus = x.startsWith('+');
+  x = x.replace(/[^0-9]/g,'');
+  if(x.startsWith('0062')) x = x.slice(2); // 0062 -> 62
+  if(x.startsWith('62')) x = '0' + x.slice(2); // 62 -> 0
+  if(!x.startsWith('0') && x.startsWith('8')) x = '0' + x; // 8xxxx -> 08xxxx
+  // 0 yang double
+  x = x.replace(/^00+/,'0');
   return x;
 }
 
 function validWhatsapp(v){
   const x=normalisasiWhatsapp(v);
-  if(!x)return {ok:false,message:"Nomor WhatsApp wajib diisi.",value:x};
-  if(!/^08\d{8,11}$/.test(x)){
-    return {ok:false,message:"Nomor WhatsApp harus 10–13 digit dan diawali 08.",value:x};
+  if(!x) return {ok:false,message:"Nomor WhatsApp wajib diisi.",value:x};
+  if(x.length<10) return {ok:false,message:"Nomor terlalu pendek (min 10 digit).",value:x};
+  if(x.length>13) return {ok:false,message:"Nomor terlalu panjang (max 13 digit).",value:x};
+  if(!/^08\d+$/.test(x)) return {ok:false,message:"Nomor harus diawali 08.",value:x};
+  if(!/^08\d{8,11}$/.test(x)) return {ok:false,message:"Nomor WhatsApp harus 10–13 digit. Contoh: 081234567890",value:x};
+  
+  // Cek nomor gak valid seperti 08000000000, 08111111111
+  if(/^0(\d)\1{7,}$/.test(x)) return {ok:false,message:"Nomor tidak valid.",value:x};
+  if(/^08(0{8,}|1{8,}|2{8,})$/.test(x)) return {ok:false,message:"Nomor tidak valid.",value:x};
+
+  // Validasi prefix Indonesia yang umum
+  const prefix = x.substring(0,4);
+  const validPrefixes = ['0811','0812','0813','0821','0822','0823','0852','0853','0851','0856','0857','0858','0814','0815','0816','0817','0818','0819','0820','0855','0859','0877','0878','0879','0881','0882','0887','0888','0895','0896','0897','0898','0899'];
+  // Boleh longgar: cukup cek 081,082,083,085,087,088,089
+  if(!/^(081|082|083|085|087|088|089|0819|0821)/.test(x) && !validPrefixes.some(p=>x.startsWith(p))) {
+    // tetap boleh tapi warning? kita ketat aja cek 08
   }
+
   return {ok:true,message:"",value:x};
+}
+
+function formatWhatsappIndo(x){
+  // 081234567890 -> +62 812-3456-7890 (untuk display)
+  if(!x) return '';
+  if(x.startsWith('0')) return '+62 ' + x.slice(1);
+  return x;
 }
 
 function validAlamat(v){
@@ -365,21 +412,23 @@ function validasiKonfirmasi(){
 fields.namaKonter.addEventListener("blur",validasiNamaKonter);
 fields.namaPemilik.addEventListener("blur",validasiNamaPemilik);
 fields.whatsapp.addEventListener("blur",validasiWhatsapp);
-fields.email.addEventListener("blur",validasiEmail);
+fields.email.addEventListener("blur",async ()=>{ if(validasiEmail()) await validasiEmailDuplikat(); });
 fields.alamat.addEventListener("blur",validasiAlamat);
 fields.password.addEventListener("blur",validasiPassword);
 fields.konfirmasi.addEventListener("blur",validasiKonfirmasi);
 
 fields.whatsapp.addEventListener("input",function(){
-  this.value=this.value.replace(/[^0-9+]/g,"");
-  /* Hanya + boleh di awal saat mengetik. */
-  if(this.value.includes("+")){
-    this.value=(this.value.startsWith("+")?"+":"")+this.value.replace(/\+/g,"");
-  }
+  let v=this.value;
+  // Auto format: +62 -> 0
+  if(v.startsWith("+62")){ v="0"+v.slice(3); }
+  if(v.startsWith("62") && v.length>2){ v="0"+v.slice(2); }
+  this.value=v.replace(/[^0-9]/g,"").slice(0,13);
+  validasiWhatsapp(false);
 });
 
 fields.email.addEventListener("input",function(){
   this.value=this.value.replace(/\s/g,"").toLowerCase();
+  if(this.value.length>5) validasiEmail(false);
 });
 
 fields.namaPemilik.addEventListener("input",function(){
@@ -390,6 +439,43 @@ document.getElementById("lihatPassword").addEventListener("click",()=>{
   const p=document.getElementById("password");
   p.type=p.type==="password"?"text":"password";
 });
+
+
+// CEK EMAIL DUPLIKAT - JANGAN ADA YANG SAMA
+async function cekEmailDuplikat(email){
+  const emailLower = email.trim().toLowerCase();
+  // Cek di users
+  const qUsers = query(collection(db,"users"), where("email","==",emailLower));
+  const snapUsers = await getDocs(qUsers);
+  if(!snapUsers.empty) return true;
+  // Cek di konter juga
+  const qKonter = query(collection(db,"konter"), where("email","==",emailLower));
+  const snapKonter = await getDocs(qKonter);
+  if(!snapKonter.empty) return true;
+  // Cek di konter ownerEmail
+  const qKonterOwner = query(collection(db,"konter"), where("ownerEmail","==",emailLower));
+  const snapKonterOwner = await getDocs(qKonterOwner);
+  if(!snapKonterOwner.empty) return true;
+  return false;
+}
+
+async function validasiEmailDuplikat(){
+  const email = fields.email.value.trim().toLowerCase();
+  if(!email) return true;
+  const msgFormat = validEmail(email);
+  if(msgFormat) return false; // format salah, skip cek duplikat
+  try{
+    const duplikat = await cekEmailDuplikat(email);
+    if(duplikat){
+      setFieldState(fields.email, errors.email, "Email sudah terdaftar, pakai email lain.", false);
+      return false;
+    }
+    return true;
+  }catch(e){
+    console.warn("Cek duplikat gagal", e);
+    return true; // kalau cek gagal, biarin lanjut (auth akan blokir kalau dobel)
+  }
+}
 
 /* =========================
    TOKEN
@@ -603,6 +689,21 @@ form.addEventListener("submit",async e=>{
   const okKonfirmasi=validasiKonfirmasi();
   const okToken=validasiToken();
 
+  // Cek duplikat email - jangan ada yang sama
+  let okDuplikat = true;
+  if(okEmail){
+    btn.disabled=true;
+    loading.style.display="block";
+    loading.textContent="Mengecek email...";
+    okDuplikat = await validasiEmailDuplikat();
+    loading.textContent="Memproses...";
+    if(!okDuplikat){
+      resetFormState();
+      popup("Email Sudah Ada","Email "+fields.email.value+" sudah terdaftar.\\nGunakan email lain atau login.");
+      return;
+    }
+  }
+
   if(!document.getElementById("setuju").checked){
     popup("Fixzy","Silakan setujui syarat dan ketentuan.");
     return;
@@ -703,9 +804,18 @@ form.addEventListener("submit",async e=>{
     const tanggalBerakhir=new Date(tanggalAktivasi);
     tanggalBerakhir.setDate(tanggalBerakhir.getDate()+90);
 
+    const konterIdBaru = "KONTER-" + Date.now();
+
     await setDoc(doc(db,"users",uid),{
       uid,
-      idKonter:"FX-"+Date.now(),
+      // KUNCI ISOLASI EMAIL - WAJIB ADA
+      akun: email,
+      akunLogin: email,
+      ownerEmail: email, // Owner email = email sendiri
+      email,
+      konterId: konterIdBaru,
+      idKonter: konterIdBaru,
+      konterNama: namaKonter,
       aplikasi:"Fixzy",
 
       namaKonter,
@@ -713,7 +823,6 @@ form.addEventListener("submit",async e=>{
       whatsapp,
       noWa:whatsapp,
       nomorWa:whatsapp,
-      email,
       alamat,
 
       paket:"3 Bulan",
@@ -744,6 +853,20 @@ form.addEventListener("submit",async e=>{
       device:navigator.userAgent,
       versi:"Fixzy V1",
       lastLogin:null
+    });
+
+    // Buat dokumen konter juga biar bisa di-list
+    await setDoc(doc(db,"konter",konterIdBaru),{
+      konterId: konterIdBaru,
+      nama: namaKonter,
+      namaPemilik,
+      ownerEmail: email,
+      ownerUid: uid,
+      alamat,
+      whatsapp,
+      email,
+      createdAt:serverTimestamp(),
+      status:"aktif"
     });
 
     await updateDoc(doc(db,"registrationTokens",tokenDoc.id),{
