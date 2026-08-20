@@ -15,19 +15,19 @@ html,body{min-height:100%;background:var(--bg);color:var(--txt);font-family:Aria
 body{background:linear-gradient(180deg,#fff 0,#f5f7fb 250px)}
 button,input,select{font:inherit}button{cursor:pointer}
 .header{
-  position:sticky;top:0;z-index:20;background:#fff;
-  border-bottom:1px solid var(--line);box-shadow:0 2px 12px #17203312
+  position:sticky;top:0;z-index:20;background:#111111;color:#fff;
+  border-bottom:1px solid #262626;box-shadow:0 2px 14px #0005
 }
 .header-in{max-width:1180px;margin:auto;padding:12px 16px;display:flex;align-items:center;justify-content:space-between;gap:12px}
 .brand{display:flex;align-items:center;gap:10px;min-width:0}
 .logo{width:42px;height:42px;border-radius:12px;object-fit:cover;background:#f1f5f9}
-.brand h1{font-size:18px;font-weight:900;color:#111827}.brand p{font-size:10px;color:var(--muted);margin-top:3px}
+.brand h1{font-size:18px;font-weight:900;color:#fff}.brand p{font-size:10px;color:#a3a3a3;margin-top:3px}
 .head-actions{display:flex;gap:7px}
-.head-btn{height:42px;border:1px solid var(--line);border-radius:11px;background:#fff;color:#111827;font-size:14px;padding:0 12px;font-weight:800}
+.head-btn{height:42px;border:1px solid #3a3a3a;border-radius:11px;background:#1f1f1f;color:#fff;font-size:14px;padding:0 12px;font-weight:800}.head-btn:hover{background:#2a2a2a}
 .head-btn.refresh{background:var(--y2);border-color:var(--y2)}
 .header-account{margin-left:auto;text-align:right;line-height:1.15;min-width:0}
-.account-name{font-size:11px;font-weight:900;color:#d97706;max-width:180px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.account-exp{font-size:9px;color:var(--muted);margin-top:3px}
+.account-name{font-size:11px;font-weight:900;color:#ffc107;max-width:180px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.account-exp{font-size:9px;color:#a3a3a3;margin-top:3px}
 @media(max-width:600px){.header-in{padding:9px 10px;gap:7px}.logo{width:38px;height:38px}.brand{gap:7px}.brand h1{font-size:16px}.brand p{font-size:9px}.account-name{max-width:110px;font-size:9px}.head-actions{gap:4px}.head-btn{width:38px;padding:0;height:38px}}
 .container{width:min(1180px,100%);margin:auto;padding:18px 14px 70px}
 .top{display:flex;gap:9px;flex-wrap:wrap;margin-bottom:14px}
@@ -79,6 +79,13 @@ tr:hover td{background:#fffdf5}
   .grid4{grid-template-columns:1fr}.grid4 .search{grid-column:auto}.import-box{grid-template-columns:1fr}
   .table-wrap{display:none}.mobile-list{display:grid}.form{grid-template-columns:1fr}.full{grid-column:auto}.top .btn{flex:1}
 }
+</style>
+<style id="price-rule-style">
+.price-rule-box{display:grid;grid-template-columns:1fr 1fr auto;gap:9px;align-items:end;margin-top:12px;padding:12px;border:1px solid var(--line);border-radius:13px;background:#f8fafc}
+.price-rule-box .field input{height:42px}
+.price-rule-preview{grid-column:1/-1;font-size:11px;color:#475569;line-height:1.5}
+.price-rule-preview b{color:#111827}
+@media(max-width:600px){.price-rule-box{grid-template-columns:1fr 1fr}.price-rule-box .apply-price-btn{grid-column:1/-1;width:100%}}
 </style>
 <style id="stock-logic-patch">
 .stockBulkBar{display:flex;gap:10px;align-items:center;flex-wrap:wrap;justify-content:flex-start;margin:10px 0;padding:10px;border:1px solid #e5e7eb;border-radius:12px;background:#f8fafc}
@@ -157,6 +164,24 @@ function tutupHalaman(){
       <table><thead id="previewHead"></thead><tbody id="previewBody"></tbody></table>
     </div>
     <button id="saveCsvBtn" class="btn primary" style="display:none;width:100%;margin-top:10px" onclick="saveCSVToFirebase()">⬆ SIMPAN HASIL CSV KE FIREBASE</button>
+
+    <div class="price-rule-box">
+      <div class="field">
+        <label>TAMBAHAN HARGA JUAL (%)</label>
+        <input id="pricePercent" type="number" min="0" step="0.01" value="15" placeholder="15">
+      </div>
+      <div class="field">
+        <label>TAMBAHAN DARI MODAL (Rp)</label>
+        <input id="priceNominal" type="number" min="0" step="1" value="0" placeholder="10000">
+      </div>
+      <button type="button" class="btn primary apply-price-btn" onclick="applyGlobalSellingPrice()">
+        💰 TERAPKAN KE SELURUH STOK
+      </button>
+      <div class="price-rule-preview" id="priceRulePreview">
+        Rumus: <b>Harga Jual = Modal + (% × Modal) + Nominal Tambahan</b>.
+        Contoh modal Rp100.000 + 15% + Rp10.000 = <b>Rp125.000</b>.
+      </div>
+    </div>
   </section>
 
   <section class="card">
@@ -210,10 +235,20 @@ function tutupHalaman(){
 </div>
 </div>
 
+<div class="confirm-ui" id="confirmUi"><div class="confirm-box"><h3 id="confirmTitle">Konfirmasi</h3><p id="confirmText"></p><div class="confirm-actions"><button class="confirm-no" id="confirmNo">Batal</button><button class="confirm-yes" id="confirmYes">Ya, lanjutkan</button></div></div></div>
 <div class="loading" id="loading"><div class="loader"><div class="spin"></div><b id="loadingText">Memproses...</b></div></div>
 <div class="toast" id="toast"></div>
 
 <script>
+function uiConfirm(text,title="Konfirmasi",yesText="Ya, lanjutkan"){
+  return new Promise(resolve=>{
+    const ui=document.getElementById("confirmUi"),t=document.getElementById("confirmTitle"),p=document.getElementById("confirmText"),no=document.getElementById("confirmNo"),yes=document.getElementById("confirmYes");
+    t.textContent=title;p.textContent=text;yes.textContent=yesText;ui.classList.add("show");
+    const finish=v=>{ui.classList.remove("show");no.onclick=null;yes.onclick=null;resolve(v)};
+    no.onclick=()=>finish(false);yes.onclick=()=>finish(true);
+  });
+}
+
 function refreshHalaman(){
   const b=document.getElementById("refreshBtn");
   if(b){
@@ -340,7 +375,7 @@ function normalizeCSV(rows){
       nama:String(nama||"").trim(),
       kategori:String(kategori).trim().toUpperCase(),
       hargaModal:modal,
-      hargaJual:jual||Math.round(modal*1.15),
+      hargaJual:jual||defaultSellingPrice(modal),
       sisa:Math.max(0,sisa),
       merk:String(merk||"").trim(),
       catatan:String(catatan||"").trim()
@@ -535,9 +570,8 @@ async function saveCSVToFirebase(){
   showLoading(true,"Menyimpan stok ke Firebase...");
   try{
     const ref=collection(db,"stok");
-    const snap=await getDocs(query(ref,where("uid","==",uid)));
     const existing=new Map();
-    snap.forEach(d=>{const x=d.data();if(x.kode)existing.set(String(x.kode).trim().toLowerCase(),d.id)});
+    products.forEach(x=>{if(x.kode)existing.set(String(x.kode).trim().toLowerCase(),x.id)});
     let baru=0,update=0;
     for(const r of csvRows){
       const data={...r,...identityFields(),updatedAt:serverTimestamp(),sumber:"CSV"};
@@ -607,7 +641,7 @@ function render(){
   $("total").textContent=products.length;$("ready").textContent=ready;$("empty").textContent=empty;$("value").textContent=money(value);
   $("tbody").innerHTML=arr.map(rowHTML).join("")||'<tr><td colspan="8" style="text-align:center;color:#777;padding:25px">Tidak ada data</td></tr>';
   $("mobileList").innerHTML=arr.map(mobileHTML).join("")||'<div class="sub">Tidak ada data.</div>';
-  const sa=document.getElementById("stockSelectAll");if(sa)sa.checked=false;updateSelectedStockCount();
+  const sa=document.getElementById("stockSelectAll");if(sa)sa.checked=false;updateSelectedStockCount();updatePriceRulePreview();
 }
 
 function rowHTML(p){
@@ -615,7 +649,7 @@ function rowHTML(p){
   const stat=st>0
     ? `<span class="badge ready">READY • ${st}</span>`
     : `<span class="badge empty">KOSONG</span>`;
-  const jual=num(p.hargaJual)||Math.round(num(p.hargaModal)*1.15);
+  const jual=num(p.hargaJual)||defaultSellingPrice(p.hargaModal);
 
   return `<tr>
     <td class="stockSelectCol">
@@ -641,7 +675,7 @@ function mobileHTML(p){
   const stat=st>0
     ? `<span class="badge ready">READY • ${st}</span>`
     : `<span class="badge empty">KOSONG</span>`;
-  const jual=num(p.hargaJual)||Math.round(num(p.hargaModal)*1.15);
+  const jual=num(p.hargaJual)||defaultSellingPrice(p.hargaModal);
 
   return `<div class="m-card">
     <div class="m-head">
@@ -680,11 +714,58 @@ window.editProduct=async id=>{
   $("fKode").value=p.kode||"";$("fNama").value=p.nama||"";$("fCat").value=p.kategori||"LAINNYA";$("fModal").value=p.hargaModal||0;$("fJual").value=p.hargaJual||0;$("fSisa").value=p.sisa??0;$("fMerk").value=p.merk||"";$("fNote").value=p.catatan||"";
   $("manualModal").classList.add("show");
 }
+function getSellingPrice(modal, percent, nominal){
+  const m=Math.max(0,num(modal));
+  const p=Math.max(0,num(percent));
+  const n=Math.max(0,num(nominal));
+  return Math.round(m+(m*p/100)+n);
+}
+function getGlobalPriceSettings(){
+  return {percent:Math.max(0,num($("pricePercent").value)),nominal:Math.max(0,num($("priceNominal").value))};
+}
+function defaultSellingPrice(modal){return getSellingPrice(modal,15,0)}
+function updatePriceRulePreview(){
+  const el=$("priceRulePreview");
+  if(!el)return;
+  const {percent,nominal}=getGlobalPriceSettings();
+  const sample=products[0];
+  if(sample){
+    el.innerHTML=`Contoh <b>${esc(sample.nama||sample.kode||"produk")}</b>: modal ${money(sample.hargaModal)} → harga jual <b>${money(getSellingPrice(sample.hargaModal,percent,nominal))}</b>`;
+  }else{
+    el.innerHTML='Rumus: <b>Harga Jual = Modal + (% × Modal) + Nominal Tambahan</b>. Contoh modal Rp100.000 + 15% + Rp10.000 = <b>Rp125.000</b>.';
+  }
+}
+window.applyGlobalSellingPrice=async function(){
+  if(!uid){toast("Sesi Firebase belum tersedia.");return}
+  const {percent,nominal}=getGlobalPriceSettings();
+  if(percent===0 && nominal===0){toast("Isi % atau nominal tambahan terlebih dahulu.");return}
+  if(!products.length){toast("Belum ada stok untuk diubah.");return}
+  showLoading(true,"Mengubah harga jual seluruh stok...");
+  try{
+    let berhasil=0;
+    for(const p of products){
+      await updateDoc(doc(db,"stok",p.id),{
+        hargaJual:getSellingPrice(p.hargaModal,percent,nominal),
+        hargaJualPercent:percent,
+        hargaJualNominal:nominal,
+        updatedAt:serverTimestamp(),
+        sumberHargaJual:"aturan_harga_global"
+      });
+      berhasil++;
+    }
+    await loadProducts();
+    toast(`Harga jual ${berhasil} produk berhasil diperbarui.`);
+  }catch(e){
+    console.error(e);
+    toast("Gagal mengubah harga jual: "+e.message);
+  }finally{showLoading(false)}
+};
+
 window.saveManual=async()=>{
   if(!uid){toast("Belum login");return}
   const nama=$("fNama").value.trim(),modal=num($("fModal").value),kode=$("fKode").value.trim();
   if(!nama||modal<=0){toast("Nama dan harga modal wajib diisi");return}
-  const data={...identityFields(),kode,nama,kategori:$("fCat").value,hargaModal:modal,hargaJual:num($("fJual").value)||Math.round(modal*1.15),sisa:Math.max(0,num($("fSisa").value)),merk:$("fMerk").value.trim(),catatan:$("fNote").value.trim(),updatedAt:serverTimestamp(),sumber:"manual"};
+  const data={...identityFields(),kode,nama,kategori:$("fCat").value,hargaModal:modal,hargaJual:num($("fJual").value)||getSellingPrice(modal, num($("pricePercent").value)||15, num($("priceNominal").value)||0),sisa:Math.max(0,num($("fSisa").value)),merk:$("fMerk").value.trim(),catatan:$("fNote").value.trim(),updatedAt:serverTimestamp(),sumber:"manual"};
   showLoading(true,editingId?"Memperbarui stok...":"Menyimpan stok...");
   try{
     if(editingId)await updateDoc(doc(db,"stok",editingId),data);
@@ -693,12 +774,15 @@ window.saveManual=async()=>{
   }catch(e){alert("Gagal menyimpan:\\n"+e.message)}finally{showLoading(false)}
 }
 window.deleteProduct=async id=>{
-  if(!confirm("Hapus produk ini dari Firebase?"))return;
+  if(!(await uiConfirm("Hapus produk ini dari Firebase?","Hapus Produk","Hapus")))return;
   try{await deleteDoc(doc(db,"stok",id));toast("Produk dihapus");await loadProducts()}catch(e){alert("Gagal menghapus:\\n"+e.message)}
 }
 window.resetFilter=()=>{$("search").value="";$("cat").value="";$("status").value="";render()};
 $("search").addEventListener("input",render);$("cat").addEventListener("change",render);$("status").addEventListener("change",render);
+$("pricePercent").addEventListener("input",updatePriceRulePreview);$("priceNominal").addEventListener("input",updatePriceRulePreview);
 
+
+window.uiConfirm=uiConfirm;
 
 // Fungsi yang dipanggil oleh onclick HTML harus diekspos ke window
 // karena script utama menggunakan type="module".
@@ -713,16 +797,14 @@ window.resetFilter = resetFilter;
 
 // ===== CEKLIS & HAPUS TERPILIH — Firebase module =====
 async function generateNextStockCode(){
-  if(!uid) return "STK001";
-  const snap=await getDocs(query(collection(db,"stok"),where("uid","==",uid)));
+  if(!uid)return "STK001";
   const used=new Set();
-  snap.forEach(d=>{
-    const k=String(d.data()?.kode||"").trim().toUpperCase();
+  products.forEach(d=>{
+    const k=String(d?.kode||"").trim().toUpperCase();
     const m=k.match(/^STK(\d+)$/);
-    if(m) used.add(Number(m[1]));
+    if(m)used.add(Number(m[1]));
   });
-  let n=1;
-  while(used.has(n)) n++;
+  let n=1;while(used.has(n))n++;
   return "STK"+String(n).padStart(3,"0");
 }
 
@@ -763,7 +845,7 @@ window.hapusStockTerpilih=async function(){
     return;
   }
 
-  if(!confirm(`Hapus ${ids.length} produk terpilih dari Firebase?`)) return;
+  if(!(await uiConfirm(`Hapus ${ids.length} produk terpilih dari Firebase?`,"Hapus Produk Terpilih","Hapus Semua"))) return;
 
   showLoading(true,`Menghapus ${ids.length} produk...`);
   try{
