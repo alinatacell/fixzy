@@ -638,11 +638,10 @@ onAuthStateChanged(auth, async u=>{
   document.getElementById('namaToko').textContent='Input Penjualan';
   document.getElementById('akunLoginField').value=u.email;
   try{
+    const snap={empty:true}; // FIX: jangan pakai __name__
     let p=null;
-    try{ const d=await getDoc(doc(db,"users",u.uid)); if(d.exists()) p=d.data(); }catch(e){}
-    if(!p){
-      try{ const snap=await getDocs(query(collection(db,"users"), where("__name__","==", u.uid))); if(!snap.empty) p=snap.docs[0].data(); }catch(e){}
-    }
+    if(!snap.empty) p=snap.docs[0].data();
+    else{ const d=await getDoc(doc(db,"users",u.uid)); if(d.exists()) p=d.data(); }
     if(!p){
       ownerUid=u.uid; isOwner=true;
       konterName="Fixzy - A Yudi Thea";
@@ -677,83 +676,26 @@ onAuthStateChanged(auth, async u=>{
   await loadProduk();
 });
 
+
 async function loadKaryawan(){
   try{
     let list=[];
-    // FIX OWNER & KARYAWAN - query ownerUid & ownerId & uid, filter di JS (gak butuh composite index)
-    try{
-      const q=query(collection(db,"users"), where("ownerUid","==", ownerUid));
-      const s=await getDocs(q);
-      s.forEach(d=>{
-        const data=d.data();
-        const namaK = data.nama || data.namaKaryawan || data.displayName || data.name || data.email?.split('@')[0] || '';
-        if(namaK) list.push({uid:d.id, email:data.email||'', nama:namaK, asal:'users-ownerUid'});
-      });
-    }catch(e){ console.warn("ownerUid", e.message); }
-    try{
-      const q=query(collection(db,"users"), where("ownerId","==", ownerUid));
-      const s=await getDocs(q);
-      s.forEach(d=>{
-        if(list.find(x=>x.uid===d.id)) return;
-        const data=d.data();
-        const namaK = data.nama || data.namaKaryawan || data.displayName || data.name || data.email?.split('@')[0] || '';
-        if(namaK) list.push({uid:d.id, email:data.email||'', nama:namaK, asal:'users-ownerId'});
-      });
-    }catch(e){ console.warn("ownerId", e.message); }
-    try{
-      const q=query(collection(db,"users"), where("uid","==", ownerUid));
-      const s=await getDocs(q);
-      s.forEach(d=>{
-        if(list.find(x=>x.uid===d.id)) return;
-        const data=d.data();
-        const namaK = data.nama || data.namaKaryawan || data.displayName || data.name || data.email?.split('@')[0] || '';
-        if(namaK) list.push({uid:d.id, email:data.email||'', nama:namaK, asal:'users-uid'});
-      });
-    }catch(e){}
-    try{
-      const sK=await getDocs(collection(db,"karyawan"));
-      sK.forEach(d=>{
-        const data=d.data();
-        const namaK = data.nama || data.namaKaryawan || '';
-        if(namaK && !list.find(x=>x.uid===d.id)) list.push({uid:d.id, email:data.email||'', nama:namaK, asal:'karyawan'});
-      });
-    }catch{}
-
+    try{ const q=query(collection(db,"users"), where("ownerUid","==", ownerUid)); const s=await getDocs(q); s.forEach(d=>{ const data=d.data(); const nama=data.nama||data.namaKaryawan||data.displayName||data.name||data.email?.split("@")[0]||""; if(nama) list.push({uid:d.id,email:data.email||"",nama:nama}); }); }catch(e){}
+    try{ const q=query(collection(db,"users"), where("ownerId","==", ownerUid)); const s=await getDocs(q); s.forEach(d=>{ if(list.find(x=>x.uid===d.id)) return; const data=d.data(); const nama=data.nama||data.namaKaryawan||data.displayName||data.name||data.email?.split("@")[0]||""; if(nama) list.push({uid:d.id,email:data.email||"",nama:nama}); }); }catch(e){}
+    try{ const sK=await getDocs(collection(db,"karyawan")); sK.forEach(d=>{ const data=d.data(); const nama=data.nama||data.namaKaryawan||""; if(nama && !list.find(x=>x.uid===d.id)) list.push({uid:d.id,email:data.email||"",nama:nama}); }); }catch(e){}
     if(!list.find(x=>x.email===currentUser.email)){
-      try{
-        const curSnap = await getDoc(doc(db,"users", currentUser.uid));
-        let curNama = '';
-        if(curSnap.exists()){
-          const cd = curSnap.data();
-          curNama = cd.nama || cd.namaKaryawan || cd.displayName || cd.name || currentUser.email.split('@')[0];
-        }else{
-          curNama = currentUser.email.split('@')[0];
-        }
-        if(curNama.toLowerCase() === konterName.toLowerCase()){
-          curNama = currentUser.email.split('@')[0];
-        }
-        list.unshift({uid:currentUser.uid, email:currentUser.email, nama:curNama, asal:'current-user'});
-      }catch{
-        list.unshift({uid:currentUser.uid, email:currentUser.email, nama:currentUser.email.split('@')[0], asal:'current-user-fallback'});
-      }
+      try{ const curSnap=await getDoc(doc(db,"users", currentUser.uid)); let curNama=currentUser.email.split("@")[0]; if(curSnap.exists()){ const cd=curSnap.data(); curNama=cd.nama||cd.namaKaryawan||curNama; } list.unshift({uid:currentUser.uid,email:currentUser.email,nama:curNama}); }catch{ list.unshift({uid:currentUser.uid,email:currentUser.email,nama:currentUser.email.split("@")[0]}); }
     }
-    const seen = new Set();
-    let filtered = [];
-    for(let k of list){
-      const key = (k.nama||'').toLowerCase().trim();
-      if(!key) continue;
-      if(seen.has(key)) continue;
-      seen.add(key);
-      filtered.push(k);
-    }
+    const seen=new Set(); let filtered=[]; for(let k of list){ const key=(k.nama||"").toLowerCase().trim(); if(!key||seen.has(key)) continue; seen.add(key); filtered.push(k); }
     karyawanList=filtered;
     const sel=document.getElementById('teknisiSelect');
-    sel.innerHTML=filtered.map(k=>{
-      const namaBersih=(k.nama||'').toString().trim();
-      return `<option value="${namaBersih}" data-email="${k.email}" data-nama="${namaBersih}" data-asal="${k.asal||''}">${namaBersih}</option>`;
-    }).join('');
-  }catch(e){ console.error('loadKaryawan error', e); }
+    if(sel){
+      sel.innerHTML=filtered.map(k=>`<option value="${(k.nama||"").trim()}" data-email="${k.email}" data-nama="${(k.nama||"").trim()}">${(k.nama||"").trim()}</option>`).join('');
+      if(filtered.length>0) sel.selectedIndex=0;
+    }
+  }catch(e){ console.error('loadKaryawan error', e); const sel=document.getElementById('teknisiSelect'); if(sel) sel.innerHTML=`<option>${e.message}</option>`; }
 }
+
 
 
 window.fixStokSinkron=async()=>{
@@ -814,11 +756,16 @@ async function loadProduk(){
     for(let col of stokCols){
       try{
         let snaps=[];
-        // FIX: query 3 field (ownerUid, uid, ownerId) biar stok punya Zaka (uid=jm3q...) kebaca owner & karyawan
-        try{ const s=await getDocs(query(collection(db,col), where("ownerUid","==", ownerUid))); if(s.size>0) snaps.push(s); }catch(e){ console.warn("stok ownerUid", e.message); }
-        try{ const s=await getDocs(query(collection(db,col), where("uid","==", ownerUid))); if(s.size>0) snaps.push(s); }catch(e){ console.warn("stok uid", e.message); }
-        try{ const s=await getDocs(query(collection(db,col), where("ownerId","==", ownerUid))); if(s.size>0) snaps.push(s); }catch(e){ console.warn("stok ownerId", e.message); }
-
+        // Coba filter owner dulu
+        try{ const s=await getDocs(query(collection(db,col), where("ownerUid","==", ownerUid))); if(s.size>0) snaps.push(s); }catch(e){}
+        try{ const s=await getDocs(query(collection(db,col), where("uid","==", ownerUid))); if(s.size>0) snaps.push(s); }catch(e){}
+        try{ const s=await getDocs(query(collection(db,col), where("ownerId","==", ownerUid))); if(s.size>0) snaps.push(s); }catch(e){}
+        // IZINKAN SEMUA: kalau hasil filter kosong atau untuk karyawan, ambil semua
+        try{
+          const allSnap=await getDocs(collection(db,col));
+          console.log(`[PENJUALAN] Total ${col}: ${allSnap.size}, filtered: ${snaps.reduce((a,s)=>a+s.size,0)}`);
+          if(allSnap.size>0) snaps.push(allSnap);
+        }catch(e){}
         
         const mapId = new Map();
         snaps.forEach(snap=>{
@@ -1225,6 +1172,7 @@ window.pilihTemplateCetak=(id)=>{
   document.querySelector('#cetakModal .template-cetak-btn[data-template="'+cetakTemplateTerpilih+'"]').classList.add('active');
 };
 
+
 window.pilihCetak=(jenis)=>{
   const id=document.getElementById('cetakModal').getAttribute('data-id');
   const nama=konterName||'NAMA PERUSAHAAN';
@@ -1241,26 +1189,18 @@ window.pilihCetak=(jenis)=>{
   const esc=v=>String(v??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
   const rupiah=v=>'Rp '+Number(v||0).toLocaleString('id-ID');
   const rows=rincianItems.map((it,i)=>`<tr><td>${i+1}</td><td>${esc(it.nama)}</td><td>${it.qty}</td><td>${rupiah(it.harga)}</td><td>${rupiah(it.subtotal)}</td></tr>`).join('');
-  const minimal=rincianItems.map(it=>`<div class="minimal-row"><span>${esc(it.nama)} ×${it.qty}</span><span>${rupiah(it.subtotal)}</span></div>`).join('');
+  const minimal=rincianItems.map(it=>`<div class="minimal-row"><span>${esc(it.nama)} x${it.qty}</span><span>${rupiah(it.subtotal)}</span></div>`).join('');
   const accent=t===2?'#2563eb':t===4?'#16a34a':t===5?'#ffc107':'#111';
   const header=t===1?'border-bottom:2px solid #111':`background:${accent};color:${t===5?'#111':'#fff'};padding:9px;border-radius:7px`;
   const barcode=(t===3)?'':`<div class="barcode"></div><div class="barcode-text">${nomorEsc}</div>`;
   const policy='Barang yang sudah dibeli tidak dapat dikembalikan. Garansi mengikuti ketentuan perusahaan.';
   const thanks='Terima kasih telah mempercayakan kebutuhan Anda kepada kami.';
   const title=t===1?'Klasik':t===2?'Modern':t===3?'Minimal':t===4?'Profesional':'Konter';
-  const html=`<!doctype html><html><head><meta charset="utf-8"><title>${title} - ${nomorEsc}</title><style>
-    *{box-sizing:border-box}body{margin:0;background:#eef2f7;font-family:Arial,Helvetica,sans-serif;color:#111}.paper{width:${jenis==='5x8'?'302px':'390px'};max-width:100%;min-height:470px;margin:0 auto;background:#fff;padding:${jenis==='5x8'?'15px':'22px 20px'};box-shadow:0 0 0 transparent}.head{text-align:center;padding-bottom:9px;margin-bottom:10px}.company{font-size:20px;font-weight:900}.contact{font-size:10px;margin-top:4px;line-height:1.45}.doc{font-size:16px;font-weight:900;margin:8px 0 2px}.meta{display:grid;grid-template-columns:1fr 1fr;gap:5px;font-size:10px;margin:10px 0}.meta div{border-bottom:1px solid #aaa;padding-bottom:3px}table{width:100%;border-collapse:collapse;font-size:9px}th,td{border:1px solid #555;padding:5px 4px}th{font-weight:900}.totals{margin-top:9px;margin-left:auto;width:62%;font-size:10px}.totals div{display:flex;justify-content:space-between;border-bottom:1px solid #aaa;padding:3px}.policy{font-size:9px;line-height:1.45;margin-top:12px;padding:7px;border:1px dashed #777}.thanks{text-align:center;font-weight:900;font-size:11px;margin-top:10px}.barcode{height:38px;margin:10px auto 2px;width:180px;background:repeating-linear-gradient(90deg,#111 0 2px,#fff 2px 4px,#111 4px 5px,#fff 5px 8px)}.barcode-text{text-align:center;font-size:8px;letter-spacing:2px}.sign{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:17px;text-align:center;font-size:9px}.sign div{border-top:1px solid #333;padding-top:5px;margin-top:35px;min-height:15px}.minimal-row{display:flex;justify-content:space-between;border-bottom:1px dashed #999;padding:5px 0;font-size:9px}.minimal .company{font-size:16px}.minimal .doc{font-size:13px}.minimal .meta{font-size:9px}.minimal table{display:none}.minimal .policy{font-size:8px}.minimal .sign{font-size:8px}.mono{filter:grayscale(1)}@media print{body{background:#fff}.paper{box-shadow:none;margin:0 auto}}
-  </style></head><body><div class="paper ${t===3?'minimal':''} ${t===1?'classic':t===2?'modern':t===4?'professional':'counter'}">
-    <div class="head" style="${header}"><div class="company">${esc(nama)}</div><div class="contact">Nota Penjualan</div><div class="doc">NOTA PENJUALAN</div></div>
-    <div class="meta"><div>No. Nota: <b>${nomorEsc}</b></div><div>Tanggal: <b>${esc(tanggal)}</b></div><div>Pelanggan: <b>${esc(pelanggan)}</b></div><div>Kasir: <b>${esc(teknisi)}</b></div></div>
-    ${t===2?`<div style="font-weight:900;border-bottom:2px solid ${accent};padding:5px 0;margin-bottom:5px">DETAIL TRANSAKSI</div>`:''}
-    ${t===3?minimal:`<table><thead><tr><th>NO</th><th>BARANG / JASA</th><th>QTY</th><th>HARGA</th><th>JUMLAH</th></tr></thead><tbody>${rows}</tbody></table>`}
-    <div class="totals"><div><span>Subtotal</span><b>${rupiah(total+diskon)}</b></div><div><span>Diskon</span><b>${rupiah(diskon)}</b></div><div><span>TOTAL</span><b>${rupiah(total)}</b></div>${dp?`<div><span>Dibayar</span><b>${rupiah(dp)}</b></div>`:''}${sisa?`<div><span>Sisa</span><b>${rupiah(sisa)}</b></div>`:''}</div>
-    ${barcode}<div class="policy"><b>Kebijakan Perusahaan:</b><br>${policy}</div><div class="thanks">${thanks}</div>${t!==3?'<div class="sign"><div>Konsumen</div><div>Pemilik / Penanggung Jawab</div></div>':''}
-  </div><script>window.onload=function(){setTimeout(function(){window.print()},250)}<\/script></body></html>`;
+  const htmlContent=`<!doctype html><html><head><meta charset="utf-8"><title>${title} - ${nomorEsc}</title><style>*{box-sizing:border-box}body{margin:0;background:#eef2f7;font-family:Arial;color:#111}.paper{width:${jenis==='5x8'?'302px':'390px'};max-width:100%;min-height:470px;margin:0 auto;background:#fff;padding:${jenis==='5x8'?'15px':'22px 20px'}}.head{text-align:center;padding-bottom:9px;margin-bottom:10px}.company{font-size:20px;font-weight:900}.doc{font-size:16px;font-weight:900;margin:8px 0 2px}.meta{display:grid;grid-template-columns:1fr 1fr;gap:5px;font-size:10px;margin:10px 0}.meta div{border-bottom:1px solid #aaa;padding-bottom:3px}table{width:100%;border-collapse:collapse;font-size:9px}th,td{border:1px solid #555;padding:5px 4px}th{font-weight:900}.totals{margin-top:9px;margin-left:auto;width:62%;font-size:10px}.totals div{display:flex;justify-content:space-between;border-bottom:1px solid #aaa;padding:3px}.policy{font-size:9px;line-height:1.45;margin-top:12px;padding:7px;border:1px dashed #777}.thanks{text-align:center;font-weight:900;font-size:11px;margin-top:10px}.barcode{height:38px;margin:10px auto 2px;width:180px;background:repeating-linear-gradient(90deg,#111 0 2px,#fff 2px 4px,#111 4px 5px,#fff 5px 8px)}.barcode-text{text-align:center;font-size:8px;letter-spacing:2px}.sign{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:17px;text-align:center;font-size:9px}.sign div{border-top:1px solid #333;padding-top:5px;margin-top:35px;min-height:15px}.minimal-row{display:flex;justify-content:space-between;border-bottom:1px dashed #999;padding:5px 0;font-size:9px}</style></head><body><div class="paper"><div class="head" style="${header}"><div class="company">${esc(nama)}</div><div class="doc">NOTA PENJUALAN</div></div><div class="meta"><div>No. Nota: <b>${nomorEsc}</b></div><div>Tanggal: <b>${esc(tanggal)}</b></div><div>Pelanggan: <b>${esc(pelanggan)}</b></div><div>Kasir: <b>${esc(teknisi)}</b></div></div>${t===3?minimal:`<table><thead><tr><th>NO</th><th>BARANG</th><th>QTY</th><th>HARGA</th><th>JUMLAH</th></tr></thead><tbody>${rows}</tbody></table>`}<div class="totals"><div><span>Subtotal</span><b>${rupiah(total+diskon)}</b></div><div><span>Diskon</span><b>${rupiah(diskon)}</b></div><div><span>TOTAL</span><b>${rupiah(total)}</b></div></div>${barcode}<div class="policy">${policy}</div><div class="thanks">${thanks}</div></div><script>(function(){var loc=location.href.replace(/#.*$/,"");var ATTR_NAMES=["data-product-id","data-productid","data-product_id","product-id","productid","product_id","data-source-entity-id","source-entity-id","source_entity_id","data-product","data-metadata","data-meta"];var DATASET_KEYS=["productId","productid","product_id","sourceEntityId","sourceentityid","source_entity_id","product","metadata","meta"];function readProductId(value){if(typeof value!=="string"||value.length===0)return null;if(/^[0-9]{6,}$/.test(value))return value;var match=value.match(/(?:product(?:_|-)?id|source(?:_|-)?entity(?:_|-)?id)["'=:\s]+([0-9]{6,})/i);return match?match[1]:null}function extractProductId(start){for(var node=start;node&&node!==document.body;node=node.parentElement){for(var i=0;i<ATTR_NAMES.length;i++){var attrValue=node.getAttribute&&node.getAttribute(ATTR_NAMES[i]);var attrProductId=readProductId(attrValue);if(attrProductId)return attrProductId}var dataset=node.dataset||null;if(dataset){for(var j=0;j<DATASET_KEYS.length;j++){var dataValue=dataset[DATASET_KEYS[j]];var dataProductId=readProductId(dataValue);if(dataProductId)return dataProductId}}}return null}function isInlineMediaSlotElement(node){return !!(node&&node.getAttribute&&node.getAttribute("data-clippy-inline-media-slot")!==null)}function findInlineMediaSlot(start){for(var node=start;node&&node!==document.body;node=node.parentElement){if(isInlineMediaSlotElement(node))return node}return null}function readInlineMediaUrl(node){if(!node)return null;return node.getAttribute&&((node.getAttribute("data-clippy-inline-media-url")||node.getAttribute("data-url")||node.getAttribute("data_url")))||node.href||null}function stripHash(url){return String(url).replace(/#.*$/,"")}function urlsMatch(a,b){if(!a||!b)return false;try{return stripHash(new URL(a,loc).href)===stripHash(new URL(b,loc).href)}catch(_){return stripHash(a)===stripHash(b)}}function isFirstPartyReelUrl(value){try{var url=new URL(value,loc);if(url.protocol!=="https:")return false;var host=url.hostname.toLowerCase();var supported=host==="instagram.com"||host.endsWith(".instagram.com")||host==="facebook.com"||host.endsWith(".facebook.com");return supported&&/\/reels?\//i.test(url.pathname)}catch(_){return false}}function isInlineMediaUrlClick(node,href){var slot=findInlineMediaSlot(node);if(!slot)return false;var slotUrl=readInlineMediaUrl(slot);if(slotUrl)return urlsMatch(href,slotUrl);return isFirstPartyReelUrl(href)}function findDataHref(start){for(var node=start;node&&node!==document.body;node=node.parentElement){if(node.getAttribute){var href=node.getAttribute("data-href")||node.getAttribute("data-url");if(href)return{href:href,node:node}}}return null}var nativeOpen=window.open;window.open=function(url){if(parent!==window&&typeof url==="string"&&/^https?:\/\//.test(url)){parent.postMessage({type:"ecto:usercontent-link-click",href:url},"*");return null}return nativeOpen?nativeOpen.apply(window,arguments):null};document.addEventListener("click",function(e){var target=e.target instanceof Element?e.target:null;if(!target)return;if(parent===window)return;var a=target.closest?target.closest("a[href]"):null;if(a&&a.href&&/^https?:\/\//.test(a.href)&&a.href.replace(/#.*$/,"")!==loc){if(isInlineMediaUrlClick(a,a.href))return;var productId=extractProductId(target)||extractProductId(a);if(productId){e.preventDefault();parent.postMessage({type:"ecto-artifact-link-click",productId:productId},"*");return}e.preventDefault();parent.postMessage({type:"ecto:usercontent-link-click",href:a.href},"*");return}var dataHref=findDataHref(target);if(dataHref&&/^https?:\/\//.test(dataHref.href)&&dataHref.href.replace(/#.*$/,"")!==loc){if(isInlineMediaUrlClick(dataHref.node,dataHref.href))return;e.preventDefault();parent.postMessage({type:"ecto:usercontent-link-click",href:dataHref.href},"*")}},true)})();</script><script>(function(){var FOCUS_TYPE="ecto:artifact-focus-request";var CLOSE_TYPE="ecto:artifact-close-request";function focusArtifactDocument(){var body=document.body;if(!body)return;try{window.focus();}catch(e){}if(!body.hasAttribute("tabindex"))body.setAttribute("tabindex","-1");try{body.focus({preventScroll:true});}catch(e){try{body.focus();}catch(e2){}}}window.addEventListener("message",function(event){if(event.source!==window.parent)return;var data=event.data;if(!data||typeof data!=="object"||data.type!==FOCUS_TYPE)return;if(document.readyState==="loading"){document.addEventListener("DOMContentLoaded",focusArtifactDocument,{once:true});return;}focusArtifactDocument();});window.addEventListener("keydown",function(event){if(event.key!=="Escape")return;window.setTimeout(function(){if(event.defaultPrevented)return;window.parent.postMessage({type:CLOSE_TYPE},"*");},0);});})();</script></body></html>`;
   const w=window.open('','_blank','width=400,height=650');
-  if(!w){showKonterPopup('Popup cetak diblokir browser. Izinkan popup untuk halaman ini.','error');return;}
-  w.document.write(html); w.document.close();
+  if(!w){showKonterPopup('Popup cetak diblokir browser.','error');return;}
+  w.document.open(); w.document.write(htmlContent); w.document.close();
+  w.onload=()=>{ setTimeout(()=>w.print(),300); };
   document.getElementById('cetakModal').classList.remove('show');
   setTimeout(()=>{ location.href='data-penjualan.html'; }, 1000);
 };
@@ -1618,129 +1558,19 @@ body.dark #manualToggle + label{
     </div>
 
     <div class="info-row">
-      <span class="info-label">Barcode</span><div class="info-value info-with-button"><input id="barcodeField" readonly><button type="button" class="info-refresh-btn" onclick="regenerate()">🔄</button></div></div><div class="info-row"><span class="info-label">Nama Teknisi *</span><div class="info-value"><select id="teknisiSelect" style="text-align:left;direction:ltr"><option>Memuat...</option></select></div></div></div>
-</div>
-
-<div class="card">
-  <div class="card-header"><span>Data Pelanggan</span></div>
-  <div><label style="font-size:11px;font-weight:800">Nama Pelanggan *</label><input id="namaPelangganField" placeholder="Wajib" required></div>
-  <div class="grid2" style="margin-top:10px">
-    <div><label style="font-size:11px;font-weight:800">No Whatsapp</label><input id="waField" placeholder="no whastapp"></div>
-    <div><label style="font-size:11px;font-weight:800">Alamat</label><textarea id="alamatField" placeholder="Alamat pelanggan" style="min-height:60px"></textarea></div>
-  </div>
-</div>
-
-<div class="card">
-<div class="card-header">
-  <span>Data Produk (Stok) + Manual</span>
-  <div style="display:flex;gap:6px;align-items:center">
-    <span id="produkInfo" style="font-size:10px;color:#64748b">Memuat...</span>
-  </div>
-</div>
-  <div id="autoProdukWrap">
-    <div id="produkStockInfo" style="font-size:11px;color:#16a34a;font-weight:800;margin-bottom:6px;display:none"></div>
-    <label style="font-size:11px;font-weight:800">Cari Produk Auto (Dropdown dari stock produk)</label>
-    <div style="position:relative"><input id="produkSearch" placeholder="Ketik nama / barcode... jika kosong hide/samarkan"><input type="hidden" id="produkNamaAuto"></div>
-    <div class="grid3" style="margin-top:8px">
-      <div><label style="font-size:10px">Harga (ikut produk)</label><input id="hargaAuto" type="number" placeholder="Auto dari stok"></div>
-      <div><label style="font-size:10px">Modal</label><input id="modalAuto" type="number" placeholder="Auto"></div>
-      <div><label style="font-size:10px">Qty (ikut produk)</label><input id="qtyAuto" type="number" value="1" min="1"></div>
+      <span class="info-label">Barcode</span>
+      <div class="info-value info-with-button">
+        <input id="barcodeField" readonly>
+        <button type="button" class="info-refresh-btn" onclick="regenerate()" title="Buat ulang barcode">🔄</button>
+      </div>
     </div>
-    <div style="margin-top:6px"><label style="font-size:10px">Subtotal Auto</label><input id="subtotalAuto" readonly style="background:#f8fafc"></div>
-  </div>
-  <div style="margin:12px 0;display:flex;align-items:center;gap:8px">
-    <input type="checkbox" id="manualToggle" onchange="toggleManual()" style="width:18px;height:18px">
-    <label for="manualToggle" style="font-size:12px;font-weight:800">Aktifkan Kolom Manual Produk (jika produk auto tidak tersedia)</label>
-  </div>
-  <div id="manualWrap" style="display:none;grid-template-columns:1fr 1fr;gap:10px">
-    <div style="grid-column:1/-1"><label style="font-size:11px;font-weight:800">Nama Produk Manual *</label><input id="produkNamaManual" placeholder="Ketik manual jika auto tidak ada"></div>
-    <div><label style="font-size:10px">Barcode Manual</label><input id="barcodeManual" placeholder="Opsional"></div>
-    <div><label style="font-size:10px">Harga Manual</label><input id="hargaManual" type="number" placeholder="Manual"></div>
-    <div><label style="font-size:10px">Qty Manual</label><input id="qtyManual" type="number" value="1" min="1"></div>
-    <div><label style="font-size:10px">Subtotal Manual</label><input id="subtotalManual" readonly style="background:#f8fafc"></div>
-  </div>
-  <div style="margin-top:12px"><button type="button" onclick="tambahProduk()" style="width:100%;background:#111827;color:#fff;padding:12px;border-radius:10px">Tambah ke Rincian blanja</button></div>
-</div>
 
-<div class="card">
-  <div class="card-header"><span>Rincian Produk Yang Dipilih</span><span style="font-size:10px;color:#64748b">Hasil dari Header 3</span></div>
-  <table class="rincian-table">
-    <thead><tr><th>No</th><th>Produk + Barcode + Type</th><th>Harga</th><th>Qty</th><th>Subtotal</th><th>Aksi</th></tr></thead>
-    <tbody id="rincianBody"><tr><td colspan="6" style="text-align:center;color:#94a3b8;padding:16px">Belum ada produk yang di pilih</td></tr></tbody>
-  </table>
-  <div style="margin-top:10px;display:flex;justify-content:space-between;font-weight:900"><span>Total Rincian:</span><span id="totalDisplay">Rp 0</span></div>
-</div>
-
-<div class="card">
-  <div class="card-header"><span>Rincian Pembayaran</span></div>
-  <div class="grid2">
-    <div><label style="font-size:11px;font-weight:800">Total</label><input id="totalField" type="number" readonly style="background:#f8fafc;font-weight:900"></div>
-    <div><label style="font-size:11px;font-weight:800">Diskon</label><input id="diskonField" type="number" value="0"></div>
-  </div>
-  <div class="grid2" style="margin-top:10px">
-    <div><label style="font-size:11px;font-weight:800">DP (Uang Muka)</label><input id="dpField" type="number" value="0"></div>
-    <div><label style="font-size:11px;font-weight:800">Sisa (Total - Diskon - DP)</label><input id="sisaField" type="number" readonly style="background:#f8fafc;font-weight:900;color:#15803d"></div>
-  </div>
-  <div style="margin-top:10px"><label style="font-size:11px;font-weight:800">Status</label><select id="statusField"><option value="masuk">Masuk</option><option value="tagihan">Tagihan</option><option value="tunai">Tunai</option><option value="diambil">Diambil</option><option value="batal" class="ownerOnly">Batal (Admin Only)</option></select></div>
-  <div style="margin-top:10px;display:flex;justify-content:space-between;font-weight:900;background:#f8fafc;padding:10px;border-radius:10px"><span>Sisa Bayar:</span><span id="sisaDisplay" style="color:#15803d">Rp 0</span></div>
-  <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-top:16px">
-    <button type="button" onclick="batalInput()" style="background:#e5e7eb;color:#111827;padding:12px;border-radius:10px">Batal</button>
-    <button type="button" onclick="simpan()" style="background:#111827;color:#fff;padding:12px;border-radius:10px">💾 Simpan</button>
-    <button type="button" onclick="simpanCetak()" style="background:#2563eb;color:#fff;padding:12px;border-radius:10px">🖨️ Simpan & Cetak</button>
-  </div>
-</div>
-
-</form>
-<div style="text-align:center;font-size:11px;color:#64748b;margin-top:12px">5 Header Rapi • H1: Akun, Teknisi, Tgl, Nota, Barcode Auto • H2: Nama, WA, Alamat • H3: Produk Auto + Manual (harga qty ikut) • H4: Rincian • H5: Total Diskon DP Sisa Status Tombol Cetak 5x8 & Umum • Header Hitam Logo BG Hitam</div>
-</main>
-
-<div class="modal" id="konterAlertModal">
-  <div class="modal-box" style="max-width:400px;text-align:center">
-    <div id="konterAlertIcon" style="font-size:32px;margin-bottom:8px">ℹ️</div>
-    <h3 id="konterAlertTitle" style="font-weight:900;margin:0 0 4px;font-size:16px">📢 Info</h3>
-    <div style="background:#111827;color:#fff;padding:6px 12px;border-radius:8px;font-size:11px;font-weight:800;margin-bottom:10px">
-      🏪 <span id="konterAlertKonter">Fixzy - A Yudi Thea</span> (Admin)
+    <div class="info-row">
+      <span class="info-label">Nama Teknisi *</span>
+      <div class="info-value">
+        <select id="teknisiSelect" style="text-align:left;direction:ltr"><option>Memuat karyawan...</option></select>
+      </div>
     </div>
-    <p id="konterAlertMessage" style="font-size:13px;line-height:1.5;color:#374151;margin-bottom:16px">Pesan</p>
-    <button onclick="closeKonterPopup()" style="width:100%;background:#111827;color:#fff;padding:12px;border-radius:10px;font-weight:900">OK Tutup</button>
+
   </div>
 </div>
-
-<div class="modal" id="cetakModal">
-  <div class="modal-box">
-    <h3 style="font-weight:900;margin:0 0 6px">🧾 Pilih Template Nota</h3>
-    <p style="font-size:12px;color:#64748b;margin:0 0 12px">Template hanya digunakan saat mencetak. Tidak disimpan ke Firebase.</p>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px">
-      <button class="template-cetak-btn active" data-template="1" onclick="pilihTemplateCetak(1)" style="background:#fff;color:#111827;border:2px solid #ffc107;padding:10px;border-radius:10px;text-align:left;box-shadow:none">
-        <b>1. Klasik</b><br><span style="font-size:10px;color:#64748b">Hitam/putih • tabel lengkap</span>
-      </button>
-      <button class="template-cetak-btn" data-template="2" onclick="pilihTemplateCetak(2)" style="background:#fff;color:#111827;border:2px solid #e2e8f0;padding:10px;border-radius:10px;text-align:left;box-shadow:none">
-        <b>2. Modern</b><br><span style="font-size:10px;color:#64748b">Header biru • total tegas</span>
-      </button>
-      <button class="template-cetak-btn" data-template="3" onclick="pilihTemplateCetak(3)" style="background:#fff;color:#111827;border:2px solid #e2e8f0;padding:10px;border-radius:10px;text-align:left;box-shadow:none">
-        <b>3. Minimal</b><br><span style="font-size:10px;color:#64748b">Ringkas • hemat kertas</span>
-      </button>
-      <button class="template-cetak-btn" data-template="4" onclick="pilihTemplateCetak(4)" style="background:#fff;color:#111827;border:2px solid #e2e8f0;padding:10px;border-radius:10px;text-align:left;box-shadow:none">
-        <b>4. Profesional</b><br><span style="font-size:10px;color:#64748b">Header hijau • invoice</span>
-      </button>
-      <button class="template-cetak-btn" data-template="5" onclick="pilihTemplateCetak(5)" style="background:#fff;color:#111827;border:2px solid #e2e8f0;padding:10px;border-radius:10px;text-align:left;box-shadow:none;grid-column:1/-1">
-        <b>5. Konter</b><br><span style="font-size:10px;color:#64748b">Header kuning • struktur</span>
-      </button>
-    </div>
-    <div style="font-size:12px;font-weight:900;margin-bottom:8px">Ukuran Cetak</div>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
-      <button onclick="pilihCetak('5x8')" style="background:#111827;color:#fff;padding:14px;border-radius:12px">🖨️ Cetak 5x8<br><span style="font-size:10px;opacity:0.7">Kecil (5 inch x 8 inch)</span></button>
-      <button onclick="pilihCetak('umum')" style="background:#2563eb;color:#fff;padding:14px;border-radius:12px">🖨️ Cetak Umum<br><span style="font-size:10px;opacity:0.7">Struk 80mm / A4</span></button>
-    </div>
-    <button onclick="document.getElementById('cetakModal').classList.remove('show')" style="width:100%;margin-top:10px;background:#e5e7eb;color:#111827">Tutup</button>
-  </div>
-</div>
-
-<script>
-const h=document.documentElement, b=document.getElementById('btnDark');
-const s=localStorage.getItem('fixzy-dark');
-if(s==='1' || (!s && window.matchMedia('(prefers-color-scheme: dark)').matches)){ h.classList.add('dark'); document.body.classList.add('dark'); b.textContent='☀️'; }
-b.addEventListener('click', ()=>{ h.classList.toggle('dark'); document.body.classList.toggle('dark'); const d=h.classList.contains('dark'); localStorage.setItem('fixzy-dark', d?'1':'0'); b.textContent=d?'☀️':'🌙'; });
-</script>
-<script>(function(){var loc=location.href.replace(/#.*$/,"");var ATTR_NAMES=["data-product-id","data-productid","data-product_id","product-id","productid","product_id","data-source-entity-id","source-entity-id","source_entity_id","data-product","data-metadata","data-meta"];var DATASET_KEYS=["productId","productid","product_id","sourceEntityId","sourceentityid","source_entity_id","product","metadata","meta"];function readProductId(value){if(typeof value!=="string"||value.length===0)return null;if(/^[0-9]{6,}$/.test(value))return value;var match=value.match(/(?:product(?:_|-)?id|source(?:_|-)?entity(?:_|-)?id)["'=:\s]+([0-9]{6,})/i);return match?match[1]:null}function extractProductId(start){for(var node=start;node&&node!==document.body;node=node.parentElement){for(var i=0;i<ATTR_NAMES.length;i++){var attrValue=node.getAttribute&&node.getAttribute(ATTR_NAMES[i]);var attrProductId=readProductId(attrValue);if(attrProductId)return attrProductId}var dataset=node.dataset||null;if(dataset){for(var j=0;j<DATASET_KEYS.length;j++){var dataValue=dataset[DATASET_KEYS[j]];var dataProductId=readProductId(dataValue);if(dataProductId)return dataProductId}}}return null}function isInlineMediaSlotElement(node){return !!(node&&node.getAttribute&&node.getAttribute("data-clippy-inline-media-slot")!==null)}function findInlineMediaSlot(start){for(var node=start;node&&node!==document.body;node=node.parentElement){if(isInlineMediaSlotElement(node))return node}return null}function readInlineMediaUrl(node){if(!node)return null;return node.getAttribute&&((node.getAttribute("data-clippy-inline-media-url")||node.getAttribute("data-url")||node.getAttribute("data_url")))||node.href||null}function stripHash(url){return String(url).replace(/#.*$/,"")}function urlsMatch(a,b){if(!a||!b)return false;try{return stripHash(new URL(a,loc).href)===stripHash(new URL(b,loc).href)}catch(_){return stripHash(a)===stripHash(b)}}function isFirstPartyReelUrl(value){try{var url=new URL(value,loc);if(url.protocol!=="https:")return false;var host=url.hostname.toLowerCase();var supported=host==="instagram.com"||host.endsWith(".instagram.com")||host==="facebook.com"||host.endsWith(".facebook.com");return supported&&/\/reels?\//i.test(url.pathname)}catch(_){return false}}function isInlineMediaUrlClick(node,href){var slot=findInlineMediaSlot(node);if(!slot)return false;var slotUrl=readInlineMediaUrl(slot);if(slotUrl)return urlsMatch(href,slotUrl);return isFirstPartyReelUrl(href)}function findDataHref(start){for(var node=start;node&&node!==document.body;node=node.parentElement){if(node.getAttribute){var href=node.getAttribute("data-href")||node.getAttribute("data-url");if(href)return{href:href,node:node}}}return null}var nativeOpen=window.open;window.open=function(url){if(parent!==window&&typeof url==="string"&&/^https?:\/\//.test(url)){parent.postMessage({type:"ecto:usercontent-link-click",href:url},"*");return null}return nativeOpen?nativeOpen.apply(window,arguments):null};document.addEventListener("click",function(e){var target=e.target instanceof Element?e.target:null;if(!target)return;if(parent===window)return;var a=target.closest?target.closest("a[href]"):null;if(a&&a.href&&/^https?:\/\//.test(a.href)&&a.href.replace(/#.*$/,"")!==loc){if(isInlineMediaUrlClick(a,a.href))return;var productId=extractProductId(target)||extractProductId(a);if(productId){e.preventDefault();parent.postMessage({type:"ecto-artifact-link-click",productId:productId},"*");return}e.preventDefault();parent.postMessage({type:"ecto:usercontent-link-click",href:a.href},"*");return}var dataHref=findDataHref(target);if(dataHref&&/^https?:\/\//.test(dataHref.href)&&dataHref.href.replace(/#.*$/,"")!==loc){if(isInlineMediaUrlClick(dataHref.node,dataHref.href))return;e.preventDefault();parent.postMessage({type:"ecto:usercontent-link-click",href:dataHref.href},"*")}},true)})();</script><script>(function(){var FOCUS_TYPE="ecto:artifact-focus-request";var CLOSE_TYPE="ecto:artifact-close-request";function focusArtifactDocument(){var body=document.body;if(!body)return;try{window.focus();}catch(e){}if(!body.hasAttribute("tabindex"))body.setAttribute("tabindex","-1");try{body.focus({preventScroll:true});}catch(e){try{body.focus();}catch(e2){}}}window.addEventListener("message",function(event){if(event.source!==window.parent)return;var data=event.data;if(!data||typeof data!=="object"||data.type!==FOCUS_TYPE)return;if(document.readyState==="loading"){document.addEventListener("DOMContentLoaded",focusArtifactDocument,{once:true});return;}focusArtifactDocument();});window.addEventListener("keydown",function(event){if(event.key!=="Escape")return;window.setTimeout(function(){if(event.defaultPrevented)return;window.parent.postMessage({type:CLOSE_TYPE},"*");},0);});})();</script><script>(function(){var loc=location.href.replace(/#.*$/,"");var ATTR_NAMES=["data-product-id","data-productid","data-product_id","product-id","productid","product_id","data-source-entity-id","source-entity-id","source_entity_id","data-product","data-metadata","data-meta"];var DATASET_KEYS=["productId","productid","product_id","sourceEntityId","sourceentityid","source_entity_id","product","metadata","meta"];function readProductId(value){if(typeof value!=="string"||value.length===0)return null;if(/^[0-9]{6,}$/.test(value))return value;var match=value.match(/(?:product(?:_|-)?id|source(?:_|-)?entity(?:_|-)?id)["'=:\s]+([0-9]{6,})/i);return match?match[1]:null}function extractProductId(start){for(var node=start;node&&node!==document.body;node=node.parentElement){for(var i=0;i<ATTR_NAMES.length;i++){var attrValue=node.getAttribute&&node.getAttribute(ATTR_NAMES[i]);var attrProductId=readProductId(attrValue);if(attrProductId)return attrProductId}var dataset=node.dataset||null;if(dataset){for(var j=0;j<DATASET_KEYS.length;j++){var dataValue=dataset[DATASET_KEYS[j]];var dataProductId=readProductId(dataValue);if(dataProductId)return dataProductId}}}return null}function isInlineMediaSlotElement(node){return !!(node&&node.getAttribute&&node.getAttribute("data-clippy-inline-media-slot")!==null)}function findInlineMediaSlot(start){for(var node=start;node&&node!==document.body;node=node.parentElement){if(isInlineMediaSlotElement(node))return node}return null}function readInlineMediaUrl(node){if(!node)return null;return node.getAttribute&&((node.getAttribute("data-clippy-inline-media-url")||node.getAttribute("data-url")||node.getAttribute("data_url")))||node.href||null}function stripHash(url){return String(url).replace(/#.*$/,"")}function urlsMatch(a,b){if(!a||!b)return false;try{return stripHash(new URL(a,loc).href)===stripHash(new URL(b,loc).href)}catch(_){return stripHash(a)===stripHash(b)}}function isFirstPartyReelUrl(value){try{var url=new URL(value,loc);if(url.protocol!=="https:")return false;var host=url.hostname.toLowerCase();var supported=host==="instagram.com"||host.endsWith(".instagram.com")||host==="facebook.com"||host.endsWith(".facebook.com");return supported&&/\/reels?\//i.test(url.pathname)}catch(_){return false}}function isInlineMediaUrlClick(node,href){var slot=findInlineMediaSlot(node);if(!slot)return false;var slotUrl=readInlineMediaUrl(slot);if(slotUrl)return urlsMatch(href,slotUrl);return isFirstPartyReelUrl(href)}function findDataHref(start){for(var node=start;node&&node!==document.body;node=node.parentElement){if(node.getAttribute){var href=node.getAttribute("data-href")||node.getAttribute("data-url");if(href)return{href:href,node:node}}}return null}var nativeOpen=window.open;window.open=function(url){if(parent!==window&&typeof url==="string"&&/^https?:\/\//.test(url)){parent.postMessage({type:"ecto:usercontent-link-click",href:url},"*");return null}return nativeOpen?nativeOpen.apply(window,arguments):null};document.addEventListener("click",function(e){var target=e.target instanceof Element?e.target:null;if(!target)return;if(parent===window)return;var a=target.closest?target.closest("a[href]"):null;if(a&&a.href&&/^https?:\/\//.test(a.href)&&a.href.replace(/#.*$/,"")!==loc){if(isInlineMediaUrlClick(a,a.href))return;var productId=extractProductId(target)||extractProductId(a);if(productId){e.preventDefault();parent.postMessage({type:"ecto-artifact-link-click",productId:productId},"*");return}e.preventDefault();parent.postMessage({type:"ecto:usercontent-link-click",href:a.href},"*");return}var dataHref=findDataHref(target);if(dataHref&&/^https?:\/\//.test(dataHref.href)&&dataHref.href.replace(/#.*$/,"")!==loc){if(isInlineMediaUrlClick(dataHref.node,dataHref.href))return;e.preventDefault();parent.postMessage({type:"ecto:usercontent-link-click",href:dataHref.href},"*")}},true)})();</script><script>(function(){var FOCUS_TYPE="ecto:artifact-focus-request";var CLOSE_TYPE="ecto:artifact-close-request";function focusArtifactDocument(){var body=document.body;if(!body)return;try{window.focus();}catch(e){}if(!body.hasAttribute("tabindex"))body.setAttribute("tabindex","-1");try{body.focus({preventScroll:true});}catch(e){try{body.focus();}catch(e2){}}}window.addEventListener("message",function(event){if(event.source!==window.parent)return;var data=event.data;if(!data||typeof data!=="object"||data.type!==FOCUS_TYPE)return;if(document.readyState==="loading"){document.addEventListener("DOMContentLoaded",focusArtifactDocument,{once:true});return;}focusArtifactDocument();});window.addEventListener("keydown",function(event){if(event.key!=="Escape")return;window.setTimeout(function(){if(event.defaultPrevented)return;window.parent.postMessage({type:CLOSE_TYPE},"*");},0);});})();</script></body>
-</html>
