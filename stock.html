@@ -15,16 +15,16 @@ html,body{min-height:100%;background:var(--bg);color:var(--txt);font-family:Aria
 body{background:linear-gradient(180deg,#fff 0,#f5f7fb 250px)}
 button,input,select{font:inherit}button{cursor:pointer}
 .header{
-  position:sticky;top:0;z-index:50;background:#111827;color:#fff;
-  border-bottom:3px solid #ffc107;box-shadow:0 3px 14px #0003
+  position:sticky;top:0;z-index:20;background:#fff;
+  border-bottom:1px solid var(--line);box-shadow:0 2px 12px #17203312
 }
-.header-in{max-width:1180px;margin:auto;min-height:68px;padding:9px 14px;display:flex;align-items:center;justify-content:space-between;gap:11px}
-.brand{display:flex;align-items:center;gap:11px;min-width:0}
-.logo{width:48px;height:48px;object-fit:contain;border-radius:10px;background:#000}
-.brand h1{font-size:18px;font-weight:900;color:#fff;margin:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.brand p{font-size:11px;color:#cbd5e1;margin-top:3px}
+.header-in{max-width:1180px;margin:auto;padding:12px 16px;display:flex;align-items:center;justify-content:space-between;gap:12px}
+.brand{display:flex;align-items:center;gap:10px;min-width:0}
+.logo{width:42px;height:42px;border-radius:12px;object-fit:cover;background:#f1f5f9}
+.brand h1{font-size:18px;font-weight:900;color:#111827}.brand p{font-size:10px;color:var(--muted);margin-top:3px}
 .head-actions{display:flex;gap:7px}
-.head-btn{height:42px;border:0;border-radius:9px;background:#374151;color:#fff;font-size:11px;padding:9px 10px;font-weight:900}
-.head-btn.refresh{background:#ffc107;color:#111827}
+.head-btn{height:42px;border:1px solid var(--line);border-radius:11px;background:#fff;color:#111827;font-size:14px;padding:0 12px;font-weight:800}
+.head-btn.refresh{background:var(--y2);border-color:var(--y2)}
 .container{width:min(1180px,100%);margin:auto;padding:18px 14px 70px}
 .top{display:flex;gap:9px;flex-wrap:wrap;margin-bottom:14px}
 .btn{min-height:42px;border:0;border-radius:11px;padding:10px 15px;font-weight:800}
@@ -120,10 +120,10 @@ function tutupHalaman(){
   <div class="header-in">
     <div class="brand">
       <img src="logo.png" class="logo" onerror="this.style.display='none'">
-      <div><h1>Fixzy</h1><p>Produk & Stok</p></div>
+      <div><h1>Fixzy</h1><p>Produk & Stok • Firebase</p></div>
     </div>
     <div>
-     
+      <button class="head-btn" onclick="tutupHalaman()">✕ Tutup</button>
       <button class="head-btn refresh" id="refreshBtn" onclick="refreshHalaman()">↻ Refresh</button>
     </div>
   </div>
@@ -249,7 +249,7 @@ function refreshHalaman(){
 <script type="module">
 import {initializeApp} from "https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js";
 import {getAuth,onAuthStateChanged} from "https://www.gstatic.com/firebasejs/11.10.0/firebase-auth.js";
-import {getFirestore,collection,getDocs,addDoc,updateDoc,deleteDoc,doc,getDoc,query,where,serverTimestamp} from "https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js";
+import {getFirestore,collection,getDocs,addDoc,updateDoc,deleteDoc,doc,query,where,serverTimestamp} from "https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js";
 
 const firebaseConfig={
   apiKey:"AIzaSyCwMbJsuORhIq4QCmp4c1r6OsjAUlfxU5Y",
@@ -270,38 +270,6 @@ let csvRows=[];
 let editingId=null;
 
 const $=id=>document.getElementById(id);
-
-let profile=null;
-let ownerUid=null;
-let myRole=null;
-
-onAuthStateChanged(auth, async (user)=>{
-  if(!user){
-    location.replace("login.html");
-    return;
-  }
-  uid=user.uid;
-  try{
-    const userSnap = await getDoc(doc(db,"users",uid));
-    if(!userSnap.exists()){
-      $("listMsg").textContent="Profil tidak ditemukan di users/"+uid;
-      return;
-    }
-    profile=userSnap.data()||{};
-    myRole=String(profile.role||"").toLowerCase();
-    ownerUid = myRole==="owner" ? uid : (profile.ownerUid||profile.ownerId||uid);
-    if(!["owner","superadmin"].includes(myRole)){
-      document.body.innerHTML='<div style="min-height:100vh;display:flex;align-items:center;justify-content:center;background:#f5f7fb;padding:20px"><div style="background:#fff;border:2px solid #111827;border-radius:16px;padding:24px;max-width:420px;text-align:center;box-shadow:6px 6px 0 #111827"><h2 style="color:#dc2626">Akses Ditolak</h2><p style="margin-top:10px;color:#475569;line-height:1.5">Halaman Stok hanya untuk <b>Owner</b> & <b>Superadmin</b>.<br>Role kamu: <b>'+myRole+'</b></p><button onclick="location.href='index.html'" style="margin-top:14px;background:#111827;color:#fff;border:0;border-radius:10px;padding:10px 16px;font-weight:900">Kembali</button></div></div>';
-      return;
-    }
-    $("listMsg").textContent="Login sebagai "+myRole+" - memuat stok...";
-    await loadProducts();
-  }catch(e){
-    console.error(e);
-    $("listMsg").textContent="Gagal cek role: "+e.message;
-  }
-});
-
 const money=n=>"Rp "+Number(n||0).toLocaleString("id-ID");
 
 function showLoading(v,text="Memproses..."){
