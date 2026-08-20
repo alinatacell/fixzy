@@ -280,7 +280,7 @@ window.salinPesanWA=async()=>{
     }
   }
 };
-// === FIX WA TIDAK TERKIRIM - cuma ini yang diubah ===
+// FIX WA ONLY - hapus dobel, pakai anchor click biar tidak di-block
 window.kirimWhatsApp=()=>{
   const d=window._waPending;
   if(!d) return;
@@ -292,14 +292,13 @@ window.kirimWhatsApp=()=>{
   }
   const link = window._waLink || ("https://wa.me/"+nomor+"?text="+encodeURIComponent(d.message));
   $("waPopup").classList.remove("show");
-  // anchor click biar tidak di-block popup blocker
   const a=document.createElement('a');
   a.href=link;
   a.target='_blank';
   a.rel='noopener';
   document.body.appendChild(a);
   a.click();
-  setTimeout(()=>{ try{a.remove();}catch{} window._waPending=null; window._waLink=null; },1000);
+  setTimeout(()=>{ try{a.remove();}catch{} window._waPending=null; window._waLink=null; },1200);
 };
 
 window.kirimResetPassword=async email=>{try{if(!validEmail(email))throw new Error("Email tidak valid.");await sendPasswordResetEmail(auth,email);tampilNotice("✅ Reset Password","Link reset dikirim ke "+esc(email)+".")}catch(e){tampilNotice("❌ Reset Password",esc(e.message||e))}};
