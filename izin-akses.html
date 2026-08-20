@@ -48,7 +48,7 @@ main{max-width:1180px;margin:auto;padding:14px 10px 70px}.card{background:#fff;b
 <div class="popup" id="popup"><div class="popup-box"><h3 id="popupTitle">Tambah Akun</h3><div class="grid">
 <div class="field"><label>NAMA</label><input id="fNama"></div>
 <div class="field"><label>ROLE</label><select id="fRole"><option value="employee">Karyawan</option><option value="reseller">Reseller</option></select></div>
-<div class="field"><label>EMAIL LOGIN</label><input id="fEmail" type="email"></div>
+<div class="field"><label>EMAIL LOGIN</label><input id="fEmail" oninput="try{isValidEmailStrictFixzy(this.value); this.style.borderColor='#cbd5e1';}catch(e){this.style.borderColor='#ef4444';}" type="email"></div>
 <div class="field"><label>NO. WA</label><input id="fWA" type="tel" maxlength="15" placeholder="08xxxxxxxxxx"></div>
 <div class="field" id="passWrap"><label id="passLabel">PASSWORD AWAL</label><input id="fPassword" type="password" placeholder="Minimal 6 karakter"></div>
 <div class="field"><label>JABATAN</label><input id="fJabatan" placeholder="Teknisi / Kasir"></div>
@@ -67,7 +67,6 @@ import{getAuth,onAuthStateChanged,createUserWithEmailAndPassword,updateProfile,s
 import{getFirestore,collection,query,where,getDocs,doc,getDoc,setDoc,serverTimestamp}from"https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js";
 const cfg={apiKey:"AIzaSyC_PcarMTT5Un7qfSLzf92o5OGn5rginsI",authDomain:"fixzy-update.firebaseapp.com",projectId:"fixzy-update",storageBucket:"fixzy-update.firebasestorage.app",messagingSenderId:"995892519622",appId:"1:995892519622:web:fa41047944d8e5b35d6dc7"};
 const app=getApps().length?getApp():initializeApp(cfg),auth=getAuth(app),db=getFirestore(app),$ = id=>document.getElementById(id);
-function isValidEmailStrictFixzy(email){ const e=String(email||'').trim().toLowerCase(); if(e.endsWith('@gmail.co')) throw new Error('Anda ketik '+e+' — harus gmail.com'); if(e.includes('@gmail.') && !e.endsWith('@gmail.com')) throw new Error('Gunakan gmail.com bukan @'+e.split('@')[1]); return true; }
 const rupiah=n=>"Rp "+(Number(n)||0).toLocaleString("id-ID"),esc=v=>String(v??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]));
 
 // Daftar izin TIDAK lagi hardcode. Sumbernya adalah menu .menu-link di index.html.
@@ -216,9 +215,9 @@ window.simpanAkun=async()=>{
      tampilNotice("✅ Berhasil","Data akun berhasil diperbarui.");return;
    }
    // === BUAT BARU - FIX PERMISSIONS ===
-   isValidEmailStrictFixzy(email);
    if(pass.length<6)return tampilNotice("⚠️ Password","Password minimal 6 karakter.");
-   const accountData={ownerUid, role:r, status, nama:n, namaKaryawan:n, email, noWA:wa, wa, noWa:wa, jabatan:j, upahHarian:upah, izin, permissions:izin, tanggalDaftar:new Date().toISOString()};
+   isValidEmailStrictFixzy(email);
+       const accountData={ownerUid, role:r, status, nama:n, namaKaryawan:n, email, noWA:wa, wa, noWa:wa, jabatan:j, upahHarian:upah, izin, permissions:izin, tanggalDaftar:new Date().toISOString()};
    const newUid=await buatAuthBaruDanTulisDokumen(email,pass,n,accountData);
    $("popup").classList.remove("show");
    const pesan=`Silahkan login\n\nNama: ${n}\nEmail: ${email}\nPassword: ${pass}\nRole: ${r}\nLink: https://fixzy-olive.vercel.app`;
@@ -236,6 +235,25 @@ window.simpanAkun=async()=>{
 
 
 
+// === FIX TELITI: BLOK gmail.co - THEMA TETAP, CUMA VALIDASI ===
+function isValidEmailStrictFixzy(email){
+  const e = String(email||"").trim().toLowerCase();
+  if(!e) return false;
+  if(e.endsWith('@gmail.co')){
+    throw new Error('Anda ketik '+e+' — domain gmail.co tidak ada. Harus gmail.com (pakai M). Contoh: servis@gmail.com bukan servis@gmail.co');
+  }
+  if(e.endsWith('@yahoo.co')||e.endsWith('@hotmail.co')||e.endsWith('@outlook.co')){
+    throw new Error('Domain '+e.split('@')[1]+' tidak valid. Gunakan .com');
+  }
+  if(e.includes('@gmail.') && !e.endsWith('@gmail.com')){
+    throw new Error('Gunakan @gmail.com bukan @'+e.split('@')[1]+' — Anda ketik '+e);
+  }
+  if(!/^[^@]+@[^@]+\.[^@]+$/.test(e)){
+    throw new Error('Format email tidak valid: '+e);
+  }
+  return true;
+}
+
 function nomorWhatsApp(v){
   let s=String(v||"").replace(/[^0-9]/g,"").trim();
   if(!s) return "";
@@ -247,62 +265,60 @@ function nomorWhatsApp(v){
 function tampilWaPopup(data){
   const nomorWA = nomorWhatsApp(data.phone);
   const waLink = "https://wa.me/"+nomorWA+"?text="+encodeURIComponent(data.message);
-  const esc2 = (v)=>String(v||"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",""":"&quot;","'":"&#39;"}[m]));
+  const esc2 = (v)=>String(v||"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[m]));
   document.getElementById("waText").innerHTML=`
     Akun <b>${esc2(data.name)}</b> berhasil disimpan & terdaftar di Firestore ✅<br><br>
     Nomor WA tujuan: <b>${esc2(data.phone||"-")} → ${esc2(nomorWA)}</b><br><br>
     Pesan yang akan dikirim:
     <div id="waMsgBox" style="margin-top:8px;padding:11px;border:1px solid #e2e8f0;border-radius:10px;background:#f8fafc;white-space:pre-wrap;font-size:11px;max-height:180px;overflow:auto">${esc2(data.message)}</div>
     <div style="margin-top:10px;display:flex;gap:7px;flex-wrap:wrap">
-      <a href="${waLink}" target="_blank" rel="noopener" id="waDirectLink" style="flex:1;text-align:center;padding:10px;background:#25D366;color:#fff;border-radius:8px;text-decoration:none;font-weight:900;display:block">📲 Buka WhatsApp</a>
+      <a href="${waLink}" target="_blank" id="waDirectLink" style="flex:1;text-align:center;padding:10px;background:#25D366;color:#fff;border-radius:8px;text-decoration:none;font-weight:900;display:block">📲 Buka WhatsApp</a>
       <button class="btn secondary" onclick="salinPesanWA()" style="padding:10px">📋 Salin Pesan</button>
     </div>
-    <div style="margin-top:8px;font-size:10px;color:#64748b">Jika tombol tidak merespon, klik Salin Pesan lalu paste manual di WA. Pastikan no WA diawali 08 / 628</div>
+    <div style="margin-top:8px;font-size:10px;color:#64748b">Jika tombol tidak merespon, klik Salin Pesan lalu paste manual di WA.</div>
   `;
   document.getElementById("waPopup").classList.add("show");
   window._waLink = waLink;
-  window._waNomor = nomorWA;
 }
-window.tutupWaPopup=()=>{document.getElementById("waPopup").classList.remove("show");window._waPending=null;window._waLink=null;window._waNomor=null;};
+window.tutupWaPopup=()=>{document.getElementById("waPopup").classList.remove("show");window._waPending=null;window._waLink=null};
 window.salinPesanWA=async()=>{
   const d=window._waPending;
   if(!d) return;
   try{
     await navigator.clipboard.writeText(d.message);
-    tampilNotice("✅ Disalin","Pesan login berhasil disalin, tinggal paste di WhatsApp.<br><br><code style='font-size:10px'>"+d.message.replace(/</g,"&lt;")+"</code>");
+    const nTitle=document.getElementById("noticeTitle");const nText=document.getElementById("noticeText");
+    if(nTitle) nTitle.textContent="✅ Disalin";
+    if(nText) nText.innerHTML="Pesan login berhasil disalin, tinggal paste di WhatsApp.<br><br><code style='font-size:10px'>"+d.message.replace(/</g,"&lt;")+"</code>";
+    document.getElementById("notice").classList.add("show");
   }catch{
     const box=document.getElementById("waMsgBox");
     if(box){
       const r=document.createRange();r.selectNode(box);window.getSelection().removeAllRanges();window.getSelection().addRange(r);
       try{document.execCommand("copy");}catch{}
-      tampilNotice("✅ Disalin","Pesan disalin.");
+      document.getElementById("noticeTitle").textContent="✅ Disalin";
+      document.getElementById("noticeText").innerHTML="Pesan disalin.";
+      document.getElementById("notice").classList.add("show");
     }
   }
 };
-// === FIX WA TIDAK TERKIRIM: single function, pakai anchor click biar tidak di-block popup ===
 window.kirimWhatsApp=()=>{
   const d=window._waPending;
-  if(!d){ tampilNotice("⚠️ Gagal","Data WA kosong"); return; }
-  const nomor = window._waNomor || nomorWhatsApp(d.phone);
-  if(!nomor || nomor.length < 10){
-    $("waPopup").classList.remove("show");
-    tampilNotice("⚠️ No. WA Tidak Valid","Nomor "+esc(d.phone||"-")+" tidak valid. Harus 08xxxxxxxxxx atau 628xxxxxxxxxx");
-    return;
+  if(!d) return;
+  const link=window._waLink || ("https://wa.me/"+nomorWhatsApp(d.phone)+"?text="+encodeURIComponent(d.message));
+  try{
+    const win=window.open(link,"_blank","noopener");
+    if(!win){
+      // popup diblokir, pakai link langsung
+      document.getElementById("waDirectLink").click();
+    }
+  }catch(e){
+    location.href=link;
   }
-  const url = window._waLink || ("https://wa.me/"+nomor+"?text="+encodeURIComponent(d.message));
-  $("waPopup").classList.remove("show");
-  // Buat anchor biar tidak ke-block popup blocker
-  const a=document.createElement('a');
-  a.href=url;
-  a.target='_blank';
-  a.rel='noopener';
-  document.body.appendChild(a);
-  a.click();
-  setTimeout(()=>{ try{a.remove();}catch{}; },1000);
-  window._waPending=null; window._waLink=null; window._waNomor=null;
+  document.getElementById("waPopup").classList.remove("show");
+  setTimeout(()=>{window._waPending=null;window._waLink=null;},2000);
 };
 
-
+window.kirimWhatsApp=()=>{const d=window._waPending;if(!d)return;const nomor=nomorWhatsApp(d.phone);if(!nomor){$("waPopup").classList.remove("show");tampilNotice("⚠️ No. WA Tidak Valid","Nomor tidak valid.");return}const url="https://wa.me/"+nomor+"?text="+encodeURIComponent(d.message);$("waPopup").classList.remove("show");window.open(url,"_blank");window._waPending=null};
 window.kirimResetPassword=async email=>{try{if(!validEmail(email))throw new Error("Email tidak valid.");await sendPasswordResetEmail(auth,email);tampilNotice("✅ Reset Password","Link reset dikirim ke "+esc(email)+".")}catch(e){tampilNotice("❌ Reset Password",esc(e.message||e))}};
 async function init(){onAuthStateChanged(auth,async u=>{if(!u){location.replace("login.html");return}uid=u.uid;try{const s=await getDoc(doc(db,"users",uid));if(!s.exists())throw new Error("Profil Owner tidak ditemukan.");profile=s.data()||{};if(!["owner","superadmin","admin"].includes(norm(profile.role)))throw new Error("Halaman Izin Akses hanya untuk Owner.");ownerUid=norm(profile.role)==="owner"?uid:(profile.ownerUid||profile.ownerId||uid);ready=true;await loadPermissionsFromIndex();await load()}catch(e){ready=false;$("status").innerHTML=`<span class="err">🔒 ${esc(e.message||e)}</span>`;$("tbody").innerHTML='<tr><td colspan="8" class="empty">Akses tidak tersedia.</td></tr>'}})}
 window.muatSemua=async()=>{if(ready){$("status").textContent="Memuat ulang...";await load()}};
