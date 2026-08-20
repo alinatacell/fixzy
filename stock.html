@@ -72,6 +72,15 @@ tr:hover td{background:#fffdf5}
 .loading{display:none;position:fixed;inset:0;z-index:200;background:#11182766;align-items:center;justify-content:center}.loading.show{display:flex}
 .loader{background:#fff;border:1px solid var(--line);border-radius:16px;padding:24px;text-align:center;box-shadow:0 20px 60px #0002}.spin{width:32px;height:32px;border:4px solid #e5e7eb;border-top-color:var(--y);border-radius:50%;animation:s .8s linear infinite;margin:auto auto 10px}@keyframes s{to{transform:rotate(360deg)}}
 .toast{position:fixed;left:50%;bottom:22px;z-index:300;transform:translate(-50%,20px);opacity:0;pointer-events:none;background:#111827;color:#fff;border:1px solid #374151;border-radius:12px;padding:11px 15px;font-size:11px;width:min(90%,430px);text-align:center;transition:.2s}.toast.show{opacity:1;transform:translate(-50%,0)}
+.confirm-ui{display:none;position:fixed;inset:0;z-index:400;background:#11182780;backdrop-filter:blur(4px);align-items:center;justify-content:center;padding:14px}
+.confirm-ui.show{display:flex}
+.confirm-box{width:min(430px,100%);background:#fff;border:1px solid var(--line);border-radius:17px;padding:18px;box-shadow:0 25px 80px #0004}
+.confirm-box h3{font-size:16px;color:#111827;margin-bottom:8px}
+.confirm-box p{font-size:12px;color:#475569;line-height:1.55;white-space:pre-line}
+.confirm-actions{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:15px}
+.confirm-no,.confirm-yes{border:0;border-radius:10px;padding:11px;font-weight:900;cursor:pointer}
+.confirm-no{background:#f1f5f9;color:#334155}.confirm-yes{background:#dc2626;color:#fff}
+
 @media(max-width:900px){.stats{grid-template-columns:repeat(2,1fr)}.grid4{grid-template-columns:1fr 1fr}.grid4 .search{grid-column:1/-1}}
 @media(max-width:600px){
   .container{padding:10px}.header-in{padding:10px}.brand h1{font-size:16px}.brand p{font-size:9px}
@@ -279,7 +288,6 @@ function refreshHalaman(){
 import {initializeApp} from "https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js";
 import {getAuth,onAuthStateChanged} from "https://www.gstatic.com/firebasejs/11.10.0/firebase-auth.js";
 import {getFirestore,collection,getDocs,addDoc,updateDoc,deleteDoc,doc,query,where,serverTimestamp,getDoc} from "https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js";
-import * as XLSX from "https://cdn.sheetjs.com/xlsx-0.20.3/package/xlsx.mjs";
 
 const firebaseConfig={
   apiKey:"AIzaSyC_PcarMTT5Un7qfSLzf92o5OGn5rginsI",
@@ -452,6 +460,13 @@ function setImportMessage(text,type="info"){
 
 async function handleExcelUpload(file){
   if(!file)return;
+  let XLSX;
+  try{
+    XLSX=await import("https://cdn.sheetjs.com/xlsx-0.20.3/package/xlsx.mjs");
+  }catch(e){
+    setImportMessage("Library Excel gagal dimuat. Periksa koneksi internet lalu coba lagi.","err");
+    return;
+  }
   setImportMessage("Membaca file Excel...","info");
   $("saveCsvBtn").style.display="none";
   $("preview").style.display="none";
@@ -603,18 +618,26 @@ async function previewCSV(){
      * Kode / nama produk / stock awal / harga / harga sabtu /
      * terjual / sisa stock / merk / status.
      */
-    csvRows=normalizeCSV(parsed);
+    const normalized=normalizeCSV(parsed);
+    const result=findDuplicateProducts(normalized,products);
+    csvRows=result.accepted;
+    showDuplicateInfo(result.duplicate);
 
     renderPreview();
 
-    msg(
-      "BERHASIL MEMBACA CSV\\n"+
-      csvRows.length+" produk ditemukan.\\n\\n"+
-      "Data belum masuk Firebase. Klik SIMPAN HASIL CSV KE FIREBASE.",
-      "ok"
-    );
-
-    $("saveCsvBtn").style.display="block";
+    if(!csvRows.length){
+      $("saveCsvBtn").style.display="none";
+      msg(`Tidak ada produk baru. ${result.duplicate.length} produk sudah ada/duplikat.`,"info");
+    }else{
+      msg(
+        "BERHASIL MEMBACA CSV\n"+
+        csvRows.length+" produk baru ditemukan."+
+        (result.duplicate.length?`\n${result.duplicate.length} produk duplikat ditolak.`:"")+
+        "\n\nData belum masuk Firebase. Klik SIMPAN HASIL CSV KE FIREBASE.",
+        "ok"
+      );
+      $("saveCsvBtn").style.display="block";
+    }
 
   }catch(e){
     console.error("CSV ERROR:",e);
@@ -929,8 +952,18 @@ window.saveManual=async()=>{
   };
   showLoading(true,editingId?"Memperbarui stok...":"Menyimpan stok...");
   try{
-    if(editingId)await updateDoc(doc(db,"stok",editingId),data);
-    else await addDoc(collection(db,"stok"),{...data,createdAt:serverTimestamp()});
+    if(editingId){
+      await updateDoc(doc(db,"stok",editingId),data);
+    }else{
+      // Cegah produk ganda: kode sama ATAU nama + kategori sama.
+      const duplicate=products.find(p=>isSameProduct(data,p));
+      if(duplicate){
+        showLoading(false);
+        toast(`Produk sudah ada: ${duplicate.nama||duplicate.kode||"produk"}`);
+        return;
+      }
+      await addDoc(collection(db,"stok"),{...data,createdAt:serverTimestamp()});
+    }
     closeManual();
     toast(editingId?"Stok diperbarui":"Stok ditambahkan");
     await loadProducts();
@@ -941,32 +974,29 @@ window.saveManual=async()=>{
 }
 window.deleteProduct=async id=>{
   const p=products.find(x=>x.id===id);
-  if(!p){toast("Produk tidak ditemukan.");return}
-  if(!(await uiConfirm(
-    `Hapus "${p.nama||p.kode||"produk"}" dari Firebase?`,
+  if(!p){toast("Produk tidak ditemukan atau data sudah berubah.");return}
+  const ok=await uiConfirm(
+    `Hapus produk "${p.nama||p.kode||"produk"}" dari Firebase?`,
     "Hapus Produk",
     "Hapus"
-  )))return;
+  );
+  if(!ok)return;
 
   showLoading(true,"Menghapus produk...");
   try{
     await deleteDoc(doc(db,"stok",id));
-    products=products.filter(x=>x.id!==id);
-    render();
-    toast("Produk berhasil dihapus.");
-    // Sinkronkan lagi dari Firebase supaya tampilan benar-benar sesuai database.
     await loadProducts();
+    toast("Produk berhasil dihapus dari Firebase.");
   }catch(e){
     console.error("DELETE STOCK ERROR:",e);
-    let detail=e?.message||String(e);
-    if(/permission|insufficient|unauthenticated/i.test(detail)){
-      detail="Akses hapus ditolak Firestore Rules. Pastikan dokumen stok memiliki akun/ownerEmail/konterId yang sama dengan akun yang sedang login.";
-    }
-    toast("Gagal menghapus: "+detail);
+    const detail=e?.message||String(e);
+    toast(/permission|insufficient|unauthenticated/i.test(detail)
+      ? "Hapus ditolak Firebase Rules. Pastikan akun ini memiliki akses ke dokumen stok."
+      : "Gagal menghapus: "+detail);
   }finally{
     showLoading(false);
   }
-}
+};
 window.resetFilter=()=>{$("search").value="";$("cat").value="";$("status").value="";render()};
 $("search").addEventListener("input",render);$("cat").addEventListener("change",render);$("status").addEventListener("change",render);
 $("pricePercent").addEventListener("input",updatePriceRulePreview);$("priceNominal").addEventListener("input",updatePriceRulePreview);
