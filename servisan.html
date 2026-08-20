@@ -76,6 +76,7 @@ function getBusinessIdentity(){
    ?email
    :String(profile.ownerEmail||profile.ownerEmailAddress||"").trim().toLowerCase()||email;
  const konterId=String(profile.konterId||"").trim();
+ // akun bisnis tetap ownerEmail agar cocok dengan stok lama FIXZY.
  return {email,ownerEmail,konterId,akun:ownerEmail};
 }
 function notaBaru(){const d=new Date(),p=n=>String(n).padStart(2,"0");return "SRV-"+d.getFullYear()+p(d.getMonth()+1)+p(d.getDate())+"-"+p(d.getHours())+p(d.getMinutes())+p(d.getSeconds())+String(d.getMilliseconds()).padStart(3,"0")}
@@ -97,70 +98,61 @@ async function loadEmployees(){
  const map=new Map();
  const identity=getBusinessIdentity();
 
- // RULES USERS:
- // Karyawan hanya boleh membaca users lain melalui konterId yang sama.
- // Owner/admin dapat membaca user berdasarkan ownerEmail.
- // Selain users, koleksi karyawan memakai isMyData(), sehingga
- // akun milik owner dapat dicari melalui field akun/ownerEmail/konterId.
+ // Mengikuti Firestore Rules USERS:
+ // - employee/karyawan: akses user lain melalui konterId yang sama.
+ // - owner/admin/superadmin: akses user melalui ownerEmail miliknya.
+ // Tidak memakai query ownerUid/ownerId karena field tersebut bukan
+ // jalur izin read pada Rules users/{userId}.
  const qsUsers=[];
  if(identity.konterId){
-   qsUsers.push(query(collection(db,"users"),where("konterId","==",identity.konterId)));
+   qsUsers.push({label:"users.konterId",q:query(collection(db,"users"),where("konterId","==",identity.konterId))});
  }
- if(role==="owner"||role==="admin"||role==="superadmin"){
-   if(identity.ownerEmail) qsUsers.push(query(collection(db,"users"),where("ownerEmail","==",identity.ownerEmail)));
+ if(identity.ownerEmail && ["owner","admin","superadmin"].includes(role)){
+   qsUsers.push({label:"users.ownerEmail",q:query(collection(db,"users"),where("ownerEmail","==",identity.ownerEmail))});
  }
 
- for(const q of qsUsers){
+ for(const item of qsUsers){
    try{
-     const s=await getDocs(q);
+     const s=await getDocs(item.q);
      s.forEach(d=>{
        const x={id:d.id,...(d.data()||{})};
-       const r=String(x.role||"").toLowerCase();
-       const st=String(x.status||"").toLowerCase();
-       if(["employee","karyawan"].includes(r)&&(!st||["aktif","active"].includes(st))){
-         map.set(d.id,x);
-       }
+       const r=String(x.role||"").trim().toLowerCase();
+       const st=String(x.status||"").trim().toLowerCase();
+       if(["employee","karyawan"].includes(r)&&(!st||["aktif","active"].includes(st))) map.set(d.id,x);
      });
-   }catch(e){
-     console.warn("users teknisi query dilewati:",e);
-   }
+   }catch(e){console.warn("Query teknisi users dilewati:",item.label,e)}
  }
 
  // Koleksi karyawan mengikuti isMyData() pada Rules.
  const qsKaryawan=[];
- if(identity.akun) qsKaryawan.push(query(collection(db,"karyawan"),where("akun","==",identity.akun)));
- if(identity.ownerEmail) qsKaryawan.push(query(collection(db,"karyawan"),where("ownerEmail","==",identity.ownerEmail)));
- if(identity.konterId) qsKaryawan.push(query(collection(db,"karyawan"),where("konterId","==",identity.konterId)));
+ if(identity.akun)qsKaryawan.push({label:"karyawan.akun",q:query(collection(db,"karyawan"),where("akun","==",identity.akun))});
+ if(identity.ownerEmail)qsKaryawan.push({label:"karyawan.ownerEmail",q:query(collection(db,"karyawan"),where("ownerEmail","==",identity.ownerEmail))});
+ if(identity.konterId)qsKaryawan.push({label:"karyawan.konterId",q:query(collection(db,"karyawan"),where("konterId","==",identity.konterId))});
 
- for(const q of qsKaryawan){
+ for(const item of qsKaryawan){
    try{
-     const s=await getDocs(q);
+     const s=await getDocs(item.q);
      s.forEach(d=>{
        const x={id:d.id,...(d.data()||{})};
-       const r=String(x.role||x.jabatan||"karyawan").toLowerCase();
-       const st=String(x.status||"").toLowerCase();
-       if(["employee","karyawan","teknisi"].includes(r)&&(!st||["aktif","active"].includes(st))){
-         map.set(d.id,x);
-       }
+       const r=String(x.role||x.jabatan||"karyawan").trim().toLowerCase();
+       const st=String(x.status||"").trim().toLowerCase();
+       if(["employee","karyawan","teknisi"].includes(r)&&(!st||["aktif","active"].includes(st))) map.set(d.id,x);
      });
-   }catch(e){
-     console.warn("koleksi karyawan query dilewati:",e);
-   }
+   }catch(e){console.warn("Query koleksi karyawan dilewati:",item.label,e)}
  }
 
  employees=[...map.values()];
  $("teknisi").innerHTML='<option value="">-- Pilih Teknisi --</option>'+
-   employees.map(x=>`<option value="${esc(x.id)}">${esc(x.nama||x.namaKaryawan||x.email||x.id)}</option>`).join("");
+   employees.map(x=>`<option value="${esc(x.id)}">${esc(x.nama||x.namaKaryawan||x.namaTeknisi||x.email||x.id)}</option>`).join("");
 
- if(!employees.length){
-   $("teknisi").innerHTML+='<option value="" disabled>-- Teknisi belum ditemukan --</option>';
- }
+ if(!employees.length)$("teknisi").innerHTML+='<option value="" disabled>-- Teknisi belum ditemukan --</option>';
 }
 
 async function loadProducts(){
  products=[];
  const map=new Map();
  const identity=getBusinessIdentity();
+ const queryErrors=[];
 
  function addProduct(d){
    const x={id:d.id,...(d.data()||{})};
@@ -168,51 +160,81 @@ async function loadProducts(){
    const oe=String(x.ownerEmail||"").trim().toLowerCase();
    const ki=String(x.konterId||"").trim();
 
-   // Data yang masuk hanya jika cocok dengan identitas yang
-   // memang diizinkan oleh isMyData() pada Rules.
+   // Sama dengan isMyData() pada Rules:
+   // akun == email login
+   // ownerEmail == email login
+   // konterId == konterId akun
+   // akun == ownerEmail akun karyawan
    const allowed=isSuperAdmin() ||
-     (identity.akun && akun===identity.akun) ||
-     (identity.ownerEmail && oe===identity.ownerEmail) ||
-     (identity.konterId && ki===identity.konterId);
+     (identity.email&&akun===identity.email) ||
+     (identity.email&&oe===identity.email) ||
+     (identity.konterId&&ki===identity.konterId) ||
+     (identity.ownerEmail&&akun===identity.ownerEmail);
 
-   if(!allowed) return;
+   if(!allowed)return;
 
-   const key=String(x.kode||x.kodeProduk||x.barcode||x.nama||x.namaProduk||d.id)
-     .trim().toLowerCase();
+   const key=String(x.kode||x.kodeProduk||x.sku||x.barcode||x.nama||x.namaProduk||d.id).trim().toLowerCase();
    const stok=Number(x.sisa??x.sisaStok??x.stokTersedia??x.stokAkhir??x.stok??x.qty??x.jumlah??0)||0;
    const item={...x,_stok:stok};
    const old=map.get(key);
-   if(!old||stok>Number(old._stok||0)) map.set(key,item);
+   if(!old||stok>Number(old._stok||0))map.set(key,item);
  }
 
  if(isSuperAdmin()){
    try{
      const s=await getDocs(collection(db,"stok"));
      s.forEach(addProduct);
-   }catch(e){console.warn("stok superadmin:",e)}
+   }catch(e){queryErrors.push(e);console.warn("Stok superadmin gagal dibaca:",e)}
  }else{
    const qs=[];
 
-   // Ini adalah jalur utama karena cocok dengan isMyData():
-   // akun == myOwnerEmail.
-   if(identity.akun) qs.push(query(collection(db,"stok"),where("akun","==",identity.akun)));
+   // ACUAN DARI HALAMAN STOK:
+   // ownerEmail == email login
+   // akun == email login
+   // konterId == konterId login
+   if(identity.email){
+     qs.push({label:"stok.akun.emailLogin",q:query(collection(db,"stok"),where("akun","==",identity.email))});
+     qs.push({label:"stok.ownerEmail.emailLogin",q:query(collection(db,"stok"),where("ownerEmail","==",identity.email))});
+   }
 
-   // Kompatibilitas data lama.
-   if(identity.ownerEmail) qs.push(query(collection(db,"stok"),where("ownerEmail","==",identity.ownerEmail)));
-   if(identity.konterId) qs.push(query(collection(db,"stok"),where("konterId","==",identity.konterId)));
+   // Jalur tambahan yang secara eksplisit diizinkan Rules:
+   // akun == myOwnerEmail()
+   if(identity.ownerEmail&&identity.ownerEmail!==identity.email){
+     qs.push({label:"stok.akun.ownerEmail",q:query(collection(db,"stok"),where("akun","==",identity.ownerEmail))});
+   }
 
-   for(const q of qs){
+   if(identity.konterId){
+     qs.push({label:"stok.konterId",q:query(collection(db,"stok"),where("konterId","==",identity.konterId))});
+   }
+
+   for(const item of qs){
      try{
-       const s=await getDocs(q);
+       const s=await getDocs(item.q);
        s.forEach(addProduct);
      }catch(e){
-       console.warn("stok query dilewati:",e);
+       queryErrors.push(e);
+       console.warn("Query stok dilewati:",item.label,e);
      }
    }
  }
 
  products=[...map.values()];
  renderProdukInfo();
+
+ const info=$("produkInfo");
+ if(!products.length&&queryErrors.length&&info){
+   if(["employee","karyawan"].includes(role)){
+     const stockPermission=
+       profile?.izin?.stock===true ||
+       profile?.permissions?.stock===true ||
+       profile?.hakAkses?.stock===true;
+     info.textContent=stockPermission
+       ?"Stok tidak ditemukan pada akun/konter ini."
+       :"Stok tidak tampil: Firestore Rules membutuhkan izin stock untuk karyawan.";
+   }else{
+     info.textContent="Stok tidak dapat dibaca. Cek field akun/ownerEmail/konterId.";
+   }
+ }
 }
 
 function renderProdukInfo(){
