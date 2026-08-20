@@ -15,16 +15,20 @@ html,body{min-height:100%;background:var(--bg);color:var(--txt);font-family:Aria
 body{background:linear-gradient(180deg,#fff 0,#f5f7fb 250px)}
 button,input,select{font:inherit}button{cursor:pointer}
 .header{
-  position:sticky;top:0;z-index:20;background:#111827;color:#fff;
+  position:sticky;top:0;z-index:20;background:#fff;
   border-bottom:1px solid var(--line);box-shadow:0 2px 12px #17203312
 }
 .header-in{max-width:1180px;margin:auto;padding:12px 16px;display:flex;align-items:center;justify-content:space-between;gap:12px}
 .brand{display:flex;align-items:center;gap:10px;min-width:0}
-.logo{width:48px;height:48px;border-radius:12px;object-fit:cover;background:#f1f5f9}
-.brand h1{font-size:18px;font-weight:900;color:#fff}.brand p{font-size:10px;color:var(--muted);margin-top:3px}
+.logo{width:42px;height:42px;border-radius:12px;object-fit:cover;background:#f1f5f9}
+.brand h1{font-size:18px;font-weight:900;color:#111827}.brand p{font-size:10px;color:var(--muted);margin-top:3px}
 .head-actions{display:flex;gap:7px}
-.head-btn{height:42px;border:1px solid #4b5563;border-radius:11px;background:#374151;color:#fff;font-size:14px;padding:0 12px;font-weight:800}
-.head-btn.refresh{background:var(--y2);border-color:var(--y2);color:#111827}
+.head-btn{height:42px;border:1px solid var(--line);border-radius:11px;background:#fff;color:#111827;font-size:14px;padding:0 12px;font-weight:800}
+.head-btn.refresh{background:var(--y2);border-color:var(--y2)}
+.header-account{margin-left:auto;text-align:right;line-height:1.15;min-width:0}
+.account-name{font-size:11px;font-weight:900;color:#d97706;max-width:180px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.account-exp{font-size:9px;color:var(--muted);margin-top:3px}
+@media(max-width:600px){.header-in{padding:9px 10px;gap:7px}.logo{width:38px;height:38px}.brand{gap:7px}.brand h1{font-size:16px}.brand p{font-size:9px}.account-name{max-width:110px;font-size:9px}.head-actions{gap:4px}.head-btn{width:38px;padding:0;height:38px}}
 .container{width:min(1180px,100%);margin:auto;padding:18px 14px 70px}
 .top{display:flex;gap:9px;flex-wrap:wrap;margin-bottom:14px}
 .btn{min-height:42px;border:0;border-radius:11px;padding:10px 15px;font-weight:800}
@@ -111,11 +115,15 @@ function tutupHalaman(){
   <div class="header-in">
     <div class="brand">
       <img src="logo.png" class="logo" onerror="this.style.display='none'">
-      <div><h1>FIXZY • STOK</h1><p>Produk & Stok • Firebase</p><div id="accountInfo" style="font-size:9px;color:#f59e0b;margin-top:2px">Memeriksa akun...</div></div>
+      <div><h1>FIXZY</h1><p>Stok Produk • <span id="headerRole">Memuat...</span></p></div>
     </div>
-    <div>
-      <button class="head-btn" onclick="tutupHalaman()">✕ Tutup</button>
-      <button class="head-btn refresh" id="refreshBtn" onclick="refreshHalaman()">↻ Refresh</button>
+    <div class="header-account">
+      <div class="account-name" id="headerAccount">Memuat...</div>
+      <div class="account-exp">Exp: <span id="headerExp">-</span></div>
+    </div>
+    <div class="head-actions">
+      <button class="head-btn" onclick="tutupHalaman()">✕</button>
+      <button class="head-btn refresh" id="refreshBtn" onclick="refreshHalaman()">↻</button>
     </div>
   </div>
 </header>
@@ -197,7 +205,7 @@ function tutupHalaman(){
     <div class="field"><label>MERK / SUPPLIER</label><input id="fMerk" placeholder="Zevan"></div>
     <div class="field full"><label>CATATAN</label><input id="fNote" placeholder="Opsional"></div>
   </div>
-  <div class="sub" style="margin-top:8px">Jika harga jual kosong: (modal × 2) + Rp50.000.</div>
+  <div class="sub" style="margin-top:8px">Jika harga jual kosong: harga modal + 15%.</div>
   <div class="modal-actions"><button class="btn dark" onclick="closeManual()">Batal</button><button class="btn primary" id="manualSave" onclick="saveManual()">SIMPAN STOK</button></div>
 </div>
 </div>
@@ -224,21 +232,22 @@ import {getAuth,onAuthStateChanged} from "https://www.gstatic.com/firebasejs/11.
 import {getFirestore,collection,getDocs,addDoc,updateDoc,deleteDoc,doc,query,where,serverTimestamp,getDoc} from "https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js";
 
 const firebaseConfig={
-  apiKey:"AIzaSyCwMbJsuORhIq4QCmp4c1r6OsjAUlfxU5Y",
-  authDomain:"fixzy-f056f.firebaseapp.com",
-  projectId:"fixzy-f056f",
-  storageBucket:"fixzy-f056f.firebasestorage.app",
-  messagingSenderId:"838081521031",
-  appId:"1:838081521031:web:50fdee909b56460b055f22"
+  apiKey:"AIzaSyC_PcarMTT5Un7qfSLzf92o5OGn5rginsI",
+  authDomain:"fixzy-update.firebaseapp.com",
+  projectId:"fixzy-update",
+  storageBucket:"fixzy-update.firebasestorage.app",
+  messagingSenderId:"995892519622",
+  appId:"1:995892519622:web:fa41047944d8e5b35d6dc7"
 };
 
 const app=initializeApp(firebaseConfig);
 const auth=getAuth(app);
 const db=getFirestore(app);
-let role="";
-let profile=null;
 
 let uid=null;
+let currentUser=null;
+let currentProfile=null;
+let isSuperAdmin=false;
 let products=[];
 let csvRows=[];
 let editingId=null;
@@ -331,7 +340,7 @@ function normalizeCSV(rows){
       nama:String(nama||"").trim(),
       kategori:String(kategori).trim().toUpperCase(),
       hargaModal:modal,
-      hargaJual:jual||modal*1.25,
+      hargaJual:jual||Math.round(modal*1.15),
       sisa:Math.max(0,sisa),
       merk:String(merk||"").trim(),
       catatan:String(catatan||"").trim()
@@ -500,6 +509,25 @@ function renderPreview(){
   if(csvRows.length>30)msg(`CSV terbaca ${csvRows.length} produk. Preview menampilkan 30 pertama.`,"info");
 }
 
+function identityFields(){
+  const email=String(currentUser?.email||"").toLowerCase();
+  const konterId=String(currentProfile?.konterId||"").trim();
+  const ownerUid=String(currentProfile?.role==="owner" ? uid : (currentProfile?.ownerUid||currentProfile?.ownerId||"")).trim();
+  const ownerEmail=String(currentProfile?.role==="owner" ? email : (currentProfile?.ownerEmail||email)).toLowerCase();
+  return {uid,akun:email,ownerEmail,konterId,ownerUid};
+}
+
+function formatExp(v){
+  if(!v)return "-";
+  try{
+    let d=null;
+    if(typeof v==="object"&&typeof v.toDate==="function")d=v.toDate();
+    else if(typeof v==="object"&&v.seconds!==undefined)d=new Date(Number(v.seconds)*1000);
+    else d=new Date(v);
+    return isNaN(d.getTime())?"-":d.toLocaleDateString("id-ID",{day:"2-digit",month:"2-digit",year:"numeric"});
+  }catch{return "-"}
+}
+
 async function saveCSVToFirebase(){
   if(!uid){msg("Belum login Firebase. Silakan login terlebih dahulu.","err");return}
   if(!csvRows.length){msg("Belum ada data CSV.","err");return}
@@ -512,7 +540,7 @@ async function saveCSVToFirebase(){
     snap.forEach(d=>{const x=d.data();if(x.kode)existing.set(String(x.kode).trim().toLowerCase(),d.id)});
     let baru=0,update=0;
     for(const r of csvRows){
-      const data={...r,uid,updatedAt:serverTimestamp(),sumber:"CSV"};
+      const data={...r,...identityFields(),updatedAt:serverTimestamp(),sumber:"CSV"};
       const key=r.kode.toLowerCase();
       if(key && existing.has(key)){
         await updateDoc(doc(db,"stok",existing.get(key)),data);update++;
@@ -530,12 +558,24 @@ async function saveCSVToFirebase(){
 }
 
 async function loadProducts(){
-  if(!uid){$("listMsg").textContent="Menunggu login Firebase...";return}
+  if(!uid){$("listMsg").textContent="Sesi Firebase belum siap.";return}
   $("listMsg").textContent="Memuat data stok...";
   try{
-    const snap=await getDocs(query(collection(db,"stok"),where("uid","==",uid)));
-    products=[];
-    snap.forEach(d=>products.push({id:d.id,...d.data()}));
+    const ref=collection(db,"stok");
+    const map=new Map();
+    if(isSuperAdmin){
+      const snap=await getDocs(ref);
+      snap.forEach(d=>map.set(d.id,{id:d.id,...d.data()}));
+    }else{
+      const email=String(currentUser?.email||"").toLowerCase();
+      const queries=[query(ref,where("ownerEmail","==",email)),query(ref,where("akun","==",email))];
+      if(currentProfile?.konterId)queries.push(query(ref,where("konterId","==",String(currentProfile.konterId))));
+      for(const q of queries){
+        const snap=await getDocs(q);
+        snap.forEach(d=>map.set(d.id,{id:d.id,...d.data()}));
+      }
+    }
+    products=[...map.values()];
     $("listMsg").textContent=products.length?`${products.length} produk tersimpan di Firebase.`:"Belum ada data stok.";
     fillCategories();render();
   }catch(e){
@@ -575,7 +615,7 @@ function rowHTML(p){
   const stat=st>0
     ? `<span class="badge ready">READY • ${st}</span>`
     : `<span class="badge empty">KOSONG</span>`;
-  const jual=num(p.hargaJual)||Math.round(num(p.hargaModal)*1.25);
+  const jual=num(p.hargaJual)||Math.round(num(p.hargaModal)*1.15);
 
   return `<tr>
     <td class="stockSelectCol">
@@ -601,7 +641,7 @@ function mobileHTML(p){
   const stat=st>0
     ? `<span class="badge ready">READY • ${st}</span>`
     : `<span class="badge empty">KOSONG</span>`;
-  const jual=num(p.hargaJual)||Math.round(num(p.hargaModal)*1.25);
+  const jual=num(p.hargaJual)||Math.round(num(p.hargaModal)*1.15);
 
   return `<div class="m-card">
     <div class="m-head">
@@ -644,7 +684,7 @@ window.saveManual=async()=>{
   if(!uid){toast("Belum login");return}
   const nama=$("fNama").value.trim(),modal=num($("fModal").value),kode=$("fKode").value.trim();
   if(!nama||modal<=0){toast("Nama dan harga modal wajib diisi");return}
-  const data={uid,kode,nama,kategori:$("fCat").value,hargaModal:modal,hargaJual:num($("fJual").value)||modal*1.25,sisa:Math.max(0,num($("fSisa").value)),merk:$("fMerk").value.trim(),catatan:$("fNote").value.trim(),updatedAt:serverTimestamp(),sumber:"manual"};
+  const data={...identityFields(),kode,nama,kategori:$("fCat").value,hargaModal:modal,hargaJual:num($("fJual").value)||Math.round(modal*1.15),sisa:Math.max(0,num($("fSisa").value)),merk:$("fMerk").value.trim(),catatan:$("fNote").value.trim(),updatedAt:serverTimestamp(),sumber:"manual"};
   showLoading(true,editingId?"Memperbarui stok...":"Menyimpan stok...");
   try{
     if(editingId)await updateDoc(doc(db,"stok",editingId),data);
@@ -659,30 +699,6 @@ window.deleteProduct=async id=>{
 window.resetFilter=()=>{$("search").value="";$("cat").value="";$("status").value="";render()};
 $("search").addEventListener("input",render);$("cat").addEventListener("change",render);$("status").addEventListener("change",render);
 
-
-
-// ===== AKSES: HANYA OWNER & SUPERADMIN =====
-onAuthStateChanged(auth,async user=>{
-  uid=null; role="";
-  const appContent=document.querySelector("main.container");
-  if(appContent) appContent.style.display="none";
-  if(!user){ location.replace("login.html"); return; }
-  try{
-    const snap=await getDoc(doc(db,"users",user.uid));
-    if(!snap.exists()) throw new Error("Profil akun tidak ditemukan.");
-    profile=snap.data()||{};
-    role=String(profile.role||"").trim().toLowerCase();
-    if(role!=="owner" && role!=="superadmin"){
-      document.body.innerHTML=`<div style="min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px;background:#f5f7fb;font-family:Arial"><div style="max-width:430px;background:#fff;border:1px solid #e5e7eb;border-radius:18px;padding:25px;text-align:center;box-shadow:0 15px 50px #0001"><div style="font-size:42px">🔒</div><h2 style="margin:10px 0">Akses Ditolak</h2><p style="color:#64748b;line-height:1.5">Halaman Stok Firebase hanya dapat digunakan oleh <b>Owner</b> dan <b>Superadmin</b>.</p><button onclick="location.replace('index.html')" style="margin-top:15px;border:0;border-radius:10px;padding:11px 18px;background:#111827;color:#fff;font-weight:800">Kembali ke Index</button></div></div>`;
-      return;
-    }
-    uid=user.uid;
-    const ai=document.getElementById("accountInfo");
-    if(ai) ai.textContent=`${profile.nama||user.displayName||user.email||"Akun"} • ${role.toUpperCase()}`;
-    if(appContent) appContent.style.display="block";
-    await loadProducts();
-  }catch(e){ console.error(e); document.body.innerHTML=`<div style="padding:40px;text-align:center;font-family:Arial"><h2>Gagal memeriksa akun</h2><p>${esc(e.message||e)}</p></div>`; }
-});
 
 // Fungsi yang dipanggil oleh onclick HTML harus diekspos ke window
 // karena script utama menggunakan type="module".
@@ -770,10 +786,35 @@ window.hapusStockTerpilih=async function(){
   }
 };
 
-onAuthStateChanged(auth,async user=>{
-  if(user){uid=user.uid;await loadProducts()}
-  else{location.href="login.html"}
-});
-</script>
-</body>
+
+// ===== SESI FIXZY: TIDAK ADA LOGIN ULANG =====
+async function initFixzyStockSession(user){
+  if(!user){
+    $("listMsg").textContent="Sesi FIXZY belum tersedia. Buka halaman ini dari index.html setelah login.";
+    ["openManual","previewCSV","saveCSVToFirebase","applyGlobalSellingPrice","deleteProduct","hapusStockTerpilih"].forEach(()=>{});
+    return;
+  }
+  uid=user.uid; currentUser=user;
+  try{
+    const snap=await getDoc(doc(db,"users",uid));
+    if(!snap.exists()) throw new Error("Profil akun tidak ditemukan.");
+    currentProfile=snap.data()||{};
+    const role=String(currentProfile.role||"").toLowerCase();
+    const email=String(user.email||"").toLowerCase();
+    isSuperAdmin=role==="superadmin" || email==="servicehpmaja@gmail.com";
+    if(!isSuperAdmin && role!=="owner") throw new Error("Hanya superadmin atau owner yang diizinkan membuka Stock.");
+    if(String(currentProfile.status||"").toLowerCase()==="blocked" || String(currentProfile.status||"").toLowerCase()==="rejected") throw new Error("Akun diblokir / ditolak.");
+    $("headerAccount").textContent=currentProfile.namaKonter||currentProfile.namaPemilik||currentProfile.nama||user.email||"Akun";
+    $("headerRole").textContent=isSuperAdmin?"SUPERADMIN":"OWNER";
+    $("headerExp").textContent=formatExp(currentProfile.exp||currentProfile.expAt||currentProfile.expiredAt||currentProfile.tanggalBerakhir);
+    document.body.dataset.stockAuthorized="true";
+    await loadProducts();
+  }catch(e){
+    console.error("FIXZY STOCK ACCESS:",e);
+    document.body.innerHTML=`<div style="min-height:100vh;display:flex;align-items:center;justify-content:center;background:#f3f4f6;padding:20px;font-family:Arial"><div style="width:min(430px,100%);background:#fff;border:1px solid #e5e7eb;border-radius:18px;padding:25px;text-align:center;box-shadow:0 10px 30px #0002"><div style="font-size:42px">🔒</div><h2 style="margin:10px 0">Akses Terbatas</h2><p style="color:#64748b;line-height:1.6">${esc(e.message||"Akses ditolak.")}<br><br>Hanya <b>Superadmin</b> dan <b>Owner</b> yang dapat mengelola stok.</p></div></div>`;
+  }
+}
+onAuthStateChanged(auth,initFixzyStockSession);
+
+</script></body>
 </html>
