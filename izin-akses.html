@@ -1,27 +1,6 @@
 <!DOCTYPE html>
 <html lang="id">
-<head><style>
-@font-face {
-  font-family: "Optimistic";
-  font-style: normal;
-  font-weight: 400 600;
-  font-display: swap;
-  src: url("/fonts/OptimisticAI_VF_Optimized.woff2") format("woff2");
-}
-@font-face {
-  font-family: "Optimistic Mono";
-  font-style: normal;
-  font-weight: 400;
-  font-display: swap;
-  src: url("/fonts/OptimisticMono_W_TextRegular.woff2") format("woff2");
-}
-:where(html) {
-  font-family: "Optimistic", system-ui, sans-serif;
-}
-:where(code, pre, kbd, samp) {
-  font-family: "Optimistic Mono", ui-monospace, monospace;
-}
-</style>
+<head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="theme-color" content="#111827">
@@ -37,7 +16,19 @@ main{max-width:1180px;margin:auto;padding:14px 10px 70px}.card{background:#fff;b
 @media(max-width:500px){.toolbar{grid-template-columns:1fr}.toolbar .actions{grid-column:auto}.brand small{display:none}.summary{grid-template-columns:1fr 1fr}.head-actions .close{display:none}.checks{grid-template-columns:1fr}}
 </style>
 </head>
-<body>
+<body><script>
+/* FIXZY SESSION CENTER: halaman dibuka dari index.html memakai sesi pusat.
+   Tidak mengubah tampilan/fungsi halaman; hanya menyediakan referensi sesi parent. */
+(function(){
+  try{
+    if(window.parent&&window.parent!==window){
+      Object.defineProperty(window,"fixzySession",{configurable:true,get:function(){return window.parent.fixzySession||null}});
+      window.fixzySessionReady=function(){return !!(window.parent&&window.parent.fixzySession&&window.parent.fixzySession.uid)};
+    }
+  }catch(e){}
+})();
+</script>
+
 <header><div class="head"><div class="brand"><img src="logo.png" class="logo" alt="FIXZY"><div><h1>IZIN AKSES - FIXED PERMISSIONS</h1><small>Fix Missing or insufficient permissions</small></div></div><div class="head-actions"><button class="btn refresh" onclick="muatSemua()">↻ Refresh</button><button class="btn close" onclick="tutupHalaman()">✕ Tutup</button></div></div></header>
 <main>
 <section class="card"><div class="body"><div class="title">Tambah akun karyawan - FIX anti Missing permissions</div><div class="toolbar"><div class="field"><label>FILTER ROLE</label><select id="roleFilter" onchange="render()"><option value="">Semua</option><option value="employee">Karyawan</option><option value="reseller">Reseller</option></select></div><div class="field"><label>PENCARIAN</label><input id="cari" placeholder="Cari nama atau email..." oninput="render()"></div><div class="actions"><button class="btn primary" onclick="bukaTambah()">Tambah Akun</button><button class="btn secondary" onclick="resetFilter()">Reset</button></div></div><div id="status" class="status">Memeriksa sesi Owner...</div></div></section>
@@ -280,31 +271,28 @@ window.salinPesanWA=async()=>{
     }
   }
 };
-// FIX WA ONLY - hapus dobel, pakai anchor click biar tidak di-block
 window.kirimWhatsApp=()=>{
   const d=window._waPending;
   if(!d) return;
-  const nomor = nomorWhatsApp(d.phone);
-  if(!nomor){
-    $("waPopup").classList.remove("show");
-    tampilNotice("⚠️ No. WA Tidak Valid","Nomor "+esc(d.phone||"-")+" tidak valid. Gunakan 08xxxxxxxxxx");
-    return;
+  const link=window._waLink || ("https://wa.me/"+nomorWhatsApp(d.phone)+"?text="+encodeURIComponent(d.message));
+  try{
+    const win=window.open(link,"_blank","noopener");
+    if(!win){
+      // popup diblokir, pakai link langsung
+      document.getElementById("waDirectLink").click();
+    }
+  }catch(e){
+    location.href=link;
   }
-  const link = window._waLink || ("https://wa.me/"+nomor+"?text="+encodeURIComponent(d.message));
-  $("waPopup").classList.remove("show");
-  const a=document.createElement('a');
-  a.href=link;
-  a.target='_blank';
-  a.rel='noopener';
-  document.body.appendChild(a);
-  a.click();
-  setTimeout(()=>{ try{a.remove();}catch{} window._waPending=null; window._waLink=null; },1200);
+  document.getElementById("waPopup").classList.remove("show");
+  setTimeout(()=>{window._waPending=null;window._waLink=null;},2000);
 };
 
+window.kirimWhatsApp=()=>{const d=window._waPending;if(!d)return;const nomor=nomorWhatsApp(d.phone);if(!nomor){$("waPopup").classList.remove("show");tampilNotice("⚠️ No. WA Tidak Valid","Nomor tidak valid.");return}const url="https://wa.me/"+nomor+"?text="+encodeURIComponent(d.message);$("waPopup").classList.remove("show");window.open(url,"_blank");window._waPending=null};
 window.kirimResetPassword=async email=>{try{if(!validEmail(email))throw new Error("Email tidak valid.");await sendPasswordResetEmail(auth,email);tampilNotice("✅ Reset Password","Link reset dikirim ke "+esc(email)+".")}catch(e){tampilNotice("❌ Reset Password",esc(e.message||e))}};
-async function init(){onAuthStateChanged(auth,async u=>{if(!u){location.replace("login.html");return}uid=u.uid;try{const s=await getDoc(doc(db,"users",uid));if(!s.exists())throw new Error("Profil Owner tidak ditemukan.");profile=s.data()||{};if(!["owner","superadmin","admin"].includes(norm(profile.role)))throw new Error("Halaman Izin Akses hanya untuk Owner.");ownerUid=norm(profile.role)==="owner"?uid:(profile.ownerUid||profile.ownerId||uid);ready=true;await loadPermissionsFromIndex();await load()}catch(e){ready=false;$("status").innerHTML=`<span class="err">🔒 ${esc(e.message||e)}</span>`;$("tbody").innerHTML='<tr><td colspan="8" class="empty">Akses tidak tersedia.</td></tr>'}})}
+async function init(){onAuthStateChanged(auth,async u=>{if(!u){if(window.parent!==window && window.parent && window.parent.fixzySession){return;}location.replace("login.html");return;}uid=u.uid;try{const s=await getDoc(doc(db,"users",uid));if(!s.exists())throw new Error("Profil Owner tidak ditemukan.");profile=s.data()||{};if(!["owner","superadmin","admin"].includes(norm(profile.role)))throw new Error("Halaman Izin Akses hanya untuk Owner.");ownerUid=norm(profile.role)==="owner"?uid:(profile.ownerUid||profile.ownerId||uid);ready=true;await loadPermissionsFromIndex();await load()}catch(e){ready=false;$("status").innerHTML=`<span class="err">🔒 ${esc(e.message||e)}</span>`;$("tbody").innerHTML='<tr><td colspan="8" class="empty">Akses tidak tersedia.</td></tr>'}})}
 window.muatSemua=async()=>{if(ready){$("status").textContent="Memuat ulang...";await load()}};
 init();
 </script>
-<script>(function(){var loc=location.href.replace(/#.*$/,"");var ATTR_NAMES=["data-product-id","data-productid","data-product_id","product-id","productid","product_id","data-source-entity-id","source-entity-id","source_entity_id","data-product","data-metadata","data-meta"];var DATASET_KEYS=["productId","productid","product_id","sourceEntityId","sourceentityid","source_entity_id","product","metadata","meta"];function readProductId(value){if(typeof value!=="string"||value.length===0)return null;if(/^[0-9]{6,}$/.test(value))return value;var match=value.match(/(?:product(?:_|-)?id|source(?:_|-)?entity(?:_|-)?id)["'=:\s]+([0-9]{6,})/i);return match?match[1]:null}function extractProductId(start){for(var node=start;node&&node!==document.body;node=node.parentElement){for(var i=0;i<ATTR_NAMES.length;i++){var attrValue=node.getAttribute&&node.getAttribute(ATTR_NAMES[i]);var attrProductId=readProductId(attrValue);if(attrProductId)return attrProductId}var dataset=node.dataset||null;if(dataset){for(var j=0;j<DATASET_KEYS.length;j++){var dataValue=dataset[DATASET_KEYS[j]];var dataProductId=readProductId(dataValue);if(dataProductId)return dataProductId}}}return null}function isInlineMediaSlotElement(node){return !!(node&&node.getAttribute&&node.getAttribute("data-clippy-inline-media-slot")!==null)}function findInlineMediaSlot(start){for(var node=start;node&&node!==document.body;node=node.parentElement){if(isInlineMediaSlotElement(node))return node}return null}function readInlineMediaUrl(node){if(!node)return null;return node.getAttribute&&((node.getAttribute("data-clippy-inline-media-url")||node.getAttribute("data-url")||node.getAttribute("data_url")))||node.href||null}function stripHash(url){return String(url).replace(/#.*$/,"")}function urlsMatch(a,b){if(!a||!b)return false;try{return stripHash(new URL(a,loc).href)===stripHash(new URL(b,loc).href)}catch(_){return stripHash(a)===stripHash(b)}}function isFirstPartyReelUrl(value){try{var url=new URL(value,loc);if(url.protocol!=="https:")return false;var host=url.hostname.toLowerCase();var supported=host==="instagram.com"||host.endsWith(".instagram.com")||host==="facebook.com"||host.endsWith(".facebook.com");return supported&&/\/reels?\//i.test(url.pathname)}catch(_){return false}}function isInlineMediaUrlClick(node,href){var slot=findInlineMediaSlot(node);if(!slot)return false;var slotUrl=readInlineMediaUrl(slot);if(slotUrl)return urlsMatch(href,slotUrl);return isFirstPartyReelUrl(href)}function findDataHref(start){for(var node=start;node&&node!==document.body;node=node.parentElement){if(node.getAttribute){var href=node.getAttribute("data-href")||node.getAttribute("data-url");if(href)return{href:href,node:node}}}return null}var nativeOpen=window.open;window.open=function(url){if(parent!==window&&typeof url==="string"&&/^https?:\/\//.test(url)){parent.postMessage({type:"ecto:usercontent-link-click",href:url},"*");return null}return nativeOpen?nativeOpen.apply(window,arguments):null};document.addEventListener("click",function(e){var target=e.target instanceof Element?e.target:null;if(!target)return;if(parent===window)return;var a=target.closest?target.closest("a[href]"):null;if(a&&a.href&&/^https?:\/\//.test(a.href)&&a.href.replace(/#.*$/,"")!==loc){if(isInlineMediaUrlClick(a,a.href))return;var productId=extractProductId(target)||extractProductId(a);if(productId){e.preventDefault();parent.postMessage({type:"ecto-artifact-link-click",productId:productId},"*");return}e.preventDefault();parent.postMessage({type:"ecto:usercontent-link-click",href:a.href},"*");return}var dataHref=findDataHref(target);if(dataHref&&/^https?:\/\//.test(dataHref.href)&&dataHref.href.replace(/#.*$/,"")!==loc){if(isInlineMediaUrlClick(dataHref.node,dataHref.href))return;e.preventDefault();parent.postMessage({type:"ecto:usercontent-link-click",href:dataHref.href},"*")}},true)})();</script><script>(function(){var FOCUS_TYPE="ecto:artifact-focus-request";var CLOSE_TYPE="ecto:artifact-close-request";function focusArtifactDocument(){var body=document.body;if(!body)return;try{window.focus();}catch(e){}if(!body.hasAttribute("tabindex"))body.setAttribute("tabindex","-1");try{body.focus({preventScroll:true});}catch(e){try{body.focus();}catch(e2){}}}window.addEventListener("message",function(event){if(event.source!==window.parent)return;var data=event.data;if(!data||typeof data!=="object"||data.type!==FOCUS_TYPE)return;if(document.readyState==="loading"){document.addEventListener("DOMContentLoaded",focusArtifactDocument,{once:true});return;}focusArtifactDocument();});window.addEventListener("keydown",function(event){if(event.key!=="Escape")return;window.setTimeout(function(){if(event.defaultPrevented)return;window.parent.postMessage({type:CLOSE_TYPE},"*");},0);});})();</script></body>
+</body>
 </html>
