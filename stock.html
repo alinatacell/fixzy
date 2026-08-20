@@ -44,6 +44,15 @@ button,input,select{font:inherit}button{cursor:pointer}
 .import-box{display:grid;grid-template-columns:1fr auto;gap:9px}
 .import-box input{height:46px;width:100%;background:#fff;color:#111827;border:1px solid #cbd5e1;border-radius:12px;padding:0 13px;outline:none}
 .import-box input:focus{border-color:var(--y)}
+.price-rule-box{display:grid;grid-template-columns:1fr 1fr auto;gap:9px;align-items:end;margin-top:12px;padding:12px;border:1px solid var(--line);border-radius:13px;background:#f8fafc}
+.price-rule-box .field input{height:42px}
+.price-rule-preview{grid-column:1/-1;font-size:11px;color:#475569;line-height:1.5}
+.price-rule-preview b{color:#111827}
+@media(max-width:600px){
+  .price-rule-box{grid-template-columns:1fr 1fr}
+  .price-rule-box .apply-price-btn{grid-column:1/-1;width:100%}
+}
+
 .note{margin-top:8px;font-size:10px;color:var(--muted);line-height:1.55}
 .msg{display:none;margin-top:10px;padding:10px;border-radius:10px;font-size:11px;white-space:pre-line;line-height:1.5;overflow-wrap:anywhere}
 .msg.show{display:block}.msg.ok{color:#166534;background:#f0fdf4;border:1px solid #bbf7d0}.msg.err{color:#b91c1c;background:#fef2f2;border:1px solid #fecaca}.msg.info{color:#92400e;background:#fffbeb;border:1px solid #fde68a}
@@ -149,6 +158,25 @@ function tutupHalaman(){
       <table><thead id="previewHead"></thead><tbody id="previewBody"></tbody></table>
     </div>
     <button id="saveCsvBtn" class="btn primary" style="display:none;width:100%;margin-top:10px" onclick="saveCSVToFirebase()">⬆ SIMPAN HASIL CSV KE FIREBASE</button>
+
+    <div class="price-rule-box">
+      <div class="field">
+        <label>TAMBAHAN HARGA JUAL (%)</label>
+        <input id="pricePercent" type="number" min="0" step="0.01" value="15" placeholder="15">
+      </div>
+      <div class="field">
+        <label>TAMBAHAN DARI MODAL (Rp)</label>
+        <input id="priceNominal" type="number" min="0" step="1" value="0" placeholder="10000">
+      </div>
+      <button type="button" class="btn primary apply-price-btn" onclick="applyGlobalSellingPrice()">
+        💰 TERAPKAN KE SELURUH STOK
+      </button>
+      <div class="price-rule-preview">
+        Rumus: <b>Harga Jual = Modal + (% × Modal) + Nominal Tambahan</b>.
+        Contoh modal Rp100.000 + 15% + Rp10.000 = <b>Rp125.000</b>.
+      </div>
+    </div>
+
   </section>
 
   <section class="card">
@@ -197,7 +225,7 @@ function tutupHalaman(){
     <div class="field"><label>MERK / SUPPLIER</label><input id="fMerk" placeholder="Zevan"></div>
     <div class="field full"><label>CATATAN</label><input id="fNote" placeholder="Opsional"></div>
   </div>
-  <div class="sub" style="margin-top:8px">Jika harga jual kosong: harga modal + 15%.</div>
+  <div class="sub" style="margin-top:8px">Jika harga jual dikosongkan: otomatis memakai aturan di atas (default 15% dari modal + nominal tambahan).</div>
   <div class="modal-actions"><button class="btn dark" onclick="closeManual()">Batal</button><button class="btn primary" id="manualSave" onclick="saveManual()">SIMPAN STOK</button></div>
 </div>
 </div>
@@ -329,7 +357,7 @@ function normalizeCSV(rows){
       nama:String(nama||"").trim(),
       kategori:String(kategori).trim().toUpperCase(),
       hargaModal:modal,
-      hargaJual:jual||Math.round(modal*1.15),
+      hargaJual:jual||defaultSellingPrice(modal),
       sisa:Math.max(0,sisa),
       merk:String(merk||"").trim(),
       catatan:String(catatan||"").trim()
@@ -565,7 +593,7 @@ function render(){
   $("total").textContent=products.length;$("ready").textContent=ready;$("empty").textContent=empty;$("value").textContent=money(value);
   $("tbody").innerHTML=arr.map(rowHTML).join("")||'<tr><td colspan="8" style="text-align:center;color:#777;padding:25px">Tidak ada data</td></tr>';
   $("mobileList").innerHTML=arr.map(mobileHTML).join("")||'<div class="sub">Tidak ada data.</div>';
-  const sa=document.getElementById("stockSelectAll");if(sa)sa.checked=false;updateSelectedStockCount();
+  const sa=document.getElementById("stockSelectAll");if(sa)sa.checked=false;updateSelectedStockCount();updatePriceRulePreview();
 }
 
 function rowHTML(p){
@@ -573,7 +601,7 @@ function rowHTML(p){
   const stat=st>0
     ? `<span class="badge ready">READY • ${st}</span>`
     : `<span class="badge empty">KOSONG</span>`;
-  const jual=num(p.hargaJual)||Math.round(num(p.hargaModal)*1.15);
+  const jual=num(p.hargaJual)||defaultSellingPrice(p.hargaModal);
 
   return `<tr>
     <td class="stockSelectCol">
@@ -599,7 +627,7 @@ function mobileHTML(p){
   const stat=st>0
     ? `<span class="badge ready">READY • ${st}</span>`
     : `<span class="badge empty">KOSONG</span>`;
-  const jual=num(p.hargaJual)||Math.round(num(p.hargaModal)*1.15);
+  const jual=num(p.hargaJual)||defaultSellingPrice(p.hargaModal);
 
   return `<div class="m-card">
     <div class="m-head">
@@ -631,18 +659,98 @@ function esc(s){return String(s??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&l
 
 window.openManual=async()=>{$("manualModal").classList.add("show");editingId=null;$("modalTitle").textContent="Tambah Stok Baru";$("manualSave").textContent="SIMPAN STOK";clearForm();await setNextStockCode()};
 window.closeManual=()=>{$("manualModal").classList.remove("show")};
-function clearForm(){["fKode","fNama","fModal","fJual","fSisa","fMerk","fNote"].forEach(id=>$(id).value="");$("fSisa").value=1;$("fCat").value="LCD"}
+function clearForm(){["fKode","fNama","fModal","fJual","fSisa","fMerk","fNote"].forEach(id=>$(id).value="");$("fSisa").value=1;$("fCat").value="LCD";$("fJual").placeholder="Otomatis: Modal + 15%";}
 window.editProduct=async id=>{
   const p=products.find(x=>x.id===id);if(!p)return;
   editingId=id;$("modalTitle").textContent="Edit Stok";$("manualSave").textContent="UPDATE STOK";
   $("fKode").value=p.kode||"";$("fNama").value=p.nama||"";$("fCat").value=p.kategori||"LAINNYA";$("fModal").value=p.hargaModal||0;$("fJual").value=p.hargaJual||0;$("fSisa").value=p.sisa??0;$("fMerk").value=p.merk||"";$("fNote").value=p.catatan||"";
   $("manualModal").classList.add("show");
 }
+
+function getSellingPrice(modal, percent, nominal){
+  const m=Math.max(0,num(modal));
+  const p=Math.max(0,num(percent));
+  const n=Math.max(0,num(nominal));
+  return Math.round(m + (m*p/100) + n);
+}
+
+function getGlobalPriceSettings(){
+  return {
+    percent:Math.max(0,num($("pricePercent").value)),
+    nominal:Math.max(0,num($("priceNominal").value))
+  };
+}
+
+
+function updatePriceRulePreview(){
+  const p=Math.max(0,num($("pricePercent").value));
+  const n=Math.max(0,num($("priceNominal").value));
+  const sample=products.length?products[0]:null;
+  const el=document.getElementById("priceRulePreview");
+  if(el && sample){
+    el.innerHTML=`Contoh <b>${esc(sample.nama||sample.kode||"produk")}</b>: modal ${money(sample.hargaModal)} → harga jual <b>${money(getSellingPrice(sample.hargaModal,p,n))}</b>`;
+  }
+}
+
+window.applyGlobalSellingPrice=async function(){
+  if(!uid){
+    toast("Belum login Firebase.");
+    return;
+  }
+
+  const {percent,nominal}=getGlobalPriceSettings();
+  if(percent===0 && nominal===0){
+    toast("Isi % atau nominal tambahan terlebih dahulu.");
+    return;
+  }
+  if(!products.length){
+    toast("Belum ada stok untuk diubah.");
+    return;
+  }
+
+  const contoh=getSellingPrice(products[0].hargaModal,percent,nominal);
+  if(!confirm(
+    `Ubah harga jual SELURUH ${products.length} produk?\\n\\n`+
+    `Tambahan: ${percent}% + ${money(nominal)}\\n`+
+    `Rumus: Modal + % Modal + Nominal\\n`+
+    `Contoh produk pertama: ${money(products[0].hargaModal)} → ${money(contoh)}\\n\\n`+
+    `Harga modal dan stok tidak akan berubah.`
+  )) return;
+
+  showLoading(true,"Mengubah harga jual seluruh stok...");
+  try{
+    let berhasil=0;
+    for(const p of products){
+      const hargaJual=getSellingPrice(p.hargaModal,percent,nominal);
+      await updateDoc(doc(db,"stok",p.id),{
+        hargaJual,
+        hargaJualPercent:percent,
+        hargaJualNominal:nominal,
+        updatedAt:serverTimestamp(),
+        sumberHargaJual:"aturan_harga_global"
+      });
+      berhasil++;
+    }
+
+    await loadProducts();
+    toast(`Harga jual ${berhasil} produk berhasil diperbarui.`);
+  }catch(e){
+    console.error("Update harga jual:",e);
+    toast("Gagal mengubah harga jual: "+e.message);
+  }finally{
+    showLoading(false);
+  }
+};
+
+function defaultSellingPrice(modal){
+  return getSellingPrice(modal,15,0);
+}
+
 window.saveManual=async()=>{
   if(!uid){toast("Belum login");return}
   const nama=$("fNama").value.trim(),modal=num($("fModal").value),kode=$("fKode").value.trim();
   if(!nama||modal<=0){toast("Nama dan harga modal wajib diisi");return}
-  const data={uid,kode,nama,kategori:$("fCat").value,hargaModal:modal,hargaJual:num($("fJual").value)||Math.round(modal*1.15),sisa:Math.max(0,num($("fSisa").value)),merk:$("fMerk").value.trim(),catatan:$("fNote").value.trim(),updatedAt:serverTimestamp(),sumber:"manual"};
+  const data={uid,kode,nama,kategori:$("fCat").value,hargaModal:modal,hargaJual:num($("fJual").value)||getSellingPrice(modal, num($("pricePercent").value)||15, num($("priceNominal").value)||0),sisa:Math.max(0,num($("fSisa").value)),merk:$("fMerk").value.trim(),catatan:$("fNote").value.trim(),updatedAt:serverTimestamp(),sumber:"manual"};
   showLoading(true,editingId?"Memperbarui stok...":"Menyimpan stok...");
   try{
     if(editingId)await updateDoc(doc(db,"stok",editingId),data);
@@ -656,6 +764,7 @@ window.deleteProduct=async id=>{
 }
 window.resetFilter=()=>{$("search").value="";$("cat").value="";$("status").value="";render()};
 $("search").addEventListener("input",render);$("cat").addEventListener("change",render);$("status").addEventListener("change",render);
+$("pricePercent").addEventListener("input",updatePriceRulePreview);$("priceNominal").addEventListener("input",updatePriceRulePreview);
 
 
 // Fungsi yang dipanggil oleh onclick HTML harus diekspos ke window
