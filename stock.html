@@ -766,20 +766,36 @@ async function loadProducts(){
     const map=new Map();
 
     /*
-     * FIX ISOLASI PER KONTER
-     * Superadmin tidak lagi membaca seluruh koleksi "stok".
-     * Semua akun hanya membaca dokumen yang ownerUid/ownerId-nya
-     * sama dengan ownerUid akun aktif.
+     * OWNER:
+     * hanya membaca stok milik owner sendiri.
+     *
+     * SUPERADMIN:
+     * TIDAK dibatasi ownerUid. Superadmin dapat melihat dan mengelola
+     * seluruh dokumen koleksi stok yang diizinkan oleh Firebase Rules.
      */
+    if(isSuperAdmin){
+      const snap=await getDocs(ref);
+      snap.forEach(d=>map.set(d.id,{id:d.id,...d.data()}));
+      products=[...map.values()];
+      $("listMsg").textContent=products.length
+        ? `${products.length} produk tersimpan di Firebase (SUPERADMIN).`
+        : "Belum ada data stok.";
+      const scope=$("stockScopeInfo");
+      if(scope){
+        scope.textContent="👑 SUPERADMIN — dapat melihat dan mengelola seluruh stok Firebase.";
+        scope.style.color="#b45309";
+      }
+      fillCategories();render();
+      return;
+    }
+
     const activeOwnerUid=String(
       currentProfile?.role==="owner"
         ? uid
         : (currentProfile?.ownerUid||currentProfile?.ownerId||uid)
     ).trim();
 
-    if(!activeOwnerUid){
-      throw new Error("ownerUid akun aktif tidak ditemukan.");
-    }
+    if(!activeOwnerUid) throw new Error("ownerUid akun aktif tidak ditemukan.");
 
     const queries=[
       query(ref,where("ownerUid","==",activeOwnerUid)),
@@ -789,32 +805,22 @@ async function loadProducts(){
     for(const q of queries){
       try{
         const snap=await getDocs(q);
-        snap.forEach(d=>{
-          const p={id:d.id,...d.data()};
-          map.set(d.id,p);
-        });
-      }catch(e){
-        console.warn("Query stok isolasi:",e);
-      }
+        snap.forEach(d=>map.set(d.id,{id:d.id,...d.data()}));
+      }catch(e){console.warn("Query stok isolasi:",e)}
     }
 
-    /*
-     * Filter kedua di sisi aplikasi sebagai pengaman tambahan.
-     * Jadi walaupun ada dokumen dengan field lain, stok owner lain
-     * tidak akan masuk ke array products.
-     */
     products=[...map.values()].filter(p=>{
       const pOwner=String(p.ownerUid||p.ownerId||"").trim();
       return pOwner===activeOwnerUid;
     });
 
-    {const lm=$("listMsg"); if(lm) lm.textContent=products.length
+    $("listMsg").textContent=products.length
       ? `${products.length} produk tersimpan di Firebase.`
-      : "Belum ada data stok.";}
+      : "Belum ada data stok.";
     fillCategories();render();
   }catch(e){
     console.error(e);
-    {const lm=$("listMsg"); if(lm) lm.textContent="Gagal membaca stok: "+e.message;}
+    $("listMsg").textContent="Gagal membaca stok: "+e.message;
   }
 }
 function fillCategories(){
@@ -1157,13 +1163,12 @@ async function initFixzyStockSession(user){
     if(String(currentProfile.status||"").toLowerCase()==="blocked" || String(currentProfile.status||"").toLowerCase()==="rejected") throw new Error("Akun diblokir / ditolak.");
 
     /*
-     * Tetapkan scope konter sebelum loadProducts().
-     * Ini memastikan Superadmin tidak membaca stok milik Owner lain.
+     * OWNER memakai UID sendiri sebagai scope stok.
+     * SUPERADMIN tidak diberi scope owner sehingga dapat melihat
+     * seluruh stok Firebase melalui loadProducts().
      */
     if(role==="owner"){
       currentProfile.ownerUid=uid;
-    }else{
-      currentProfile.ownerUid=String(currentProfile.ownerUid||currentProfile.ownerId||uid).trim();
     }
 
     $("headerAccount").textContent=currentProfile.namaKonter||currentProfile.namaPemilik||currentProfile.nama||user.email||"Akun";
