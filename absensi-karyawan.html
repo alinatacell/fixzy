@@ -1,517 +1,637 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="id">
 <head>
-<meta charset="utf-8">
+<meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="theme-color" content="#081326">
-<title>FIXZY | Data & Input Karyawan</title>
+<title>FIXZY | Input Absensi Karyawan</title>
 <style>
 *{box-sizing:border-box}
-:root{--navy:#081326;--yellow:#ffc107;--bg:#f3f6fa;--card:#fff;--line:#dbe2ea;--text:#111827;--muted:#64748b;--green:#16a34a;--red:#dc2626;--blue:#2563eb}
-body{margin:0;background:linear-gradient(#fff,#f3f6fa 300px);font-family:Arial,Helvetica,sans-serif;color:var(--text)}
-button,input,select{font:inherit}
+:root{--bg:#eef2f7;--card:#fff;--line:#dbe2ea;--text:#111827;--muted:#64748b;--navy:#081326;--yellow:#ffc107;--green:#16a34a;--red:#dc2626;--blue:#2563eb}
+html,body{margin:0;padding:0;overflow-x:hidden}
+body{background:var(--bg);color:var(--text);font-family:Arial,Helvetica,sans-serif}
+button,input,select,textarea{font:inherit}
 button{cursor:pointer}
-.top{background:var(--navy);color:#fff;position:sticky;top:0;z-index:20;box-shadow:0 3px 14px #0003}
-.topin{max-width:1050px;margin:auto;min-height:72px;padding:10px 14px;display:flex;align-items:center;justify-content:space-between;gap:12px}
-.brand{display:flex;align-items:center;gap:11px;min-width:0}
-.logo{width:50px;height:50px;border-radius:10px;object-fit:contain;background:#000}
+.header{position:sticky;top:0;z-index:50;background:var(--navy);color:#fff;border-bottom:3px solid var(--yellow);box-shadow:0 3px 14px #0004}
+.header-in{max-width:920px;margin:auto;padding:9px 12px;display:flex;align-items:center;gap:11px;min-height:70px}
+.logo{width:52px;height:52px;object-fit:contain;border-radius:12px;background:#000;flex:none}
+.head-info{min-width:0;flex:1}
 .title{font-size:18px;font-weight:900;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.sub{font-size:11px;color:#cbd5e1;margin-top:3px}
-.refresh{border:0;border-radius:10px;background:var(--yellow);padding:11px 15px;font-weight:900}
-.wrap{max-width:1050px;margin:auto;padding:14px 10px 70px}
-.tabs{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px}
-.tab{border:1px solid var(--line);background:#fff;border-radius:11px;padding:13px;font-weight:900;color:#475569}
-.tab.active{background:var(--navy);color:#fff;border-color:var(--navy)}
-.panel{display:none}.panel.active{display:block}
-.card{background:#fff;border:1px solid var(--line);border-radius:15px;margin-bottom:12px;overflow:hidden;box-shadow:0 5px 20px #17203308}
-.head{padding:14px 16px;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;gap:8px;font-weight:900}
-.body{padding:15px 16px}
-.info{font-size:11px;color:var(--muted);line-height:1.55}
-.grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.sub{font-size:11px;color:#cbd5e1;margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.refresh{height:42px;border:0;border-radius:12px;background:var(--yellow);color:#111827;padding:0 14px;font-weight:900;flex:none}
+.wrap{max-width:920px;margin:auto;padding:14px 12px 70px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:15px;margin-bottom:13px;overflow:hidden;box-shadow:0 4px 16px #1720330b}
+.card-head{padding:14px 16px;border-bottom:1px solid var(--line);font-weight:900;font-size:16px}
+.card-body{padding:14px 16px}
+.notice{padding:11px 13px;border-radius:11px;background:#f8fafc;border:1px solid var(--line);color:var(--muted);font-size:12px;font-weight:700}
+.notice.ok{background:#ecfdf5;border-color:#a7f3d0;color:#166534}
+.notice.err{background:#fef2f2;border-color:#fecaca;color:#b91c1c}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:11px}
 .full{grid-column:1/-1}
-.field{display:flex;flex-direction:column;gap:5px}
-label{font-size:10px;font-weight:900;color:#475569}
-input,select{height:43px;border:1px solid #cbd5e1;border-radius:10px;padding:0 11px;background:#fff;outline:none;width:100%}
+.field{min-width:0}
+label{display:block;font-size:11px;font-weight:900;color:#475569;margin-bottom:5px}
+input,select{width:100%;height:44px;border:1px solid #cbd5e1;border-radius:10px;padding:0 11px;background:#fff;color:#111827;outline:none}
 input:focus,select:focus{border-color:#f59e0b;box-shadow:0 0 0 3px #f59e0b18}
-.primary{border:0;border-radius:10px;background:var(--yellow);color:#111827;padding:11px 16px;font-weight:900}
-.secondary{border:0;border-radius:10px;background:#e5e7eb;color:#111827;padding:11px 16px;font-weight:900}
-.actions{display:flex;justify-content:flex-end;gap:8px;margin-top:12px}
-.search{margin-bottom:10px}
-.tablewrap{overflow:auto;border:1px solid var(--line);border-radius:12px}
-table{width:100%;min-width:820px;border-collapse:collapse}
-th,td{padding:10px;border-bottom:1px solid var(--line);text-align:left;font-size:11px;vertical-align:middle}
+input[readonly]{background:#f8fafc;color:#475569}
+.employee-info{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:11px}
+.info{border:1px solid var(--line);border-radius:10px;padding:10px;background:#f8fafc}
+.info small{display:block;font-size:9px;color:var(--muted);font-weight:900}
+.info b{display:block;margin-top:4px;font-size:13px}
+.status-buttons{display:grid;grid-template-columns:1fr 1fr;gap:9px}
+.status-btn{height:48px;border:2px solid #cbd5e1;border-radius:11px;background:#fff;font-weight:900}
+.status-btn.active.hadir{background:#dcfce7;border-color:#16a34a;color:#166534}
+.status-btn.active.tidak{background:#fee2e2;border-color:#dc2626;color:#b91c1c}
+.actions{display:grid;grid-template-columns:1fr 1fr;gap:9px}
+.btn{height:44px;border:0;border-radius:10px;font-weight:900}
+.primary{background:var(--yellow);color:#111827}
+.secondary{background:#e5e7eb;color:#111827}
+.summary{display:grid;grid-template-columns:repeat(4,1fr);gap:9px;margin-bottom:13px}
+.sum{background:#fff;border:1px solid var(--line);border-radius:12px;padding:11px}
+.sum small{display:block;font-size:9px;color:var(--muted);font-weight:900}
+.sum b{display:block;font-size:20px;margin-top:4px}
+.sum.green{background:#ecfdf5;border-color:#a7f3d0}.sum.green b{color:#047857}
+.sum.red{background:#fef2f2;border-color:#fecaca}.sum.red b{color:#b91c1c}
+.sum.blue{background:#eff6ff;border-color:#bfdbfe}.sum.blue b{color:#1d4ed8}
+.sum.orange{background:#fff7ed;border-color:#fed7aa}.sum.orange b{color:#c2410c}
+.table-wrap{overflow:auto;border:1px solid var(--line);border-radius:11px}
+table{width:100%;min-width:720px;border-collapse:collapse}
+th,td{padding:9px 10px;border-bottom:1px solid var(--line);font-size:11px;text-align:left;vertical-align:middle}
 th{background:#f8fafc;color:#475569;font-size:10px}
 .badge{display:inline-block;padding:5px 8px;border-radius:999px;font-size:9px;font-weight:900}
-.aktif{background:#dcfce7;color:#166534}.nonaktif{background:#fee2e2;color:#991b1b}
-.upah{font-weight:900;color:#c2410c}
-.mini{border:0;border-radius:8px;padding:7px 10px;font-size:9px;font-weight:900;background:#fef3c7;color:#92400e}
-.empty{text-align:center;color:#64748b;padding:25px}
-.summary{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px}
-.sum{background:#fff;border:1px solid var(--line);border-radius:11px;padding:12px}
-.sum small{display:block;color:#64748b;font-size:10px;font-weight:900}
-.sum b{font-size:20px;display:block;margin-top:4px}
-.notice{position:fixed;inset:0;background:#0008;display:none;align-items:center;justify-content:center;z-index:100}
-.notice.show{display:flex}
-.box{width:min(480px,calc(100% - 24px));background:#fff;border-radius:15px;padding:17px}
-.box h3{margin:0 0 10px}
-.box p{font-size:12px;line-height:1.5;color:#475569}
-@media(max-width:700px){
- .topin{min-height:66px;padding:8px 10px}.logo{width:44px;height:44px}.title{font-size:14px}.refresh{padding:9px 11px;font-size:11px}
- .grid{grid-template-columns:1fr}.full{grid-column:auto}.summary{grid-template-columns:1fr 1fr}.sum:last-child{grid-column:1/-1}
+.badge.hadir{background:#dcfce7;color:#166534}
+.badge.tidak{background:#fee2e2;color:#b91c1c}
+.edit{border:0;border-radius:8px;background:#fef3c7;color:#92400e;padding:7px 10px;font-size:10px;font-weight:900}
+.empty{text-align:center;color:var(--muted);padding:25px}
+.popup{position:fixed;inset:0;background:#0008;display:none;align-items:center;justify-content:center;z-index:100;padding:12px}
+.popup.show{display:flex}
+.popup-box{width:min(460px,100%);background:#fff;border-radius:15px;padding:17px;box-shadow:0 12px 40px #0004}
+.popup-box h3{margin:0 0 8px}
+.popup-box p{font-size:12px;color:var(--muted);line-height:1.5}
+.popup-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:14px}
+@media(max-width:650px){
+ .grid{grid-template-columns:1fr}
+ .full{grid-column:auto}
+ .employee-info{grid-template-columns:1fr 1fr}
+ .summary{grid-template-columns:1fr 1fr}
+ .title{font-size:16px}
+ .refresh{padding:0 11px}
 }
 </style>
 </head>
 <body>
 
-<header class="top">
- <div class="topin">
-  <div class="brand">
-   <img src="logo.png" class="logo" alt="FIXZY">
-   <div>
-    <div class="title">DATA & INPUT KARYAWAN</div>
-    <div class="sub" id="accountInfo">Memeriksa akun...</div>
-   </div>
+<header class="header">
+  <div class="header-in">
+    <img src="logo.png" class="logo" alt="FIXZY">
+    <div class="head-info">
+      <div class="title">INPUT ABSENSI KARYAWAN</div>
+      <div id="headerUser" class="sub">Memuat akun...</div>
+    </div>
+    <button class="refresh" id="refreshBtn" type="button">↻ Refresh</button>
   </div>
-  <button class="refresh" onclick="muatSemua()">↻ Refresh</button>
- </div>
 </header>
 
 <main class="wrap">
- <div class="tabs">
-  <button class="tab active" id="tabInput" onclick="bukaTab('input')">📝 Input Karyawan</button>
-  <button class="tab" id="tabData" onclick="bukaTab('data')">👥 Data Karyawan</button>
- </div>
 
- <section id="panelInput" class="panel active">
-  <div class="card">
-   <div class="head"><span>✏️ Edit Data Karyawan</span><span id="inputStatus">-</span></div>
-   <div class="body">
-    <div class="info"><b>Hak akses:</b> hanya Owner dan Super Admin yang dapat edit. Owner hanya untuk konternya sendiri. Super Admin dapat memilih Owner tujuan.<br><br>Data karyawan yang sudah ada menjadi sumber nama teknisi/karyawan untuk halaman Absensi. Upah harian disimpan di data karyawan dan akan dibaca otomatis saat menghitung upah.</div>
-    <div class="grid" style="margin-top:12px">
-     <div class="field full">
-      <label>NAMA KARYAWAN / TEKNISI</label>
-      <select id="nama" onchange="pilihDataKaryawan()">
-       <option value="">-- Pilih dari data karyawan Owner --</option>
-      </select>
-      <div style="font-size:10px;color:#64748b;margin-top:3px">
-       Nama diambil langsung dari data karyawan Owner yang sudah tersimpan.
-      </div>
-     </div>
-     <div class="field"><label>JABATAN</label>
-      <select id="jabatan"><option value="Teknisi">Teknisi</option><option value="Kasir">Kasir</option><option value="Admin">Admin</option><option value="Kurir">Kurir</option><option value="Lainnya">Lainnya</option></select>
-     </div>
-     <div class="field"><label>NO. WHATSAPP <span style="font-weight:400;color:#94a3b8">• otomatis</span></label><input id="wa" inputmode="tel" placeholder="08xxxxxxxxxx"></div>
-     <div class="field"><label>UPAH HARIAN <span style="font-weight:400;color:#94a3b8">• otomatis</span></label><input id="upah" inputmode="numeric" placeholder="Contoh 100000"></div>
-     <div class="field"><label>STATUS KARYAWAN</label>
-      <select id="statusKaryawan"><option value="aktif">Aktif</option><option value="nonaktif">Nonaktif</option></select>
-     </div>
-     <div class="field"><label>ROLE</label>
-      <select id="role"><option value="employee">Employee</option><option value="teknisi">Teknisi</option><option value="kasir">Kasir</option><option value="admin">Admin</option></select>
-     </div>
-     <div class="field" id="ownerField" style="display:none">
-      <label>OWNER DATA (SUPER ADMIN)</label>
-      <select id="pilihOwner" onchange="muatKaryawanOwner()"><option value="">-- Pilih Owner --</option></select>
-     </div>
-     <div class="field" id="ownerInfoField">
-      <label>OWNER DATA</label>
-      <input id="ownerInfo" readonly placeholder="Otomatis mengikuti Owner yang login">
-     </div>
-    </div>
-    <div class="actions"><button class="secondary" onclick="resetForm()">Kosongkan</button><button class="primary" onclick="simpanKaryawan()">Simpan Karyawan</button></div>
-   </div>
+<section class="card">
+  <div class="card-body">
+    <div id="statusMsg" class="notice">Memeriksa login Firebase...</div>
   </div>
+</section>
 
-  <div class="card">
-   <div class="head">📋 Input Daftar Hadir</div>
-   <div class="body">
+<section class="summary">
+  <div class="sum"><small>KARYAWAN AKTIF</small><b id="totalKaryawan">0</b></div>
+  <div class="sum green"><small>HADIR BULAN INI</small><b id="totalHadir">0</b></div>
+  <div class="sum red"><small>TIDAK HADIR</small><b id="totalTidak">0</b></div>
+  <div class="sum orange"><small>TOTAL UPAH</small><b id="totalUpah">Rp 0</b></div>
+</section>
+
+<section class="card">
+  <div class="card-head">📝 Input / Edit Daftar Hadir</div>
+  <div class="card-body">
     <div class="grid">
-     <div class="field"><label>TANGGAL</label><input id="tanggalHadir" type="date"></div>
-     <div class="field"><label>PILIH TEKNISI / KARYAWAN</label><select id="pilihTeknisi"></select></div>
-     <div class="field"><label>STATUS</label>
-      <select id="statusHadir"><option value="hadir">Hadir</option><option value="tidak">Tidak Hadir</option></select>
-     </div>
-     <div class="field"><label>CATATAN</label><input id="catatan" placeholder="Opsional"></div>
-    </div>
-    <div class="actions"><button class="primary" onclick="simpanKehadiran()">Simpan ke Daftar Hadir</button></div>
-    <div class="info" style="margin-top:10px">Tidak menggunakan jam masuk/pulang. Satu karyawan memiliki satu data absensi per tanggal. Jika sudah ada, status akan diperbarui.</div>
-   </div>
-  </div>
- </section>
+      <div class="field">
+        <label>TANGGAL ABSENSI</label>
+        <input id="tanggal" type="date">
+      </div>
 
- <section id="panelData" class="panel">
-  <div class="summary">
-   <div class="sum"><small>TOTAL KARYAWAN</small><b id="totalKaryawan">0</b></div>
-   <div class="sum"><small>AKTIF</small><b id="totalAktif">0</b></div>
-   <div class="sum"><small>UPAH HARIAN</small><b id="totalUpah">Rp 0</b></div>
-  </div>
-  <div class="card">
-   <div class="head"><span>👥 Data Karyawan</span><span class="info">Edit nama, jabatan, status & upah</span></div>
-   <div class="body">
-    <input id="cari" class="search" placeholder="Cari nama / jabatan..." oninput="renderKaryawan()">
-    <div class="tablewrap">
-     <table>
-      <thead><tr><th>Nama</th><th>Jabatan</th><th>Role</th><th>WhatsApp</th><th>Status</th><th>Upah/Hari</th><th>Aksi</th></tr></thead>
-      <tbody id="tbody"><tr><td colspan="7" class="empty">Memuat...</td></tr></tbody>
-     </table>
+      <div class="field">
+        <label>NAMA KARYAWAN / TEKNISI</label>
+        <select id="karyawan">
+          <option value="">-- Pilih Karyawan --</option>
+        </select>
+      </div>
+
+      <div class="field">
+        <label>NO. WHATSAPP</label>
+        <input id="wa" readonly placeholder="Otomatis">
+      </div>
+
+      <div class="field">
+        <label>UPAH HARIAN</label>
+        <input id="upah" readonly placeholder="Otomatis">
+      </div>
+
+      <div class="field full">
+        <div class="employee-info">
+          <div class="info"><small>JABATAN</small><b id="jabatan">-</b></div>
+          <div class="info"><small>ROLE</small><b id="role">-</b></div>
+          <div class="info"><small>STATUS KARYAWAN</small><b id="statusKaryawan">-</b></div>
+        </div>
+      </div>
+
+      <div class="field full">
+        <label>STATUS KEHADIRAN</label>
+        <div class="status-buttons">
+          <button type="button" class="status-btn hadir" id="hadirBtn">✓ HADIR</button>
+          <button type="button" class="status-btn tidak" id="tidakBtn">✕ TIDAK HADIR</button>
+        </div>
+      </div>
+
+      <div class="field full">
+        <div class="actions">
+          <button class="btn secondary" id="clearBtn" type="button">Kosongkan</button>
+          <button class="btn primary" id="saveBtn" type="button">Simpan Absensi</button>
+        </div>
+      </div>
     </div>
-   </div>
   </div>
- </section>
+</section>
+
+<section class="card">
+  <div class="card-head">📋 Daftar Hadir Bulan Ini</div>
+  <div class="card-body">
+    <div class="grid">
+      <div class="field">
+        <label>BULAN</label>
+        <input id="bulan" type="month">
+      </div>
+      <div class="field">
+        <label>CARI KARYAWAN</label>
+        <input id="cari" placeholder="Nama / jabatan...">
+      </div>
+    </div>
+
+    <div class="table-wrap" style="margin-top:12px">
+      <table>
+        <thead>
+          <tr>
+            <th>Tanggal</th>
+            <th>Nama</th>
+            <th>Jabatan</th>
+            <th>Status</th>
+            <th>Upah</th>
+            <th>Aksi</th>
+          </tr>
+        </thead>
+        <tbody id="tbody">
+          <tr><td colspan="6" class="empty">Memuat data...</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
 </main>
 
-<div class="notice" id="notice">
- <div class="box">
-  <h3 id="noticeTitle">FIXZY</h3>
-  <p id="noticeText"></p>
-  <div class="actions"><button class="primary" onclick="tutupNotice()">OK</button></div>
- </div>
+<div class="popup" id="popup">
+  <div class="popup-box">
+    <h3 id="popupTitle">FIXZY</h3>
+    <p id="popupText"></p>
+    <div class="popup-actions">
+      <button class="btn primary" id="popupOk" type="button">OK</button>
+    </div>
+  </div>
 </div>
 
 <script type="module">
-import{initializeApp}from"https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js";
-import{getAuth,onAuthStateChanged}from"https://www.gstatic.com/firebasejs/11.10.0/firebase-auth.js";
-import{getFirestore,collection,query,where,getDocs,doc,getDoc,setDoc,updateDoc,serverTimestamp}from"https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js";
+import { initializeApp } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js";
+import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-auth.js";
+import {
+  getFirestore, collection, query, where, getDocs, getDoc,
+  doc, setDoc, serverTimestamp
+} from "https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js";
 
-const firebaseConfig={
- apiKey:"AIzaSyC_PcarMTT5Un7qfSLzf92o5OGn5rginsI",
- authDomain:"fixzy-update.firebaseapp.com",
- projectId:"fixzy-update",
- storageBucket:"fixzy-update.firebasestorage.app",
- messagingSenderId:"995892519622",
- appId:"1:995892519622:web:fa41047944d8e5b35d6dc7"
+const cfg={
+  apiKey:"AIzaSyC_PcarMTT5Un7qfSLzf92o5OGn5rginsI",
+  authDomain:"fixzy-update.firebaseapp.com",
+  projectId:"fixzy-update",
+  storageBucket:"fixzy-update.firebasestorage.app",
+  messagingSenderId:"995892519622",
+  appId:"1:995892519622:web:fa41047944d8e5b35d6dc7"
 };
-const app=initializeApp(firebaseConfig),auth=getAuth(app),db=getFirestore(app);
+
+const app=initializeApp(cfg);
+const auth=getAuth(app);
+const db=getFirestore(app);
+
+let uid="";
+let businessUid="";
+let profile={};
+let role="";
+let employees=[];
+let attendance=[];
+let selectedEmployee=null;
+let selectedStatus="";
+
 const $=id=>document.getElementById(id);
-const esc=v=>String(v??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]));
-const rp=n=>"Rp "+(Number(n)||0).toLocaleString("id-ID");
+const rupiah=n=>"Rp "+(Number(n)||0).toLocaleString("id-ID");
+const today=()=>new Date().toISOString().slice(0,10);
+const monthNow=()=>today().slice(0,7);
 
-let uid="",ownerUid="",profile={},karyawan=[],editingId=null;
-
-function today(){
- const d=new Date(),p=n=>String(n).padStart(2,"0");
- return `${d.getFullYear()}-${p(d.getMonth()+1)}-${p(d.getDate())}`;
-}
-function nama(a){return a.namaKaryawan||a.nama||a.displayName||a.name||a.email||"-"}
-function getOwner(a){return String(a.ownerUid||a.ownerId||"").trim()}
-
-function notice(title,text){
- $("noticeTitle").textContent=title;$("noticeText").textContent=text;$("notice").classList.add("show");
-}
-window.tutupNotice=()=> $("notice").classList.remove("show");
-
-function bukaTab(tab){
- const input=tab==="input";
- $("panelInput").classList.toggle("active",input);
- $("panelData").classList.toggle("active",!input);
- $("tabInput").classList.toggle("active",input);
- $("tabData").classList.toggle("active",!input);
-}
-window.bukaTab=bukaTab;
-
-async function profileUser(){
- const s=await getDoc(doc(db,"users",uid));
- if(!s.exists())throw new Error("Profil pengguna tidak ditemukan.");
- profile=s.data();
- const role=String(profile.role||"").toLowerCase().trim();
- if(role!=="owner"&&role!=="superadmin"){
-   throw new Error("Akses ditolak. Hanya Owner dan Super Admin yang dapat input/edit data karyawan.");
- }
- ownerUid=role==="superadmin"?"":uid;
- $("accountInfo").textContent=(profile.namaKonter||profile.namaUsaha||profile.nama||profile.email||"Akun")+" • "+role.toUpperCase();
-
- if(role==="superadmin"){
-   $("ownerField").style.display="";
-   $("ownerInfoField").style.display="none";
-   await loadOwnerList();
- }else{
-   $("ownerField").style.display="none";
-   $("ownerInfoField").style.display="";
-   $("ownerInfo").value=profile.namaKonter||profile.namaUsaha||profile.nama||profile.email||"Owner ini";
- }
+function esc(s){
+  return String(s??"").replace(/[&<>"]/g,c=>({
+    "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"
+  }[c]));
 }
 
-async function loadOwnerList(){
- const map=new Map();
- try{
-   const s=await getDocs(collection(db,"users"));
-   s.docs.forEach(d=>{
-     const a={id:d.id,...d.data()};
-     const r=String(a.role||"").toLowerCase().trim();
-     if(r==="owner" || a.isOwner===true) map.set(d.id,a);
-   });
- }catch(e){
-   console.error("Gagal memuat owner",e);
- }
- $("pilihOwner").innerHTML='<option value="">-- Pilih Owner --</option>'+
-   [...map.values()].map(a=>{
-     const label=a.namaKonter||a.namaUsaha||a.nama||a.email||a.id;
-     return `<option value="${esc(a.id)}">${esc(label)}</option>`;
-   }).join("");
+function showPopup(title,text){
+  $("popupTitle").textContent=title;
+  $("popupText").textContent=text;
+  $("popup").classList.add("show");
 }
 
-
-async function muatKaryawanOwner(){
- if(String(profile.role||"").toLowerCase().trim()!=="superadmin")return;
- const selectedOwner=String($("pilihOwner")?.value||"").trim();
- if(!selectedOwner){
-   karyawan=[];
-   renderKaryawan();
-   isiDropdownTeknisi();
-   return;
- }
- try{
-   const s=await getDocs(query(collection(db,"karyawan"),where("ownerUid","==",selectedOwner)));
-   karyawan=s.docs.map(d=>({id:d.id,...d.data()}))
-     .filter(a=>String(a.status||"aktif").toLowerCase()!=="nonaktif");
-   renderKaryawan();
-   isiDropdownTeknisi();
-   isiDropdownKaryawanInput("");
- }catch(e){
-   console.error(e);
-   notice("❌ Gagal Memuat","Data karyawan Owner tersebut tidak dapat dimuat.");
- }
+function notice(text,type=""){
+  $("statusMsg").className="notice "+type;
+  $("statusMsg").textContent=text;
 }
 
-
-async function loadKaryawan(){
- const map=new Map();
- const ambil=async(field,value)=>{
-  if(!value)return;
-  const s=await getDocs(query(collection(db,"karyawan"),where(field,"==",value)));
-  s.docs.forEach(d=>map.set(d.id,{id:d.id,...d.data()}));
- };
- const role=String(profile.role||"").toLowerCase();
- if(role==="superadmin"){
-  const s=await getDocs(collection(db,"karyawan"));
-  s.docs.forEach(d=>map.set(d.id,{id:d.id,...d.data()}));
- }else{
-  await ambil("ownerUid",ownerUid);
-  await ambil("ownerId",ownerUid);
- }
- karyawan=[...map.values()];
- renderKaryawan();
- isiDropdown();
+function resolveBusinessUid(data){
+  const r=String(data.role||"").toLowerCase();
+  if(r==="owner") return uid;
+  return String(data.ownerUid||data.ownerId||uid);
 }
 
-
-function isiDropdownKaryawanInput(selectedId=""){
- const activeList=karyawan.filter(a=>String(a.status||"aktif").toLowerCase()!=="nonaktif");
- const el=$("nama");
- if(!el)return;
- el.innerHTML=
-   '<option value="">-- Pilih dari data karyawan Owner --</option>'+
-   activeList.map(a=>`<option value="${esc(a.id)}">${esc(nama(a))} • ${esc(a.jabatan||"Teknisi")}</option>`).join("");
- if(selectedId) el.value=selectedId;
+function employeeName(x){
+  return x.nama||x.namaKaryawan||x.displayName||x.email||x.id;
 }
 
-function pilihDataKaryawan(){
- const id=String($("nama").value||"").trim();
- if(!id){
-   $("wa").value="";
-   $("upah").value="";
-   $("jabatan").value="Teknisi";
-   $("statusKaryawan").value="aktif";
-   $("role").value="employee";
-   $("inputStatus").textContent="-";
-   editingId=null;
-   return;
- }
- const a=karyawan.find(x=>x.id===id);
- if(!a)return;
- editingId=id;
- $("wa").value=a.noWA||a.wa||a.noHp||a.whatsapp||"";
- $("upah").value=Number(a.upahHarian??a.upah??a.gajiHarian??0);
- $("jabatan").value=a.jabatan||"Teknisi";
- $("statusKaryawan").value=a.status||"aktif";
- $("role").value=a.role||"employee";
- $("inputStatus").textContent="Data karyawan terpilih • otomatis";
+function employeeWa(x){
+  return x.noWA||x.wa||x.noHp||x.whatsapp||"";
 }
 
-function renderKaryawan(){
- const q=($("cari").value||"").toLowerCase().trim();
- const data=karyawan.filter(a=>
-  !q||[nama(a),a.jabatan,a.role,a.noWA,a.wa].join(" ").toLowerCase().includes(q)
- );
- $("totalKaryawan").textContent=karyawan.length;
- $("totalAktif").textContent=karyawan.filter(a=>String(a.status||"aktif")==="aktif").length;
- $("totalUpah").textContent=rp(karyawan.reduce((s,a)=>s+Number(a.upahHarian||a.upah||0),0));
- $("tbody").innerHTML=data.length?data.map(a=>`
- <tr>
-  <td><b>${esc(nama(a))}</b><div style="font-size:9px;color:#94a3b8">${esc(a.email||"")}</div></td>
-  <td>${esc(a.jabatan||"-")}</td>
-  <td>${esc(String(a.role||"employee").toUpperCase())}</td>
-  <td>${esc(a.noWA||a.wa||"-")}</td>
-  <td><span class="badge ${String(a.status||"aktif")==="aktif"?"aktif":"nonaktif"}">${String(a.status||"aktif").toUpperCase()}</span></td>
-  <td class="upah">${rp(a.upahHarian||a.upah||0)}</td>
-  <td><button class="mini" onclick="editKaryawan('${a.id}')">Edit</button></td>
- </tr>`).join(""):'<tr><td colspan="7" class="empty">Belum ada karyawan.</td></tr>';
+function employeeWage(x){
+  return Number(x.upahHarian??x.upah??x.gajiHarian??0)||0;
 }
 
-function isiDropdown(){
- const aktif=karyawan.filter(a=>String(a.status||"aktif")==="aktif");
- $("pilihTeknisi").innerHTML='<option value="">-- Pilih teknisi/karyawan --</option>'+
- aktif.map(a=>`<option value="${esc(a.id)}">${esc(nama(a))} • ${esc(a.jabatan||"Teknisi")}</option>`).join("");
+function attendanceId(employeeId,date){
+  return `${employeeId}_${date}`;
 }
 
-window.editKaryawan=async id=>{
- const loginRole=String(profile.role||"").toLowerCase().trim();
- if(loginRole!=="owner"&&loginRole!=="superadmin"){
-   notice("🔒 Akses Ditolak","Hanya Owner dan Super Admin yang dapat mengedit data karyawan.");return;
- }
- const a=karyawan.find(x=>x.id===id);if(!a)return;
- if(loginRole==="owner" && String(a.ownerUid||a.ownerId||"")!==uid){
-   notice("🔒 Akses Ditolak","Owner hanya dapat mengedit karyawan milik konternya sendiri.");return;
- }
- editingId=id;
- if(loginRole==="superadmin" && $("pilihOwner")){
-   $("pilihOwner").value=String(a.ownerUid||a.ownerId||"");
-   await muatKaryawanOwner();
- }
- isiDropdownKaryawanInput(id);
- $("nama").value=id;
- pilihDataKaryawan();
- bukaTab("input");
- window.scrollTo({top:0,behavior:"smooth"});
-};
+function resetEmployeeFields(){
+  selectedEmployee=null;
+  $("wa").value="";
+  $("upah").value="";
+  $("jabatan").textContent="-";
+  $("role").textContent="-";
+  $("statusKaryawan").textContent="-";
+  selectedStatus="";
+  $("hadirBtn").classList.remove("active");
+  $("tidakBtn").classList.remove("active");
+}
 
-window.resetForm=()=>{
- editingId=null;
- $("nama").value="";
- $("wa").value="";
- $("upah").value="";
- $("jabatan").value="Teknisi";
- $("statusKaryawan").value="aktif";
- $("role").value="employee";
- $("inputStatus").textContent="-";
-};
+function selectEmployee(){
+  const id=$("karyawan").value;
+  selectedEmployee=employees.find(x=>x.id===id)||null;
 
-window.simpanKaryawan=async()=>{
- const selectedId=String($("nama")?.value||"").trim();
- if(!selectedId){
-   notice("⚠️ Karyawan Belum Dipilih","Pilih nama karyawan dari data Owner terlebih dahulu.");
-   return;
- }
- const selectedKaryawan=karyawan.find(x=>x.id===selectedId);
- if(!selectedKaryawan){
-   notice("❌ Data Tidak Ditemukan","Data karyawan yang dipilih tidak ditemukan.");
-   return;
- }
- const n=nama(selectedKaryawan); try{
-  const roleLogin=String(profile.role||"").toLowerCase().trim();
-  if(roleLogin!=="owner"&&roleLogin!=="superadmin"){
-    notice("🔒 Akses Ditolak","Hanya Owner dan Super Admin yang dapat input/edit karyawan.");
+  if(!selectedEmployee){
+    resetEmployeeFields();
     return;
   }
 
-  let targetOwner="";
-  if(roleLogin==="superadmin"){
-    targetOwner=String($("pilihOwner").value||"").trim();
-    if(!targetOwner){
-      notice("⚠️ Owner Belum Dipilih","Super Admin harus memilih Owner pemilik konter untuk data karyawan ini.");
-      return;
+  $("wa").value=employeeWa(selectedEmployee);
+  $("upah").value=rupiah(employeeWage(selectedEmployee));
+  $("jabatan").textContent=selectedEmployee.jabatan||selectedEmployee.posisi||"-";
+  $("role").textContent=String(selectedEmployee.role||"-").toUpperCase();
+  $("statusKaryawan").textContent=String(selectedEmployee.status||"-").toUpperCase();
+
+  loadExistingForForm();
+}
+
+function setStatus(value){
+  selectedStatus=value;
+  $("hadirBtn").classList.toggle("active",value==="hadir");
+  $("tidakBtn").classList.toggle("active",value==="tidak_hadir");
+}
+
+async function loadEmployees(){
+  employees=[];
+  const map=new Map();
+
+  async function getEmployees(field){
+    try{
+      const q=query(
+        collection(db,"users"),
+        where(field,"==",businessUid)
+      );
+      const snap=await getDocs(q);
+
+      snap.forEach(d=>{
+        const x={id:d.id,...d.data()};
+        const r=String(x.role||"").toLowerCase();
+        const st=String(x.status||"").toLowerCase();
+
+        if(["employee","karyawan"].includes(r) && (!st || st==="aktif")){
+          map.set(d.id,x);
+        }
+      });
+    }catch(e){
+      console.warn("loadEmployees",field,e);
     }
-  }else{
-    targetOwner=uid;
   }
 
-  const payload={
-   ownerUid:targetOwner,
-   ownerId:targetOwner,
-   nama:n,
-   namaKaryawan:n,
-   jabatan:$("jabatan").value,
-   noWA:$("wa").value.trim(),
-   upahHarian:Number($("upah").value)||0,
-   status:$("statusKaryawan").value,
-   role:$("role").value,
-   updatedAt:serverTimestamp()
+  await getEmployees("ownerUid");
+
+  if(businessUid){
+    await getEmployees("ownerId");
+  }
+
+  employees=[...map.values()].sort((a,b)=>
+    employeeName(a).localeCompare(employeeName(b),"id")
+  );
+
+  $("karyawan").innerHTML=
+    '<option value="">-- Pilih Karyawan --</option>'+
+    employees.map(x=>
+      `<option value="${esc(x.id)}">${esc(employeeName(x))}</option>`
+    ).join("");
+
+  $("totalKaryawan").textContent=employees.length;
+}
+
+async function loadAttendance(){
+  attendance=[];
+  const map=new Map();
+  const month=$("bulan").value||monthNow();
+
+  async function getAttendance(field){
+    try{
+      const q=query(
+        collection(db,"absensi"),
+        where(field,"==",businessUid)
+      );
+      const snap=await getDocs(q);
+      snap.forEach(d=>{
+        const x={id:d.id,...d.data()};
+        if(String(x.tanggal||"").slice(0,7)===month){
+          map.set(d.id,x);
+        }
+      });
+    }catch(e){
+      console.warn("loadAttendance",field,e);
+    }
+  }
+
+  await getAttendance("ownerUid");
+  await getAttendance("ownerId");
+
+  attendance=[...map.values()];
+  renderAttendance();
+  updateSummary();
+}
+
+function employeeForAttendance(x){
+  const id=x.userId||x.uid||"";
+  return employees.find(e=>e.id===id)||null;
+}
+
+function renderAttendance(){
+  const search=($("cari").value||"").trim().toLowerCase();
+
+  const data=attendance.filter(x=>{
+    const emp=employeeForAttendance(x);
+    const name=x.nama||emp&&employeeName(emp)||"";
+    const jabatan=x.jabatan||emp&&(
+      emp.jabatan||emp.posisi||""
+    )||"";
+
+    return !search ||
+      String(name).toLowerCase().includes(search) ||
+      String(jabatan).toLowerCase().includes(search);
+  }).sort((a,b)=>
+    String(b.tanggal||"").localeCompare(String(a.tanggal||""))
+  );
+
+  if(!data.length){
+    $("tbody").innerHTML=
+      '<tr><td colspan="6" class="empty">Belum ada data absensi bulan ini.</td></tr>';
+    return;
+  }
+
+  $("tbody").innerHTML=data.map(x=>{
+    const emp=employeeForAttendance(x);
+    const name=x.nama||emp&&employeeName(emp)||"-";
+    const jabatan=x.jabatan||emp&&(emp.jabatan||emp.posisi)||"-";
+    const wage=Number(x.upahHarian??emp&&employeeWage(emp)??0)||0;
+    const st=String(x.status||"tidak_hadir");
+
+    return `<tr>
+      <td>${esc(x.tanggal||"-")}</td>
+      <td><b>${esc(name)}</b></td>
+      <td>${esc(jabatan)}</td>
+      <td><span class="badge ${st==="hadir"?"hadir":"tidak"}">
+        ${st==="hadir"?"HADIR":"TIDAK HADIR"}
+      </span></td>
+      <td><b>${st==="hadir"?rupiah(wage):"Rp 0"}</b></td>
+      <td><button class="edit" data-edit="${esc(x.id)}">Edit</button></td>
+    </tr>`;
+  }).join("");
+}
+
+function updateSummary(){
+  const hadir=attendance.filter(x=>String(x.status)==="hadir").length;
+  const tidak=attendance.filter(x=>String(x.status)!=="hadir").length;
+
+  const totalUpah=attendance.reduce((sum,x)=>{
+    if(String(x.status)!=="hadir") return sum;
+    return sum+Number(x.upahHarian||0);
+  },0);
+
+  $("totalHadir").textContent=hadir;
+  $("totalTidak").textContent=tidak;
+  $("totalUpah").textContent=rupiah(totalUpah);
+}
+
+async function loadExistingForForm(){
+  if(!selectedEmployee) return;
+
+  const date=$("tanggal").value||today();
+  const id=attendanceId(selectedEmployee.id,date);
+
+  try{
+    const snap=await getDoc(doc(db,"absensi",id));
+
+    if(snap.exists()){
+      const x=snap.data()||{};
+      setStatus(String(x.status||"tidak_hadir"));
+    }else{
+      setStatus("");
+    }
+  }catch(e){
+    console.warn("cek absensi",e);
+    setStatus("");
+  }
+}
+
+async function saveAttendance(){
+  if(!selectedEmployee){
+    showPopup("Belum memilih karyawan","Silakan pilih nama karyawan/teknisi dari dropdown.");
+    return;
+  }
+
+  if(!selectedStatus){
+    showPopup("Status belum dipilih","Pilih HADIR atau TIDAK HADIR.");
+    return;
+  }
+
+  const date=$("tanggal").value||today();
+  const id=attendanceId(selectedEmployee.id,date);
+  const wage=employeeWage(selectedEmployee);
+
+  const data={
+    ownerUid:businessUid,
+    ownerId:businessUid,
+    userId:selectedEmployee.id,
+    uid:selectedEmployee.uid||selectedEmployee.id,
+    nama:employeeName(selectedEmployee),
+    namaKaryawan:selectedEmployee.namaKaryawan||selectedEmployee.nama||employeeName(selectedEmployee),
+    email:selectedEmployee.email||"",
+    role:selectedEmployee.role||"employee",
+    jabatan:selectedEmployee.jabatan||selectedEmployee.posisi||"",
+    noWA:employeeWa(selectedEmployee),
+    upahHarian:wage,
+    tanggal:date,
+    status:selectedStatus,
+    hadir:selectedStatus==="hadir",
+    updatedAt:serverTimestamp(),
+    updatedBy:uid
   };
 
-  if(editingId){
-   const old=karyawan.find(x=>x.id===editingId);
-   if(!old)throw new Error("Data karyawan tidak ditemukan.");
+  try{
+    $("saveBtn").disabled=true;
+    $("saveBtn").textContent="Menyimpan...";
 
-   const oldOwner=String(old.ownerUid||old.ownerId||"").trim();
-   if(roleLogin==="owner" && oldOwner!==uid){
-     notice("🔒 Akses Ditolak","Owner hanya dapat mengedit karyawan milik konternya sendiri.");
-     return;
-   }
+    const old=await getDoc(doc(db,"absensi",id));
 
-   // Owner tidak boleh memindahkan karyawan ke owner lain.
-   if(roleLogin==="owner"){
-     payload.ownerUid=uid;
-     payload.ownerId=uid;
-   }
+    if(!old.exists()){
+      data.createdAt=serverTimestamp();
+      data.createdBy=uid;
+    }
 
-   await updateDoc(doc(db,"karyawan",editingId),payload);
-   notice("✅ Berhasil","Data karyawan berhasil diperbarui.");
-  }else{
-   throw new Error("Pilih data karyawan yang sudah ada untuk diedit.");
+    await setDoc(doc(db,"absensi",id),data,{merge:true});
+
+    notice(
+      `✓ Absensi ${employeeName(selectedEmployee)} tanggal ${date} berhasil disimpan.`,
+      "ok"
+    );
+
+    await loadAttendance();
+    await loadExistingForForm();
+
+  }catch(e){
+    console.error(e);
+    notice("Gagal menyimpan: "+(e.message||e),"err");
+    showPopup("Gagal menyimpan",e.message||"Terjadi kesalahan.");
+  }finally{
+    $("saveBtn").disabled=false;
+    $("saveBtn").textContent="Simpan Absensi";
+  }
+}
+
+function editAttendance(id){
+  const x=attendance.find(a=>a.id===id);
+  if(!x) return;
+
+  const empId=x.userId||x.uid||"";
+  $("tanggal").value=x.tanggal||today();
+  $("karyawan").value=empId;
+  selectEmployee();
+  setStatus(String(x.status||"tidak_hadir"));
+  window.scrollTo({top:0,behavior:"smooth"});
+}
+
+async function initializeUser(user){
+  uid=user.uid;
+
+  const me=await getDoc(doc(db,"users",uid));
+  if(!me.exists()) throw new Error("Profil akun tidak ditemukan di users/{UID}.");
+
+  profile=me.data()||{};
+  role=String(profile.role||"").toLowerCase();
+
+  if(!["owner","superadmin"].includes(role)){
+    throw new Error("Halaman ini hanya dapat digunakan oleh OWNER dan SUPERADMIN.");
   }
 
-  resetForm();
-  await loadKaryawan();
- }catch(e){
-  console.error(e);
-  notice("❌ Gagal Menyimpan",e.message||String(e));
- }
-};
+  businessUid=resolveBusinessUid(profile);
 
-window.simpanKehadiran=async()=>{
- const id=$("pilihTeknisi").value,date=$("tanggalHadir").value,status=$("statusHadir").value;
- if(!id||!date){notice("⚠️ Data Belum Lengkap","Pilih teknisi/karyawan dan tanggal terlebih dahulu.");return}
- const a=karyawan.find(x=>x.id===id);
- if(!a){notice("❌ Gagal","Karyawan tidak ditemukan.");return}
+  $("headerUser").textContent=
+    `${profile.nama||profile.namaKonter||user.email||"-"} • ${role.toUpperCase()}`;
 
- const loginRole=String(profile.role||"").toLowerCase().trim();
- if(loginRole!=="owner"&&loginRole!=="superadmin"){
-   notice("🔒 Akses Ditolak","Hanya Owner dan Super Admin yang dapat menginput daftar hadir.");
-   return;
- }
+  await loadEmployees();
+  await loadAttendance();
 
- const owner=String(a.ownerUid||a.ownerId||"").trim();
- if(!owner){notice("❌ Gagal","ownerUid karyawan tidak ditemukan.");return}
-
- // Owner hanya boleh mencatat kehadiran karyawan konternya sendiri.
- if(loginRole==="owner" && owner!==uid){
-   notice("🔒 Akses Ditolak","Karyawan tersebut bukan milik konter Owner yang sedang login.");
-   return;
- }
-
- const docId=`${owner}_${id}_${date}`;
- const payload={
-  ownerUid:owner,ownerId:owner,userId:id,uid:a.uid||id,
-  nama:nama(a),namaKaryawan:nama(a),
-  jabatan:a.jabatan||"Teknisi",role:a.role||"employee",
-  tanggal:date,status,
-  catatan:$("catatan").value.trim(),
-  updatedAt:serverTimestamp()
- };
- try{
-  await setDoc(doc(db,"absensi",docId),payload,{merge:true});
-  $("catatan").value="";
-  notice("✅ Daftar Hadir Tersimpan",`${nama(a)} tercatat ${status==="hadir"?"HADIR":"TIDAK HADIR"} pada ${date}.`);
- }catch(e){
-  console.error(e);
-  notice("❌ Gagal Menyimpan Absensi",e.message||String(e));
- }
-};
-
-async function muatSemua(){
- try{
-  $("tanggalHadir").value=today();
-  await profileUser();
-  await loadKaryawan();
- }catch(e){
-  console.error(e);notice("❌ Tidak Bisa Memuat",e.message||String(e));
- }
+  notice(
+    `✓ Akun ${role.toUpperCase()} aktif • data dibatasi ke ownerUid ${businessUid.slice(0,8)}.`,
+    "ok"
+  );
 }
-window.muatSemua=muatSemua;
 
-$("tanggalHadir").value=today();
-onAuthStateChanged(auth,async u=>{
- if(!u){location.replace("login.html");return}
- uid=u.uid;await muatSemua();
+$("tanggal").value=today();
+$("bulan").value=monthNow();
+
+$("karyawan").addEventListener("change",selectEmployee);
+$("tanggal").addEventListener("change",loadExistingForForm);
+$("hadirBtn").addEventListener("click",()=>setStatus("hadir"));
+$("tidakBtn").addEventListener("click",()=>setStatus("tidak_hadir"));
+$("cari").addEventListener("input",renderAttendance);
+
+$("bulan").addEventListener("change",async()=>{
+  await loadAttendance();
+  await loadExistingForForm();
+});
+
+$("refreshBtn").addEventListener("click",async()=>{
+  try{
+    notice("Memuat ulang data...");
+    await loadEmployees();
+    await loadAttendance();
+    if(selectedEmployee) await loadExistingForForm();
+    notice("✓ Data berhasil diperbarui.","ok");
+  }catch(e){
+    notice(e.message||"Gagal refresh","err");
+  }
+});
+
+$("clearBtn").addEventListener("click",()=>{
+  $("karyawan").value="";
+  resetEmployeeFields();
+  $("tanggal").value=today();
+});
+
+$("saveBtn").addEventListener("click",saveAttendance);
+
+$("tbody").addEventListener("click",e=>{
+  const btn=e.target.closest("[data-edit]");
+  if(btn) editAttendance(btn.dataset.edit);
+});
+
+$("popupOk").addEventListener("click",()=>$("popup").classList.remove("show"));
+
+onAuthStateChanged(auth,async user=>{
+  if(!user){
+    notice("Belum login. Silakan login melalui halaman utama FIXZY.","err");
+    $("headerUser").textContent="Belum login";
+    return;
+  }
+
+  try{
+    await initializeUser(user);
+  }catch(e){
+    console.error(e);
+    notice(e.message||"Gagal memuat halaman.","err");
+    $("headerUser").textContent="Akses ditolak";
+  }
 });
 </script>
 </body>
