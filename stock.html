@@ -218,7 +218,7 @@ function tutupHalaman(){
   </section>
 
   <section class="card">
-    <div class="title">📦 Stok Firebase</div>
+    <div class="title">📦 Stok Firebase</div><div class="sub" style="margin:-4px 0 10px;color:#15803d;font-weight:800">🔒 Stok terisolasi berdasarkan ownerUid akun aktif — stok owner/konter lain tidak ditampilkan.</div>
     <div id="listMsg" class="sub">Memuat data...</div>
     <div class="stockBulkBar">
   <label style="display:flex;align-items:center;gap:7px;font-weight:800;cursor:pointer">
@@ -682,11 +682,27 @@ function renderPreview(){
 function identityFields(){
   const email=String(currentUser?.email||"").toLowerCase();
   const konterId=String(currentProfile?.konterId||"").trim();
-  const ownerUid=String(currentProfile?.role==="owner" ? uid : (currentProfile?.ownerUid||currentProfile?.ownerId||"")).trim();
-  const ownerEmail=String(currentProfile?.role==="owner" ? email : (currentProfile?.ownerEmail||email)).toLowerCase();
+
+  /*
+   * Owner memakai UID dirinya sendiri.
+   * Superadmin memakai ownerUid/ownerId yang tersimpan di profil;
+   * bila belum ada, gunakan UID Superadmin sendiri.
+   * Jangan pernah mengosongkan ownerUid saat menyimpan stok.
+   */
+  const ownerUid=String(
+    currentProfile?.role==="owner"
+      ? uid
+      : (currentProfile?.ownerUid||currentProfile?.ownerId||uid)
+  ).trim();
+
+  const ownerEmail=String(
+    currentProfile?.role==="owner"
+      ? email
+      : (currentProfile?.ownerEmail||email)
+  ).toLowerCase();
+
   return {uid,akun:email,ownerEmail,konterId,ownerUid};
 }
-
 function formatExp(v){
   if(!v)return "-";
   try{
@@ -761,27 +777,59 @@ async function loadProducts(){
   try{
     const ref=collection(db,"stok");
     const map=new Map();
-    if(isSuperAdmin){
-      const snap=await getDocs(ref);
-      snap.forEach(d=>map.set(d.id,{id:d.id,...d.data()}));
-    }else{
-      const email=String(currentUser?.email||"").toLowerCase();
-      const queries=[query(ref,where("ownerEmail","==",email)),query(ref,where("akun","==",email))];
-      if(currentProfile?.konterId)queries.push(query(ref,where("konterId","==",String(currentProfile.konterId))));
-      for(const q of queries){
+
+    /*
+     * FIX ISOLASI PER KONTER
+     * Superadmin tidak lagi membaca seluruh koleksi "stok".
+     * Semua akun hanya membaca dokumen yang ownerUid/ownerId-nya
+     * sama dengan ownerUid akun aktif.
+     */
+    const activeOwnerUid=String(
+      currentProfile?.role==="owner"
+        ? uid
+        : (currentProfile?.ownerUid||currentProfile?.ownerId||uid)
+    ).trim();
+
+    if(!activeOwnerUid){
+      throw new Error("ownerUid akun aktif tidak ditemukan.");
+    }
+
+    const queries=[
+      query(ref,where("ownerUid","==",activeOwnerUid)),
+      query(ref,where("ownerId","==",activeOwnerUid))
+    ];
+
+    for(const q of queries){
+      try{
         const snap=await getDocs(q);
-        snap.forEach(d=>map.set(d.id,{id:d.id,...d.data()}));
+        snap.forEach(d=>{
+          const p={id:d.id,...d.data()};
+          map.set(d.id,p);
+        });
+      }catch(e){
+        console.warn("Query stok isolasi:",e);
       }
     }
-    products=[...map.values()];
-    $("listMsg").textContent=products.length?`${products.length} produk tersimpan di Firebase.`:"Belum ada data stok.";
+
+    /*
+     * Filter kedua di sisi aplikasi sebagai pengaman tambahan.
+     * Jadi walaupun ada dokumen dengan field lain, stok owner lain
+     * tidak akan masuk ke array products.
+     */
+    products=[...map.values()].filter(p=>{
+      const pOwner=String(p.ownerUid||p.ownerId||"").trim();
+      return pOwner===activeOwnerUid;
+    });
+
+    $("listMsg").textContent=products.length
+      ? `${products.length} produk tersimpan di Firebase.`
+      : "Belum ada data stok.";
     fillCategories();render();
   }catch(e){
     console.error(e);
     $("listMsg").textContent="Gagal membaca stok: "+e.message;
   }
 }
-
 function fillCategories(){
   const sel=$("cat"),old=sel.value;
   const cats=[...new Set(products.map(x=>String(x.kategori||"LAINNYA").toUpperCase()).filter(Boolean))].sort();
@@ -1115,6 +1163,17 @@ async function initFixzyStockSession(user){
     isSuperAdmin=role==="superadmin" || email==="servicehpmaja@gmail.com";
     if(!isSuperAdmin && role!=="owner") throw new Error("Hanya superadmin atau owner yang diizinkan membuka Stock.");
     if(String(currentProfile.status||"").toLowerCase()==="blocked" || String(currentProfile.status||"").toLowerCase()==="rejected") throw new Error("Akun diblokir / ditolak.");
+
+    /*
+     * Tetapkan scope konter sebelum loadProducts().
+     * Ini memastikan Superadmin tidak membaca stok milik Owner lain.
+     */
+    if(role==="owner"){
+      currentProfile.ownerUid=uid;
+    }else{
+      currentProfile.ownerUid=String(currentProfile.ownerUid||currentProfile.ownerId||uid).trim();
+    }
+
     $("headerAccount").textContent=currentProfile.namaKonter||currentProfile.namaPemilik||currentProfile.nama||user.email||"Akun";
     $("headerRole").textContent=isSuperAdmin?"SUPERADMIN":"OWNER";
     $("headerExp").textContent=formatExp(currentProfile.exp||currentProfile.expAt||currentProfile.expiredAt||currentProfile.tanggalBerakhir);
