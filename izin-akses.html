@@ -152,15 +152,50 @@ window.pilihAksesKaryawan=()=>{
 function renderIzin(a){const izin=gabungIzin(a);if(!izin.length)return '<span style="color:#94a3b8">Tidak ada akses</span>';return izin.map(v=>`<span class="badge">${esc(izinLabel(v))}</span>`).join("")}
 
 async function load(){if(!ready)return;
-  // FIX ISOLASI - hanya akun dengan ownerUid == ownerUid ini
-  const s=await getDocs(query(collection(db,"users"),where("ownerUid","==",ownerUid)));
-  accounts=s.docs.map(d=>({id:d.id,...d.data()})).filter(x=>["employee","reseller"].includes(norm(x.role)));
-  render();
-  $("status").innerHTML=`<span class="ok">✓ ${accounts.length} akun karyawan/reseller untuk konter ini • Hak akses sinkron dengan index.</span>`
+  try{
+    const s=await getDocs(query(collection(db,"users"),where("ownerUid","==",ownerUid)));
+    accounts=s.docs.map(d=>({id:d.id,...d.data()})).filter(x=>["employee","reseller"].includes(norm(x.role)));
+    // FIX: jangan biarkan filter pencarian owner email (handa@gmail.com) bikin tabel 0
+    // Jika pencarian mengandung email owner, reset otomatis
+    const q=norm($("cari").value);
+    if(q && q.includes("@") && (q===norm(profile.email||"") || q===norm(profile.ownerEmail||"") || q===norm(auth.currentUser.email||""))){
+      $("cari").value=""; // auto reset kalau yang dicari email owner sendiri
+    }
+    render();
+    $("status").innerHTML=`<span class="ok">✓ ${accounts.length} akun karyawan/reseller untuk konter ini • Hak akses sinkron dengan index. • WA pakai acuan Data Penjualan</span>`;
+  }catch(e){
+    $("status").innerHTML=`<span class="err">Gagal load: ${esc(e.message)}</span>`;
+  }
 }
 
-function render(){const role=$("roleFilter").value,q=norm($("cari").value);const arr=accounts.filter(a=>(!role||a.role===role)&&(!q||norm(nama(a)).includes(q)||norm(a.email).includes(q)||norm(a.jabatan).includes(q)));$("total").textContent=arr.length;$("aktif").textContent=arr.filter(a=>norm(a.status)==="aktif").length;$("jmlKaryawan").textContent=arr.filter(a=>a.role==="employee").length;$("jmlReseller").textContent=arr.filter(a=>a.role==="reseller").length;$("tbody").innerHTML=arr.length?arr.map(a=>`<tr><td><b>${esc(nama(a))}</b></td><td>${esc(a.email||"-")}</td><td>${esc(a.noWA||a.wa||a.noWa||a.noHp||"-")}</td><td><span class="badge ${esc(a.role||"")}">${esc(roleLabel(a.role))}</span></td><td>${esc(a.jabatan||a.posisi||"-")}</td><td><span class="badge ${norm(a.status)==="aktif"?"active":"off"}">${esc(a.status||"-")}</span></td><td>${renderIzin(a)}</td><td><button class="btn secondary" style="padding:7px 9px;font-size:10px" onclick="editAkun('${a.id}')">✏️ Edit</button></td></tr>`).join(""):'<tr><td colspan="8" class="empty">Belum ada akun karyawan/reseller untuk konter ini.</td></tr>'}
-window.render=render;window.resetFilter=()=>{$("roleFilter").value="";$("cari").value="";render()};
+function render(){
+  const role=$("roleFilter").value;
+  const q=norm($("cari").value);
+  // FIX: summary dari semua akun, bukan yang terfilter (biar tidak 0 seperti screenshot)
+  const all=accounts;
+  $("total").textContent=all.length;
+  $("aktif").textContent=all.filter(a=>norm(a.status)==="aktif").length;
+  $("jmlKaryawan").textContent=all.filter(a=>a.role==="employee").length;
+  $("jmlReseller").textContent=all.filter(a=>a.role==="reseller").length;
+
+  // tabel yang difilter pencarian & role
+  const arr=all.filter(a=>(!role||a.role===role)&&(!q||norm(nama(a)).includes(q)||norm(a.email).includes(q)||norm(a.jabatan).includes(q)||norm(a.noWA||"").includes(q)));
+  $("tbody").innerHTML=arr.length?arr.map(a=>`
+    <tr>
+      <td><b>${esc(nama(a))}</b></td>
+      <td>${esc(a.email||"-")}</td>
+      <td>${esc(a.noWA||a.wa||a.noWa||"-")}<br><a href="#" onclick="event.preventDefault();kirimUlangWA('${a.id}')" style="font-size:9px;color:#2563eb;text-decoration:underline">📲 Kirim WA</a></td>
+      <td><span class="badge ${esc(a.role||"")}">${esc(roleLabel(a.role))}</span></td>
+      <td>${esc(a.jabatan||a.posisi||"-")}</td>
+      <td><span class="badge ${norm(a.status)==="aktif"?"active":"off"}">${esc(a.status||"-")}</span></td>
+      <td>${renderIzin(a)}</td>
+      <td style="display:flex;gap:4px;flex-wrap:wrap">
+        <button class="btn secondary" style="padding:7px 9px;font-size:10px" onclick="editAkun('${a.id}')">✏️ Edit</button>
+        <button class="btn secondary" style="padding:7px 9px;font-size:10px" onclick="kirimUlangWA('${a.id}')">📲 WA</button>
+      </td>
+    </tr>`).join(""):'<tr><td colspan="8" class="empty">'+(q?('Tidak ada hasil untuk "'+esc($("cari").value)+'" - klik Reset'):'Belum ada akun karyawan/reseller untuk konter ini.')+'</td></tr>'
+}
+window.render=render;window.resetFilter=()=>{$("roleFilter").value="";$("cari").value="";render(); $("status").innerHTML=`<span class="ok">✓ ${accounts.length} akun - filter direset</span>`;};
 window.bukaTambah=()=>{if(!ready)return;editId=null;editEmailLama="";$("popupTitle").textContent="＋ Tambah Akun";$("fNama").value="";$("fRole").value="employee";$("fRole").disabled=false;$("fEmail").value="";$("fWA").value="";$("fPassword").value="";$("passLabel").textContent="PASSWORD AWAL";$("fPassword").placeholder="Minimal 6 karakter";$("fJabatan").value="";$("fUpah").value="";$("fStatus").value="aktif";setIzin(["penjualan","servis","dataPenjualan","dataServis","stock","absensi"]);$("passWrap").style.display="flex";$("editInfo").textContent="Akun dibuat di Firebase Auth dan dihubungkan ke ownerUid ini (isolasi per konter).";$("popup").classList.add("show")};
 window.editAkun=id=>{const a=accounts.find(x=>x.id===id);if(!a)return;editId=id;editEmailLama=String(a.email||"").trim();$("popupTitle").textContent="✏️ Edit Akun & Checklist Hak Akses";$("fNama").value=nama(a);$("fRole").value=a.role;$("fRole").disabled=true;$("fEmail").value=editEmailLama;$("fWA").value=a.noWA||a.wa||a.noWa||a.noHp||"";$("fPassword").value="";$("passLabel").textContent="PASSWORD LOGIN BARU";$("fPassword").placeholder="Isi bila email login diganti";$("fJabatan").value=a.jabatan||a.posisi||"";$("fUpah").value=a.upahHarian??a.upah??a.gajiHarian??0;$("fStatus").value=a.status||"aktif";setIzin(gabungIzin(a));$("passWrap").style.display="flex";$("editInfo").innerHTML='Jika email tetap, password tidak perlu diisi. Checklist di atas sinkron dengan menu index-FIXED.';$("popup").classList.add("show")};
 
@@ -222,8 +257,19 @@ function nomorWhatsApp(v){
   else if(s.length>=10) s="62"+s;
   return s;
 }
-function tampilWaPopup(data){$("waText").innerHTML=`Akun <b>${esc(data.name)}</b> berhasil disimpan.<br><br>Nomor WA: <b>${esc(data.phone||"-")}</b><br><br>Pesan:<div style="margin-top:8px;padding:11px;border:1px solid #e2e8f0;border-radius:10px;background:#f8fafc;white-space:pre-wrap;font-size:11px">${esc(data.message)}</div>`;$("waPopup").classList.add("show")}
+function tampilWaPopup(data){
+  $("waText").innerHTML=`Akun <b>${esc(data.name)}</b> berhasil disimpan.<br><br>Nomor WA: <b>${esc(data.phone||"-")}</b><br><span style="font-size:10px;color:#64748b">Format nomor akan otomatis jadi 62... seperti di Data Penjualan</span><br><br>Pesan:<div style="margin-top:8px;padding:11px;border:1px solid #e2e8f0;border-radius:10px;background:#f8fafc;white-space:pre-wrap;font-size:11px">${esc(data.message)}</div>`;
+  $("waPopup").classList.add("show")
+}
 window.tutupWaPopup=()=>{$("waPopup").classList.remove("show");window._waPending=null};
+window.kirimUlangWA=(id)=>{
+  const a=accounts.find(x=>x.id===id); if(!a) return;
+  const n=nama(a), email=a.email||"", wa=a.noWA||a.wa||"", r=a.role||"employee", j=a.jabatan||"", upah=a.upahHarian||0;
+  // acuan pesan WA seperti di Data Penjualan - template penjualan
+  const pesan=`*FIXZY - AKSES KARYAWAN*\n\nHalo ${n}, akun kamu sudah aktif.\n\n*Login:*\nNama: ${n}\nEmail: ${email}\nRole: ${roleLabel(r)}\nJabatan: ${j||"-"}\nUpah: ${rupiah(upah)}\nStatus: ${a.status||"aktif"}\n\n*Link Login:*\nhttps://fixzy-olive.vercel.app/login.html\n\nJika lupa password, klik Lupa Password di halaman login.`;
+  window._waPending={phone:wa,message:pesan,name:n,email,role:r};
+  tampilWaPopup(window._waPending);
+};
 window.kirimWhatsApp=()=>{
   const d=window._waPending; if(!d) return;
   const nomor=nomorWhatsApp(d.phone);
