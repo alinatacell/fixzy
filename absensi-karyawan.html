@@ -452,8 +452,20 @@ async function simpanAbsensi(){
    tampilNotice("❌ Gagal Menyimpan","Owner akun karyawan tidak ditemukan.");
    return;
  }
+
+ // Pengaman isolasi: Owner hanya boleh mengedit/menyimpan
+ // absensi karyawan yang memang berada di konternya sendiri.
+ if(role==="owner"){
+   const selectedOwner=String(selected.ownerUid||selected.ownerId||ownerUid||"").trim();
+   if(selectedOwner!==ownerUid){
+     tampilNotice("❌ Gagal Menyimpan","Karyawan bukan bagian dari konter Owner ini.");
+     return;
+   }
+ }
+
  const data={
    ownerUid:targetOwnerUid,
+   ownerId:targetOwnerUid,
    userId:selected.id,
    uid:selected.uid||selected.id,
    nama:nama(selected),
