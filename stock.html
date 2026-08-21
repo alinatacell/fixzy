@@ -107,7 +107,27 @@ tr:hover td{background:#fffdf5}
 .stockBulkBar{display:flex;gap:10px;align-items:center;flex-wrap:wrap;justify-content:flex-start;margin:10px 0;padding:10px;border:1px solid #e5e7eb;border-radius:12px;background:#f8fafc}
 .stockBulkBar button{border:0;border-radius:10px;padding:9px 13px;font-weight:800;cursor:pointer}.stockBulkDelete{background:#dc2626;color:#fff}.stockCheck{width:18px;height:18px;accent-color:#dc2626}
 </style></head>
-<body><script>
+<body>
+<header class="header">
+  <div class="header-in">
+    <div class="brand">
+      <img src="logo.png" class="logo" onerror="this.style.display='none'">
+      <div>
+        <h1>FIXZY</h1>
+        <p>Stok Produk • <span id="headerRole">Memuat...</span></p>
+      </div>
+    </div>
+    <div class="header-account">
+      <div class="account-name" id="headerAccount">Memuat...</div>
+      <div class="account-exp">Exp: <span id="headerExp">-</span></div>
+    </div>
+    <div class="head-actions">
+      <button class="head-btn" type="button" onclick="tutupHalaman()">✕</button>
+      <button class="head-btn refresh" id="refreshBtn" type="button" onclick="refreshHalaman()">↻</button>
+    </div>
+  </div>
+</header>
+<script>
 /* FIX TUTUP: hapus iframe yang sedang menampilkan halaman ini. */
 function tutupHalaman(){
   try{
@@ -134,22 +154,7 @@ function tutupHalaman(){
 }
 </script>
 
-<header class="header">
-  <div class="header-in">
-    <div class="brand">
-      <img src="logo.png" class="logo" onerror="this.style.display='none'">
-      <div><h1>FIXZY</h1><p>Stok Produk • <span id="headerRole">Memuat...</span></p></div>
-    </div>
-    <div class="header-account">
-      <div class="account-name" id="headerAccount">Memuat...</div>
-      <div class="account-exp">Exp: <span id="headerExp">-</span></div>
-    </div>
-    <div class="head-actions">
-      <button class="head-btn" onclick="tutupHalaman()">✕</button>
-      <button class="head-btn refresh" id="refreshBtn" onclick="refreshHalaman()">↻</button>
-    </div>
-  </div>
-</header>
+
 
 <main class="container">
   <div class="top">
@@ -207,36 +212,9 @@ function tutupHalaman(){
     </div>
   </section>
 
-  <section class="card">
-    <div class="title">🔎 Cari Stok</div>
-    <div class="grid4">
-      <div class="field search"><label>CARI PRODUK</label><input id="search" placeholder="Kode / nama / merk..."></div>
-      <div class="field"><label>KATEGORI</label><select id="cat"><option value="">Semua kategori</option></select></div>
-      <div class="field"><label>STATUS</label><select id="status"><option value="">Semua</option><option value="ready">Ready</option><option value="empty">Kosong</option></select></div>
-      <button class="btn dark" onclick="resetFilter()">Reset</button>
-    </div>
-  </section>
 
-  <section class="card">
-    <div class="title">📦 Stok Firebase</div><div class="sub" style="margin:-4px 0 10px;color:#15803d;font-weight:800">🔒 Stok terisolasi berdasarkan ownerUid akun aktif — stok owner/konter lain tidak ditampilkan.</div>
-    <div id="listMsg" class="sub">Memuat data...</div>
-    <div class="stockBulkBar">
-  <label style="display:flex;align-items:center;gap:7px;font-weight:800;cursor:pointer">
-    <input id="stockSelectAll" class="stockCheck" type="checkbox" onchange="toggleAllStock(this.checked)">
-    Ceklis Semua
-  </label>
-  <span id="stockSelectedInfo" style="font-size:12px;color:#64748b">0 dipilih</span>
-  <button type="button" class="stockBulkDelete" onclick="hapusStockTerpilih()">🗑 Hapus Terpilih</button>
-</div>
 
-    <div class="table-wrap" style="margin-top:11px">
-      <table>
-        <thead><tr><th class="stockSelectCol">☑</th><th>Kode</th><th>Nama</th><th>Kategori</th><th>Modal</th><th>Jual</th><th>Sisa</th><th>Status</th><th>Aksi</th></tr></thead>
-        <tbody id="tbody"></tbody>
-      </table>
-    </div>
-    <div id="mobileList" class="mobile-list" style="margin-top:11px"></div>
-  </section>
+
 </main>
 
 <!-- MODAL MANUAL -->
@@ -317,6 +295,11 @@ function showLoading(v,text="Memproses..."){
   $("loadingText").textContent=text;
   $("loading").classList.toggle("show",v);
 }
+function goToTampilStock(){
+  // Navigasi ke halaman stok read-only setelah stok benar-benar tersimpan.
+  window.location.replace("tampil-stock.html");
+}
+
 function toast(text){
   $("toast").textContent=text;$("toast").classList.add("show");
   setTimeout(()=>$("toast").classList.remove("show"),2600);
@@ -763,7 +746,11 @@ async function saveCSVToFirebase(){
     csvRows=[];
     $("saveCsvBtn").style.display="none";
     $("preview").style.display="none";
-    await loadProducts();
+
+    // Selesai menambahkan stok dari CSV/Google Sheet/Excel:
+    // arahkan langsung ke halaman tampil-stock.html.
+    goToTampilStock();
+    return;
   }catch(e){
     console.error(e);
     msg("Gagal menyimpan ke Firebase:\n"+(e.message||e),"err");
@@ -773,13 +760,6 @@ async function saveCSVToFirebase(){
 }
 async function loadProducts(){
   if(!uid){$("listMsg").textContent="Sesi Firebase belum siap.";return}
-  if(isSuperAdmin){
-    products=[];
-    fillCategories();
-    render();
-    $("listMsg").textContent="Superadmin tidak menampilkan data stok Owner.";
-    return;
-  }
   $("listMsg").textContent="Memuat data stok...";
   try{
     const ref=collection(db,"stok");
@@ -828,24 +808,24 @@ async function loadProducts(){
       return pOwner===activeOwnerUid;
     });
 
-    $("listMsg").textContent=products.length
+    {const lm=$("listMsg"); if(lm) lm.textContent=products.length
       ? `${products.length} produk tersimpan di Firebase.`
-      : "Belum ada data stok.";
+      : "Belum ada data stok.";}
     fillCategories();render();
   }catch(e){
     console.error(e);
-    $("listMsg").textContent="Gagal membaca stok: "+e.message;
+    {const lm=$("listMsg"); if(lm) lm.textContent="Gagal membaca stok: "+e.message;}
   }
 }
 function fillCategories(){
-  const sel=$("cat"),old=sel.value;
+  const sel=$("cat"); if(!sel) return; const old=sel.value;
   const cats=[...new Set(products.map(x=>String(x.kategori||"LAINNYA").toUpperCase()).filter(Boolean))].sort();
   sel.innerHTML='<option value="">Semua kategori</option>'+cats.map(c=>`<option>${esc(c)}</option>`).join("");
   if(cats.includes(old))sel.value=old;
 }
 
 function render(){
-  const q=$("search").value.toLowerCase().trim(),cat=$("cat").value,status=$("status").value;
+  const q=$("search") ? $("search").value.toLowerCase().trim() : "",cat=$("cat") ? $("cat").value : "",status=$("status") ? $("status").value : "";
   const arr=products.filter(p=>{
     const text=[p.kode,p.nama,p.merk,p.kategori].join(" ").toLowerCase();
     if(q&&!text.includes(q))return false;
@@ -857,10 +837,10 @@ function render(){
   }).sort((a,b)=>String(a.nama||"").localeCompare(String(b.nama||"")));
   let ready=0,empty=0,value=0;
   products.forEach(p=>{const s=num(p.sisa);if(s>0){ready++;value+=s*num(p.hargaModal)}else empty++});
-  $("total").textContent=products.length;$("ready").textContent=ready;$("empty").textContent=empty;$("value").textContent=money(value);
-  $("tbody").innerHTML=arr.map(rowHTML).join("")||'<tr><td colspan="8" style="text-align:center;color:#777;padding:25px">Tidak ada data</td></tr>';
-  $("mobileList").innerHTML=arr.map(mobileHTML).join("")||'<div class="sub">Tidak ada data.</div>';
-  const sa=document.getElementById("stockSelectAll");if(sa)sa.checked=false;updateSelectedStockCount();updatePriceRulePreview();
+  if($("total")) $("total").textContent=products.length; if($("ready")) $("ready").textContent=ready; if($("empty")) $("empty").textContent=empty; if($("value")) $("value").textContent=money(value);
+  if($("tbody")) $("tbody").innerHTML=arr.map(rowHTML).join("")||'<tr><td colspan="8" style="text-align:center;color:#777;padding:25px">Tidak ada data</td></tr>';
+  if($("mobileList")) $("mobileList").innerHTML=arr.map(mobileHTML).join("")||'<div class="sub">Tidak ada data.</div>';
+  const sa=document.getElementById("stockSelectAll");if(sa)sa.checked=false; if(typeof updateSelectedStockCount==="function") updateSelectedStockCount(); updatePriceRulePreview();
 }
 
 function rowHTML(p){
@@ -1009,6 +989,10 @@ window.saveManual=async()=>{
   try{
     if(editingId){
       await updateDoc(doc(db,"stok",editingId),data);
+      closeManual();
+      toast("Stok diperbarui");
+      await loadProducts();
+      return;
     }else{
       // Cegah produk ganda: kode sama ATAU nama + kategori sama.
       const duplicate=products.find(p=>isSameProduct(data,p));
@@ -1018,10 +1002,11 @@ window.saveManual=async()=>{
         return;
       }
       await addDoc(collection(db,"stok"),{...data,createdAt:serverTimestamp()});
+      closeManual();
+      toast("Stok ditambahkan");
+      goToTampilStock();
+      return;
     }
-    closeManual();
-    toast(editingId?"Stok diperbarui":"Stok ditambahkan");
-    await loadProducts();
   }catch(e){
     console.error(e);
     toast("Gagal menyimpan: "+(e.message||e));
@@ -1052,8 +1037,8 @@ window.deleteProduct=async id=>{
     showLoading(false);
   }
 };
-window.resetFilter=()=>{$("search").value="";$("cat").value="";$("status").value="";render()};
-$("search").addEventListener("input",render);$("cat").addEventListener("change",render);$("status").addEventListener("change",render);
+window.resetFilter=()=>{if($("search")) $("search").value=""; if($("cat")) $("cat").value=""; if($("status")) $("status").value=""; render()};
+if($("search")) $("search").addEventListener("input",render); if($("cat")) $("cat").addEventListener("change",render); if($("status")) $("status").addEventListener("change",render);
 $("pricePercent").addEventListener("input",updatePriceRulePreview);$("priceNominal").addEventListener("input",updatePriceRulePreview);
 
 
@@ -1156,58 +1141,39 @@ window.hapusStockTerpilih=async function(){
 // ===== SESI FIXZY: TIDAK ADA LOGIN ULANG =====
 async function initFixzyStockSession(user){
   if(!user){
-    $("listMsg").textContent="Sesi Firebase belum tersedia. Buka halaman ini dari index.html setelah login.";
+    const lm=$("listMsg"); if(lm) lm.textContent="Sesi FIXZY belum tersedia. Buka halaman ini dari index.html setelah login.";
+    ["openManual","previewCSV","saveCSVToFirebase","applyGlobalSellingPrice","deleteProduct","hapusStockTerpilih"].forEach(()=>{});
     return;
   }
-  uid=user.uid;
-  currentUser=user;
+  uid=user.uid; currentUser=user;
   try{
     const snap=await getDoc(doc(db,"users",uid));
     if(!snap.exists()) throw new Error("Profil akun tidak ditemukan.");
     currentProfile=snap.data()||{};
     const role=String(currentProfile.role||"").toLowerCase();
     const email=String(user.email||"").toLowerCase();
-
-    // Superadmin boleh membuka stock.html, tetapi TIDAK melihat stok Owner.
     isSuperAdmin=role==="superadmin" || email==="servicehpmaja@gmail.com";
-    if(isSuperAdmin){
-      $("headerAccount").textContent=currentProfile.namaKonter||currentProfile.namaPemilik||currentProfile.nama||user.email||"Superadmin";
-      $("headerRole").textContent="SUPERADMIN";
-      $("headerExp").textContent=formatExp(currentProfile.exp||currentProfile.expAt||currentProfile.expiredAt||currentProfile.tanggalBerakhir);
-      document.body.dataset.stockAuthorized="true";
-      products=[];
-      fillCategories();
-      render();
-      $("listMsg").textContent="Superadmin dapat membuka halaman ini, tetapi data stok Owner tidak ditampilkan.";
-      return;
+    if(!isSuperAdmin && role!=="owner") throw new Error("Hanya superadmin atau owner yang diizinkan membuka Stock.");
+    if(String(currentProfile.status||"").toLowerCase()==="blocked" || String(currentProfile.status||"").toLowerCase()==="rejected") throw new Error("Akun diblokir / ditolak.");
+
+    /*
+     * Tetapkan scope konter sebelum loadProducts().
+     * Ini memastikan Superadmin tidak membaca stok milik Owner lain.
+     */
+    if(role==="owner"){
+      currentProfile.ownerUid=uid;
+    }else{
+      currentProfile.ownerUid=String(currentProfile.ownerUid||currentProfile.ownerId||uid).trim();
     }
 
-    // stock.html khusus Owner.
-    if(role!=="owner"){
-      throw new Error("Halaman Stock Produk hanya untuk Owner. Karyawan/Teknisi menggunakan tampilan-stock.html sesuai izin akses.");
-    }
-
-    if(String(currentProfile.status||"").toLowerCase()==="blocked" ||
-       String(currentProfile.status||"").toLowerCase()==="rejected"){
-      throw new Error("Akun diblokir / ditolak.");
-    }
-
-    $("headerAccount").textContent=currentProfile.namaKonter||currentProfile.namaPemilik||currentProfile.nama||user.email||"Owner";
-    $("headerRole").textContent="OWNER";
+    $("headerAccount").textContent=currentProfile.namaKonter||currentProfile.namaPemilik||currentProfile.nama||user.email||"Akun";
+    $("headerRole").textContent=isSuperAdmin?"SUPERADMIN":"OWNER";
     $("headerExp").textContent=formatExp(currentProfile.exp||currentProfile.expAt||currentProfile.expiredAt||currentProfile.tanggalBerakhir);
     document.body.dataset.stockAuthorized="true";
-
-    // UID Owner aktif menjadi identitas utama stok.
     await loadProducts();
   }catch(e){
     console.error("FIXZY STOCK ACCESS:",e);
-    document.body.innerHTML=`<div style="min-height:100vh;display:flex;align-items:center;justify-content:center;background:#f3f4f6;padding:20px;font-family:Arial">
-      <div style="width:min(430px,100%);background:#fff;border:1px solid #e5e7eb;border-radius:18px;padding:25px;text-align:center;box-shadow:0 10px 30px #0002">
-        <div style="font-size:42px">🔒</div>
-        <h2 style="margin:10px 0">Akses Terbatas</h2>
-        <p style="color:#64748b;line-height:1.6">${esc(e.message||"Akses ditolak.")}</p>
-      </div>
-    </div>`;
+    document.body.innerHTML=`<div style="min-height:100vh;display:flex;align-items:center;justify-content:center;background:#f3f4f6;padding:20px;font-family:Arial"><div style="width:min(430px,100%);background:#fff;border:1px solid #e5e7eb;border-radius:18px;padding:25px;text-align:center;box-shadow:0 10px 30px #0002"><div style="font-size:42px">🔒</div><h2 style="margin:10px 0">Akses Terbatas</h2><p style="color:#64748b;line-height:1.6">${esc(e.message||"Akses ditolak.")}<br><br>Hanya <b>Superadmin</b> dan <b>Owner</b> yang dapat mengelola stok.</p></div></div>`;
   }
 }
 onAuthStateChanged(auth,initFixzyStockSession);
