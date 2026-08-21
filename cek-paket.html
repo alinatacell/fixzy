@@ -40,7 +40,6 @@ body{margin:0;font-family:Arial,Helvetica,sans-serif;background:#eef2f7;color:#1
 .badge{display:inline-block;padding:5px 10px;border-radius:999px;font-size:11px;font-weight:900}
 .badge.green{background:#dcfce7;color:#166534}.badge.red{background:#fee2e2;color:#991b1b}.badge.yellow{background:#fef3c7;color:#92400e}
 .small-info{font-size:11px;color:#64748b;margin-top:7px}
-.plan-option:hover{border-color:#111827 !important} .plan-option input{accent-color:#111827}
 </style>
 </head>
 <body>
@@ -120,11 +119,13 @@ body{margin:0;font-family:Arial,Helvetica,sans-serif;background:#eef2f7;color:#1
         Paket terpilih: <span id="paketLabel">3 Bulan - Rp 50.000</span>
       </div>
 
-      <button id="btnWhatsApp" type="button" class="btn"
-        style="display:block;text-align:center;background:#16a34a;color:#fff;width:100%;margin-top:12px;padding:16px;font-size:16px;font-weight:900;border-radius:12px;border:0"
-        onclick="kirimWA()">
+      <a id="btnWhatsApp" class="btn" onclick="kirimWA(event)"
+        href="#"
+        target="_blank"
+        rel="noopener"
+        style="display:block;text-align:center;text-decoration:none;background:#16a34a;color:#fff;width:100%;margin-top:12px;padding:16px;font-size:16px;font-weight:900;border-radius:12px">
         💬 Pesan via WhatsApp
-      </button>
+      </a>
 
       <div style="font-size:11px;color:#64748b;text-align:center;margin-top:8px">
         Setelah pembayaran, kirim bukti pembayaran sesuai paket yang dipilih.
@@ -755,15 +756,7 @@ window.pakaiToken=async function(){
    Klik tombol -> tampilkan QRIS di bawahnya.
    WhatsApp diarahkan ke 082319264646.
    ========================================================= */
-function getPaketTerpilih(){
-  const el=document.querySelector('input[name="paket"]:checked');
-  if(!el) return {bulan:3,harga:50000,hari:90,label:"3 Bulan - Rp 50.000"};
-  const [b,h,d]=el.value.split("|");
-  const bulan=Number(b), harga=Number(h), hari=Number(d);
-  const label=bulan===3?"3 Bulan - Rp 50.000":bulan===6?"6 Bulan - Rp 80.000":"12 Bulan - Rp 120.000";
-  return {bulan,harga,hari,label};
-}
-let _waUrl="#";
+let _waUrl="";
 function getPaketTerpilih(){
   const el=document.querySelector('input[name="paket"]:checked');
   if(!el) return {bulan:3,harga:50000,hari:90,label:"3 Bulan - Rp 50.000"};
@@ -797,18 +790,22 @@ Saya ingin request token perpanjangan.
 
 Mohon info pembayaran & token. Terima kasih 🙏`
   );
-
   _waUrl="https://wa.me/6282319264646?text="+waText;
+  // tetap set href untuk fallback
+  const btn=document.getElementById("btnWhatsApp");
+  if(btn) btn.setAttribute("href", _waUrl);
 };
-window.kirimWA=function(){
-  if(!_waUrl || _waUrl==="#"){ updateWALink(); }
+// HANYA FIX TOMBOL WA - tidak merubah logic lain
+window.kirimWA=function(e){
+  if(e){ e.preventDefault(); }
+  if(!_waUrl){ updateWALink(); }
   const url=_waUrl;
   let opened=false;
   try{
     const nativeOpen=window.__FIXZY_NATIVE_OPEN || window.open;
     const w=nativeOpen.call(window, url, "_blank");
     if(w) opened=true;
-  }catch(e){}
+  }catch(err){}
   if(!opened){
     try{
       if(window.top && window.top!==window){
@@ -816,20 +813,10 @@ window.kirimWA=function(){
         const w2=topOpen.call(window.top, url, "_blank");
         if(w2) opened=true;
       }
-    }catch(e){}
+    }catch(err){}
   }
   if(!opened){
-    try{
-      const a=document.createElement("a");
-      a.href=url; a.target="_blank"; a.rel="noopener noreferrer";
-      a.style.display="none";
-      document.body.appendChild(a);
-      a.click();
-      setTimeout(()=>{ try{a.remove();}catch{} }, 1500);
-      opened=true;
-    }catch(e){}
-  }
-  if(!opened){
+    // fallback pakai location - pasti kebuka
     window.location.href=url;
   }
 };
