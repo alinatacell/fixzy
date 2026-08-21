@@ -683,11 +683,23 @@ function identityFields(){
   const email=String(currentUser?.email||"").toLowerCase();
   const konterId=String(currentProfile?.konterId||"").trim();
 
-  // stock.html hanya boleh digunakan Owner.
-  // Semua stok yang dibuat/import dari halaman ini wajib menjadi milik
-  // Owner yang sedang login, sehingga Owner lain tidak ikut tercampur.
-  const ownerUid=String(uid||"").trim();
-  const ownerEmail=email;
+  /*
+   * Owner memakai UID dirinya sendiri.
+   * Superadmin memakai ownerUid/ownerId yang tersimpan di profil;
+   * bila belum ada, gunakan UID Superadmin sendiri.
+   * Jangan pernah mengosongkan ownerUid saat menyimpan stok.
+   */
+  const ownerUid=String(
+    currentProfile?.role==="owner"
+      ? uid
+      : (currentProfile?.ownerUid||currentProfile?.ownerId||uid)
+  ).trim();
+
+  const ownerEmail=String(
+    currentProfile?.role==="owner"
+      ? email
+      : (currentProfile?.ownerEmail||email)
+  ).toLowerCase();
 
   return {uid,akun:email,ownerEmail,konterId,ownerUid};
 }
@@ -761,6 +773,13 @@ async function saveCSVToFirebase(){
 }
 async function loadProducts(){
   if(!uid){$("listMsg").textContent="Sesi Firebase belum siap.";return}
+  if(isSuperAdmin){
+    products=[];
+    fillCategories();
+    render();
+    $("listMsg").textContent="Superadmin tidak menampilkan data stok Owner.";
+    return;
+  }
   $("listMsg").textContent="Memuat data stok...";
   try{
     const ref=collection(db,"stok");
@@ -772,7 +791,11 @@ async function loadProducts(){
      * Semua akun hanya membaca dokumen yang ownerUid/ownerId-nya
      * sama dengan ownerUid akun aktif.
      */
-    const activeOwnerUid=String(uid||"").trim();
+    const activeOwnerUid=String(
+      currentProfile?.role==="owner"
+        ? uid
+        : (currentProfile?.ownerUid||currentProfile?.ownerId||uid)
+    ).trim();
 
     if(!activeOwnerUid){
       throw new Error("ownerUid akun aktif tidak ditemukan.");
@@ -1133,35 +1156,58 @@ window.hapusStockTerpilih=async function(){
 // ===== SESI FIXZY: TIDAK ADA LOGIN ULANG =====
 async function initFixzyStockSession(user){
   if(!user){
-    $("listMsg").textContent="Sesi FIXZY belum tersedia. Buka halaman ini dari index.html setelah login.";
-    ["openManual","previewCSV","saveCSVToFirebase","applyGlobalSellingPrice","deleteProduct","hapusStockTerpilih"].forEach(()=>{});
+    $("listMsg").textContent="Sesi Firebase belum tersedia. Buka halaman ini dari index.html setelah login.";
     return;
   }
-  uid=user.uid; currentUser=user;
+  uid=user.uid;
+  currentUser=user;
   try{
     const snap=await getDoc(doc(db,"users",uid));
     if(!snap.exists()) throw new Error("Profil akun tidak ditemukan.");
     currentProfile=snap.data()||{};
     const role=String(currentProfile.role||"").toLowerCase();
     const email=String(user.email||"").toLowerCase();
+
+    // Superadmin boleh membuka stock.html, tetapi TIDAK melihat stok Owner.
     isSuperAdmin=role==="superadmin" || email==="servicehpmaja@gmail.com";
-    // stock.html adalah halaman pengelolaan stok khusus Owner.
-    // Superadmin tidak melihat stok Owner melalui halaman ini.
-    if(role!=="owner") throw new Error("Hanya Owner yang dapat membuka halaman Stock.");
-    if(String(currentProfile.status||"").toLowerCase()==="blocked" || String(currentProfile.status||"").toLowerCase()==="rejected") throw new Error("Akun diblokir / ditolak.");
+    if(isSuperAdmin){
+      $("headerAccount").textContent=currentProfile.namaKonter||currentProfile.namaPemilik||currentProfile.nama||user.email||"Superadmin";
+      $("headerRole").textContent="SUPERADMIN";
+      $("headerExp").textContent=formatExp(currentProfile.exp||currentProfile.expAt||currentProfile.expiredAt||currentProfile.tanggalBerakhir);
+      document.body.dataset.stockAuthorized="true";
+      products=[];
+      fillCategories();
+      render();
+      $("listMsg").textContent="Superadmin dapat membuka halaman ini, tetapi data stok Owner tidak ditampilkan.";
+      return;
+    }
 
-    // Owner selalu memakai UID akunnya sendiri sebagai pemilik stok.
-    // Tidak ada fallback ke UID akun lain dan tidak ada scope Superadmin.
-    currentProfile.ownerUid=uid;
+    // stock.html khusus Owner.
+    if(role!=="owner"){
+      throw new Error("Halaman Stock Produk hanya untuk Owner. Karyawan/Teknisi menggunakan tampilan-stock.html sesuai izin akses.");
+    }
 
-    $("headerAccount").textContent=currentProfile.namaKonter||currentProfile.namaPemilik||currentProfile.nama||user.email||"Akun";
-    $("headerRole").textContent=isSuperAdmin?"SUPERADMIN":"OWNER";
+    if(String(currentProfile.status||"").toLowerCase()==="blocked" ||
+       String(currentProfile.status||"").toLowerCase()==="rejected"){
+      throw new Error("Akun diblokir / ditolak.");
+    }
+
+    $("headerAccount").textContent=currentProfile.namaKonter||currentProfile.namaPemilik||currentProfile.nama||user.email||"Owner";
+    $("headerRole").textContent="OWNER";
     $("headerExp").textContent=formatExp(currentProfile.exp||currentProfile.expAt||currentProfile.expiredAt||currentProfile.tanggalBerakhir);
     document.body.dataset.stockAuthorized="true";
+
+    // UID Owner aktif menjadi identitas utama stok.
     await loadProducts();
   }catch(e){
     console.error("FIXZY STOCK ACCESS:",e);
-    document.body.innerHTML=`<div style="min-height:100vh;display:flex;align-items:center;justify-content:center;background:#f3f4f6;padding:20px;font-family:Arial"><div style="width:min(430px,100%);background:#fff;border:1px solid #e5e7eb;border-radius:18px;padding:25px;text-align:center;box-shadow:0 10px 30px #0002"><div style="font-size:42px">🔒</div><h2 style="margin:10px 0">Akses Terbatas</h2><p style="color:#64748b;line-height:1.6">${esc(e.message||"Akses ditolak.")}<br><br>Hanya <b>Owner</b> yang dapat mengelola stok.</p></div></div>`;
+    document.body.innerHTML=`<div style="min-height:100vh;display:flex;align-items:center;justify-content:center;background:#f3f4f6;padding:20px;font-family:Arial">
+      <div style="width:min(430px,100%);background:#fff;border:1px solid #e5e7eb;border-radius:18px;padding:25px;text-align:center;box-shadow:0 10px 30px #0002">
+        <div style="font-size:42px">🔒</div>
+        <h2 style="margin:10px 0">Akses Terbatas</h2>
+        <p style="color:#64748b;line-height:1.6">${esc(e.message||"Akses ditolak.")}</p>
+      </div>
+    </div>`;
   }
 }
 onAuthStateChanged(auth,initFixzyStockSession);
