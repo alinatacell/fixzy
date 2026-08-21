@@ -53,13 +53,21 @@ th{background:#f8fafc;color:#475569;font-size:10px;position:sticky;top:0}
 .popup{position:fixed;inset:0;background:#0008;display:none;align-items:center;justify-content:center;z-index:100}
 .popup.show{display:flex}
 .popup-box{width:min(520px,calc(100% - 24px));max-height:90vh;overflow:auto;background:#fff;border-radius:15px;padding:17px}
-
-.popup-actions{display:flex;justify-content:flex-end;gap:7px;margin-top:13px}
-.primary,.secondary{border:0;border-radius:9px;padding:10px 14px;font-weight:900;cursor:pointer}
-.primary{background:#111827;color:#fff}.secondary{background:#e5e7eb;color:#111827}
 </style>
 </head>
-<body>
+<body><script>
+/* FIXZY SESSION CENTER: halaman dibuka dari index.html memakai sesi pusat.
+   Tidak mengubah tampilan/fungsi halaman; hanya menyediakan referensi sesi parent. */
+(function(){
+  try{
+    if(window.parent&&window.parent!==window){
+      Object.defineProperty(window,"fixzySession",{configurable:true,get:function(){return window.parent.fixzySession||null}});
+      window.fixzySessionReady=function(){return !!(window.parent&&window.parent.fixzySession&&window.parent.fixzySession.uid)};
+    }
+  }catch(e){}
+})();
+</script>
+
 
 <header class="header">
   <div class="header-in">
@@ -101,11 +109,11 @@ th{background:#f8fafc;color:#475569;font-size:10px;position:sticky;top:0}
     <div class="toolbar">
       <div class="field">
         <label>TANGGAL ABSENSI</label>
-        <input id="tanggal" type="date" onchange="muatAbsensi()">
+        <input id="tanggal" type="date">
       </div>
       <div class="field">
         <label>BULAN PERHITUNGAN UPAH</label>
-        <input id="bulan" type="month" onchange="muatAbsensiBulan()">
+        <input id="bulan" type="month">
       </div>
       <div class="field">
         <label>CARI</label>
@@ -144,16 +152,6 @@ th{background:#f8fafc;color:#475569;font-size:10px;position:sticky;top:0}
 </div>
 </div></div>
 
-<div class="popup" id="notice">
-  <div class="popup-box">
-    <h3 id="noticeTitle">FIXZY</h3>
-    <div id="noticeText" class="status"></div>
-    <div class="popup-actions">
-      <button class="primary" type="button" onclick="tutupNotice()">OK</button>
-    </div>
-  </div>
-</div>
-
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js";
 import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-auth.js";
@@ -167,14 +165,8 @@ const db=getFirestore(app);
 let uid="", ownerUid="", profile={}, accounts=[], absensi={}, monthlyAbsensi={}, selected=null;
 const $=id=>document.getElementById(id);
 function esc(s){return String(s??"").replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
-function today(){
-  const d=new Date(),p=n=>String(n).padStart(2,"0");
-  return `${d.getFullYear()}-${p(d.getMonth()+1)}-${p(d.getDate())}`;
-}
-function nowTime(){
-  const d=new Date(),p=n=>String(n).padStart(2,"0");
-  return `${p(d.getHours())}:${p(d.getMinutes())}`;
-}
+function today(){return new Date().toISOString().slice(0,10);}
+function nowTime(){return new Date().toTimeString().slice(0,5);}
 function getDateKey(){return $("tanggal").value||today();}
 function makeId(userId,date){return `${userId}_${date}`;}
 function nama(a){return a.nama||a.namaKaryawan||a.displayName||a.email||"-";}
@@ -183,13 +175,6 @@ function roleLabel(r){return String(r||"").toUpperCase();}
 function statusLabel(s){return String(s||"").toUpperCase();}
 function statusClass(s){return String(s||"belum").toLowerCase();}
 function rupiah(n){return "Rp "+(Number(n)||0).toLocaleString("id-ID");}
-
-function tampilNotice(title,text){
-  $("noticeTitle").textContent=title;
-  $("noticeText").innerHTML=text;
-  $("notice").classList.add("show");
-}
-window.tutupNotice=()=>{$("notice").classList.remove("show");};
 
 async function loadProfile(){
   const snap=await getDoc(doc(db,"users",uid));
@@ -322,8 +307,6 @@ function bukaForm(a,mode){
   $("fMasuk").value=x.jamMasuk||"";
   $("fPulang").value=x.jamPulang||"";
   $("fCatatan").value=x.catatan||"";
-  if(mode==="masuk") $("fMasuk").value=nowTime();
-  if(mode==="pulang") $("fPulang").value=nowTime();
   $("popup").classList.add("show");
 }
 window.aksiMasuk=id=>{const a=accounts.find(x=>x.id===id);if(a)bukaForm(a,"masuk")};
@@ -332,25 +315,11 @@ window.editAbsensi=id=>{const a=accounts.find(x=>x.id===id);if(a)bukaForm(a,"edi
 
 async function simpanAbsensi(){
   if(!selected) return;
-
   const date=$("fTanggal").value||getDateKey();
-  const selectedOwner=String(selected.ownerUid||selected.ownerId||ownerUid).trim();
-
-  if(!isSuperAdmin && selectedOwner!==ownerUid){
-    tampilNotice("❌ Akses Ditolak","Karyawan bukan bagian dari konter Owner ini.");
-    return;
-  }
-
-  const current=dailyAbsensi[selected.id]||absensi[selected.id]||null;
-
-  // Gunakan ID dokumen yang sudah ada saat EDIT.
-  // Ini menjaga kompatibilitas dengan data lama dan mencegah
-  // pembuatan dokumen duplikat.
-  const id=current?.id || makeId(selected.id,date);
-
+  const id=makeId(selected.id,date);
   const data={
-    ownerUid:isSuperAdmin ? (selectedOwner||ownerUid) : ownerUid,
-    ownerId:isSuperAdmin ? (selectedOwner||ownerUid) : ownerUid,
+    ownerUid, // FIX ISOLASI - wajib simpan ownerUid
+    ownerId: ownerUid,
     userId:selected.id,
     uid:selected.uid||selected.id,
     nama:nama(selected),
@@ -366,44 +335,15 @@ async function simpanAbsensi(){
     catatan:$("fCatatan").value.trim(),
     updatedAt:serverTimestamp()
   };
-
   try{
-    const ref=doc(db,"absensi",id);
-    const existing=await getDoc(ref);
+    const existing=await getDoc(doc(db,"absensi",id));
     if(!existing.exists()) data.createdAt=serverTimestamp();
-
-    await setDoc(ref,data,{merge:true});
-
+    await setDoc(doc(db,"absensi",id),data,{merge:true});
     $("popup").classList.remove("show");
-    selected=null;
-
-    tampilNotice(
-      "✅ Absensi Tersimpan",
-      `Absensi <b>${esc(nama(data))}</b> tanggal <b>${esc(date)}</b> berhasil disimpan.`
-    );
-
     await loadAbsensi();
-  }catch(e){
-    console.error("Simpan absensi:",e);
-    tampilNotice(
-      "❌ Gagal Menyimpan",
-      `<b>${esc(e.code||"firebase/error")}</b><br>${esc(e.message||e)}`
-    );
-  }
+  }catch(e){alert("Gagal: "+e.message);}
 }
 window.simpanAbsensi=simpanAbsensi;
-
-window.muatAbsensiBulan=async()=>{
-  try{
-    $("status").textContent="Menghitung upah bulan yang dipilih...";
-    await loadAccounts();
-    await loadAbsensi();
-    $("status").innerHTML=`<span class="ok">✓ Perhitungan ${esc($("bulan").value)} aktif • Hadir × upah harian.</span>`;
-  }catch(e){
-    console.error(e);
-    $("status").innerHTML=`<span class="err">❌ ${esc(e.message||e)}</span>`;
-  }
-};
 
 window.muatAbsensi=async()=>{
   try{
@@ -411,10 +351,7 @@ window.muatAbsensi=async()=>{
     await loadAccounts();
     await loadAbsensi();
     $("status").innerHTML=`<span class="ok">✓ Firebase aktif • ${accounts.length} akun terdaftar untuk ownerUid ${esc(ownerUid.slice(0,8))} • Isolasi aktif</span>`;
-  }catch(e){
-    console.error(e);
-    $("status").innerHTML=`<span class="err">❌ ${esc(e.code||"firebase/error")} • ${esc(e.message||e)}</span>`;
-  }
+  }catch(e){$("status").innerHTML=`<span class="err">${esc(e.message||e)}</span>`;}
 };
 window.muatSemua=async()=>{ $("tanggal").value=today(); await window.muatAbsensi(); };
 
@@ -422,7 +359,7 @@ $("tanggal").value=today();
 $("bulan").value=today().slice(0,7);
 
 onAuthStateChanged(auth,async u=>{
-  if(!u){location.replace("login.html");return}
+  if(!u){if(window.parent!==window && window.parent && window.parent.fixzySession){return;}location.replace("login.html");return;}
   uid=u.uid;
   try{ await loadProfile(); await window.muatAbsensi(); }
   catch(e){$("status").innerHTML=`<span class="err">${esc(e.message||e)}</span>`;}
