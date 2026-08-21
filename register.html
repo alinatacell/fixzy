@@ -1,27 +1,6 @@
 <!DOCTYPE html>
 <html lang="id">
-<head><style>
-@font-face {
-  font-family: "Optimistic";
-  font-style: normal;
-  font-weight: 400 600;
-  font-display: swap;
-  src: url("/fonts/OptimisticAI_VF_Optimized.woff2") format("woff2");
-}
-@font-face {
-  font-family: "Optimistic Mono";
-  font-style: normal;
-  font-weight: 400;
-  font-display: swap;
-  src: url("/fonts/OptimisticMono_W_TextRegular.woff2") format("woff2");
-}
-:where(html) {
-  font-family: "Optimistic", system-ui, sans-serif;
-}
-:where(code, pre, kbd, samp) {
-  font-family: "Optimistic Mono", ui-monospace, monospace;
-}
-</style>
+<head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>Fixzy | Registrasi Akun</title>
@@ -698,7 +677,6 @@ function resetFormState(){
   loading.style.display="none";
 }
 
-
 form.addEventListener("submit",async e=>{
   e.preventDefault();
 
@@ -709,7 +687,9 @@ form.addEventListener("submit",async e=>{
   const okAlamat=validasiAlamat();
   const okPassword=validasiPassword();
   const okKonfirmasi=validasiKonfirmasi();
+  const okToken=validasiToken();
 
+  // Cek duplikat email - jangan ada yang sama
   let okDuplikat = true;
   if(okEmail){
     btn.disabled=true;
@@ -719,21 +699,18 @@ form.addEventListener("submit",async e=>{
     loading.textContent="Memproses...";
     if(!okDuplikat){
       resetFormState();
-      popup("Email Sudah Ada","Email "+fields.email.value+" sudah terdaftar.
-Gunakan email lain atau login.");
+      popup("Email Sudah Ada","Email "+fields.email.value+" sudah terdaftar.\\nGunakan email lain atau login.");
       return;
     }
   }
 
   if(!document.getElementById("setuju").checked){
     popup("Fixzy","Silakan setujui syarat dan ketentuan.");
-    resetFormState();
     return;
   }
 
-  if(!(okNamaKonter&&okNamaPemilik&&okWhatsapp&&okEmail&&okAlamat&&okPassword&&okKonfirmasi)){
+  if(!(okNamaKonter&&okNamaPemilik&&okWhatsapp&&okEmail&&okAlamat&&okPassword&&okKonfirmasi&&okToken)){
     popup("Data Belum Benar","Periksa kembali kolom yang ditandai merah.");
-    resetFormState();
     return;
   }
 
@@ -743,50 +720,85 @@ Gunakan email lain atau login.");
   const email=fields.email.value.trim().toLowerCase();
   const alamat=cleanSpaces(fields.alamat.value);
   const password=fields.password.value;
+  const konfirmasi=password;
   const tokenAktivasi=tokenInput.value.trim().toUpperCase();
 
-  if(!tokenAktivasi){
-    popup("Token Wajib","Pilih atau ketik token registrasi gratis. Jika tidak ada, hubungi admin FIXZY.");
-    resetFormState();
+  if(password!==konfirmasi){
+    popup("Fixzy","Konfirmasi password tidak sama.");
     return;
   }
 
   btn.disabled=true;
   loading.style.display="block";
-  loading.textContent="Membuat akun...";
 
-  let cred=null;
-  let uid=null;
-  let tokenDoc=null;
-  let tokenInfo=null;
-  let pakaiToken=false;
+  let authCreatedUid=null;
 
   try{
-    // 1. Buat auth dulu - ini kunci acuan dari file lama fixzy-f056f
-    cred=await createUserWithEmailAndPassword(auth,email,password);
-    uid=cred.user.uid;
-    console.log("[REGISTER] Auth created:",uid);
+    const q=query(
+      collection(db,"registrationTokens"),
+      where("token","==",tokenAktivasi)
+    );
 
-    // 2. Cek token SETELAH auth (acuan baru fixzy-update)
-    loading.textContent="Memeriksa token "+tokenAktivasi+"...";
-    try{
-      const q=query(collection(db,"registrationTokens"), where("token","==",tokenAktivasi));
-      const snap=await getDocs(q);
-      if(!snap.empty){
-        snap.forEach(d=>{ if(!tokenDoc){ tokenDoc=d; tokenInfo=d.data()||{}; } });
-        const used=tokenInfo.used===true || String(tokenInfo.used||"").toLowerCase()==="true" || ["terpakai","used"].includes(String(tokenInfo.status||"").toLowerCase());
-        if(!used){
-          // Validasi 90 hari (acuan lama: trial 3 bulan)
-          const hari=Number(tokenInfo.paketHari??tokenInfo.durasiHari??90);
-          const paket=String(tokenInfo.paket||"3 Bulan").toLowerCase();
-          const is90 = hari===90 || hari===3 || paket.includes("3 bulan") || paket.includes("90");
-          if(is90) pakaiToken=true;
-        }
-      }
-    }catch(errToken){
-      console.warn("[REGISTER] Cek token gagal, fallback ke trial:",errToken);
-      // Jangan throw - lanjut pakai mode trial seperti file lama
+    const snap=await getDocs(q);
+
+    if(snap.empty){
+      throw new Error("Token tidak ditemukan di registrationTokens.");
     }
+
+    let tokenDoc=null;
+    let tokenInfo=null;
+
+    snap.forEach(d=>{
+      if(!tokenDoc){
+        tokenDoc=d;
+        tokenInfo=d.data()||{};
+      }
+    });
+
+    const used=tokenInfo.used===true ||
+      String(tokenInfo.used||"").toLowerCase()==="true" ||
+      ["terpakai","used"].includes(String(tokenInfo.status||"").toLowerCase());
+
+    if(used)throw new Error("Token sudah pernah digunakan.");
+
+    const hari=Number(
+      tokenInfo.paketHari??
+      tokenInfo.durasiHari??
+      tokenInfo.masaAktifHari??
+      0
+    );
+
+    const paket=String(
+      tokenInfo.paket??
+      tokenInfo.durasi??
+      tokenInfo.masaAktif??
+      ""
+    ).toLowerCase();
+
+    const is90Hari=
+      hari===90 ||
+      hari===3 ||
+      paket.includes("3 bulan") ||
+      paket.includes("3bulan") ||
+      paket.includes("90 hari") ||
+      paket.includes("90hari");
+
+    if(!is90Hari)throw new Error("Token registrasi harus 3 bulan / 90 hari.");
+
+    const tipe=String(tokenInfo.tipe||"").toLowerCase();
+    const hanya=tokenInfo.hanyaRegistrasiBaru;
+
+    if(tipe&&tipe!=="registrasi_baru"&&tipe!=="aktivasi_baru"){
+      throw new Error("Token ini bukan token registrasi pengguna baru.");
+    }
+
+    if(hanya!==undefined&&hanya!==true){
+      throw new Error("Token ini bukan token registrasi pengguna baru.");
+    }
+
+    const cred=await createUserWithEmailAndPassword(auth,email,password);
+    const uid=cred.user.uid;
+    authCreatedUid=uid;
 
     const tanggalAktivasi=new Date();
     const tanggalBerakhir=new Date(tanggalAktivasi);
@@ -794,99 +806,83 @@ Gunakan email lain atau login.");
 
     const konterIdBaru = "KONTER-" + Date.now();
 
-    // Struktur gabungan: acuan lama (fixzy-f056f) + acuan baru (fixzy-update)
-    // - Dari lama: paket FREE TRIAL, masaAktif trial, idKonter FX-
-    // - Dari baru: ownerEmail, akun, konterId, token info
-    const userData = {
+    await setDoc(doc(db,"users",uid),{
       uid,
-      idKonter: konterIdBaru,
+      // KUNCI ISOLASI EMAIL - WAJIB ADA
+      akun: email,
+      akunLogin: email,
+      ownerEmail: email, // Owner email = email sendiri
+      email,
       konterId: konterIdBaru,
+      idKonter: konterIdBaru,
       konterNama: namaKonter,
+      aplikasi:"Fixzy",
+
       namaKonter,
       namaPemilik,
       whatsapp,
-      noWa: whatsapp,
-      nomorWa: whatsapp,
-      // Acuan penting isolasi email dari file lama & baru
-      email,
-      akun: email,
-      akunLogin: email,
-      ownerEmail: email,
-      aplikasi: "Fixzy",
+      noWa:whatsapp,
+      nomorWa:whatsapp,
       alamat,
-      paket: pakaiToken ? (tokenInfo.paket||"3 Bulan") : "FREE TRIAL",
-      jenisLisensi: pakaiToken ? "Token Registrasi" : "Trial Gratis",
-      durasi: "3 Bulan",
-      paketHari: 90,
-      harga: pakaiToken ? Number(tokenInfo.harga||0) : 0,
-      status: "aktif",
-      statusPembayaran: pakaiToken ? "free-token" : "free",
-      masaAktif: "aktif",
-      trial: !pakaiToken,
-      perpanjangan: false,
-      perpanjanganStatus: "none",
-      role: "owner",
+
+      paket:"3 Bulan",
+      jenisLisensi:"Token Registrasi",
+      durasi:"3 Bulan",
+      harga:Number(tokenInfo.harga||0),
+
+      status:"aktif",
+      statusPembayaran:"free",
+      masaAktif:"aktif",
+
+      trial:false,
+      perpanjangan:false,
+      perpanjanganStatus:"none",
+
+      role:"owner",
+      ownerUid:uid,
+
+      tokenAktivasi,
+      tokenType:"registrasi_baru",
+      tokenId:tokenDoc.id,
+
+      createdAt:serverTimestamp(),
+      tanggalDaftar:serverTimestamp(),
+      tanggalAktivasi:tanggalAktivasi.toISOString(),
+      tanggalBerakhir:tanggalBerakhir.toISOString(),
+
+      device:navigator.userAgent,
+      versi:"Fixzy V1",
+      lastLogin:null
+    });
+
+    // Buat dokumen konter juga biar bisa di-list
+    await setDoc(doc(db,"konter",konterIdBaru),{
+      konterId: konterIdBaru,
+      nama: namaKonter,
+      namaPemilik,
+      ownerEmail: email,
       ownerUid: uid,
-      tokenAktivasi: pakaiToken ? tokenAktivasi : "",
-      tokenType: pakaiToken ? "registrasi_baru" : "trial",
-      tokenId: pakaiToken ? tokenDoc.id : "",
-      createdAt: serverTimestamp(),
-      tanggalDaftar: serverTimestamp(),
-      tanggalAktivasi: tanggalAktivasi.toISOString(),
-      tanggalBerakhir: tanggalBerakhir.toISOString(),
-      trialMulai: serverTimestamp(),
-      trialSelesai: tanggalBerakhir.toISOString(),
-      device: navigator.userAgent,
-      versi: "Fixzy V1",
-      lastLogin: null
-    };
+      alamat,
+      whatsapp,
+      email,
+      createdAt:serverTimestamp(),
+      status:"aktif"
+    });
 
-    await setDoc(doc(db,"users",uid), userData);
+    await updateDoc(doc(db,"registrationTokens",tokenDoc.id),{
+      used:true,
+      status:"terpakai",
+      usedBy:uid,
+      usedByEmail:email,
+      usedAt:serverTimestamp()
+    });
 
-    // Buat konter - acuan dari file baru, tapi izinkan seperti file lama
-    try{
-      await setDoc(doc(db,"konter",konterIdBaru),{
-        konterId: konterIdBaru,
-        nama: namaKonter,
-        namaPemilik,
-        ownerEmail: email,
-        ownerUid: uid,
-        alamat,
-        whatsapp,
-        email,
-        createdAt: serverTimestamp(),
-        status: "aktif"
-      });
-    }catch(eKonter){
-      console.warn("Gagal buat konter, lanjut:", eKonter);
-    }
+    tokenLoaded=false;
+    tokenData=[];
 
-    // Tandai token terpakai jika pakai token
-    if(pakaiToken && tokenDoc){
-      try{
-        await updateDoc(doc(db,"registrationTokens",tokenDoc.id),{
-          used: true,
-          status: "terpakai",
-          usedBy: uid,
-          usedByEmail: email,
-          usedAt: serverTimestamp()
-        });
-      }catch(eUpdate){
-        console.warn("Gagal update token:", eUpdate);
-      }
-    }
-
-    popup("Fixzy", pakaiToken ? 
-      "Pendaftaran berhasil!
-
-Akun OWNER aktif selama 3 bulan / 90 hari.
-Token "+tokenAktivasi+" sudah ditandai TERPAKAI.
-
-Silakan login sekarang." :
-      "Pendaftaran berhasil!
-
-Trial 3 Bulan kamu LANGSUNG AKTIF (mode fallback karena token tidak bisa diverifikasi, tapi akun tetap jadi).
-Silakan login sekarang."
+    popup(
+      "Fixzy",
+      "Pendaftaran berhasil!\n\nAkun OWNER aktif selama 3 bulan / 90 hari.\nToken registrasi sudah ditandai TERPAKAI.\n\nSilakan login sekarang."
     );
 
     setTimeout(async()=>{
@@ -895,10 +891,11 @@ Silakan login sekarang."
         window.parent.postMessage({type:"FIXZY_REGISTER_SUCCESS"},"*");
       }
       window.location.href="login.html";
-    },1800);
+    },1500);
 
   }catch(err){
     console.error("REGISTER ERROR:",err);
+
     let pesan=err.message||"Terjadi kesalahan.";
 
     if(err.code==="auth/email-already-in-use"){
@@ -908,21 +905,24 @@ Silakan login sekarang."
     }else if(err.code==="auth/weak-password"){
       pesan="Password terlalu lemah.";
     }else if(err.code==="permission-denied"){
-      // Jangan tampilkan error permission lagi - fallback sudah dibuat di atas
-      pesan="Akses ditolak oleh Rules, tapi akun sudah terbuat. Silakan coba login. Jika gagal, hubungi admin dengan UID: "+(cred?.user?.uid||"");
+      pesan="Firebase menolak akses ke registrationTokens. Pastikan Rules Firestore sudah di-PUBLISH pada project fixzy-update.";
     }
 
-    // Jika auth sudah terbuat tapi users gagal, hapus auth biar bisa coba lagi
-    if(uid && !pakaiToken && pesan.includes("permission")){
-      // biarkan, user sudah ada
+    /*
+      Jika pembuatan Auth berhasil tetapi penulisan users gagal,
+      akun Auth tetap ada. Tidak menghapus akun otomatis agar tidak
+      berisiko menghapus akun yang sudah terbentuk.
+    */
+    if(authCreatedUid){
+      console.warn("Auth sudah dibuat dengan UID:",authCreatedUid);
     }
 
     popup("Gagal Registrasi",pesan);
+
   }finally{
     resetFormState();
   }
 });
-
 </script>
 <script type="module">var Tc=Object.create;var{getPrototypeOf:qc,defineProperty:fu,getOwnPropertyNames:Oc}=Object;var Kc=Object.prototype.hasOwnProperty;var we=(e,t,n)=>{n=e!=null?Tc(qc(e)):{};let r=t||!e||!e.__esModule?fu(n,"default",{value:e,enumerable:!0}):n;for(let l of Oc(e))if(!Kc.call(r,l))fu(r,l,{get:()=>e[l],enumerable:!0});return r};var Br=(e,t)=>()=>(t||e((t={exports:{}}).exports,t),t.exports);var Gc=(e,t)=>{for(var n in t)fu(e,n,{get:t[n],enumerable:!0,configurable:!0,set:(r)=>t[n]=()=>r})};var Hc=(e,t)=>()=>(e&&(t=e(e=0)),t);var cu=((e)=>typeof require<"u"?require:typeof Proxy<"u"?new Proxy(e,{get:(t,n)=>(typeof require<"u"?require:t)[n]}):e)(function(e){if(typeof require<"u")return require.apply(this,arguments);throw Error('Dynamic require of "'+e+'" is not supported')});var Nt=Br((ud)=>{var Rn=Symbol.for("react.element"),Yc=Symbol.for("react.portal"),Lc=Symbol.for("react.fragment"),Jc=Symbol.for("react.strict_mode"),Xc=Symbol.for("react.profiler"),Wc=Symbol.for("react.provider"),Zc=Symbol.for("react.context"),jc=Symbol.for("react.forward_ref"),bc=Symbol.for("react.suspense"),_c=Symbol.for("react.memo"),$c=Symbol.for("react.lazy"),Do=Symbol.iterator;function ed(e){if(e===null||typeof e!=="object")return null;return e=Do&&e[Do]||e["@@iterator"],typeof e==="function"?e:null}var Oo={isMounted:function(){return!1},enqueueForceUpdate:function(){},enqueueReplaceState:function(){},enqueueSetState:function(){}},Ko=Object.assign,Go={};function bt(e,t,n){this.props=e,this.context=t,this.refs=Go,this.updater=n||Oo}bt.prototype.isReactComponent={};bt.prototype.setState=function(e,t){if(typeof e!=="object"&&typeof e!=="function"&&e!=null)throw Error("setState(...): takes an object of state variables to update or a function which returns an object of state variables.");this.updater.enqueueSetState(this,e,t,"setState")};bt.prototype.forceUpdate=function(e){this.updater.enqueueForceUpdate(this,e,"forceUpdate")};function Ho(){}Ho.prototype=bt.prototype;function pu(e,t,n){this.props=e,this.context=t,this.refs=Go,this.updater=n||Oo}var vu=pu.prototype=new Ho;vu.constructor=pu;Ko(vu,bt.prototype);vu.isPureReactComponent=!0;var To=Array.isArray,Yo=Object.prototype.hasOwnProperty,hu={current:null},Lo={key:!0,ref:!0,__self:!0,__source:!0};function Jo(e,t,n){var r,l={},u=null,i=null;if(t!=null)for(r in t.ref!==void 0&&(i=t.ref),t.key!==void 0&&(u=""+t.key),t)Yo.call(t,r)&&!Lo.hasOwnProperty(r)&&(l[r]=t[r]);var o=arguments.length-2;if(o===1)l.children=n;else if(1<o){for(var a=Array(o),f=0;f<o;f++)a[f]=arguments[f+2];l.children=a}if(e&&e.defaultProps)for(r in o=e.defaultProps,o)l[r]===void 0&&(l[r]=o[r]);return{$$typeof:Rn,type:e,key:u,ref:i,props:l,_owner:hu.current}}function td(e,t){return{$$typeof:Rn,type:e.type,key:t,ref:e.ref,props:e.props,_owner:e._owner}}function yu(e){return typeof e==="object"&&e!==null&&e.$$typeof===Rn}function nd(e){var t={"=":"=0",":":"=2"};return"$"+e.replace(/[=:]/g,function(n){return t[n]})}var qo=/\/+/g;function du(e,t){return typeof e==="object"&&e!==null&&e.key!=null?nd(""+e.key):t.toString(36)}function Tr(e,t,n,r,l){var u=typeof e;if(u==="undefined"||u==="boolean")e=null;var i=!1;if(e===null)i=!0;else switch(u){case"string":case"number":i=!0;break;case"object":switch(e.$$typeof){case Rn:case Yc:i=!0}}if(i)return i=e,l=l(i),e=r===""?"."+du(i,0):r,To(l)?(n="",e!=null&&(n=e.replace(qo,"$&/")+"/"),Tr(l,t,n,"",function(f){return f})):l!=null&&(yu(l)&&(l=td(l,n+(!l.key||i&&i.key===l.key?"":(""+l.key).replace(qo,"$&/")+"/")+e)),t.push(l)),1;if(i=0,r=r===""?".":r+":",To(e))for(var o=0;o<e.length;o++){u=e[o];var a=r+du(u,o);i+=Tr(u,t,n,a,l)}else if(a=ed(e),typeof a==="function")for(e=a.call(e),o=0;!(u=e.next()).done;)u=u.value,a=r+du(u,o++),i+=Tr(u,t,n,a,l);else if(u==="object")throw t=String(e),Error("Objects are not valid as a React child (found: "+(t==="[object Object]"?"object with keys {"+Object.keys(e).join(", ")+"}":t)+"). If you meant to render a collection of children, use an array instead.");return i}function Dr(e,t,n){if(e==null)return e;var r=[],l=0;return Tr(e,r,"","",function(u){return t.call(n,u,l++)}),r}function rd(e){if(e._status===-1){var t=e._result;t=t(),t.then(function(n){if(e._status===0||e._status===-1)e._status=1,e._result=n},function(n){if(e._status===0||e._status===-1)e._status=2,e._result=n}),e._status===-1&&(e._status=0,e._result=t)}if(e._status===1)return e._result.default;throw e._result}var se={current:null},qr={transition:null},ld={ReactCurrentDispatcher:se,ReactCurrentBatchConfig:qr,ReactCurrentOwner:hu};function Xo(){throw Error("act(...) is not supported in production builds of React.")}ud.Children={map:Dr,forEach:function(e,t,n){Dr(e,function(){t.apply(this,arguments)},n)},count:function(e){var t=0;return Dr(e,function(){t++}),t},toArray:function(e){return Dr(e,function(t){return t})||[]},only:function(e){if(!yu(e))throw Error("React.Children.only expected to receive a single React element child.");return e}};ud.Component=bt;ud.Fragment=Lc;ud.Profiler=Xc;ud.PureComponent=pu;ud.StrictMode=Jc;ud.Suspense=bc;ud.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED=ld;ud.act=Xo;ud.cloneElement=function(e,t,n){if(e===null||e===void 0)throw Error("React.cloneElement(...): The argument must be a React element, but you passed "+e+".");var r=Ko({},e.props),l=e.key,u=e.ref,i=e._owner;if(t!=null){if(t.ref!==void 0&&(u=t.ref,i=hu.current),t.key!==void 0&&(l=""+t.key),e.type&&e.type.defaultProps)var o=e.type.defaultProps;for(a in t)Yo.call(t,a)&&!Lo.hasOwnProperty(a)&&(r[a]=t[a]===void 0&&o!==void 0?o[a]:t[a])}var a=arguments.length-2;if(a===1)r.children=n;else if(1<a){o=Array(a);for(var f=0;f<a;f++)o[f]=arguments[f+2];r.children=o}return{$$typeof:Rn,type:e.type,key:l,ref:u,props:r,_owner:i}};ud.createContext=function(e){return e={$$typeof:Zc,_currentValue:e,_currentValue2:e,_threadCount:0,Provider:null,Consumer:null,_defaultValue:null,_globalName:null},e.Provider={$$typeof:Wc,_context:e},e.Consumer=e};ud.createElement=Jo;ud.createFactory=function(e){var t=Jo.bind(null,e);return t.type=e,t};ud.createRef=function(){return{current:null}};ud.forwardRef=function(e){return{$$typeof:jc,render:e}};ud.isValidElement=yu;ud.lazy=function(e){return{$$typeof:$c,_payload:{_status:-1,_result:e},_init:rd}};ud.memo=function(e,t){return{$$typeof:_c,type:e,compare:t===void 0?null:t}};ud.startTransition=function(e){var t=qr.transition;qr.transition={};try{e()}finally{qr.transition=t}};ud.unstable_act=Xo;ud.useCallback=function(e,t){return se.current.useCallback(e,t)};ud.useContext=function(e){return se.current.useContext(e)};ud.useDebugValue=function(){};ud.useDeferredValue=function(e){return se.current.useDeferredValue(e)};ud.useEffect=function(e,t){return se.current.useEffect(e,t)};ud.useId=function(){return se.current.useId()};ud.useImperativeHandle=function(e,t,n){return se.current.useImperativeHandle(e,t,n)};ud.useInsertionEffect=function(e,t){return se.current.useInsertionEffect(e,t)};ud.useLayoutEffect=function(e,t){return se.current.useLayoutEffect(e,t)};ud.useMemo=function(e,t){return se.current.useMemo(e,t)};ud.useReducer=function(e,t,n){return se.current.useReducer(e,t,n)};ud.useRef=function(e){return se.current.useRef(e)};ud.useState=function(e){return se.current.useState(e)};ud.useSyncExternalStore=function(e,t,n){return se.current.useSyncExternalStore(e,t,n)};ud.useTransition=function(){return se.current.useTransition()};ud.version="18.3.1"});var ea=Br((Hd)=>{function gu(e,t){var n=e.length;e.push(t);e:for(;0<n;){var r=n-1>>>1,l=e[r];if(0<Or(l,t))e[r]=t,e[n]=l,n=r;else break e}}function Fe(e){return e.length===0?null:e[0]}function Yr(e){if(e.length===0)return null;var t=e[0],n=e.pop();if(n!==t){e[0]=n;e:for(var r=0,l=e.length,u=l>>>1;r<u;){var i=2*(r+1)-1,o=e[i],a=i+1,f=e[a];if(0>Or(o,n))a<l&&0>Or(f,o)?(e[r]=f,e[a]=n,r=a):(e[r]=o,e[i]=n,r=i);else if(a<l&&0>Or(f,n))e[r]=f,e[a]=n,r=a;else break e}}return t}function Or(e,t){var n=e.sortIndex-t.sortIndex;return n!==0?n:e.id-t.id}if(typeof performance==="object"&&typeof performance.now==="function")Au=performance,Hd.unstable_now=function(){return Au.now()};else Kr=Date,ku=Kr.now(),Hd.unstable_now=function(){return Kr.now()-ku};var Au,Kr,ku,He=[],st=[],Gd=1,Ie=null,le=3,Lr=!1,Rt=!1,Fn=!1,Zo=typeof setTimeout==="function"?setTimeout:null,jo=typeof clearTimeout==="function"?clearTimeout:null,Wo=typeof setImmediate<"u"?setImmediate:null;typeof navigator<"u"&&navigator.scheduling!==void 0&&navigator.scheduling.isInputPending!==void 0&&navigator.scheduling.isInputPending.bind(navigator.scheduling);function Eu(e){for(var t=Fe(st);t!==null;){if(t.callback===null)Yr(st);else if(t.startTime<=e)Yr(st),t.sortIndex=t.expirationTime,gu(He,t);else break;t=Fe(st)}}function Cu(e){if(Fn=!1,Eu(e),!Rt)if(Fe(He)!==null)Rt=!0,Iu(wu);else{var t=Fe(st);t!==null&&zu(Cu,t.startTime-e)}}function wu(e,t){Rt=!1,Fn&&(Fn=!1,jo(Un),Un=-1),Lr=!0;var n=le;try{Eu(t);for(Ie=Fe(He);Ie!==null&&(!(Ie.expirationTime>t)||e&&!$o());){var r=Ie.callback;if(typeof r==="function"){Ie.callback=null,le=Ie.priorityLevel;var l=r(Ie.expirationTime<=t);t=Hd.unstable_now(),typeof l==="function"?Ie.callback=l:Ie===Fe(He)&&Yr(He),Eu(t)}else Yr(He);Ie=Fe(He)}if(Ie!==null)var u=!0;else{var i=Fe(st);i!==null&&zu(Cu,i.startTime-t),u=!1}return u}finally{Ie=null,le=n,Lr=!1}}var Jr=!1,Gr=null,Un=-1,bo=5,_o=-1;function $o(){return Hd.unstable_now()-_o<bo?!1:!0}function mu(){if(Gr!==null){var e=Hd.unstable_now();_o=e;var t=!0;try{t=Gr(!0,e)}finally{t?Mn():(Jr=!1,Gr=null)}}else Jr=!1}var Mn;if(typeof Wo==="function")Mn=function(){Wo(mu)};else if(typeof MessageChannel<"u")Hr=new MessageChannel,Su=Hr.port2,Hr.port1.onmessage=mu,Mn=function(){Su.postMessage(null)};else Mn=function(){Zo(mu,0)};var Hr,Su;function Iu(e){Gr=e,Jr||(Jr=!0,Mn())}function zu(e,t){Un=Zo(function(){e(Hd.unstable_now())},t)}Hd.unstable_IdlePriority=5;Hd.unstable_ImmediatePriority=1;Hd.unstable_LowPriority=4;Hd.unstable_NormalPriority=3;Hd.unstable_Profiling=null;Hd.unstable_UserBlockingPriority=2;Hd.unstable_cancelCallback=function(e){e.callback=null};Hd.unstable_continueExecution=function(){Rt||Lr||(Rt=!0,Iu(wu))};Hd.unstable_forceFrameRate=function(e){0>e||125<e?console.error("forceFrameRate takes a positive int between 0 and 125, forcing frame rates higher than 125 fps is not supported"):bo=0<e?Math.floor(1000/e):5};Hd.unstable_getCurrentPriorityLevel=function(){return le};Hd.unstable_getFirstCallbackNode=function(){return Fe(He)};Hd.unstable_next=function(e){switch(le){case 1:case 2:case 3:var t=3;break;default:t=le}var n=le;le=t;try{return e()}finally{le=n}};Hd.unstable_pauseExecution=function(){};Hd.unstable_requestPaint=function(){};Hd.unstable_runWithPriority=function(e,t){switch(e){case 1:case 2:case 3:case 4:case 5:break;default:e=3}var n=le;le=e;try{return t()}finally{le=n}};Hd.unstable_scheduleCallback=function(e,t,n){var r=Hd.unstable_now();switch(typeof n==="object"&&n!==null?(n=n.delay,n=typeof n==="number"&&0<n?r+n:r):n=r,e){case 1:var l=-1;break;case 2:l=250;break;case 5:l=1073741823;break;case 4:l=1e4;break;default:l=5000}return l=n+l,e={id:Gd++,callback:t,priorityLevel:e,startTime:n,expirationTime:l,sortIndex:-1},n>r?(e.sortIndex=n,gu(st,e),Fe(He)===null&&e===Fe(st)&&(Fn?(jo(Un),Un=-1):Fn=!0,zu(Cu,n-r))):(e.sortIndex=l,gu(He,e),Rt||Lr||(Rt=!0,Iu(wu))),e};Hd.unstable_shouldYield=$o;Hd.unstable_wrapCallback=function(e){var t=le;return function(){var n=le;le=t;try{return e.apply(this,arguments)}finally{le=n}}}});var Mo={};Gc(Mo,{version:()=>hc,unstable_renderSubtreeIntoContainer:()=>vc,unstable_batchedUpdates:()=>pc,unmountComponentAtNode:()=>dc,render:()=>cc,hydrateRoot:()=>fc,hydrate:()=>sc,flushSync:()=>ac,findDOMNode:()=>oc,createRoot:()=>ic,createPortal:()=>uc,__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED:()=>lc});function g(e){for(var t="https://reactjs.org/docs/error-decoder.html?invariant="+e,n=1;n<arguments.length;n++)t+="&args[]="+encodeURIComponent(arguments[n]);return"Minified React error #"+e+"; visit "+t+" for the full message or use the non-minified dev environment for full errors and additional helpful warnings."}function Jt(e,t){kn(e,t),kn(e+"Capture",t)}function kn(e,t){ir[e]=t;for(e=0;e<t.length;e++)is.add(t[e])}function sp(e){if(Wu.call(na,e))return!0;if(Wu.call(ta,e))return!1;if(ap.test(e))return na[e]=!0;return ta[e]=!0,!1}function fp(e,t,n,r){if(n!==null&&n.type===0)return!1;switch(typeof t){case"function":case"symbol":return!0;case"boolean":if(r)return!1;if(n!==null)return!n.acceptsBooleans;return e=e.toLowerCase().slice(0,5),e!=="data-"&&e!=="aria-";default:return!1}}function cp(e,t,n,r){if(t===null||typeof t>"u"||fp(e,t,n,r))return!0;if(r)return!1;if(n!==null)switch(n.type){case 3:return!t;case 4:return t===!1;case 5:return isNaN(t);case 6:return isNaN(t)||1>t}return!1}function de(e,t,n,r,l,u,i){this.acceptsBooleans=t===2||t===3||t===4,this.attributeName=r,this.attributeNamespace=l,this.mustUseProperty=n,this.propertyName=e,this.type=t,this.sanitizeURL=u,this.removeEmptyString=i}function Hi(e){return e[1].toUpperCase()}function Yi(e,t,n,r){var l=re.hasOwnProperty(t)?re[t]:null;if(l!==null?l.type!==0:r||!(2<t.length)||t[0]!=="o"&&t[0]!=="O"||t[1]!=="n"&&t[1]!=="N")cp(t,n,l,r)&&(n=null),r||l===null?sp(t)&&(n===null?e.removeAttribute(t):e.setAttribute(t,""+n)):l.mustUseProperty?e[l.propertyName]=n===null?l.type===3?!1:"":n:(t=l.attributeName,r=l.attributeNamespace,n===null?e.removeAttribute(t):(l=l.type,n=l===3||l===4&&n===!0?"":""+n,r?e.setAttributeNS(r,t,n):e.setAttribute(t,n)))}function Bn(e){if(e===null||typeof e!=="object")return null;return e=ra&&e[ra]||e["@@iterator"],typeof e==="function"?e:null}function Hn(e){if(Vu===void 0)try{throw Error()}catch(n){var t=n.stack.trim().match(/\n( *(at )?)/);Vu=t&&t[1]||""}return`
 `+Vu+e}function xu(e,t){if(!e||Qu)return"";Qu=!0;var n=Error.prepareStackTrace;Error.prepareStackTrace=void 0;try{if(t)if(t=function(){throw Error()},Object.defineProperty(t.prototype,"props",{set:function(){throw Error()}}),typeof Reflect==="object"&&Reflect.construct){try{Reflect.construct(t,[])}catch(f){var r=f}Reflect.construct(e,[],t)}else{try{t.call()}catch(f){r=f}e.call(t.prototype)}else{try{throw Error()}catch(f){r=f}e()}}catch(f){if(f&&r&&typeof f.stack==="string"){for(var l=f.stack.split(`
@@ -935,5 +935,5 @@ Error generating stack: `+u.message+`
 </script>
   <script>(function(){function m(a){var h=a.getAttribute("href");if(!h)return;try{var u=new URL(h,document.baseURI);if((u.protocol==="http:"||u.protocol==="https:")&&u.host!==location.host){a.target="_blank";a.rel="noopener noreferrer";}}catch(e){}}function s(){document.querySelectorAll("a[href]").forEach(m);}if(document.readyState!=="loading"){s();}else{document.addEventListener("DOMContentLoaded",s);}document.addEventListener("click",function(e){var a=e.target&&e.target.closest&&e.target.closest("a[href]");if(a){m(a);}},true);})();</script>
   
-<script>(function(){var loc=location.href.replace(/#.*$/,"");var ATTR_NAMES=["data-product-id","data-productid","data-product_id","product-id","productid","product_id","data-source-entity-id","source-entity-id","source_entity_id","data-product","data-metadata","data-meta"];var DATASET_KEYS=["productId","productid","product_id","sourceEntityId","sourceentityid","source_entity_id","product","metadata","meta"];function readProductId(value){if(typeof value!=="string"||value.length===0)return null;if(/^[0-9]{6,}$/.test(value))return value;var match=value.match(/(?:product(?:_|-)?id|source(?:_|-)?entity(?:_|-)?id)["'=:\s]+([0-9]{6,})/i);return match?match[1]:null}function extractProductId(start){for(var node=start;node&&node!==document.body;node=node.parentElement){for(var i=0;i<ATTR_NAMES.length;i++){var attrValue=node.getAttribute&&node.getAttribute(ATTR_NAMES[i]);var attrProductId=readProductId(attrValue);if(attrProductId)return attrProductId}var dataset=node.dataset||null;if(dataset){for(var j=0;j<DATASET_KEYS.length;j++){var dataValue=dataset[DATASET_KEYS[j]];var dataProductId=readProductId(dataValue);if(dataProductId)return dataProductId}}}return null}function isInlineMediaSlotElement(node){return !!(node&&node.getAttribute&&node.getAttribute("data-clippy-inline-media-slot")!==null)}function findInlineMediaSlot(start){for(var node=start;node&&node!==document.body;node=node.parentElement){if(isInlineMediaSlotElement(node))return node}return null}function readInlineMediaUrl(node){if(!node)return null;return node.getAttribute&&((node.getAttribute("data-clippy-inline-media-url")||node.getAttribute("data-url")||node.getAttribute("data_url")))||node.href||null}function stripHash(url){return String(url).replace(/#.*$/,"")}function urlsMatch(a,b){if(!a||!b)return false;try{return stripHash(new URL(a,loc).href)===stripHash(new URL(b,loc).href)}catch(_){return stripHash(a)===stripHash(b)}}function isFirstPartyReelUrl(value){try{var url=new URL(value,loc);if(url.protocol!=="https:")return false;var host=url.hostname.toLowerCase();var supported=host==="instagram.com"||host.endsWith(".instagram.com")||host==="facebook.com"||host.endsWith(".facebook.com");return supported&&/\/reels?\//i.test(url.pathname)}catch(_){return false}}function isInlineMediaUrlClick(node,href){var slot=findInlineMediaSlot(node);if(!slot)return false;var slotUrl=readInlineMediaUrl(slot);if(slotUrl)return urlsMatch(href,slotUrl);return isFirstPartyReelUrl(href)}function findDataHref(start){for(var node=start;node&&node!==document.body;node=node.parentElement){if(node.getAttribute){var href=node.getAttribute("data-href")||node.getAttribute("data-url");if(href)return{href:href,node:node}}}return null}var nativeOpen=window.open;window.open=function(url){if(parent!==window&&typeof url==="string"&&/^https?:\/\//.test(url)){parent.postMessage({type:"ecto:usercontent-link-click",href:url},"*");return null}return nativeOpen?nativeOpen.apply(window,arguments):null};document.addEventListener("click",function(e){var target=e.target instanceof Element?e.target:null;if(!target)return;if(parent===window)return;var a=target.closest?target.closest("a[href]"):null;if(a&&a.href&&/^https?:\/\//.test(a.href)&&a.href.replace(/#.*$/,"")!==loc){if(isInlineMediaUrlClick(a,a.href))return;var productId=extractProductId(target)||extractProductId(a);if(productId){e.preventDefault();parent.postMessage({type:"ecto-artifact-link-click",productId:productId},"*");return}e.preventDefault();parent.postMessage({type:"ecto:usercontent-link-click",href:a.href},"*");return}var dataHref=findDataHref(target);if(dataHref&&/^https?:\/\//.test(dataHref.href)&&dataHref.href.replace(/#.*$/,"")!==loc){if(isInlineMediaUrlClick(dataHref.node,dataHref.href))return;e.preventDefault();parent.postMessage({type:"ecto:usercontent-link-click",href:dataHref.href},"*")}},true)})();</script><script>(function(){var FOCUS_TYPE="ecto:artifact-focus-request";var CLOSE_TYPE="ecto:artifact-close-request";function focusArtifactDocument(){var body=document.body;if(!body)return;try{window.focus();}catch(e){}if(!body.hasAttribute("tabindex"))body.setAttribute("tabindex","-1");try{body.focus({preventScroll:true});}catch(e){try{body.focus();}catch(e2){}}}window.addEventListener("message",function(event){if(event.source!==window.parent)return;var data=event.data;if(!data||typeof data!=="object"||data.type!==FOCUS_TYPE)return;if(document.readyState==="loading"){document.addEventListener("DOMContentLoaded",focusArtifactDocument,{once:true});return;}focusArtifactDocument();});window.addEventListener("keydown",function(event){if(event.key!=="Escape")return;window.setTimeout(function(){if(event.defaultPrevented)return;window.parent.postMessage({type:CLOSE_TYPE},"*");},0);});})();</script></body>
+</body>
 </html>
