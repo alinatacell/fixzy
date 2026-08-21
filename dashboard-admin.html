@@ -1,6 +1,27 @@
 <!doctype html>
 <html lang="id">
-<head>
+<head><style>
+@font-face {
+  font-family: "Optimistic";
+  font-style: normal;
+  font-weight: 400 600;
+  font-display: swap;
+  src: url("/fonts/OptimisticAI_VF_Optimized.woff2") format("woff2");
+}
+@font-face {
+  font-family: "Optimistic Mono";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("/fonts/OptimisticMono_W_TextRegular.woff2") format("woff2");
+}
+:where(html) {
+  font-family: "Optimistic", system-ui, sans-serif;
+}
+:where(code, pre, kbd, samp) {
+  font-family: "Optimistic Mono", ui-monospace, monospace;
+}
+</style>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>FIXZY | Dashboard Admin</title>
 <style>
@@ -18,17 +39,43 @@ main{max-width:1280px;margin:auto;padding:88px 14px 14px 14px}
 .stat.yellow{background:#fef9c3}.stat.green{background:#dcfce7}.stat.blue{background:#dbeafe}.stat.red{background:#fee2e2}.stat.dark{background:#111827;color:#fff}.stat.dark small{color:#9ca3af}.stat.dark i{color:#cbd5e1}
 .actions{display:flex;gap:8px;flex-wrap:wrap}.btn{border:2px solid #111827;border-radius:9px;padding:10px 13px;font-weight:900;cursor:pointer;box-shadow:3px 3px 0 #111827;text-decoration:none;display:inline-flex;align-items:center;gap:6px}.primary{background:#ffc107;color:#111}.dark{background:#111827;color:#fff}.secondary{background:#e5e7eb;color:#111827}
 .table-wrap{overflow:auto;border:3px solid #111827;border-radius:12px;box-shadow:5px 5px 0 #111827;background:#fff}
-table{width:100%;border-collapse:collapse;min-width:700px;font-size:11.5px}th,td{padding:9px 8px;border-bottom:1px solid #d1d5db;text-align:left;vertical-align:top}th{background:#111827;color:#fff;font-size:10px;white-space:nowrap}
+table{width:100%;border-collapse:collapse;min-width:620px;font-size:11.5px}th,td{padding:9px 8px;border-bottom:1px solid #d1d5db;text-align:left;vertical-align:top}th{background:#111827;color:#fff;font-size:10px;white-space:nowrap}
 .badge{display:inline-flex;padding:4px 8px;border-radius:999px;border:2px solid #111827;font-size:9px;font-weight:900;white-space:nowrap}.masuk{background:#dbeafe;color:#1d4ed8}.tagihan{background:#fef3c7;color:#92400e}.tunai{background:#dcfce7;color:#15803d}.batal{background:#fee2e2;color:#b91c1c}.diambil{background:#d1fae5;color:#047857}.proses{background:#ede9fe;color:#7c3aed}.selesai{background:#dcfce7;color:#15803d}
 .chart{width:100%;height:180px;background:#f8fafc;border:2px solid #111827;border-radius:10px;display:flex;align-items:end;gap:4px;padding:8px}.bar{flex:1;background:#111827;border-radius:6px 6px 0 0;min-height:4px;position:relative}.bar span{position:absolute;top:-16px;left:50%;transform:translateX(-50%);font-size:9px;font-weight:900;white-space:nowrap}
 body.dark{background:#0b0f14!important;color:#e5e7eb}.dark .card,.dark .table-wrap,.dark .stat{background:#1f2937!important;color:#e5e7eb!important;border-color:#334155!important}.dark th{background:#0b0f14!important}.dark td{background:#1f2937!important;color:#e5e7eb!important;border-color:#334155!important}.dark .chart{background:#0b0f14!important;border-color:#334155!important}
-@media(max-width:900px){.grid4,.grid3{grid-template-columns:1fr 1fr}.grid2{grid-template-columns:1fr}}
-@media(max-width:600px){.grid4,.grid3{grid-template-columns:1fr}header{height:68px}main{padding-top:80px}}
+/* FIX RESPONSIVE AUTO */
+@media(max-width:1100px){.grid4{grid-template-columns:1fr 1fr 1fr}}
+@media(max-width:900px){.grid4{grid-template-columns:1fr 1fr}.grid3{grid-template-columns:1fr 1fr}.grid2{grid-template-columns:1fr}.table-wrap{border-radius:10px}table{min-width:600px}}
+@media(max-width:640px){
+  .grid4,.grid3{grid-template-columns:1fr}
+  header{height:64px}
+  main{padding:78px 10px 14px 10px}
+  .head{padding:0 10px;gap:8px}
+  .logo{width:44px;height:44px;flex:0 0 44px}
+  .brand b{font-size:14px}
+  .brand small{font-size:9px}
+  .head-btn{height:38px;padding:0 10px;font-size:11px}
+  .moon{width:38px}
+  .card{padding:12px;border-radius:12px}
+  .stat b{font-size:18px}
+  .table-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch;border-width:2px;box-shadow:3px 3px 0 #111827}
+  table{min-width:560px;font-size:11px}
+  th,td{padding:7px 6px}
+  .btn{padding:8px 10px;font-size:11px}
+  .chart{height:150px}
+}
+@media(max-width:400px){
+  main{padding:76px 8px 12px 8px}
+  .brand b{font-size:13px}
+  .grid4,.grid3,.grid2{gap:8px}
+  .stat{padding:10px}
+  .card{padding:10px}
+}
 </style>
 </head>
 <body>
 <header><div class="head"><img class="logo" src="logo.png" alt="FIXZY"><div class="brand"><b>📊 Dashboard Admin FIXZY</b><small id="accountLine">Memuat akun...</small></div><div class="head-btns"><button class="head-btn refresh" onclick="location.reload()">↻ Refresh</button><button class="head-btn moon" onclick="document.body.classList.toggle('dark')">🌙</button></div></div></header>
-<main>
+<main style='width:100%;'>
 <div id="loading" class="card">⏳ Memuat dashboard admin...<br><small id="debug" style="color:#64748b"></small></div>
 <div id="page" style="display:none">
 <div id="summary" class="summary">Memuat ringkasan...</div>
@@ -137,5 +184,5 @@ onAuthStateChanged(auth,async u=>{
  }catch(e){$("loading").innerHTML=`<span style="color:#b42318">Gagal: ${esc(e.message)}</span>`}
 });
 </script>
-</body>
+<script>(function(){var loc=location.href.replace(/#.*$/,"");var ATTR_NAMES=["data-product-id","data-productid","data-product_id","product-id","productid","product_id","data-source-entity-id","source-entity-id","source_entity_id","data-product","data-metadata","data-meta"];var DATASET_KEYS=["productId","productid","product_id","sourceEntityId","sourceentityid","source_entity_id","product","metadata","meta"];function readProductId(value){if(typeof value!=="string"||value.length===0)return null;if(/^[0-9]{6,}$/.test(value))return value;var match=value.match(/(?:product(?:_|-)?id|source(?:_|-)?entity(?:_|-)?id)["'=:\s]+([0-9]{6,})/i);return match?match[1]:null}function extractProductId(start){for(var node=start;node&&node!==document.body;node=node.parentElement){for(var i=0;i<ATTR_NAMES.length;i++){var attrValue=node.getAttribute&&node.getAttribute(ATTR_NAMES[i]);var attrProductId=readProductId(attrValue);if(attrProductId)return attrProductId}var dataset=node.dataset||null;if(dataset){for(var j=0;j<DATASET_KEYS.length;j++){var dataValue=dataset[DATASET_KEYS[j]];var dataProductId=readProductId(dataValue);if(dataProductId)return dataProductId}}}return null}function isInlineMediaSlotElement(node){return !!(node&&node.getAttribute&&node.getAttribute("data-clippy-inline-media-slot")!==null)}function findInlineMediaSlot(start){for(var node=start;node&&node!==document.body;node=node.parentElement){if(isInlineMediaSlotElement(node))return node}return null}function readInlineMediaUrl(node){if(!node)return null;return node.getAttribute&&((node.getAttribute("data-clippy-inline-media-url")||node.getAttribute("data-url")||node.getAttribute("data_url")))||node.href||null}function stripHash(url){return String(url).replace(/#.*$/,"")}function urlsMatch(a,b){if(!a||!b)return false;try{return stripHash(new URL(a,loc).href)===stripHash(new URL(b,loc).href)}catch(_){return stripHash(a)===stripHash(b)}}function isFirstPartyReelUrl(value){try{var url=new URL(value,loc);if(url.protocol!=="https:")return false;var host=url.hostname.toLowerCase();var supported=host==="instagram.com"||host.endsWith(".instagram.com")||host==="facebook.com"||host.endsWith(".facebook.com");return supported&&/\/reels?\//i.test(url.pathname)}catch(_){return false}}function isInlineMediaUrlClick(node,href){var slot=findInlineMediaSlot(node);if(!slot)return false;var slotUrl=readInlineMediaUrl(slot);if(slotUrl)return urlsMatch(href,slotUrl);return isFirstPartyReelUrl(href)}function findDataHref(start){for(var node=start;node&&node!==document.body;node=node.parentElement){if(node.getAttribute){var href=node.getAttribute("data-href")||node.getAttribute("data-url");if(href)return{href:href,node:node}}}return null}var nativeOpen=window.open;window.open=function(url){if(parent!==window&&typeof url==="string"&&/^https?:\/\//.test(url)){parent.postMessage({type:"ecto:usercontent-link-click",href:url},"*");return null}return nativeOpen?nativeOpen.apply(window,arguments):null};document.addEventListener("click",function(e){var target=e.target instanceof Element?e.target:null;if(!target)return;if(parent===window)return;var a=target.closest?target.closest("a[href]"):null;if(a&&a.href&&/^https?:\/\//.test(a.href)&&a.href.replace(/#.*$/,"")!==loc){if(isInlineMediaUrlClick(a,a.href))return;var productId=extractProductId(target)||extractProductId(a);if(productId){e.preventDefault();parent.postMessage({type:"ecto-artifact-link-click",productId:productId},"*");return}e.preventDefault();parent.postMessage({type:"ecto:usercontent-link-click",href:a.href},"*");return}var dataHref=findDataHref(target);if(dataHref&&/^https?:\/\//.test(dataHref.href)&&dataHref.href.replace(/#.*$/,"")!==loc){if(isInlineMediaUrlClick(dataHref.node,dataHref.href))return;e.preventDefault();parent.postMessage({type:"ecto:usercontent-link-click",href:dataHref.href},"*")}},true)})();</script><script>(function(){var FOCUS_TYPE="ecto:artifact-focus-request";var CLOSE_TYPE="ecto:artifact-close-request";function focusArtifactDocument(){var body=document.body;if(!body)return;try{window.focus();}catch(e){}if(!body.hasAttribute("tabindex"))body.setAttribute("tabindex","-1");try{body.focus({preventScroll:true});}catch(e){try{body.focus();}catch(e2){}}}window.addEventListener("message",function(event){if(event.source!==window.parent)return;var data=event.data;if(!data||typeof data!=="object"||data.type!==FOCUS_TYPE)return;if(document.readyState==="loading"){document.addEventListener("DOMContentLoaded",focusArtifactDocument,{once:true});return;}focusArtifactDocument();});window.addEventListener("keydown",function(event){if(event.key!=="Escape")return;window.setTimeout(function(){if(event.defaultPrevented)return;window.parent.postMessage({type:CLOSE_TYPE},"*");},0);});})();</script></body>
 </html>
