@@ -197,7 +197,7 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/11.10.0/fireba
 import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-auth.js";
 import {
   getFirestore, doc, getDoc, collection, query, where,
-  getDocs, getDocsFromServer, setDoc, serverTimestamp
+  getDocs, getDocsFromServer, setDoc, updateDoc, serverTimestamp
 } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js";
 
 const cfg={
@@ -256,8 +256,8 @@ function isKasbon(x){
 function kasbonName(x){return String(x.namaKaryawan||x.nama||x.karyawan||"")}
 function kasbonAmount(x){return Number(x.nominal||x.jumlah||x.amount||0)||0}
 function attendanceMatchesEmployee(att,emp){
-  const idA=String(att.userId||att.uid||"");
-  if(idA && (idA===String(emp.id)||idA===String(emp.uid||"")))return true;
+  const ids=[att.userId,att.employeeUid,att.karyawanUid].filter(Boolean).map(String);
+  if(ids.includes(String(emp.id)) || ids.includes(String(emp.uid||"")))return true;
   const an=normalizeName(nama(emp));
   const en=normalizeName(att.nama||att.namaKaryawan||att.namaTeknisi||"");
   return !!(an&&en&&(an===en||en.includes(an)||an.includes(en)));
@@ -284,16 +284,18 @@ async function loadMyProfile(user){
   if(!snap.exists())throw new Error("Profil users tidak ditemukan");
   const data=snap.data()||{};
   const r=String(data.role||"").toLowerCase();
-  myOwnerUid=(r==="owner"||data.isOwner===true)
-    ? user.uid
-    : (data.ownerUid||data.ownerId||user.uid);
+  /* OWNER dan SUPERADMIN pada halaman ini hanya melihat konter milik UID sendiri. */
+  if(r==="owner" || r==="superadmin" || data.isOwner===true){
+    myOwnerUid=user.uid;
+  }else{
+    myOwnerUid=String(data.ownerUid||data.ownerId||user.uid);
+  }
   profile=data;
   return data;
 }
 
 async function getOwned(colName){
   const map=new Map();
-
   async function ambil(field,value){
     if(!value)return;
     try{
@@ -304,17 +306,9 @@ async function getOwned(colName){
       console.warn(colName,field,e.message);
     }
   }
-
   await ambil("ownerUid",myOwnerUid);
   await ambil("ownerId",myOwnerUid);
-  await ambil("uid",myOwnerUid);
-
-  if(myOwnerUid!==uid){
-    await ambil("ownerUid",uid);
-    await ambil("ownerId",uid);
-  }
-
-  return [...map.values()];
+  return [...map.values()].filter(x=>String(x.ownerUid||x.ownerId||"")===String(myOwnerUid));
 }
 
 async function getOwnedUsers(){
@@ -337,10 +331,19 @@ async function getOwnedUsers(){
 
   try{
     const me=await getDoc(doc(db,"users",uid));
-    if(me.exists())map.set(me.id,{id:me.id,...me.data()});
+    if(me.exists()){
+      const meData={id:me.id,...me.data()};
+      const r=String(meData.role||"").toLowerCase();
+      const owner=String(meData.ownerUid||meData.ownerId||((r==="owner"||r==="superadmin")?uid:""));
+      if(owner===String(myOwnerUid))map.set(me.id,meData);
+    }
   }catch{}
 
-  return [...map.values()];
+  return [...map.values()].filter(x=>{
+    const r=String(x.role||"").toLowerCase();
+    const owner=String(x.ownerUid||x.ownerId||((r==="owner"||r==="superadmin")?x.id:""));
+    return owner===String(myOwnerUid);
+  });
 }
 
 async function loadData(){
@@ -484,69 +487,61 @@ function render(){
 async function setAttendance(employeeId,status){
   const emp=accounts.find(x=>String(x.id)===String(employeeId));
   if(!emp)return;
-
   const date=$("tanggalAksi").value||today();
   const existing=attendanceForEmployeeDate(emp,date);
-  const id=existing?.id||`${emp.id}_${date}`;
-
+  const canonicalId=`${myOwnerUid}_${emp.id}_${date}`;
   if(savingId)return;
   savingId=emp.id;
   render();
-
   const wage=upahHarian(emp);
-
-  const data={
-    ownerUid:myOwnerUid,
-    ownerId:myOwnerUid,
-    userId:emp.id,
-    uid:emp.uid||emp.id,
-    nama:nama(emp),
-    namaKaryawan:emp.namaKaryawan||emp.nama||nama(emp),
-    email:emp.email||"",
-    role:emp.role||"",
-    jabatan:emp.jabatan||emp.posisi||"",
-    noWA:emp.noWA||emp.wa||emp.noHp||emp.whatsapp||"",
-    upahHarian:wage,
-    tanggal:date,
-    status,
-    hadir:status==="hadir",
-    updatedAt:serverTimestamp(),
-    updatedBy:uid
-  };
-
   try{
-    const old=existing ? null : await getDoc(doc(db,"absensi",id));
-    if(!existing && !old?.exists()){
-      data.createdAt=serverTimestamp();
-      data.createdBy=uid;
+    /* Dokumen lama: hanya ubah status. Field owner/uid lama tetap utuh. */
+    if(existing && existing.id){
+      await updateDoc(doc(db,"absensi",existing.id),{
+        status,
+        hadir:status==="hadir",
+        upahHarian:wage,
+        updatedAt:serverTimestamp(),
+        updatedBy:uid
+      });
+    }else{
+      /* Dokumen baru: ownerUid/ownerId = pemilik konter, userId/employeeUid/uid = karyawan. */
+      await setDoc(doc(db,"absensi",canonicalId),{
+        ownerUid:myOwnerUid,
+        ownerId:myOwnerUid,
+        userId:emp.id,
+        employeeUid:emp.uid||emp.id,
+        uid:emp.uid||emp.id,
+        nama:nama(emp),
+        namaKaryawan:emp.namaKaryawan||emp.nama||nama(emp),
+        email:emp.email||"",
+        role:emp.role||"",
+        jabatan:emp.jabatan||emp.posisi||"",
+        noHp:emp.noHp||emp.noWA||emp.wa||emp.whatsapp||"",
+        noWA:emp.noWA||emp.wa||emp.noHp||emp.whatsapp||"",
+        upahHarian:wage,
+        tanggal:date,
+        status,
+        hadir:status==="hadir",
+        createdAt:serverTimestamp(),
+        createdBy:uid,
+        updatedAt:serverTimestamp(),
+        updatedBy:uid
+      });
     }
-
-    await setDoc(doc(db,"absensi",id),data,{merge:true});
-
-    showPopup(
-      "✅ Absensi Tersimpan",
-      `${nama(emp)} ditandai ${status==="hadir"?"HADIR":"TIDAK HADIR"} pada ${date}.`
-    );
-
+    showPopup("✅ Absensi Tersimpan",`${nama(emp)} ditandai ${status==="hadir"?"HADIR":"TIDAK HADIR"} pada ${date}.`);
     await loadData();
     render();
-
-    $("status").innerHTML=
-      `<span class="ok">✓ ${esc(nama(emp))} • ${status==="hadir"?"HADIR":"TIDAK HADIR"} • ${esc(date)} berhasil disimpan.</span>`;
+    $("status").innerHTML=`<span class="ok">✓ ${esc(nama(emp))} • ${status==="hadir"?"HADIR":"TIDAK HADIR"} • ${esc(date)} berhasil disimpan.</span>`;
   }catch(e){
     console.error("Simpan absensi:",e);
-    showPopup(
-      "❌ Gagal Menyimpan",
-      e.message||"Firebase menolak penyimpanan absensi."
-    );
-    $("status").innerHTML=
-      `<span class="err">❌ Gagal menyimpan absensi: ${esc(e.message||e)}</span>`;
+    showPopup("❌ Gagal Menyimpan",`${e.code||"firebase/error"} — ${e.message||"Firebase menolak penyimpanan absensi."}`);
+    $("status").innerHTML=`<span class="err">❌ Gagal menyimpan absensi: ${esc(e.message||e)}</span>`;
   }finally{
     savingId="";
     render();
   }
 }
-
 async function muatSemua(){
   $("status").textContent=
     "⏳ Membaca data Firebase (ownerUid: "+myOwnerUid.slice(0,8)+"...)";
@@ -593,7 +588,6 @@ $("periodeTanggal").addEventListener("change",()=>{
 
 $("tanggalAksi").addEventListener("change",render);
 
-$("refreshBtn").addEventListener("click",muatSemua);
 $("refreshTop").addEventListener("click",muatSemua);
 
 $("tbody").addEventListener("click",e=>{
