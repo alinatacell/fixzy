@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="theme-color" content="#081326">
-<title>FIXZY | Absensi Karyawan - FIXED ISOLASI</title>
+<title>FIXZY | Absensi Karyawan - OWNER WRITE FIX</title>
 <style>
 *{box-sizing:border-box}
 :root{--bg:#f3f6fa;--card:#fff;--line:#dfe5ee;--text:#111827;--muted:#64748b;--yellow:#ffc107;--navy:#081326;--green:#16a34a;--red:#dc2626;--blue:#2563eb;--orange:#f59e0b}
@@ -44,7 +44,7 @@ table{width:100%;min-width:980px;border-collapse:collapse}
 th,td{padding:9px 10px;border-bottom:1px solid var(--line);font-size:11px;text-align:left;vertical-align:middle}
 th{background:#f8fafc;color:#475569;font-size:10px;position:sticky;top:0}
 .badge{display:inline-block;padding:5px 8px;border-radius:999px;font-size:9px;font-weight:900;white-space:nowrap}
-.hadir{background:#dcfce7;color:#166534}.izin{background:#fef3c7;color:#92400e}.sakit{background:#dbeafe;color:#1d4ed8}.alpa{background:#fee2e2;color:#b91c1c}.belum{background:#f1f5f9;color:#64748b}
+.hadir{background:#dcfce7;color:#166534}.tidak_hadir{background:#fee2e2;color:#b91c1c}.belum{background:#f1f5f9;color:#64748b}
 .role{background:#ede9fe;color:#6d28d9}
 .row-actions{display:flex;gap:5px;flex-wrap:wrap}
 .mini{border:0;border-radius:8px;padding:7px 9px;font-size:9px;font-weight:900}
@@ -53,21 +53,13 @@ th{background:#f8fafc;color:#475569;font-size:10px;position:sticky;top:0}
 .popup{position:fixed;inset:0;background:#0008;display:none;align-items:center;justify-content:center;z-index:100}
 .popup.show{display:flex}
 .popup-box{width:min(520px,calc(100% - 24px));max-height:90vh;overflow:auto;background:#fff;border-radius:15px;padding:17px}
+
+.popup-actions{display:flex;justify-content:flex-end;gap:7px;margin-top:13px}
+.primary,.secondary{border:0;border-radius:9px;padding:10px 14px;font-weight:900;cursor:pointer}
+.primary{background:#111827;color:#fff}.secondary{background:#e5e7eb;color:#111827}
 </style>
 </head>
-<body><script>
-/* FIXZY SESSION CENTER: halaman dibuka dari index.html memakai sesi pusat.
-   Tidak mengubah tampilan/fungsi halaman; hanya menyediakan referensi sesi parent. */
-(function(){
-  try{
-    if(window.parent&&window.parent!==window){
-      Object.defineProperty(window,"fixzySession",{configurable:true,get:function(){return window.parent.fixzySession||null}});
-      window.fixzySessionReady=function(){return !!(window.parent&&window.parent.fixzySession&&window.parent.fixzySession.uid)};
-    }
-  }catch(e){}
-})();
-</script>
-
+<body>
 
 <header class="header">
   <div class="header-in">
@@ -95,7 +87,7 @@ th{background:#f8fafc;color:#475569;font-size:10px;position:sticky;top:0}
 <section class="summary">
   <div class="sum"><small>TOTAL AKUN</small><b id="total">0</b></div>
   <div class="sum green"><small>HADIR</small><b id="hadir">0</b></div>
-  <div class="sum blue"><small>SUDAH PULANG</small><b id="pulang">0</b></div>
+  <div class="sum blue"><small>TIDAK HADIR</small><b id="pulang">0</b></div>
   <div class="sum red"><small>BELUM ABSEN</small><b id="belum">0</b></div>
   <div class="sum orange"><small>TOTAL UPAH BULAN</small><b id="totalUpahBulan">Rp 0</b></div>
 </section>
@@ -109,11 +101,11 @@ th{background:#f8fafc;color:#475569;font-size:10px;position:sticky;top:0}
     <div class="toolbar">
       <div class="field">
         <label>TANGGAL ABSENSI</label>
-        <input id="tanggal" type="date">
+        <input id="tanggal" type="date" onchange="muatAbsensi()">
       </div>
       <div class="field">
         <label>BULAN PERHITUNGAN UPAH</label>
-        <input id="bulan" type="month">
+        <input id="bulan" type="month" onchange="muatAbsensiBulan()">
       </div>
       <div class="field">
         <label>CARI</label>
@@ -121,13 +113,13 @@ th{background:#f8fafc;color:#475569;font-size:10px;position:sticky;top:0}
       </div>
       <div class="field">
         <label>STATUS</label>
-        <select id="filterStatus" onchange="render()"><option value="">Semua</option><option value="hadir">Hadir</option><option value="belum">Belum</option><option value="izin">Izin</option><option value="sakit">Sakit</option><option value="alpa">Alpa</option></select>
+        <select id="filterStatus" onchange="render()"><option value="">Semua</option><option value="hadir">Hadir</option><option value="tidak_hadir">Tidak Hadir</option><option value="belum">Belum Absen</option></select>
       </div>
     </div>
     <div class="table-wrap" style="margin-top:12px">
       <table>
-        <thead><tr><th>Nama</th><th>Jabatan</th><th>Role</th><th>WA</th><th>Masuk</th><th>Pulang</th><th>Status</th><th>Bulan</th><th>Upah</th><th>Aksi</th></tr></thead>
-        <tbody id="tbody"><tr><td colspan="10" class="empty">Memuat Firebase...</td></tr></tbody>
+        <thead><tr><th>Nama</th><th>Jabatan</th><th>Role</th><th>WA</th><th>Status Hari Ini</th><th>Hadir / Bulan</th><th>Upah / Bulan</th><th>Aksi</th></tr></thead>
+        <tbody id="tbody"><tr><td colspan="8" class="empty">Memuat Firebase...</td></tr></tbody>
       </table>
     </div>
   </div>
@@ -141,9 +133,8 @@ th{background:#f8fafc;color:#475569;font-size:10px;position:sticky;top:0}
 <div><label>Nama</label><input id="fNama" readonly></div>
 <div><label>Jabatan</label><input id="fJabatan" readonly></div>
 <div><label>Tanggal</label><input id="fTanggal" type="date"></div>
-<div><label>Status</label><select id="fStatus"><option value="hadir">Hadir</option><option value="izin">Izin</option><option value="sakit">Sakit</option><option value="alpa">Alpa</option><option value="belum">Belum</option></select></div>
-<div><label>Jam Masuk</label><input id="fMasuk" type="time"></div>
-<div><label>Jam Pulang</label><input id="fPulang" type="time"></div>
+<div><label>Status</label><select id="fStatus"><option value="hadir">Hadir</option><option value="tidak_hadir">Tidak Hadir</option></select></div>
+
 <div style="grid-column:1/-1"><label>Catatan</label><textarea id="fCatatan"></textarea></div>
 </div>
 <div style="display:flex;justify-content:flex-end;gap:7px;margin-top:13px">
@@ -151,6 +142,16 @@ th{background:#f8fafc;color:#475569;font-size:10px;position:sticky;top:0}
 <button class="primary" onclick="simpanAbsensi()">Simpan</button>
 </div>
 </div></div>
+
+<div class="popup" id="notice">
+  <div class="popup-box">
+    <h3 id="noticeTitle">FIXZY</h3>
+    <div id="noticeText" class="status"></div>
+    <div class="popup-actions">
+      <button class="primary" type="button" onclick="tutupNotice()">OK</button>
+    </div>
+  </div>
+</div>
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js";
@@ -165,10 +166,16 @@ const db=getFirestore(app);
 let uid="", ownerUid="", profile={}, accounts=[], absensi={}, monthlyAbsensi={}, selected=null;
 const $=id=>document.getElementById(id);
 function esc(s){return String(s??"").replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
-function today(){return new Date().toISOString().slice(0,10);}
-function nowTime(){return new Date().toTimeString().slice(0,5);}
+function today(){
+  const d=new Date(),p=n=>String(n).padStart(2,"0");
+  return `${d.getFullYear()}-${p(d.getMonth()+1)}-${p(d.getDate())}`;
+}
+function nowTime(){
+  const d=new Date(),p=n=>String(n).padStart(2,"0");
+  return `${p(d.getHours())}:${p(d.getMinutes())}`;
+}
 function getDateKey(){return $("tanggal").value||today();}
-function makeId(userId,date){return `${userId}_${date}`;}
+function makeId(ownerId,userId,date){return `absensi_${ownerId}_${userId}_${date}`;}
 function nama(a){return a.nama||a.namaKaryawan||a.displayName||a.email||"-";}
 function phone(a){return a.noWA||a.wa||a.noHp||a.whatsapp||"";}
 function roleLabel(r){return String(r||"").toUpperCase();}
@@ -176,85 +183,136 @@ function statusLabel(s){return String(s||"").toUpperCase();}
 function statusClass(s){return String(s||"belum").toLowerCase();}
 function rupiah(n){return "Rp "+(Number(n)||0).toLocaleString("id-ID");}
 
+function tampilNotice(title,text){
+  $("noticeTitle").textContent=title;
+  $("noticeText").innerHTML=text;
+  $("notice").classList.add("show");
+}
+window.tutupNotice=()=>{$("notice").classList.remove("show");};
+
 async function loadProfile(){
   const snap=await getDoc(doc(db,"users",uid));
   if(!snap.exists()) throw new Error("Profil tidak ditemukan");
   profile=snap.data()||{};
-  const role=String(profile.role||"").toLowerCase();
-  ownerUid = (role==="owner"||profile.isOwner===true) ? uid : (profile.ownerUid||profile.ownerId||uid);
-  $("ownerName").textContent=(profile.namaKonter||profile.nama||"FIXZY")+" • ownerUid "+ownerUid.slice(0,6);
+
+  const role=String(profile.role||"").toLowerCase().trim();
+  const authEmail=String(auth.currentUser?.email||"").toLowerCase().trim();
+  // HARUS SAMA DENGAN FIRESTORE RULES: isSuperAdmin() berdasarkan email.
+  const isSuperAdmin=authEmail==="servicehpmaja@gmail.com";
+  const isOwner=role==="owner" || profile.isOwner===true;
+
+  // HALAMAN ABSENSI KHUSUS OWNER + SUPERADMIN.
+  if(!isOwner && !isSuperAdmin){
+    accessGranted=false;
+    tampilNotice("🔒 Akses Ditolak","Halaman Absensi Karyawan hanya dapat digunakan oleh <b>Owner</b> dan <b>Superadmin</b>.");
+    $("status").innerHTML='<span class="err">🔒 Hanya Owner dan Superadmin yang dapat menggunakan Absensi Karyawan.</span>';
+    $("tbody").innerHTML='<tr><td colspan="8" class="empty">🔒 Akses hanya untuk Owner dan Superadmin.</td></tr>';
+    return false;
+  }
+
+  // SESUAI FIRESTORE RULES ABSENSI:
+  // Owner -> ownerUid HARUS sama dengan request.auth.uid.
+  // Superadmin -> tidak dibatasi ownerUid oleh Rules.
+  ownerUid=isOwner && !isSuperAdmin ? uid : "";
+  profile.__isSuperAdmin=isSuperAdmin;
+  profile.__isOwner=isOwner;
+  profile.__authEmail=authEmail;
+
+  if(String(profile.status||"aktif").toLowerCase()==="nonaktif"){
+    accessGranted=false;
+    tampilNotice("🔒 Akun Nonaktif","Akun ini berstatus nonaktif.");
+    return false;
+  }
+
+  accessGranted=true;
+  ["tanggal","bulan","cari","filterStatus"].forEach(id=>{const el=$(id);if(el)el.disabled=false});
+  $("ownerName").textContent=profile.namaKonter||profile.namaPemilik||profile.namaUsaha||profile.nama||profile.email||"FIXZY";
+  return true;
+}
+
+function isSuperAdminUser(){
+  return String(auth.currentUser?.email||"").toLowerCase().trim()==="servicehpmaja@gmail.com";
 }
 
 async function loadAccounts(){
-  // FIX ISOLASI - hanya akun dengan ownerUid == myOwnerUid
+  if(!accessGranted)return;
+
+  const role=String(profile.role||"").toLowerCase().trim();
   const map=new Map();
+
   async function ambil(field,value){
+    if(!value)return;
     try{
-      const q=query(collection(db,"users"), where(field,"==",value));
+      const q=query(collection(db,"users"),where(field,"==",value));
       const snap=await getDocsFromServer(q);
       snap.docs.forEach(d=>map.set(d.id,{id:d.id,...d.data()}));
-    }catch(e){console.warn("users",field,e.message);}
+    }catch(e){console.warn("users",field,e.code||e.message||e);}
   }
-  await ambil("ownerUid", ownerUid);
-  await ambil("ownerId", ownerUid);
-  await ambil("uid", ownerUid);
-  // include self
-  try{const me=await getDoc(doc(db,"users",uid)); if(me.exists()) map.set(me.id,{id:me.id,...me.data()});}catch{}
-  
+
+  if(isSuperAdminUser()){
+    const snap=await getDocsFromServer(collection(db,"users"));
+    snap.docs.forEach(d=>map.set(d.id,{id:d.id,...d.data()}));
+  }else{
+    // Rules users mengizinkan Owner membaca akun yang ownerUid/ownerId-nya miliknya.
+    await ambil("ownerUid",uid);
+    await ambil("ownerId",uid);
+  }
+
   accounts=[...map.values()].filter(u=>{
-    const r=String(u.role||"").toLowerCase();
-    const isWorker=["employee","karyawan","kasir","kurir","teknisi","reseller","admin"].includes(r) || r==="owner";
-    const same = String(u.ownerUid||u.ownerId||"")==ownerUid || String(u.id)==ownerUid || String(u.uid)==ownerUid || String(u.id)==uid;
-    return isWorker || same;
+    const r=String(u.role||"").toLowerCase().trim();
+    const active=String(u.status||"aktif").toLowerCase()!=="nonaktif";
+    const worker=["employee","karyawan","kasir","kurir","teknisi","reseller","admin"].includes(r);
+    return active && worker;
   });
 }
 
 async function loadAbsensi(){
-  absensi={}; monthlyAbsensi={};
-  const date=getDateKey();
-  const month=$("bulan").value||today().slice(0,7);
+  if(!accessGranted)return;
 
-  // FIX ISOLASI - query absensi hanya milik ownerUid ini
+  absensi={};
+  monthlyAbsensi={};
+
+  const date=getDateKey();
+  const month=$("bulan").value||date.slice(0,7);
+  $("tanggalLabel").textContent=date;
+
+  const role=String(profile.role||"").toLowerCase().trim();
   const map=new Map();
-  async function ambil(field,value){
-    try{
-      const q=query(collection(db,"absensi"), where(field,"==",value));
+
+  try{
+    if(isSuperAdminUser()){
+      // Rules: Superadmin boleh read seluruh koleksi absensi.
+      const snap=await getDocsFromServer(collection(db,"absensi"));
+      snap.docs.forEach(d=>map.set(d.id,{id:d.id,...d.data()}));
+    }else{
+      // Rules Owner HANYA mengizinkan read jika resource.ownerUid == request.auth.uid.
+      // Karena itu QUERY HARUS menggunakan ownerUid milik Owner yang sedang login.
+      const q=query(collection(db,"absensi"),where("ownerUid","==",uid));
       const snap=await getDocsFromServer(q);
       snap.docs.forEach(d=>map.set(d.id,{id:d.id,...d.data()}));
-    }catch(e){console.warn("absensi",field,e.message);}
-  }
-  await ambil("ownerUid", ownerUid);
-  await ambil("ownerId", ownerUid);
-
-  // filter by tanggal yang diminta
-  const filtered=[...map.values()].filter(x=>String(x.tanggal||"").startsWith(date)||String(x.tanggal||"").startsWith(month));
-  // map ke accounts
-  filtered.forEach(x=>{
-    const uidKey=x.userId||x.uid||"";
-    if(uidKey) absensi[uidKey]=x;
-    if(String(x.tanggal||"").slice(0,7)===month){
-      if(!monthlyAbsensi[uidKey]) monthlyAbsensi[uidKey]=[];
-      monthlyAbsensi[uidKey].push(x);
     }
-  });
-
-  // fallback: coba baca per id jika query tidak ada (kompatibel data lama)
-  for(const a of accounts){
-    if(absensi[a.id]) continue;
-    try{
-      const s=await getDoc(doc(db,"absensi",makeId(a.id,date)));
-      if(s.exists()){
-        const x={id:s.id,...s.data()};
-        if(String(x.ownerUid||"")==ownerUid || String(x.ownerUid||"")==uid || !x.ownerUid){
-          absensi[a.id]=x;
-        }
-      }
-    }catch{}
+  }catch(e){
+    console.error("Load absensi gagal:",e);
+    throw e;
   }
+
+  // Hanya data yang lolos Rules di atas yang diproses.
+  for(const x of map.values()){
+    const employee=String(x.userId||x.employeeUid||"");
+    const d=String(x.tanggal||"").slice(0,10);
+    if(!employee||!d)continue;
+
+    if(d===date)absensi[employee]=x;
+    if(d.slice(0,7)===month){
+      if(!monthlyAbsensi[employee])monthlyAbsensi[employee]=[];
+      monthlyAbsensi[employee].push(x);
+    }
+  }
+
   render();
 }
 
-function getRowStatus(a){const x=absensi[a.id]; if(!x) return "belum"; return x.status||((x.jamMasuk||x.jamPulang)?"hadir":"belum");}
+function getRowStatus(a){const x=absensi[a.id]; if(!x) return "belum"; return String(x.status||"belum").toLowerCase();}
 function upahHarian(a){const n=Number(a.upahHarian??a.upah??a.gajiHarian??0); return Number.isFinite(n)?n:0;}
 function dataBulan(a){return monthlyAbsensi[a.id]||[];}
 function jumlahHadirBulan(a){return dataBulan(a).filter(x=>String(x.status||"").toLowerCase()==="hadir").length;}
@@ -271,10 +329,10 @@ function render(){
   });
   $("total").textContent=accounts.length;
   $("hadir").textContent=accounts.filter(a=>getRowStatus(a)==="hadir").length;
-  $("pulang").textContent=accounts.filter(a=>!!(absensi[a.id]?.jamPulang)).length;
+  $("pulang").textContent=accounts.filter(a=>getRowStatus(a)==="tidak_hadir").length;
   $("belum").textContent=accounts.filter(a=>getRowStatus(a)==="belum").length;
   $("totalUpahBulan").textContent=rupiah(totalUpahSemuaBulan());
-  if(!data.length){$("tbody").innerHTML='<tr><td colspan="10" class="empty">Belum ada data untuk ditampilkan.</td></tr>';return;}
+  if(!data.length){$("tbody").innerHTML='<tr><td colspan="8" class="empty">Belum ada data untuk ditampilkan.</td></tr>';return;}
   $("tbody").innerHTML=data.map(a=>{
     const x=absensi[a.id]||{}; const st=getRowStatus(a); const hadirBulan=jumlahHadirBulan(a); const upah=upahBulan(a);
     return `<tr>
@@ -282,14 +340,10 @@ function render(){
       <td>${esc(a.jabatan||a.posisi||"-")}</td>
       <td><span class="badge role">${esc(roleLabel(a.role))}</span></td>
       <td>${esc(phone(a))}</td>
-      <td><b>${esc(x.jamMasuk||"-")}</b></td>
-      <td><b>${esc(x.jamPulang||"-")}</b></td>
       <td><span class="badge ${statusClass(st)}">${statusLabel(st)}</span></td>
       <td><b>${hadirBulan}</b> hari</td>
       <td><b>${rupiah(upah)}</b><div style="font-size:9px;color:#94a3b8">${rupiah(upahHarian(a))}/hari</div></td>
       <td><div class="row-actions">
-        <button class="mini masuk" onclick="aksiMasuk('${a.id}')">Masuk</button>
-        <button class="mini pulang" onclick="aksiPulang('${a.id}')">Pulang</button>
         <button class="mini edit" onclick="editAbsensi('${a.id}')">Edit</button>
       </div></td>
     </tr>`;
@@ -303,25 +357,61 @@ function bukaForm(a,mode){
   $("fNama").value=nama(a);
   $("fJabatan").value=a.jabatan||a.posisi||"";
   $("fTanggal").value=getDateKey();
-  $("fStatus").value=x.status||"hadir";
-  $("fMasuk").value=x.jamMasuk||"";
-  $("fPulang").value=x.jamPulang||"";
+  $("fStatus").value=x.status==="hadir"?"hadir":"tidak_hadir";
   $("fCatatan").value=x.catatan||"";
+  $("popupTitle").textContent="✏️ Absensi Hari Ini";
   $("popup").classList.add("show");
 }
-window.aksiMasuk=id=>{const a=accounts.find(x=>x.id===id);if(a)bukaForm(a,"masuk")};
-window.aksiPulang=id=>{const a=accounts.find(x=>x.id===id);if(a)bukaForm(a,"pulang")};
-window.editAbsensi=id=>{const a=accounts.find(x=>x.id===id);if(a)bukaForm(a,"edit")};
+window.editAbsensi=id=>{
+  const a=accounts.find(x=>x.id===id);
+  if(a)bukaForm(a,"edit");
+};if(a)bukaForm(a,"edit")};
 
 async function simpanAbsensi(){
-  if(!selected) return;
+  if(!selected)return;
+
   const date=$("fTanggal").value||getDateKey();
-  const id=makeId(selected.id,date);
+  const role=String(profile.role||"").toLowerCase().trim();
+  const superAdmin=isSuperAdminUser();
+
+  if(role!=="owner" && !superAdmin){
+    tampilNotice("🔒 Akses Ditolak","Hanya Owner dan Superadmin yang dapat menyimpan absensi.");
+    return;
+  }
+
+  // SESUAI FIRESTORE RULES:
+  // Owner -> request.resource.data.ownerUid HARUS == request.auth.uid.
+  // Superadmin -> boleh semua owner.
+  const targetOwnerUid=superAdmin
+    ? String(selected.ownerUid||selected.ownerId||"").trim()
+    : uid;
+
+  if(!targetOwnerUid){
+    tampilNotice("❌ Gagal Menyimpan","Owner UID karyawan tidak ditemukan. Pastikan akun karyawan memiliki <b>ownerUid</b> atau <b>ownerId</b>.");
+    return;
+  }
+
+  // Owner hanya boleh menyimpan untuk konternya sendiri.
+  if(!superAdmin && role==="owner" && targetOwnerUid!==uid){
+    tampilNotice("🔒 Akses Ditolak","Karyawan bukan bagian dari konter Owner yang sedang login.");
+    return;
+  }
+
+  // ID CANONICAL: satu Owner + satu karyawan + satu tanggal.
+  const id=`${targetOwnerUid}_${selected.id}_${date}`; // Owner + Karyawan + Tanggal
+  const ref=doc(db,"absensi",id);
+
+  // Field penting mengikuti Rules:
+  // ownerUid = UID OWNER
+  // ownerId  = UID OWNER
+  // userId   = UID KARYAWAN
+  // employeeUid = UID KARYAWAN
   const data={
-    ownerUid, // FIX ISOLASI - wajib simpan ownerUid
-    ownerId: ownerUid,
+    ownerUid:targetOwnerUid,
+    ownerId:targetOwnerUid,
     userId:selected.id,
-    uid:selected.uid||selected.id,
+    employeeUid:selected.uid||selected.id,
+    uid:targetOwnerUid,
     nama:nama(selected),
     namaKaryawan:selected.namaKaryawan||selected.nama||nama(selected),
     email:selected.email||"",
@@ -329,29 +419,71 @@ async function simpanAbsensi(){
     jabatan:selected.jabatan||selected.posisi||"",
     noHp:phone(selected),
     tanggal:date,
-    jamMasuk:$("fMasuk").value||"",
-    jamPulang:$("fPulang").value||"",
     status:$("fStatus").value||"hadir",
     catatan:$("fCatatan").value.trim(),
+    updatedBy:uid,
     updatedAt:serverTimestamp()
   };
+
   try{
-    const existing=await getDoc(doc(db,"absensi",id));
-    if(!existing.exists()) data.createdAt=serverTimestamp();
-    await setDoc(doc(db,"absensi",id),data,{merge:true});
+    /*
+      PENTING:
+      Jangan membaca dokumen absensi dengan getDoc() sebelum setDoc().
+
+      Jika dokumen belum ada, Rules read mengevaluasi resource.data
+      yang masih null. Owner akhirnya bisa terkena "Missing or
+      insufficient permissions" sebelum CREATE dilakukan.
+
+      setDoc() langsung akan menjadi CREATE bila dokumen belum ada,
+      sehingga Rules CREATE dapat memeriksa request.resource.data.ownerUid.
+
+      Bila dokumen sudah ada, setDoc(...,{merge:true}) menjadi UPDATE
+      dan Rules UPDATE memeriksa resource serta request.resource.
+    */
+
+    data.createdBy=uid;
+    data.createdAt=serverTimestamp();
+
+    await setDoc(ref,data,{merge:true});
+
     $("popup").classList.remove("show");
+    selected=null;
+    tampilNotice("✅ Absensi Tersimpan",`Absensi <b>${esc(nama(data))}</b> tanggal <b>${esc(date)}</b> berhasil disimpan.`);
     await loadAbsensi();
-  }catch(e){alert("Gagal: "+e.message);}
+  }catch(e){
+    console.error("Simpan absensi:",e);
+    tampilNotice(
+      "❌ Gagal Menyimpan",
+      `<b>${esc(e.code||"firebase/error")}</b><br>${esc(e.message||e)}<br><br>`+
+      `<small>Data dikirim dengan ownerUid = UID akun Owner yang sedang login, sesuai Firestore Rules.</small>`
+    );
+  }
 }
+
 window.simpanAbsensi=simpanAbsensi;
+
+window.muatAbsensiBulan=async()=>{
+  try{
+    $("status").textContent="Menghitung upah bulan yang dipilih...";
+    await loadAccounts();
+    await loadAbsensi();
+    $("status").innerHTML=`<span class="ok">✓ Perhitungan ${esc($("bulan").value)} aktif • Hadir × upah harian.</span>`;
+  }catch(e){
+    console.error(e);
+    $("status").innerHTML=`<span class="err">❌ ${esc(e.message||e)}</span>`;
+  }
+};
 
 window.muatAbsensi=async()=>{
   try{
-    $("status").textContent="Memuat data absensi (hanya konter ini)...";
+    $("status").textContent="Memuat data absensi • Owner dapat menambah dan mengedit absensi konternya...";
     await loadAccounts();
     await loadAbsensi();
-    $("status").innerHTML=`<span class="ok">✓ Firebase aktif • ${accounts.length} akun terdaftar untuk ownerUid ${esc(ownerUid.slice(0,8))} • Isolasi aktif</span>`;
-  }catch(e){$("status").innerHTML=`<span class="err">${esc(e.message||e)}</span>`;}
+    $("status").innerHTML=`<span class="ok">✓ Firebase aktif • ${accounts.length} karyawan • Akses ${String(profile.role||"").toUpperCase()} • Isolasi ownerUid aktif</span>`;
+  }catch(e){
+    console.error(e);
+    $("status").innerHTML=`<span class="err">❌ ${esc(e.code||"firebase/error")} • ${esc(e.message||e)}</span>`;
+  }
 };
 window.muatSemua=async()=>{ $("tanggal").value=today(); await window.muatAbsensi(); };
 
@@ -359,7 +491,7 @@ $("tanggal").value=today();
 $("bulan").value=today().slice(0,7);
 
 onAuthStateChanged(auth,async u=>{
-  if(!u){if(window.parent!==window && window.parent && window.parent.fixzySession){return;}location.replace("login.html");return;}
+  if(!u){location.replace("login.html");return}
   uid=u.uid;
   try{ await loadProfile(); await window.muatAbsensi(); }
   catch(e){$("status").innerHTML=`<span class="err">${esc(e.message||e)}</span>`;}
