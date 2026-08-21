@@ -173,7 +173,27 @@ window.simpanAkun=async()=>{
        await setDoc(doc(db,"users",newUid),newData,{merge:true});
        await setDoc(doc(db,"users",editId),{status:"nonaktif",replacedByUid:newUid,replacedByEmail:email,updatedAt:serverTimestamp()},{merge:true});
        $("popup").classList.remove("show");editId=null;editEmailLama="";$("fRole").disabled=false;
-       const pesan=`Silahkan login dengan data ini\n\nNama: ${n}\nEmail: ${email}\nPassword: ${pass}\nRole: ${r}\nJabatan: ${j||"-"}\nUpah: ${rupiah(upah)}\n\nLink: https://fixzy-olive.vercel.app`;
+       const namaKonter = profile.namaKonter || profile.namaToko || "FIXZY";
+       const pesan=`Halo ${n} 👋
+
+Akun FIXZY kamu sudah aktif di konter *${namaKonter}*.
+
+🔐 *DATA LOGIN*:
+• Nama: ${n}
+• Email: ${email}
+• Password: ${pass}
+• Role: ${r==="employee"?"Karyawan":"Reseller"}
+• Jabatan: ${j||"-"}
+• Upah/Hari: ${rupiah(upah)}
+• Status: Aktif
+
+🔗 *LINK LOGIN*:
+https://fixzy-olive.vercel.app
+
+📌 Simpan email & password ini. Jangan bagikan ke orang lain.
+
+Terima kasih 🙏
+*${namaKonter} - FIXZY*`;
        window._waPending={phone:wa,message:pesan,name:n,email,password:pass,role:r};
        await load();tampilWaPopup(window._waPending);return;
      }
@@ -187,15 +207,35 @@ window.simpanAkun=async()=>{
    const accountData={uid:newUid,ownerUid,role:r,status,nama:n,namaKaryawan:n,email,noWA:wa,wa,noWa:wa,jabatan:j,upahHarian:upah,izin,permissions:izin,tanggalDaftar:new Date().toISOString(),createdAt:serverTimestamp(),updatedAt:serverTimestamp()};
    await setDoc(doc(db,"users",newUid),accountData);
    $("popup").classList.remove("show");
-   const pesan=`Silahkan login dengan data ini\n\nNama: ${n}\nEmail: ${email}\nPassword: ${pass}\nRole: ${r}\nJabatan: ${j||"-"}\nUpah: ${rupiah(upah)}\n\nLink: https://fixzy-olive.vercel.app`;
+   const namaKonter = profile.namaKonter || profile.namaToko || "FIXZY";
+       const pesan=`Halo ${n} 👋
+
+Akun FIXZY kamu sudah aktif di konter *${namaKonter}*.
+
+🔐 *DATA LOGIN*:
+• Nama: ${n}
+• Email: ${email}
+• Password: ${pass}
+• Role: ${r==="employee"?"Karyawan":"Reseller"}
+• Jabatan: ${j||"-"}
+• Upah/Hari: ${rupiah(upah)}
+• Status: Aktif
+
+🔗 *LINK LOGIN*:
+https://fixzy-olive.vercel.app
+
+📌 Simpan email & password ini. Jangan bagikan ke orang lain.
+
+Terima kasih 🙏
+*${namaKonter} - FIXZY*`;
    window._waPending={phone:wa,message:pesan,name:n,email,password:pass,role:r};await load();tampilWaPopup(window._waPending);
  }catch(e){console.error(e);let m=e.message||String(e);if(e.code==="auth/email-already-in-use")m="Email sudah digunakan.";tampilNotice("❌ Gagal Menyimpan",esc(m))}
 };
 
 function nomorWhatsApp(v){let s=String(v||"").replace(/[^\d]/g,"");if(!s)return "";if(s.startsWith("0"))s="62"+s.slice(1);else if(s.startsWith("8"))s="62"+s;return s}
-function tampilWaPopup(data){$("waText").innerHTML=`Akun <b>${esc(data.name)}</b> berhasil disimpan.<br><br>Nomor WA: <b>${esc(data.phone||"-")}</b><br><br>Pesan:<div style="margin-top:8px;padding:11px;border:1px solid #e2e8f0;border-radius:10px;background:#f8fafc;white-space:pre-wrap;font-size:11px">${esc(data.message)}</div>`;$("waPopup").classList.add("show")}
+function tampilWaPopup(data){$("waText").innerHTML=`Akun <b>${esc(data.name)}</b> berhasil disimpan.<br><br>Nomor WA: <b>${esc(data.phone||"-")}</b><br>Preview pesan:<div style="margin-top:8px;padding:11px;border:1px solid #e2e8f0;border-radius:10px;background:#f8fafc;white-space:pre-wrap;font-size:12px;line-height:1.6">${esc(data.message)}</div><div style="margin-top:8px;font-size:10px;color:#64748b">Pesan akan dibuka di WhatsApp dengan format tebal *...* otomatis.</div>`;$("waPopup").classList.add("show")}
 window.tutupWaPopup=()=>{$("waPopup").classList.remove("show");window._waPending=null};
-window.kirimWhatsApp=()=>{const d=window._waPending;if(!d)return;const nomor=nomorWhatsApp(d.phone);if(!nomor){$("waPopup").classList.remove("show");tampilNotice("⚠️ No. WA Tidak Valid","Nomor tidak valid.");return}const url="https://wa.me/"+nomor+"?text="+encodeURIComponent(d.message);$("waPopup").classList.remove("show");window.open(url,"_blank");window._waPending=null};
+window.kirimWhatsApp=()=>{const d=window._waPending;if(!d)return;let nomor=nomorWhatsApp(d.phone);if(!nomor){$("waPopup").classList.remove("show");tampilNotice("⚠️ No. WA Tidak Valid","Nomor tidak valid.");return}if(nomor.startsWith("0")) nomor="62"+nomor.slice(1); const url="https://wa.me/"+nomor+"?text="+encodeURIComponent(d.message);$("waPopup").classList.remove("show");window.open(url,"_blank"); setTimeout(()=>{window._waPending=null;},500)};
 
 window.kirimResetPassword=async email=>{
  try{if(!validEmail(email))throw new Error("Email tidak valid.");await sendPasswordResetEmail(auth,email);tampilNotice("✅ Reset Password","Link reset dikirim ke "+esc(email)+".")}
