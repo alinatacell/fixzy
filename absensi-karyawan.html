@@ -95,7 +95,7 @@ th{background:#f8fafc;color:#475569;font-size:10px}
 
 <section class="card">
   <div class="card-body">
-    <div id="statusMsg" class="notice">Memeriksa login Firebase...</div>
+    <div id="statusMsg" class="notice">Memeriksa login Firebase dan memulihkan sesi...</div>
   </div>
 </section>
 
@@ -618,21 +618,50 @@ $("tbody").addEventListener("click",e=>{
 
 $("popupOk").addEventListener("click",()=>$("popup").classList.remove("show"));
 
-onAuthStateChanged(auth,async user=>{
-  if(!user){
-    notice("Belum login. Silakan login melalui halaman utama FIXZY.","err");
-    $("headerUser").textContent="Belum login";
-    return;
-  }
-
+async function bootAuth(){
   try{
+    // Tunggu Firebase Auth selesai memulihkan sesi yang sudah login.
+    // Ini lebih stabil untuk halaman yang dibuka dari index/iframe FIXZY.
+    if(typeof auth.authStateReady==="function"){
+      await auth.authStateReady();
+    }
+
+    let user=auth.currentUser;
+
+    // Fallback: beri sedikit waktu jika sesi masih dipulihkan.
+    if(!user){
+      user=await new Promise(resolve=>{
+        let done=false;
+        const finish=u=>{
+          if(done)return;
+          done=true;
+          clearTimeout(timer);
+          resolve(u||null);
+        };
+        const timer=setTimeout(()=>finish(auth.currentUser),5000);
+        const unsub=onAuthStateChanged(auth,u=>{
+          unsub();
+          finish(u);
+        });
+      });
+    }
+
+    if(!user){
+      $("headerUser").textContent="Belum login";
+      notice("Sesi Firebase belum ditemukan. Buka halaman utama FIXZY dan pastikan sudah login.","err");
+      return;
+    }
+
     await initializeUser(user);
+
   }catch(e){
-    console.error(e);
-    notice(e.message||"Gagal memuat halaman.","err");
-    $("headerUser").textContent="Akses ditolak";
+    console.error("FIXZY AUTH:",e);
+    $("headerUser").textContent="Gagal memuat akun";
+    notice("Gagal memuat akun Firebase: "+(e.message||e),"err");
   }
-});
+}
+
+bootAuth();
 </script>
 </body>
 </html>
