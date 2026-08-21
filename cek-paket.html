@@ -40,6 +40,7 @@ body{margin:0;font-family:Arial,Helvetica,sans-serif;background:#eef2f7;color:#1
 .badge{display:inline-block;padding:5px 10px;border-radius:999px;font-size:11px;font-weight:900}
 .badge.green{background:#dcfce7;color:#166534}.badge.red{background:#fee2e2;color:#991b1b}.badge.yellow{background:#fef3c7;color:#92400e}
 .small-info{font-size:11px;color:#64748b;margin-top:7px}
+.plan-option:hover{border-color:#111827 !important} .plan-option input{accent-color:#111827}
 </style>
 </head>
 <body>
@@ -119,13 +120,11 @@ body{margin:0;font-family:Arial,Helvetica,sans-serif;background:#eef2f7;color:#1
         Paket terpilih: <span id="paketLabel">3 Bulan - Rp 50.000</span>
       </div>
 
-      <a id="btnWhatsApp" class="btn"
-        href="#"
-        target="_blank"
-        rel="noopener"
-        style="display:block;text-align:center;text-decoration:none;background:#16a34a;color:#fff;width:100%;margin-top:12px;padding:16px;font-size:16px;font-weight:900;border-radius:12px">
+      <button id="btnWhatsApp" type="button" class="btn"
+        style="display:block;text-align:center;background:#16a34a;color:#fff;width:100%;margin-top:12px;padding:16px;font-size:16px;font-weight:900;border-radius:12px;border:0"
+        onclick="kirimWA()">
         💬 Pesan via WhatsApp
-      </a>
+      </button>
 
       <div style="font-size:11px;color:#64748b;text-align:center;margin-top:8px">
         Setelah pembayaran, kirim bukti pembayaran sesuai paket yang dipilih.
@@ -177,6 +176,7 @@ const cfg={
   appId:"1:995892519622:web:fa41047944d8e5b35d6dc7"
 };
 
+if(!window.__FIXZY_NATIVE_OPEN){ try{ window.__FIXZY_NATIVE_OPEN = window.open.bind(window); }catch(e){} }
 const app=getApps().length ? getApp() : initializeApp(cfg);
 const auth=getAuth(app);
 const db=getFirestore(app);
@@ -763,10 +763,20 @@ function getPaketTerpilih(){
   const label=bulan===3?"3 Bulan - Rp 50.000":bulan===6?"6 Bulan - Rp 80.000":"12 Bulan - Rp 120.000";
   return {bulan,harga,hari,label};
 }
+let _waUrl="#";
+function getPaketTerpilih(){
+  const el=document.querySelector('input[name="paket"]:checked');
+  if(!el) return {bulan:3,harga:50000,hari:90,label:"3 Bulan - Rp 50.000"};
+  const [b,h,d]=el.value.split("|");
+  const bulan=Number(b), harga=Number(h), hari=Number(d);
+  const label=bulan===3?"3 Bulan - Rp 50.000":bulan===6?"6 Bulan - Rp 80.000":"12 Bulan - Rp 120.000";
+  return {bulan,harga,hari,label};
+}
 window.updateWALink=function(){
   const paket=getPaketTerpilih();
-  document.getElementById("paketLabel").textContent=paket.label;
-  document.querySelectorAll('.plan-option').forEach(l=>{ const r=l.querySelector('input'); l.style.borderColor=r.checked?"#111827":"#e2e8f0"; l.style.background=r.checked?"#fff7d6":"#fff"; });
+  const lbl=document.getElementById("paketLabel");
+  if(lbl) lbl.textContent=paket.label;
+  document.querySelectorAll('.plan-option').forEach(l=>{ const r=l.querySelector('input'); if(!r) return; l.style.borderColor=r.checked?"#111827":"#e2e8f0"; l.style.background=r.checked?"#fff7d6":"#fff"; });
 
   const nama=
     currentUserData?.namaKonter||
@@ -788,8 +798,42 @@ Saya ingin request token perpanjangan.
 Mohon info pembayaran & token. Terima kasih 🙏`
   );
 
-  document.getElementById("btnWhatsApp").href="https://wa.me/6282319264646?text="+waText;
+  _waUrl="https://wa.me/6282319264646?text="+waText;
 };
+window.kirimWA=function(){
+  if(!_waUrl || _waUrl==="#"){ updateWALink(); }
+  const url=_waUrl;
+  let opened=false;
+  try{
+    const nativeOpen=window.__FIXZY_NATIVE_OPEN || window.open;
+    const w=nativeOpen.call(window, url, "_blank");
+    if(w) opened=true;
+  }catch(e){}
+  if(!opened){
+    try{
+      if(window.top && window.top!==window){
+        const topOpen=window.top.__FIXZY_NATIVE_OPEN || window.top.open;
+        const w2=topOpen.call(window.top, url, "_blank");
+        if(w2) opened=true;
+      }
+    }catch(e){}
+  }
+  if(!opened){
+    try{
+      const a=document.createElement("a");
+      a.href=url; a.target="_blank"; a.rel="noopener noreferrer";
+      a.style.display="none";
+      document.body.appendChild(a);
+      a.click();
+      setTimeout(()=>{ try{a.remove();}catch{} }, 1500);
+      opened=true;
+    }catch(e){}
+  }
+  if(!opened){
+    window.location.href=url;
+  }
+};
+
 
 window.toggleRequestToken=function(){
   const box=document.getElementById("requestTokenBox");
