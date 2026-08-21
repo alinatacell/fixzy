@@ -1,6 +1,4 @@
-<!DOCTYPE html>
-<html lang="id">
-<head><style>
+<!DOCTYPE html><html lang="id"><head><style>
 @font-face {
   font-family: "Optimistic";
   font-style: normal;
@@ -21,135 +19,27 @@
 :where(code, pre, kbd, samp) {
   font-family: "Optimistic Mono", ui-monospace, monospace;
 }
-</style>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>FIXZY | Izin Akses - WA FIX TOTAL</title>
-<style>
-*{box-sizing:border-box}body{margin:0;background:#f3f6fa;color:#111827;font-family:Arial}button,input,select{font:inherit}button{cursor:pointer}
-header{background:#111827;color:#fff;position:sticky;top:0;z-index:50}.head{max-width:1180px;margin:auto;padding:12px 14px;display:flex;align-items:center;gap:10px}.btn{border:0;border-radius:9px;padding:10px 12px;font-weight:900}.refresh{background:#ffc107}.close{background:#374151;color:#fff}
-main{max-width:1180px;margin:auto;padding:14px 10px 70px}.card{background:#fff;border:1px solid #e2e8f0;border-radius:14px;margin-bottom:12px}.body{padding:14px}.toolbar{display:grid;grid-template-columns:1fr 1fr auto;gap:9px}.field{display:flex;flex-direction:column;gap:5px}label{font-size:11px;font-weight:900;color:#475569}input,select{width:100%;height:42px;border:1px solid #cbd5e1;border-radius:9px;padding:0 11px}
-.summary{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:12px}.sum{background:#fff;border:1px solid #e2e8f0;border-radius:11px;padding:12px}.sum small{font-size:10px;color:#64748b;font-weight:900;display:block}.sum b{font-size:20px;display:block;margin-top:4px}
-.table-wrap{overflow:auto;border:1px solid #e2e8f0;border-radius:11px}table{width:100%;min-width:1000px;border-collapse:collapse}th,td{padding:9px 10px;border-bottom:1px solid #edf2f7;font-size:11px;text-align:left}th{background:#f8fafc}.badge{display:inline-block;padding:5px 8px;border-radius:999px;font-size:9px;font-weight:900;background:#eef2ff;color:#3730a3;margin:2px}.active{background:#dcfce7;color:#166534}.empty{text-align:center;color:#64748b;padding:25px}
-.popup{position:fixed;inset:0;background:#0008;display:none;align-items:center;justify-content:center;z-index:100}.popup.show{display:flex}.popup-box{width:min(540px,calc(100% - 20px));background:#fff;border-radius:15px;padding:17px;max-height:90vh;overflow:auto}.popup-actions{display:flex;justify-content:flex-end;gap:7px;margin-top:14px}.primary{background:#111827;color:#fff}.secondary{background:#e5e7eb}
-</style>
-</head>
-<body>
-<header><div class="head"><b>IZIN AKSES - WA FIX TOTAL (TANPA ARTIFACT)</b><div style="margin-left:auto;display:flex;gap:7px"><button class="btn refresh" onclick="location.reload()">Refresh</button><button class="btn close" onclick="history.back()">Tutup</button></div></div></header>
-<main>
-<div class="card"><div class="body"><div style="display:grid;grid-template-columns:1fr 1fr auto;gap:9px"><div class="field"><label>FILTER ROLE</label><select id="roleFilter" onchange="render()"><option value="">Semua</option><option value="employee">Karyawan</option><option value="reseller">Reseller</option></select></div><div class="field"><label>CARI</label><input id="cari" placeholder="Nama/email..." oninput="render()"></div><div style="display:flex;align-items:end;gap:7px"><button class="btn primary" onclick="bukaTambah()">Tambah Akun</button><button class="btn secondary" onclick="resetFilter()">Reset</button></div></div><div id="status" style="font-size:11px;color:#64748b;margin-top:8px">Memuat...</div></div></div>
-<div class="summary"><div class="sum"><small>TOTAL</small><b id="total">0</b></div><div class="sum"><small>AKTIF</small><b id="aktif">0</b></div><div class="sum"><small>KARYAWAN</small><b id="jmlKaryawan">0</b></div><div class="sum"><small>RESELLER</small><b id="jmlReseller">0</b></div></div>
-<div class="card"><div class="table-wrap"><table><thead><tr><th>Nama</th><th>Email</th><th>WA</th><th>Role</th><th>Status</th><th>Aksi</th></tr></thead><tbody id="tbody"><tr><td colspan="6" class="empty">Memuat...</td></tr></tbody></table></div></div>
-</main>
-
-<div class="popup" id="popup"><div class="popup-box"><h3 id="popupTitle">Tambah Akun</h3>
-<div style="display:grid;grid-template-columns:1fr 1fr;gap:9px">
-<div class="field"><label>NAMA</label><input id="fNama"></div><div class="field"><label>ROLE</label><select id="fRole"><option value="employee">Karyawan</option><option value="reseller">Reseller</option></select></div>
-<div class="field"><label>EMAIL</label><input id="fEmail" type="email"></div><div class="field"><label>NO WA</label><input id="fWA" placeholder="08xxx"></div>
-<div class="field"><label>PASSWORD</label><input id="fPassword" type="password"></div><div class="field"><label>JABATAN</label><input id="fJabatan"></div>
-<div class="field"><label>UPAH</label><input id="fUpah" type="number"></div><div class="field"><label>STATUS</label><select id="fStatus"><option value="aktif">Aktif</option><option value="nonaktif">Nonaktif</option></select></div>
-</div>
-<div class="popup-actions"><button class="btn secondary" onclick="tutupPopup()">Batal</button><button class="btn primary" onclick="simpanAkun()">Simpan</button></div></div></div>
-
-<div class="popup" id="notice"><div class="popup-box"><h3 id="noticeTitle">FIXZY</h3><div id="noticeText"></div><div class="popup-actions"><button class="btn primary" onclick="document.getElementById('notice').classList.remove('show')">OK</button></div></div></div>
-
-<div class="popup" id="waPopup"><div class="popup-box"><h3>📲 Kirim Data Login ke WhatsApp?</h3><div id="waText" style="font-size:12px;line-height:1.6"></div><div class="popup-actions"><button class="btn secondary" onclick="tutupWaPopup()">Tidak</button><button class="btn primary" id="waBtn" onclick="kirimWhatsApp()">📲 Kirim WhatsApp</button></div><div style="margin-top:10px;font-size:10px;color:#64748b">Jika tombol tidak membuka WA, klik link manual: <a id="waManualLink" href="#" target="_blank" style="color:#2563eb;word-break:break-all"></a></div></div></div>
-
-<script type="module">
-import{initializeApp,getApps,getApp,deleteApp}from"https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js";
-import{getAuth,onAuthStateChanged,createUserWithEmailAndPassword,updateProfile}from"https://www.gstatic.com/firebasejs/11.10.0/firebase-auth.js";
-import{getFirestore,collection,query,where,getDocs,doc,getDoc,setDoc,serverTimestamp}from"https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js";
-const cfg={apiKey:"AIzaSyC_PcarMTT5Un7qfSLzf92o5OGn5rginsI",authDomain:"fixzy-update.firebaseapp.com",projectId:"fixzy-update",storageBucket:"fixzy-update.firebasestorage.app",messagingSenderId:"995892519622",appId:"1:995892519622:web:fa41047944d8e5b35d6dc7"};
-const app=getApps().length?getApp():initializeApp(cfg),auth=getAuth(app),db=getFirestore(app);
-const $=id=>document.getElementById(id);
-const esc=v=>String(v??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]));
-const rupiah=n=>"Rp "+(Number(n)||0).toLocaleString("id-ID");
-let ownerUid="",profile={},accounts=[],editId=null,ready=false;
-const norm=v=>String(v??"").trim().toLowerCase();
-
-async function load(){
-  const s=await getDocs(query(collection(db,"users"),where("ownerUid","==",ownerUid)));
-  accounts=s.docs.map(d=>({id:d.id,...d.data()})).filter(x=>["employee","reseller"].includes(norm(x.role)));
-  render();
-  $("status").textContent=`✓ ${accounts.length} akun`;
+</style><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>FIXZY Izin Akses - WA 100% WORK</title></head><body style="font-family:Arial;padding:20px">
+<h2>TEST WA LANGSUNG - TANPA POPUP RIBET</h2>
+<input id="no" placeholder="08xxx" value="0895707182299"><br><br>
+<textarea id="pesan" style="width:100%;height:120px">Halo Zaka 👋
+Email: zhacky@gmail.com
+Password: 123456
+Login: https://fixzy-olive.vercel.app/login.html</textarea><br><br>
+<button onclick="testWA()" style="background:#25D366;color:#fff;padding:12px 20px;border:0;border-radius:8px;font-weight:bold">KIRIM WA TEST (RUMUS DATA PENJUALAN)</button>
+<br><br>
+<a id="manual" href="#" target="_blank" style="word-break:break-all;color:blue"></a>
+<script>
+function normalizePhone(v){let n=String(v||"").replace(/\D/g,"");if(!n)return"";if(n.startsWith("0"))n="62"+n.slice(1);else if(n.startsWith("8"))n="62"+n;return n}
+function testWA(){
+  const phone=document.getElementById("no").value;
+  const msg=document.getElementById("pesan").value;
+  const n=normalizePhone(phone);
+  const u="https://wa.me/"+n+"?text="+encodeURIComponent(msg);
+  document.getElementById("manual").href=u;
+  document.getElementById("manual").textContent=u;
+  // RUMUS EXACT DATA PENJUALAN YANG 100% WORK
+  try{const w=window.open(u,"_blank");if(!w){window.location.href=u;}}catch(e){window.location.href=u;}
 }
-function render(){
-  const role=$("roleFilter").value,q=norm($("cari").value);
-  const all=accounts;
-  $("total").textContent=all.length;
-  $("aktif").textContent=all.filter(a=>norm(a.status)==="aktif").length;
-  $("jmlKaryawan").textContent=all.filter(a=>a.role==="employee").length;
-  $("jmlReseller").textContent=all.filter(a=>a.role==="reseller").length;
-  const arr=all.filter(a=>(!role||a.role===role)&&(!q||norm(a.nama||a.namaKaryawan||"").includes(q)||norm(a.email||"").includes(q)));
-  $("tbody").innerHTML=arr.length?arr.map(a=>`<tr><td><b>${esc(a.nama||a.namaKaryawan||"-")}</b></td><td>${esc(a.email||"-")}</td><td>${esc(a.noWA||a.wa||"-")}<br><a href="#" onclick="event.preventDefault();kirimUlangWA('${a.id}')" style="font-size:10px;color:#2563eb">📲 Kirim WA</a></td><td>${esc(a.role||"-")}</td><td><span class="badge ${norm(a.status)==="aktif"?"active":""}">${esc(a.status||"-")}</span></td><td><button class="btn secondary" style="padding:6px 8px;font-size:10px" onclick="editAkun('${a.id}')">Edit</button> <button class="btn secondary" style="padding:6px 8px;font-size:10px" onclick="kirimUlangWA('${a.id}')">WA</button></td></tr>`).join(""):`<tr><td colspan="6" class="empty">Belum ada akun</td></tr>`;
-}
-window.render=render;
-window.resetFilter=()=>{$("roleFilter").value="";$("cari").value="";render();};
-window.bukaTambah=()=>{$("popupTitle").textContent="Tambah Akun";$("fNama").value="";$("fEmail").value="";$("fWA").value="";$("fPassword").value="";$("fJabatan").value="";$("fUpah").value="";$("fStatus").value="aktif";$("popup").classList.add("show")};
-window.tutupPopup=()=>{$("popup").classList.remove("show");};
-window.editAkun=id=>{const a=accounts.find(x=>x.id===id);if(!a)return;editId=id;$("fNama").value=a.nama||a.namaKaryawan||"";$("fEmail").value=a.email||"";$("fWA").value=a.noWA||a.wa||"";$("fPassword").value="";$("fJabatan").value=a.jabatan||"";$("fUpah").value=a.upahHarian||0;$("fStatus").value=a.status||"aktif";$("popup").classList.add("show")};
-
-async function buatAuthBaru(email,pass,n){
- const name="createUser-"+Date.now();
- const secondary=initializeApp(cfg,name),secondaryAuth=getAuth(secondary);
- try{const cred=await createUserWithEmailAndPassword(secondaryAuth,email,pass);await secondaryAuth.signOut();return cred.user.uid;}finally{try{await deleteApp(secondary)}catch{}}
-}
-
-window.simpanAkun=async()=>{
-  const n=$("fNama").value.trim(),r=$("fRole").value,email=$("fEmail").value.trim().toLowerCase(),wa=$("fWA").value.trim(),pass=$("fPassword").value,j=$("fJabatan").value.trim(),upah=Number($("fUpah").value)||0,status=$("fStatus").value;
-  if(!n||!email||!wa){alert("Lengkapi data");return}
-  if(pass.length<6&&!editId){alert("Password min 6");return}
-  try{
-    let newUid=editId||await buatAuthBaru(email,pass,n);
-    const data={uid:newUid,ownerUid,ownerId:ownerUid,businessUid:ownerUid,konterId:profile.konterId||"",ownerEmail:auth.currentUser.email,role:r,status,nama:n,namaKaryawan:n,email,noWA:wa,wa,jabatan:j,upahHarian:upah,izin:[],permissions:[],createdAt:serverTimestamp(),updatedAt:serverTimestamp()};
-    await setDoc(doc(db,"users",newUid),data,{merge:true});
-    $("popup").classList.remove("show");
-    const pesan=`*FIXZY - AKSES KARYAWAN*\n\nHalo ${n} 👋\n\nAkun kamu aktif:\nNama: *${n}*\nEmail: ${email}\nPassword: *${pass}*\nRole: ${r}\nJabatan: ${j||"-"}\nUpah: ${rupiah(upah)}\n\nLogin: https://fixzy-olive.vercel.app/login.html`;
-    window._waPending={phone:wa,message:pesan,name:n};
-    await load();
-    tampilWaPopup(window._waPending);
-  }catch(e){alert(e.message)}
-};
-
-// ====== WA FIX TOTAL - TANPA window.open yang di-block ======
-function normalizePhone(v){
-  let s=String(v||"").replace(/[^0-9]/g,"");
-  if(!s) return "";
-  if(s.startsWith("0")) s="62"+s.slice(1);
-  else if(s.startsWith("8")) s="62"+s;
-  return s;
-}
-function tampilWaPopup(data){
-  const nomor=normalizePhone(data.phone);
-  const url="https://wa.me/"+nomor+"?text="+encodeURIComponent(data.message);
-  $("waText").innerHTML=`Akun <b>${esc(data.name)}</b> berhasil.<br>Nomor: ${esc(data.phone)} → <b>${nomor}</b><br><br><div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:11px;white-space:pre-wrap;font-size:11px">${esc(data.message)}</div><br>URL WA:<br><span style="font-size:10px;word-break:break-all;color:#64748b">${esc(url)}</span>`;
-  $("waManualLink").href=url;
-  $("waManualLink").textContent=url;
-  $("waPopup").classList.add("show");
-}
-window.tutupWaPopup=()=>{$("waPopup").classList.remove("show");window._waPending=null;};
-window.kirimWhatsApp=()=>{
-  const d=window._waPending; if(!d) return;
-  const nomor=normalizePhone(d.phone);
-  const url="https://wa.me/"+nomor+"?text="+encodeURIComponent(d.message);
-  // CARA 1: pakai location.href langsung (paling lolos)
-  window.location.href=url;
-};
-window.kirimUlangWA=(id)=>{
-  const a=accounts.find(x=>x.id===id); if(!a) return;
-  const wa=a.noWA||a.wa||"";
-  const raw=`Halo ${a.nama||"-"} 👋\nEmail: ${a.email||"-"}\nRole: ${a.role||"-"}\nLogin: https://fixzy-olive.vercel.app/login.html`;
-  window._waPending={phone:wa,message:raw,name:a.nama||""};
-  tampilWaPopup(window._waPending);
-};
-
-onAuthStateChanged(auth,async u=>{
-  if(!u){location.href="login.html";return}
-  const s=await getDoc(doc(db,"users",u.uid));
-  profile=s.data()||{};
-  ownerUid=profile.role==="owner"?u.uid:(profile.ownerUid||u.uid);
-  ready=true; await load();
-});
 </script>
-<script>(function(){var loc=location.href.replace(/#.*$/,"");var ATTR_NAMES=["data-product-id","data-productid","data-product_id","product-id","productid","product_id","data-source-entity-id","source-entity-id","source_entity_id","data-product","data-metadata","data-meta"];var DATASET_KEYS=["productId","productid","product_id","sourceEntityId","sourceentityid","source_entity_id","product","metadata","meta"];function readProductId(value){if(typeof value!=="string"||value.length===0)return null;if(/^[0-9]{6,}$/.test(value))return value;var match=value.match(/(?:product(?:_|-)?id|source(?:_|-)?entity(?:_|-)?id)["'=:\s]+([0-9]{6,})/i);return match?match[1]:null}function extractProductId(start){for(var node=start;node&&node!==document.body;node=node.parentElement){for(var i=0;i<ATTR_NAMES.length;i++){var attrValue=node.getAttribute&&node.getAttribute(ATTR_NAMES[i]);var attrProductId=readProductId(attrValue);if(attrProductId)return attrProductId}var dataset=node.dataset||null;if(dataset){for(var j=0;j<DATASET_KEYS.length;j++){var dataValue=dataset[DATASET_KEYS[j]];var dataProductId=readProductId(dataValue);if(dataProductId)return dataProductId}}}return null}function isInlineMediaSlotElement(node){return !!(node&&node.getAttribute&&node.getAttribute("data-clippy-inline-media-slot")!==null)}function findInlineMediaSlot(start){for(var node=start;node&&node!==document.body;node=node.parentElement){if(isInlineMediaSlotElement(node))return node}return null}function readInlineMediaUrl(node){if(!node)return null;return node.getAttribute&&((node.getAttribute("data-clippy-inline-media-url")||node.getAttribute("data-url")||node.getAttribute("data_url")))||node.href||null}function stripHash(url){return String(url).replace(/#.*$/,"")}function urlsMatch(a,b){if(!a||!b)return false;try{return stripHash(new URL(a,loc).href)===stripHash(new URL(b,loc).href)}catch(_){return stripHash(a)===stripHash(b)}}function isFirstPartyReelUrl(value){try{var url=new URL(value,loc);if(url.protocol!=="https:")return false;var host=url.hostname.toLowerCase();var supported=host==="instagram.com"||host.endsWith(".instagram.com")||host==="facebook.com"||host.endsWith(".facebook.com");return supported&&/\/reels?\//i.test(url.pathname)}catch(_){return false}}function isInlineMediaUrlClick(node,href){var slot=findInlineMediaSlot(node);if(!slot)return false;var slotUrl=readInlineMediaUrl(slot);if(slotUrl)return urlsMatch(href,slotUrl);return isFirstPartyReelUrl(href)}function findDataHref(start){for(var node=start;node&&node!==document.body;node=node.parentElement){if(node.getAttribute){var href=node.getAttribute("data-href")||node.getAttribute("data-url");if(href)return{href:href,node:node}}}return null}var nativeOpen=window.open;window.open=function(url){if(parent!==window&&typeof url==="string"&&/^https?:\/\//.test(url)){parent.postMessage({type:"ecto:usercontent-link-click",href:url},"*");return null}return nativeOpen?nativeOpen.apply(window,arguments):null};document.addEventListener("click",function(e){var target=e.target instanceof Element?e.target:null;if(!target)return;if(parent===window)return;var a=target.closest?target.closest("a[href]"):null;if(a&&a.href&&/^https?:\/\//.test(a.href)&&a.href.replace(/#.*$/,"")!==loc){if(isInlineMediaUrlClick(a,a.href))return;var productId=extractProductId(target)||extractProductId(a);if(productId){e.preventDefault();parent.postMessage({type:"ecto-artifact-link-click",productId:productId},"*");return}e.preventDefault();parent.postMessage({type:"ecto:usercontent-link-click",href:a.href},"*");return}var dataHref=findDataHref(target);if(dataHref&&/^https?:\/\//.test(dataHref.href)&&dataHref.href.replace(/#.*$/,"")!==loc){if(isInlineMediaUrlClick(dataHref.node,dataHref.href))return;e.preventDefault();parent.postMessage({type:"ecto:usercontent-link-click",href:dataHref.href},"*")}},true)})();</script><script>(function(){var FOCUS_TYPE="ecto:artifact-focus-request";var CLOSE_TYPE="ecto:artifact-close-request";function focusArtifactDocument(){var body=document.body;if(!body)return;try{window.focus();}catch(e){}if(!body.hasAttribute("tabindex"))body.setAttribute("tabindex","-1");try{body.focus({preventScroll:true});}catch(e){try{body.focus();}catch(e2){}}}window.addEventListener("message",function(event){if(event.source!==window.parent)return;var data=event.data;if(!data||typeof data!=="object"||data.type!==FOCUS_TYPE)return;if(document.readyState==="loading"){document.addEventListener("DOMContentLoaded",focusArtifactDocument,{once:true});return;}focusArtifactDocument();});window.addEventListener("keydown",function(event){if(event.key!=="Escape")return;window.setTimeout(function(){if(event.defaultPrevented)return;window.parent.postMessage({type:CLOSE_TYPE},"*");},0);});})();</script></body>
-</html>
+<script>(function(){var loc=location.href.replace(/#.*$/,"");var ATTR_NAMES=["data-product-id","data-productid","data-product_id","product-id","productid","product_id","data-source-entity-id","source-entity-id","source_entity_id","data-product","data-metadata","data-meta"];var DATASET_KEYS=["productId","productid","product_id","sourceEntityId","sourceentityid","source_entity_id","product","metadata","meta"];function readProductId(value){if(typeof value!=="string"||value.length===0)return null;if(/^[0-9]{6,}$/.test(value))return value;var match=value.match(/(?:product(?:_|-)?id|source(?:_|-)?entity(?:_|-)?id)["'=:\s]+([0-9]{6,})/i);return match?match[1]:null}function extractProductId(start){for(var node=start;node&&node!==document.body;node=node.parentElement){for(var i=0;i<ATTR_NAMES.length;i++){var attrValue=node.getAttribute&&node.getAttribute(ATTR_NAMES[i]);var attrProductId=readProductId(attrValue);if(attrProductId)return attrProductId}var dataset=node.dataset||null;if(dataset){for(var j=0;j<DATASET_KEYS.length;j++){var dataValue=dataset[DATASET_KEYS[j]];var dataProductId=readProductId(dataValue);if(dataProductId)return dataProductId}}}return null}function isInlineMediaSlotElement(node){return !!(node&&node.getAttribute&&node.getAttribute("data-clippy-inline-media-slot")!==null)}function findInlineMediaSlot(start){for(var node=start;node&&node!==document.body;node=node.parentElement){if(isInlineMediaSlotElement(node))return node}return null}function readInlineMediaUrl(node){if(!node)return null;return node.getAttribute&&((node.getAttribute("data-clippy-inline-media-url")||node.getAttribute("data-url")||node.getAttribute("data_url")))||node.href||null}function stripHash(url){return String(url).replace(/#.*$/,"")}function urlsMatch(a,b){if(!a||!b)return false;try{return stripHash(new URL(a,loc).href)===stripHash(new URL(b,loc).href)}catch(_){return stripHash(a)===stripHash(b)}}function isFirstPartyReelUrl(value){try{var url=new URL(value,loc);if(url.protocol!=="https:")return false;var host=url.hostname.toLowerCase();var supported=host==="instagram.com"||host.endsWith(".instagram.com")||host==="facebook.com"||host.endsWith(".facebook.com");return supported&&/\/reels?\//i.test(url.pathname)}catch(_){return false}}function isInlineMediaUrlClick(node,href){var slot=findInlineMediaSlot(node);if(!slot)return false;var slotUrl=readInlineMediaUrl(slot);if(slotUrl)return urlsMatch(href,slotUrl);return isFirstPartyReelUrl(href)}function findDataHref(start){for(var node=start;node&&node!==document.body;node=node.parentElement){if(node.getAttribute){var href=node.getAttribute("data-href")||node.getAttribute("data-url");if(href)return{href:href,node:node}}}return null}var nativeOpen=window.open;window.open=function(url){if(parent!==window&&typeof url==="string"&&/^https?:\/\//.test(url)){parent.postMessage({type:"ecto:usercontent-link-click",href:url},"*");return null}return nativeOpen?nativeOpen.apply(window,arguments):null};document.addEventListener("click",function(e){var target=e.target instanceof Element?e.target:null;if(!target)return;if(parent===window)return;var a=target.closest?target.closest("a[href]"):null;if(a&&a.href&&/^https?:\/\//.test(a.href)&&a.href.replace(/#.*$/,"")!==loc){if(isInlineMediaUrlClick(a,a.href))return;var productId=extractProductId(target)||extractProductId(a);if(productId){e.preventDefault();parent.postMessage({type:"ecto-artifact-link-click",productId:productId},"*");return}e.preventDefault();parent.postMessage({type:"ecto:usercontent-link-click",href:a.href},"*");return}var dataHref=findDataHref(target);if(dataHref&&/^https?:\/\//.test(dataHref.href)&&dataHref.href.replace(/#.*$/,"")!==loc){if(isInlineMediaUrlClick(dataHref.node,dataHref.href))return;e.preventDefault();parent.postMessage({type:"ecto:usercontent-link-click",href:dataHref.href},"*")}},true)})();</script><script>(function(){var FOCUS_TYPE="ecto:artifact-focus-request";var CLOSE_TYPE="ecto:artifact-close-request";function focusArtifactDocument(){var body=document.body;if(!body)return;try{window.focus();}catch(e){}if(!body.hasAttribute("tabindex"))body.setAttribute("tabindex","-1");try{body.focus({preventScroll:true});}catch(e){try{body.focus();}catch(e2){}}}window.addEventListener("message",function(event){if(event.source!==window.parent)return;var data=event.data;if(!data||typeof data!=="object"||data.type!==FOCUS_TYPE)return;if(document.readyState==="loading"){document.addEventListener("DOMContentLoaded",focusArtifactDocument,{once:true});return;}focusArtifactDocument();});window.addEventListener("keydown",function(event){if(event.key!=="Escape")return;window.setTimeout(function(){if(event.defaultPrevented)return;window.parent.postMessage({type:CLOSE_TYPE},"*");},0);});})();</script></body></html>
