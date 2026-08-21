@@ -88,12 +88,22 @@ th{background:#f8fafc;color:#475569;font-size:10px}
    <div class="body">
     <div class="info"><b>Hak akses:</b> hanya Owner dan Super Admin yang dapat input/edit. Owner hanya untuk konternya sendiri. Super Admin dapat memilih Owner tujuan.<br><br>Data ini menjadi sumber nama teknisi/karyawan untuk halaman Absensi. Upah harian disimpan di data karyawan dan akan dibaca otomatis saat menghitung upah.</div>
     <div class="grid" style="margin-top:12px">
-     <div class="field"><label>NAMA KARYAWAN / TEKNISI</label><input id="nama" placeholder="Nama lengkap"></div>
+     <div class="field">
+      <label>PILIH KARYAWAN / TEKNISI</label>
+      <select id="pilihKaryawanInput" onchange="pilihDataKaryawan()">
+       <option value="">-- Pilih karyawan --</option>
+       <option value="__new__">＋ Karyawan Baru</option>
+      </select>
+     </div>
+     <div class="field" id="namaBaruField" style="display:none">
+      <label>NAMA KARYAWAN / TEKNISI BARU</label>
+      <input id="nama" placeholder="Nama lengkap">
+     </div>
      <div class="field"><label>JABATAN</label>
       <select id="jabatan"><option value="Teknisi">Teknisi</option><option value="Kasir">Kasir</option><option value="Admin">Admin</option><option value="Kurir">Kurir</option><option value="Lainnya">Lainnya</option></select>
      </div>
-     <div class="field"><label>NO. WHATSAPP</label><input id="wa" inputmode="tel" placeholder="08xxxxxxxxxx"></div>
-     <div class="field"><label>UPAH HARIAN</label><input id="upah" inputmode="numeric" placeholder="Contoh 100000"></div>
+     <div class="field"><label>NO. WHATSAPP <span style="font-weight:400;color:#94a3b8">• otomatis</span></label><input id="wa" inputmode="tel" placeholder="08xxxxxxxxxx"></div>
+     <div class="field"><label>UPAH HARIAN <span style="font-weight:400;color:#94a3b8">• otomatis</span></label><input id="upah" inputmode="numeric" placeholder="Contoh 100000"></div>
      <div class="field"><label>STATUS KARYAWAN</label>
       <select id="statusKaryawan"><option value="aktif">Aktif</option><option value="nonaktif">Nonaktif</option></select>
      </div>
@@ -257,6 +267,7 @@ async function muatKaryawanOwner(){
      .filter(a=>String(a.status||"aktif").toLowerCase()!=="nonaktif");
    renderKaryawan();
    isiDropdownTeknisi();
+   isiDropdownKaryawanInput("");
  }catch(e){
    console.error(e);
    notice("❌ Gagal Memuat","Data karyawan Owner tersebut tidak dapat dimuat.");
@@ -284,6 +295,57 @@ async function loadKaryawan(){
  isiDropdown();
 }
 
+
+function isiDropdownKaryawanInput(selectedId=""){
+ const role=String(profile.role||"").toLowerCase().trim();
+ const activeList=karyawan.filter(a=>String(a.status||"aktif").toLowerCase()!=="nonaktif");
+ $("pilihKaryawanInput").innerHTML=
+   '<option value="">-- Pilih karyawan --</option>'+
+   activeList.map(a=>`<option value="${esc(a.id)}">${esc(nama(a))} • ${esc(a.jabatan||"Teknisi")}</option>`).join("")+
+   '<option value="__new__">＋ Karyawan Baru</option>';
+ if(selectedId) $("pilihKaryawanInput").value=selectedId;
+}
+
+function pilihDataKaryawan(){
+ const id=$("pilihKaryawanInput").value;
+ if(id==="__new__"){
+   editingId=null;
+   $("namaBaruField").style.display="";
+   $("nama").value="";
+   $("wa").value="";
+   $("upah").value="";
+   $("jabatan").value="Teknisi";
+   $("statusKaryawan").value="aktif";
+   $("role").value="employee";
+   $("inputStatus").textContent="Karyawan Baru";
+   return;
+ }
+ if(!id){
+   $("namaBaruField").style.display="none";
+   $("nama").value="";
+   $("wa").value="";
+   $("upah").value="";
+   $("jabatan").value="Teknisi";
+   $("statusKaryawan").value="aktif";
+   $("role").value="employee";
+   editingId=null;
+   $("inputStatus").textContent="-";
+   return;
+ }
+ const a=karyawan.find(x=>x.id===id);
+ if(!a)return;
+ editingId=id;
+ $("namaBaruField").style.display="";
+ $("nama").value=nama(a);
+ $("wa").value=a.noWA||a.wa||"";
+ $("upah").value=Number(a.upahHarian??a.upah??0);
+ $("jabatan").value=a.jabatan||"Teknisi";
+ $("statusKaryawan").value=a.status||"aktif";
+ $("role").value=a.role||"employee";
+ $("inputStatus").textContent="Data terpilih • otomatis";
+}
+
+
 function renderKaryawan(){
  const q=($("cari").value||"").toLowerCase().trim();
  const data=karyawan.filter(a=>
@@ -310,39 +372,49 @@ function isiDropdown(){
  aktif.map(a=>`<option value="${esc(a.id)}">${esc(nama(a))} • ${esc(a.jabatan||"Teknisi")}</option>`).join("");
 }
 
-window.editKaryawan=id=>{
+window.editKaryawan=async id=>{
  const loginRole=String(profile.role||"").toLowerCase().trim();
- if(loginRole!=="owner"&&loginRole!=="superadmin"){notice("🔒 Akses Ditolak","Hanya Owner dan Super Admin yang dapat mengedit data karyawan.");return}
+ if(loginRole!=="owner"&&loginRole!=="superadmin"){
+   notice("🔒 Akses Ditolak","Hanya Owner dan Super Admin yang dapat mengedit data karyawan.");return;
+ }
  const a=karyawan.find(x=>x.id===id);if(!a)return;
  if(loginRole==="owner" && String(a.ownerUid||a.ownerId||"")!==uid){
    notice("🔒 Akses Ditolak","Owner hanya dapat mengedit karyawan milik konternya sendiri.");return;
  }
  editingId=id;
- $("nama").value=nama(a);
- $("jabatan").value=a.jabatan||"Teknisi";
- $("wa").value=a.noWA||a.wa||"";
- $("upah").value=Number(a.upahHarian??a.upah??0);
- $("statusKaryawan").value=a.status||"aktif";
- $("role").value=a.role||"employee";
- if(String(profile.role||"").toLowerCase()==="superadmin" && $("pilihOwner")){
+ if(loginRole==="superadmin" && $("pilihOwner")){
    $("pilihOwner").value=String(a.ownerUid||a.ownerId||"");
+   await muatKaryawanOwner();
  }
+ isiDropdownKaryawanInput(id);
+ $("pilihKaryawanInput").value=id;
+ $("namaBaruField").style.display="";
+ pilihDataKaryawan();
  bukaTab("input");
- $("inputStatus").textContent="Mode Edit";
  window.scrollTo({top:0,behavior:"smooth"});
 };
 
 window.resetForm=()=>{
  editingId=null;
+ if($("pilihKaryawanInput"))$("pilihKaryawanInput").value="";
+ $("namaBaruField").style.display="none";
  ["nama","wa","upah"].forEach(id=>$(id).value="");
- $("jabatan").value="Teknisi";$("statusKaryawan").value="aktif";$("role").value="employee";
- if($("pilihOwner"))$("pilihOwner").value="";
+ $("jabatan").value="Teknisi";
+ $("statusKaryawan").value="aktif";
+ $("role").value="employee";
+ if($("pilihOwner") && String(profile.role||"").toLowerCase().trim()==="superadmin"){
+   // Owner selection tetap dipertahankan agar Super Admin bisa menambah
+   // beberapa karyawan pada Owner yang sama.
+ }
  $("inputStatus").textContent="-";
 };
 
 window.simpanKaryawan=async()=>{
+ const selectedId=String($("pilihKaryawanInput")?.value||"").trim();
+ const isNew=selectedId==="__new__";
  const n=$("nama").value.trim();
- if(!n){notice("⚠️ Nama Belum Diisi","Silakan masukkan nama karyawan/teknisi.");return}
+ if(isNew && !n){notice("⚠️ Nama Belum Diisi","Silakan masukkan nama karyawan baru.");return}
+ if(!selectedId){notice("⚠️ Karyawan Belum Dipilih","Pilih karyawan dari dropdown terlebih dahulu.");return}
  try{
   const roleLogin=String(profile.role||"").toLowerCase().trim();
   if(roleLogin!=="owner"&&roleLogin!=="superadmin"){
@@ -364,7 +436,8 @@ window.simpanKaryawan=async()=>{
   const payload={
    ownerUid:targetOwner,
    ownerId:targetOwner,
-   nama:n,namaKaryawan:n,
+   nama:isNew?n:nama(karyawan.find(x=>x.id===selectedId)||{}),
+   namaKaryawan:isNew?n:nama(karyawan.find(x=>x.id===selectedId)||{}),
    jabatan:$("jabatan").value,
    noWA:$("wa").value.trim(),
    upahHarian:Number($("upah").value)||0,
@@ -373,7 +446,7 @@ window.simpanKaryawan=async()=>{
    updatedAt:serverTimestamp()
   };
 
-  if(editingId){
+  if(editingId && !isNew){
    const old=karyawan.find(x=>x.id===editingId);
    if(!old)throw new Error("Data karyawan tidak ditemukan.");
 
