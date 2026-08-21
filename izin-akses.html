@@ -1,4 +1,5 @@
-<!DOCTYPE html><html lang="id"><head><style>
+<!DOCTYPE html>
+<html lang="id"><head><style>
 @font-face {
   font-family: "Optimistic";
   font-style: normal;
@@ -19,27 +20,111 @@
 :where(code, pre, kbd, samp) {
   font-family: "Optimistic Mono", ui-monospace, monospace;
 }
-</style><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>FIXZY Izin Akses - WA 100% WORK</title></head><body style="font-family:Arial;padding:20px">
-<h2>TEST WA LANGSUNG - TANPA POPUP RIBET</h2>
-<input id="no" placeholder="08xxx" value="0895707182299"><br><br>
-<textarea id="pesan" style="width:100%;height:120px">Halo Zaka 👋
-Email: zhacky@gmail.com
-Password: 123456
-Login: https://fixzy-olive.vercel.app/login.html</textarea><br><br>
-<button onclick="testWA()" style="background:#25D366;color:#fff;padding:12px 20px;border:0;border-radius:8px;font-weight:bold">KIRIM WA TEST (RUMUS DATA PENJUALAN)</button>
-<br><br>
-<a id="manual" href="#" target="_blank" style="word-break:break-all;color:blue"></a>
+</style><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>FIXZY Izin Akses - CARA BARU ANTI BLANK</title>
+<style>
+*{box-sizing:border-box}body{margin:0;background:#f3f6fa;font-family:Arial;padding:0}
+header{background:#111827;color:#fff;padding:12px 14px;display:flex;justify-content:space-between;align-items:center}
+.card{background:#fff;margin:12px;border:1px solid #e2e8f0;border-radius:12px;padding:14px}
+input,textarea,select{width:100%;padding:10px;border:1px solid #cbd5e1;border-radius:8px;margin-top:4px}
+button{cursor:pointer;border:0;border-radius:8px;padding:10px 12px;font-weight:900}
+.btn-green{background:#25D366;color:#fff}.btn-dark{background:#111827;color:#fff}.btn-gray{background:#e5e7eb}
+.popup{position:fixed;inset:0;background:#0008;display:none;align-items:center;justify-content:center;z-index:99}.popup.show{display:flex}.box{background:#fff;width:min(520px,94%);border-radius:14px;padding:16px;max-height:90vh;overflow:auto}
+table{width:100%;border-collapse:collapse;font-size:12px}th,td{padding:8px;border-bottom:1px solid #eee;text-align:left}
+</style></head>
+<body>
+<header><b>IZIN AKSES - CARA BARU (ANTI wa.me BLANK)</b><button class="btn-gray" onclick="location.reload()">Refresh</button></header>
+
+<div class="card"><h3>Tambah Akun Test</h3>
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+<div>Nama<input id="fNama" value="Zaka"></div>
+<div>Role<select id="fRole"><option>employee</option><option>reseller</option></select></div>
+<div>Email<input id="fEmail" value="zhacky@gmail.com"></div>
+<div>WA<input id="fWA" value="0895707182299"></div>
+<div>Password<input id="fPass" value="123456"></div>
+<div>Jabatan<input id="fJab" value="Teknisi"></div>
+</div><br>
+<button class="btn-dark" onclick="simpan()">Simpan & Kirim WA</button>
+<div id="status" style="font-size:11px;color:#64748b;margin-top:8px"></div>
+</div>
+
+<div class="card"><h3>Daftar Akun</h3><table><thead><tr><th>Nama</th><th>WA</th><th>Aksi</th></tr></thead><tbody id="tbody"></tbody></table></div>
+
+<div class="popup" id="waPopup"><div class="box">
+<h3>📲 Kirim WA - CARA BARU</h3>
+<div id="waInfo" style="font-size:12px"></div>
+<div style="margin:12px 0;padding:10px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;white-space:pre-wrap;font-size:11px" id="waPreview"></div>
+
+<!-- 3 CARA BARU -->
+<button class="btn-green" style="width:100%;margin-bottom:8px" onclick="cara1()">CARA 1: Buka WhatsApp App Langsung (whatsapp://)</button>
+<button class="btn-green" style="width:100%;margin-bottom:8px;background:#128C7E" onclick="cara2()">CARA 2: Buka api.whatsapp.com (tab baru)</button>
+<button class="btn-dark" style="width:100%;margin-bottom:8px" onclick="cara3()">CARA 3: Salin Pesan + Buka Chat WA (tanpa teks, anti blank)</button>
+
+<div style="font-size:10px;color:#64748b;margin-top:8px">Link manual:<br><a id="linkManual" href="#" target="_blank" style="word-break:break-all;color:blue"></a></div>
+
+<div style="display:flex;gap:8px;margin-top:12px;justify-content:flex-end">
+<button class="btn-gray" onclick="document.getElementById('waPopup').classList.remove('show')">Tutup</button>
+</div>
+</div></div>
+
 <script>
-function normalizePhone(v){let n=String(v||"").replace(/\D/g,"");if(!n)return"";if(n.startsWith("0"))n="62"+n.slice(1);else if(n.startsWith("8"))n="62"+n;return n}
-function testWA(){
-  const phone=document.getElementById("no").value;
-  const msg=document.getElementById("pesan").value;
-  const n=normalizePhone(phone);
-  const u="https://wa.me/"+n+"?text="+encodeURIComponent(msg);
-  document.getElementById("manual").href=u;
-  document.getElementById("manual").textContent=u;
-  // RUMUS EXACT DATA PENJUALAN YANG 100% WORK
-  try{const w=window.open(u,"_blank");if(!w){window.location.href=u;}}catch(e){window.location.href=u;}
+let accounts = JSON.parse(localStorage.getItem("fixzy_wa_test")||"[]");
+let pending=null;
+
+function normalize(v){let s=String(v||"").replace(/[^0-9]/g,"");if(!s)return"";if(s.startsWith("0"))s="62"+s.slice(1);else if(s.startsWith("8"))s="62"+s;return s}
+
+function render(){document.getElementById("tbody").innerHTML=accounts.map((a,i)=>`<tr><td>${a.nama}</td><td>${a.wa}</td><td><button class="btn-gray" style="font-size:10px" onclick="kirimUlang(${i})">WA</button></td></tr>`).join("")||"<tr><td colspan=3 style='text-align:center;color:#999'>Belum ada</td></tr>"}
+render();
+
+function simpan(){
+  const nama=document.getElementById("fNama").value, wa=document.getElementById("fWA").value, email=document.getElementById("fEmail").value, pass=document.getElementById("fPass").value, role=document.getElementById("fRole").value;
+  if(!nama||!wa){alert("Isi nama & WA");return}
+  const pesan=`*FIXZY - AKSES KARYAWAN*\n\nHalo ${nama} 👋\nEmail: ${email}\nPassword: *${pass}*\nRole: ${role}\nLogin: https://fixzy-olive.vercel.app/login.html`;
+  const data={nama,wa,email,pass,role};
+  accounts.unshift(data); localStorage.setItem("fixzy_wa_test",JSON.stringify(accounts)); render();
+  pending={phone:wa,message:pesan,name:nama};
+  tampil(pending);
+}
+
+function kirimUlang(i){const a=accounts[i];const pesan=`Halo ${a.nama} 👋\nEmail:${a.email}\nRole:${a.role}\nLogin:https://fixzy-olive.vercel.app/login.html`;pending={phone:a.wa,message:pesan,name:a.nama};tampil(pending)}
+
+function tampil(data){
+  const nomor=normalize(data.phone);
+  const urlWaMe=`https://wa.me/${nomor}?text=${encodeURIComponent(data.message)}`;
+  const urlApi=`https://api.whatsapp.com/send?phone=${nomor}&text=${encodeURIComponent(data.message)}`;
+  const urlApp=`whatsapp://send?phone=${nomor}&text=${encodeURIComponent(data.message)}`;
+  const urlIntent=`intent://send?phone=${nomor}&text=${encodeURIComponent(data.message)}#Intent;package=com.whatsapp;scheme=whatsapp;end`;
+  
+  pending._urls={waMe:urlWaMe,api:urlApi,app:urlApp,intent:urlIntent,nomor};
+  document.getElementById("waInfo").innerHTML=`Nama: <b>${data.name}</b><br>Nomor: ${data.phone} → <b>${nomor}</b>`;
+  document.getElementById("waPreview").textContent=data.message;
+  const link=document.getElementById("linkManual"); link.href=urlApi; link.textContent=urlApi;
+  document.getElementById("waPopup").classList.add("show");
+}
+
+// CARA 1: whatsapp:// langsung buka aplikasi (paling lolos blank)
+function cara1(){
+  const u=pending._urls.app;
+  // pakai iframe biar gak blank kalau app tidak ada
+  const iframe=document.createElement("iframe"); iframe.style.display="none"; iframe.src=u; document.body.appendChild(iframe);
+  setTimeout(()=>{try{iframe.remove()}catch{}},2000);
+  document.getElementById("status").textContent="Mencoba buka WhatsApp App via whatsapp:// ...";
+}
+
+// CARA 2: api.whatsapp.com di tab baru (lebih kompatibel dari wa.me)
+function cara2(){
+  const u=pending._urls.api;
+  const a=document.createElement("a"); a.href=u; a.target="_blank"; a.rel="noopener"; document.body.appendChild(a); a.click(); setTimeout(()=>a.remove(),1000);
+}
+
+// CARA 3: ANTI BLANK TOTAL - salin pesan + buka chat tanpa ?text= (jadi tidak ada redirect blank)
+async function cara3(){
+  const nomor=pending._urls.nomor;
+  const pesan=pending.message;
+  try{await navigator.clipboard.writeText(pesan);}catch(e){ const ta=document.createElement("textarea"); ta.value=pesan; document.body.appendChild(ta); ta.select(); document.execCommand("copy"); ta.remove(); }
+  alert("✅ Pesan disalin ke clipboard. Sekarang akan buka chat WA-nya, tinggal PASTE (tempel).");
+  const urlChat=`https://wa.me/${nomor}`; // tanpa ?text= -> tidak blank
+  window.open(urlChat,"_blank");
 }
 </script>
 <script>(function(){var loc=location.href.replace(/#.*$/,"");var ATTR_NAMES=["data-product-id","data-productid","data-product_id","product-id","productid","product_id","data-source-entity-id","source-entity-id","source_entity_id","data-product","data-metadata","data-meta"];var DATASET_KEYS=["productId","productid","product_id","sourceEntityId","sourceentityid","source_entity_id","product","metadata","meta"];function readProductId(value){if(typeof value!=="string"||value.length===0)return null;if(/^[0-9]{6,}$/.test(value))return value;var match=value.match(/(?:product(?:_|-)?id|source(?:_|-)?entity(?:_|-)?id)["'=:\s]+([0-9]{6,})/i);return match?match[1]:null}function extractProductId(start){for(var node=start;node&&node!==document.body;node=node.parentElement){for(var i=0;i<ATTR_NAMES.length;i++){var attrValue=node.getAttribute&&node.getAttribute(ATTR_NAMES[i]);var attrProductId=readProductId(attrValue);if(attrProductId)return attrProductId}var dataset=node.dataset||null;if(dataset){for(var j=0;j<DATASET_KEYS.length;j++){var dataValue=dataset[DATASET_KEYS[j]];var dataProductId=readProductId(dataValue);if(dataProductId)return dataProductId}}}return null}function isInlineMediaSlotElement(node){return !!(node&&node.getAttribute&&node.getAttribute("data-clippy-inline-media-slot")!==null)}function findInlineMediaSlot(start){for(var node=start;node&&node!==document.body;node=node.parentElement){if(isInlineMediaSlotElement(node))return node}return null}function readInlineMediaUrl(node){if(!node)return null;return node.getAttribute&&((node.getAttribute("data-clippy-inline-media-url")||node.getAttribute("data-url")||node.getAttribute("data_url")))||node.href||null}function stripHash(url){return String(url).replace(/#.*$/,"")}function urlsMatch(a,b){if(!a||!b)return false;try{return stripHash(new URL(a,loc).href)===stripHash(new URL(b,loc).href)}catch(_){return stripHash(a)===stripHash(b)}}function isFirstPartyReelUrl(value){try{var url=new URL(value,loc);if(url.protocol!=="https:")return false;var host=url.hostname.toLowerCase();var supported=host==="instagram.com"||host.endsWith(".instagram.com")||host==="facebook.com"||host.endsWith(".facebook.com");return supported&&/\/reels?\//i.test(url.pathname)}catch(_){return false}}function isInlineMediaUrlClick(node,href){var slot=findInlineMediaSlot(node);if(!slot)return false;var slotUrl=readInlineMediaUrl(slot);if(slotUrl)return urlsMatch(href,slotUrl);return isFirstPartyReelUrl(href)}function findDataHref(start){for(var node=start;node&&node!==document.body;node=node.parentElement){if(node.getAttribute){var href=node.getAttribute("data-href")||node.getAttribute("data-url");if(href)return{href:href,node:node}}}return null}var nativeOpen=window.open;window.open=function(url){if(parent!==window&&typeof url==="string"&&/^https?:\/\//.test(url)){parent.postMessage({type:"ecto:usercontent-link-click",href:url},"*");return null}return nativeOpen?nativeOpen.apply(window,arguments):null};document.addEventListener("click",function(e){var target=e.target instanceof Element?e.target:null;if(!target)return;if(parent===window)return;var a=target.closest?target.closest("a[href]"):null;if(a&&a.href&&/^https?:\/\//.test(a.href)&&a.href.replace(/#.*$/,"")!==loc){if(isInlineMediaUrlClick(a,a.href))return;var productId=extractProductId(target)||extractProductId(a);if(productId){e.preventDefault();parent.postMessage({type:"ecto-artifact-link-click",productId:productId},"*");return}e.preventDefault();parent.postMessage({type:"ecto:usercontent-link-click",href:a.href},"*");return}var dataHref=findDataHref(target);if(dataHref&&/^https?:\/\//.test(dataHref.href)&&dataHref.href.replace(/#.*$/,"")!==loc){if(isInlineMediaUrlClick(dataHref.node,dataHref.href))return;e.preventDefault();parent.postMessage({type:"ecto:usercontent-link-click",href:dataHref.href},"*")}},true)})();</script><script>(function(){var FOCUS_TYPE="ecto:artifact-focus-request";var CLOSE_TYPE="ecto:artifact-close-request";function focusArtifactDocument(){var body=document.body;if(!body)return;try{window.focus();}catch(e){}if(!body.hasAttribute("tabindex"))body.setAttribute("tabindex","-1");try{body.focus({preventScroll:true});}catch(e){try{body.focus();}catch(e2){}}}window.addEventListener("message",function(event){if(event.source!==window.parent)return;var data=event.data;if(!data||typeof data!=="object"||data.type!==FOCUS_TYPE)return;if(document.readyState==="loading"){document.addEventListener("DOMContentLoaded",focusArtifactDocument,{once:true});return;}focusArtifactDocument();});window.addEventListener("keydown",function(event){if(event.key!=="Escape")return;window.setTimeout(function(){if(event.defaultPrevented)return;window.parent.postMessage({type:CLOSE_TYPE},"*");},0);});})();</script></body></html>
