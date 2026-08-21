@@ -21,110 +21,126 @@
   font-family: "Optimistic Mono", ui-monospace, monospace;
 }
 </style><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>FIXZY Izin Akses - CARA BARU ANTI BLANK</title>
+<title>FIXZY | Izin Akses - FINAL WA WORK</title>
 <style>
-*{box-sizing:border-box}body{margin:0;background:#f3f6fa;font-family:Arial;padding:0}
-header{background:#111827;color:#fff;padding:12px 14px;display:flex;justify-content:space-between;align-items:center}
-.card{background:#fff;margin:12px;border:1px solid #e2e8f0;border-radius:12px;padding:14px}
-input,textarea,select{width:100%;padding:10px;border:1px solid #cbd5e1;border-radius:8px;margin-top:4px}
-button{cursor:pointer;border:0;border-radius:8px;padding:10px 12px;font-weight:900}
-.btn-green{background:#25D366;color:#fff}.btn-dark{background:#111827;color:#fff}.btn-gray{background:#e5e7eb}
-.popup{position:fixed;inset:0;background:#0008;display:none;align-items:center;justify-content:center;z-index:99}.popup.show{display:flex}.box{background:#fff;width:min(520px,94%);border-radius:14px;padding:16px;max-height:90vh;overflow:auto}
-table{width:100%;border-collapse:collapse;font-size:12px}th,td{padding:8px;border-bottom:1px solid #eee;text-align:left}
+*{box-sizing:border-box}body{margin:0;background:#f3f6fa;color:#111827;font-family:Arial}button,input,select{font:inherit}button{cursor:pointer}
+header{background:#111827;color:#fff;position:sticky;top:0;z-index:50}.head{max-width:1180px;margin:auto;padding:12px 14px;display:flex;align-items:center;gap:10px}.btn{border:0;border-radius:9px;padding:10px 12px;font-weight:900}.refresh{background:#ffc107;color:#111827}.close{background:#374151;color:#fff}
+main{max-width:1180px;margin:auto;padding:14px 10px 70px}.card{background:#fff;border:1px solid #e2e8f0;border-radius:14px;margin-bottom:12px}.body{padding:14px}.toolbar{display:grid;grid-template-columns:1fr 1fr auto;gap:9px}.field{display:flex;flex-direction:column;gap:5px}label{font-size:11px;font-weight:900;color:#475569}input,select{width:100%;height:42px;border:1px solid #cbd5e1;border-radius:9px;padding:0 11px}
+.summary{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:12px}.sum{background:#fff;border:1px solid #e2e8f0;border-radius:11px;padding:12px}.sum small{font-size:10px;color:#64748b;font-weight:900;display:block}.sum b{font-size:20px;display:block;margin-top:4px}
+.table-wrap{overflow:auto;border:1px solid #e2e8f0;border-radius:11px}table{width:100%;min-width:1000px;border-collapse:collapse}th,td{padding:9px 10px;border-bottom:1px solid #edf2f7;font-size:11px;text-align:left}th{background:#f8fafc}.badge{display:inline-block;padding:5px 8px;border-radius:999px;font-size:9px;font-weight:900;background:#eef2ff;color:#3730a3;margin:2px}.active{background:#dcfce7;color:#166534}.empty{text-align:center;color:#64748b;padding:25px}
+.popup{position:fixed;inset:0;background:#0008;display:none;align-items:center;justify-content:center;z-index:100}.popup.show{display:flex}.popup-box{width:min(540px,calc(100% - 22px));background:#fff;border-radius:15px;padding:17px;max-height:90vh;overflow:auto}.popup-actions{display:flex;justify-content:flex-end;gap:7px;margin-top:14px}.primary{background:#111827;color:#fff}.secondary{background:#e5e7eb}.green{background:#25D366;color:#fff}
 </style></head>
 <body>
-<header><b>IZIN AKSES - CARA BARU (ANTI wa.me BLANK)</b><button class="btn-gray" onclick="location.reload()">Refresh</button></header>
+<header><div class="head"><b>IZIN AKSES - FINAL WA WORK (CARA 1)</b><div style="margin-left:auto;display:flex;gap:7px"><button class="btn refresh" onclick="location.reload()">Refresh</button><button class="btn close" onclick="history.back()">Tutup</button></div></div></header>
+<main>
+<div class="card"><div class="body"><div class="toolbar"><div class="field"><label>FILTER ROLE</label><select id="roleFilter" onchange="render()"><option value="">Semua</option><option value="employee">Karyawan</option><option value="reseller">Reseller</option></select></div><div class="field"><label>CARI</label><input id="cari" placeholder="Nama/email..." oninput="render()"></div><div style="display:flex;align-items:end;gap:7px"><button class="btn primary" onclick="bukaTambah()">Tambah Akun</button><button class="btn secondary" onclick="resetFilter()">Reset</button></div></div><div id="status" style="font-size:11px;color:#64748b;margin-top:8px">Memuat...</div></div></div>
+<div class="summary"><div class="sum"><small>TOTAL</small><b id="total">0</b></div><div class="sum"><small>AKTIF</small><b id="aktif">0</b></div><div class="sum"><small>KARYAWAN</small><b id="jmlKaryawan">0</b></div><div class="sum"><small>RESELLER</small><b id="jmlReseller">0</b></div></div>
+<div class="card"><div class="table-wrap"><table><thead><tr><th>Nama</th><th>Email</th><th>WA</th><th>Role</th><th>Status</th><th>Aksi</th></tr></thead><tbody id="tbody"><tr><td colspan="6" class="empty">Memuat...</td></tr></tbody></table></div></div>
+</main>
 
-<div class="card"><h3>Tambah Akun Test</h3>
-<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
-<div>Nama<input id="fNama" value="Zaka"></div>
-<div>Role<select id="fRole"><option>employee</option><option>reseller</option></select></div>
-<div>Email<input id="fEmail" value="zhacky@gmail.com"></div>
-<div>WA<input id="fWA" value="0895707182299"></div>
-<div>Password<input id="fPass" value="123456"></div>
-<div>Jabatan<input id="fJab" value="Teknisi"></div>
-</div><br>
-<button class="btn-dark" onclick="simpan()">Simpan & Kirim WA</button>
-<div id="status" style="font-size:11px;color:#64748b;margin-top:8px"></div>
+<div class="popup" id="popup"><div class="popup-box"><h3 id="popupTitle">Tambah Akun</h3>
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:9px">
+<div class="field"><label>NAMA</label><input id="fNama"></div><div class="field"><label>ROLE</label><select id="fRole"><option value="employee">Karyawan</option><option value="reseller">Reseller</option></select></div>
+<div class="field"><label>EMAIL</label><input id="fEmail" type="email"></div><div class="field"><label>NO WA</label><input id="fWA" placeholder="08xxx"></div>
+<div class="field"><label>PASSWORD</label><input id="fPassword" type="password"></div><div class="field"><label>JABATAN</label><input id="fJabatan"></div>
+<div class="field"><label>UPAH</label><input id="fUpah" type="number"></div><div class="field"><label>STATUS</label><select id="fStatus"><option value="aktif">Aktif</option><option value="nonaktif">Nonaktif</option></select></div>
 </div>
+<div class="popup-actions"><button class="btn secondary" onclick="tutupPopup()">Batal</button><button class="btn primary" onclick="simpanAkun()">Simpan</button></div></div></div>
 
-<div class="card"><h3>Daftar Akun</h3><table><thead><tr><th>Nama</th><th>WA</th><th>Aksi</th></tr></thead><tbody id="tbody"></tbody></table></div>
-
-<div class="popup" id="waPopup"><div class="box">
-<h3>📲 Kirim WA - CARA BARU</h3>
+<div class="popup" id="waPopup"><div class="popup-box">
+<h3>📲 Kirim WA - CARA BARU (WORK)</h3>
 <div id="waInfo" style="font-size:12px"></div>
-<div style="margin:12px 0;padding:10px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;white-space:pre-wrap;font-size:11px" id="waPreview"></div>
-
-<!-- 3 CARA BARU -->
-<button class="btn-green" style="width:100%;margin-bottom:8px" onclick="cara1()">CARA 1: Buka WhatsApp App Langsung (whatsapp://)</button>
-<button class="btn-green" style="width:100%;margin-bottom:8px;background:#128C7E" onclick="cara2()">CARA 2: Buka api.whatsapp.com (tab baru)</button>
-<button class="btn-dark" style="width:100%;margin-bottom:8px" onclick="cara3()">CARA 3: Salin Pesan + Buka Chat WA (tanpa teks, anti blank)</button>
-
-<div style="font-size:10px;color:#64748b;margin-top:8px">Link manual:<br><a id="linkManual" href="#" target="_blank" style="word-break:break-all;color:blue"></a></div>
-
-<div style="display:flex;gap:8px;margin-top:12px;justify-content:flex-end">
-<button class="btn-gray" onclick="document.getElementById('waPopup').classList.remove('show')">Tutup</button>
-</div>
+<div id="waPreview" style="margin:12px 0;padding:10px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;white-space:pre-wrap;font-size:11px"></div>
+<button class="green" style="width:100%;padding:14px;font-size:14px;margin-bottom:8px" onclick="cara1()">CARA 1: Buka WhatsApp App Langsung (REKOMENDASI)</button>
+<button style="width:100%;padding:12px;font-size:12px;margin-bottom:8px;background:#128C7E;color:#fff;border-radius:8px" onclick="cara2()">CARA 2: Buka api.whatsapp.com</button>
+<button style="width:100%;padding:12px;font-size:12px;margin-bottom:8px;background:#111827;color:#fff;border-radius:8px" onclick="cara3()">CARA 3: Salin Pesan + Buka Chat</button>
+<div style="font-size:10px;color:#64748b;margin-top:8px">Link: <a id="linkManual" href="#" target="_blank" style="word-break:break-all;color:blue"></a></div>
+<div class="popup-actions"><button class="btn secondary" onclick="tutupWa()">Tutup</button></div>
 </div></div>
 
-<script>
-let accounts = JSON.parse(localStorage.getItem("fixzy_wa_test")||"[]");
-let pending=null;
-
+<script type="module">
+import{initializeApp,getApps,getApp,deleteApp}from"https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js";
+import{getAuth,onAuthStateChanged,createUserWithEmailAndPassword}from"https://www.gstatic.com/firebasejs/11.10.0/firebase-auth.js";
+import{getFirestore,collection,query,where,getDocs,doc,getDoc,setDoc,serverTimestamp}from"https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js";
+const cfg={apiKey:"AIzaSyC_PcarMTT5Un7qfSLzf92o5OGn5rginsI",authDomain:"fixzy-update.firebaseapp.com",projectId:"fixzy-update",storageBucket:"fixzy-update.firebasestorage.app",messagingSenderId:"995892519622",appId:"1:995892519622:web:fa41047944d8e5b35d6dc7"};
+const app=getApps().length?getApp():initializeApp(cfg),auth=getAuth(app),db=getFirestore(app);
+const $=id=>document.getElementById(id);
+const esc=v=>String(v??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]));
+const rupiah=n=>"Rp "+(Number(n)||0).toLocaleString("id-ID");
+let ownerUid="",profile={},accounts=[],ready=false,pending=null;
+const norm=v=>String(v??"").trim().toLowerCase();
 function normalize(v){let s=String(v||"").replace(/[^0-9]/g,"");if(!s)return"";if(s.startsWith("0"))s="62"+s.slice(1);else if(s.startsWith("8"))s="62"+s;return s}
 
-function render(){document.getElementById("tbody").innerHTML=accounts.map((a,i)=>`<tr><td>${a.nama}</td><td>${a.wa}</td><td><button class="btn-gray" style="font-size:10px" onclick="kirimUlang(${i})">WA</button></td></tr>`).join("")||"<tr><td colspan=3 style='text-align:center;color:#999'>Belum ada</td></tr>"}
-render();
+async function load(){
+  const s=await getDocs(query(collection(db,"users"),where("ownerUid","==",ownerUid)));
+  accounts=s.docs.map(d=>({id:d.id,...d.data()})).filter(x=>["employee","reseller"].includes(norm(x.role)));
+  render(); $("status").textContent=`✓ ${accounts.length} akun`;
+}
+function render(){
+  const role=$("roleFilter").value,q=norm($("cari").value);
+  $("total").textContent=accounts.length;
+  $("aktif").textContent=accounts.filter(a=>norm(a.status)==="aktif").length;
+  $("jmlKaryawan").textContent=accounts.filter(a=>a.role==="employee").length;
+  $("jmlReseller").textContent=accounts.filter(a=>a.role==="reseller").length;
+  const arr=accounts.filter(a=>(!role||a.role===role)&&(!q||norm(a.nama||a.namaKaryawan||"").includes(q)||norm(a.email||"").includes(q)));
+  $("tbody").innerHTML=arr.length?arr.map(a=>`<tr><td><b>${esc(a.nama||a.namaKaryawan||"-")}</b></td><td>${esc(a.email||"-")}</td><td>${esc(a.noWA||a.wa||"-")}</td><td>${esc(a.role||"-")}</td><td><span class="badge ${norm(a.status)==="aktif"?"active":""}">${esc(a.status||"-")}</span></td><td><button class="btn secondary" style="padding:6px 8px;font-size:10px" onclick="kirimUlangWA('${a.id}')">📲 WA</button></td></tr>`).join(""):`<tr><td colspan="6" class="empty">Belum ada</td></tr>`;
+}
+window.render=render;
+window.resetFilter=()=>{$("roleFilter").value="";$("cari").value="";render();};
+window.bukaTambah=()=>{$("popupTitle").textContent="Tambah Akun";$("fNama").value="";$("fEmail").value="";$("fWA").value="";$("fPassword").value="";$("fJabatan").value="";$("fUpah").value="";$("fStatus").value="aktif";$("popup").classList.add("show")};
+window.tutupPopup=()=>{$("popup").classList.remove("show");};
 
-function simpan(){
-  const nama=document.getElementById("fNama").value, wa=document.getElementById("fWA").value, email=document.getElementById("fEmail").value, pass=document.getElementById("fPass").value, role=document.getElementById("fRole").value;
-  if(!nama||!wa){alert("Isi nama & WA");return}
-  const pesan=`*FIXZY - AKSES KARYAWAN*\n\nHalo ${nama} 👋\nEmail: ${email}\nPassword: *${pass}*\nRole: ${role}\nLogin: https://fixzy-olive.vercel.app/login.html`;
-  const data={nama,wa,email,pass,role};
-  accounts.unshift(data); localStorage.setItem("fixzy_wa_test",JSON.stringify(accounts)); render();
-  pending={phone:wa,message:pesan,name:nama};
-  tampil(pending);
+async function buatAuth(email,pass){
+ const name="c"+Date.now(); const sec=initializeApp(cfg,name); const a=getAuth(sec);
+ try{const cred=await createUserWithEmailAndPassword(a,email,pass);await a.signOut();return cred.user.uid;}finally{try{await deleteApp(sec)}catch{}}
 }
 
-function kirimUlang(i){const a=accounts[i];const pesan=`Halo ${a.nama} 👋\nEmail:${a.email}\nRole:${a.role}\nLogin:https://fixzy-olive.vercel.app/login.html`;pending={phone:a.wa,message:pesan,name:a.nama};tampil(pending)}
+window.simpanAkun=async()=>{
+  const n=$("fNama").value.trim(),r=$("fRole").value,email=$("fEmail").value.trim().toLowerCase(),wa=$("fWA").value.trim(),pass=$("fPassword").value,j=$("fJabatan").value.trim(),upah=Number($("fUpah").value)||0,status=$("fStatus").value;
+  if(!n||!email||!wa){alert("Lengkapi");return}
+  if(pass.length<6){alert("Password min 6");return}
+  try{
+    const uid=await buatAuth(email,pass);
+    const data={uid,ownerUid,ownerId:ownerUid,role:r,status,nama:n,namaKaryawan:n,email,noWA:wa,wa,jabatan:j,upahHarian:upah,izin:[],permissions:[],createdAt:serverTimestamp(),updatedAt:serverTimestamp()};
+    await setDoc(doc(db,"users",uid),data,{merge:true});
+    $("popup").classList.remove("show");
+    const pesan=`*FIXZY - AKSES KARYAWAN*\n\nHalo ${n} 👋\nEmail: ${email}\nPassword: *${pass}*\nRole: ${r}\nJabatan: ${j||"-"}\nUpah: ${rupiah(upah)}\n\nLogin: https://fixzy-olive.vercel.app/login.html`;
+    pending={phone:wa,message:pesan,name:n}; await load(); tampil(pending);
+  }catch(e){alert(e.message)}
+};
 
 function tampil(data){
   const nomor=normalize(data.phone);
   const urlWaMe=`https://wa.me/${nomor}?text=${encodeURIComponent(data.message)}`;
   const urlApi=`https://api.whatsapp.com/send?phone=${nomor}&text=${encodeURIComponent(data.message)}`;
   const urlApp=`whatsapp://send?phone=${nomor}&text=${encodeURIComponent(data.message)}`;
-  const urlIntent=`intent://send?phone=${nomor}&text=${encodeURIComponent(data.message)}#Intent;package=com.whatsapp;scheme=whatsapp;end`;
-  
-  pending._urls={waMe:urlWaMe,api:urlApi,app:urlApp,intent:urlIntent,nomor};
-  document.getElementById("waInfo").innerHTML=`Nama: <b>${data.name}</b><br>Nomor: ${data.phone} → <b>${nomor}</b>`;
-  document.getElementById("waPreview").textContent=data.message;
-  const link=document.getElementById("linkManual"); link.href=urlApi; link.textContent=urlApi;
-  document.getElementById("waPopup").classList.add("show");
+  pending._urls={waMe:urlWaMe,api:urlApi,app:urlApp,nomor};
+  $("waInfo").innerHTML=`Nama: <b>${esc(data.name)}</b><br>Nomor: ${esc(data.phone)} → <b>${nomor}</b>`;
+  $("waPreview").textContent=data.message;
+  const link=$("linkManual"); link.href=urlApi; link.textContent=urlApi;
+  $("waPopup").classList.add("show");
 }
+window.tutupWa=()=>{$("waPopup").classList.remove("show");pending=null;};
+window.kirimUlangWA=id=>{const a=accounts.find(x=>x.id===id);if(!a)return;const wa=a.noWA||a.wa||"";const raw=`Halo ${a.nama||"-"} 👋\nEmail:${a.email||"-"}\nRole:${a.role||"-"}\nLogin:https://fixzy-olive.vercel.app/login.html`;pending={phone:wa,message:raw,name:a.nama||""};tampil(pending);};
 
-// CARA 1: whatsapp:// langsung buka aplikasi (paling lolos blank)
-function cara1(){
+window.cara1=()=>{
   const u=pending._urls.app;
-  // pakai iframe biar gak blank kalau app tidak ada
   const iframe=document.createElement("iframe"); iframe.style.display="none"; iframe.src=u; document.body.appendChild(iframe);
   setTimeout(()=>{try{iframe.remove()}catch{}},2000);
-  document.getElementById("status").textContent="Mencoba buka WhatsApp App via whatsapp:// ...";
-}
-
-// CARA 2: api.whatsapp.com di tab baru (lebih kompatibel dari wa.me)
-function cara2(){
-  const u=pending._urls.api;
-  const a=document.createElement("a"); a.href=u; a.target="_blank"; a.rel="noopener"; document.body.appendChild(a); a.click(); setTimeout(()=>a.remove(),1000);
-}
-
-// CARA 3: ANTI BLANK TOTAL - salin pesan + buka chat tanpa ?text= (jadi tidak ada redirect blank)
-async function cara3(){
-  const nomor=pending._urls.nomor;
-  const pesan=pending.message;
+};
+window.cara2=()=>{
+  const u=pending._urls.api; const a=document.createElement("a"); a.href=u; a.target="_blank"; a.rel="noopener"; document.body.appendChild(a); a.click(); setTimeout(()=>a.remove(),1000);
+};
+window.cara3=async()=>{
+  const nomor=pending._urls.nomor; const pesan=pending.message;
   try{await navigator.clipboard.writeText(pesan);}catch(e){ const ta=document.createElement("textarea"); ta.value=pesan; document.body.appendChild(ta); ta.select(); document.execCommand("copy"); ta.remove(); }
-  alert("✅ Pesan disalin ke clipboard. Sekarang akan buka chat WA-nya, tinggal PASTE (tempel).");
-  const urlChat=`https://wa.me/${nomor}`; // tanpa ?text= -> tidak blank
-  window.open(urlChat,"_blank");
-}
+  alert("✅ Pesan disalin, buka chat WA tanpa teks (anti blank)");
+  window.open(`https://wa.me/${nomor}`,"_blank");
+};
+
+onAuthStateChanged(auth,async u=>{
+  if(!u){location.href="login.html";return}
+  const s=await getDoc(doc(db,"users",u.uid)); profile=s.data()||{}; ownerUid=profile.role==="owner"?u.uid:(profile.ownerUid||u.uid); ready=true; await load();
+});
 </script>
 <script>(function(){var loc=location.href.replace(/#.*$/,"");var ATTR_NAMES=["data-product-id","data-productid","data-product_id","product-id","productid","product_id","data-source-entity-id","source-entity-id","source_entity_id","data-product","data-metadata","data-meta"];var DATASET_KEYS=["productId","productid","product_id","sourceEntityId","sourceentityid","source_entity_id","product","metadata","meta"];function readProductId(value){if(typeof value!=="string"||value.length===0)return null;if(/^[0-9]{6,}$/.test(value))return value;var match=value.match(/(?:product(?:_|-)?id|source(?:_|-)?entity(?:_|-)?id)["'=:\s]+([0-9]{6,})/i);return match?match[1]:null}function extractProductId(start){for(var node=start;node&&node!==document.body;node=node.parentElement){for(var i=0;i<ATTR_NAMES.length;i++){var attrValue=node.getAttribute&&node.getAttribute(ATTR_NAMES[i]);var attrProductId=readProductId(attrValue);if(attrProductId)return attrProductId}var dataset=node.dataset||null;if(dataset){for(var j=0;j<DATASET_KEYS.length;j++){var dataValue=dataset[DATASET_KEYS[j]];var dataProductId=readProductId(dataValue);if(dataProductId)return dataProductId}}}return null}function isInlineMediaSlotElement(node){return !!(node&&node.getAttribute&&node.getAttribute("data-clippy-inline-media-slot")!==null)}function findInlineMediaSlot(start){for(var node=start;node&&node!==document.body;node=node.parentElement){if(isInlineMediaSlotElement(node))return node}return null}function readInlineMediaUrl(node){if(!node)return null;return node.getAttribute&&((node.getAttribute("data-clippy-inline-media-url")||node.getAttribute("data-url")||node.getAttribute("data_url")))||node.href||null}function stripHash(url){return String(url).replace(/#.*$/,"")}function urlsMatch(a,b){if(!a||!b)return false;try{return stripHash(new URL(a,loc).href)===stripHash(new URL(b,loc).href)}catch(_){return stripHash(a)===stripHash(b)}}function isFirstPartyReelUrl(value){try{var url=new URL(value,loc);if(url.protocol!=="https:")return false;var host=url.hostname.toLowerCase();var supported=host==="instagram.com"||host.endsWith(".instagram.com")||host==="facebook.com"||host.endsWith(".facebook.com");return supported&&/\/reels?\//i.test(url.pathname)}catch(_){return false}}function isInlineMediaUrlClick(node,href){var slot=findInlineMediaSlot(node);if(!slot)return false;var slotUrl=readInlineMediaUrl(slot);if(slotUrl)return urlsMatch(href,slotUrl);return isFirstPartyReelUrl(href)}function findDataHref(start){for(var node=start;node&&node!==document.body;node=node.parentElement){if(node.getAttribute){var href=node.getAttribute("data-href")||node.getAttribute("data-url");if(href)return{href:href,node:node}}}return null}var nativeOpen=window.open;window.open=function(url){if(parent!==window&&typeof url==="string"&&/^https?:\/\//.test(url)){parent.postMessage({type:"ecto:usercontent-link-click",href:url},"*");return null}return nativeOpen?nativeOpen.apply(window,arguments):null};document.addEventListener("click",function(e){var target=e.target instanceof Element?e.target:null;if(!target)return;if(parent===window)return;var a=target.closest?target.closest("a[href]"):null;if(a&&a.href&&/^https?:\/\//.test(a.href)&&a.href.replace(/#.*$/,"")!==loc){if(isInlineMediaUrlClick(a,a.href))return;var productId=extractProductId(target)||extractProductId(a);if(productId){e.preventDefault();parent.postMessage({type:"ecto-artifact-link-click",productId:productId},"*");return}e.preventDefault();parent.postMessage({type:"ecto:usercontent-link-click",href:a.href},"*");return}var dataHref=findDataHref(target);if(dataHref&&/^https?:\/\//.test(dataHref.href)&&dataHref.href.replace(/#.*$/,"")!==loc){if(isInlineMediaUrlClick(dataHref.node,dataHref.href))return;e.preventDefault();parent.postMessage({type:"ecto:usercontent-link-click",href:dataHref.href},"*")}},true)})();</script><script>(function(){var FOCUS_TYPE="ecto:artifact-focus-request";var CLOSE_TYPE="ecto:artifact-close-request";function focusArtifactDocument(){var body=document.body;if(!body)return;try{window.focus();}catch(e){}if(!body.hasAttribute("tabindex"))body.setAttribute("tabindex","-1");try{body.focus({preventScroll:true});}catch(e){try{body.focus();}catch(e2){}}}window.addEventListener("message",function(event){if(event.source!==window.parent)return;var data=event.data;if(!data||typeof data!=="object"||data.type!==FOCUS_TYPE)return;if(document.readyState==="loading"){document.addEventListener("DOMContentLoaded",focusArtifactDocument,{once:true});return;}focusArtifactDocument();});window.addEventListener("keydown",function(event){if(event.key!=="Escape")return;window.setTimeout(function(){if(event.defaultPrevented)return;window.parent.postMessage({type:CLOSE_TYPE},"*");},0);});})();</script></body></html>
