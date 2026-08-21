@@ -84,6 +84,8 @@ import{getAuth,onAuthStateChanged,createUserWithEmailAndPassword,updateProfile,s
 import{getFirestore,collection,query,where,getDocs,doc,getDoc,setDoc,serverTimestamp}from"https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js";
 const cfg={apiKey:"AIzaSyC_PcarMTT5Un7qfSLzf92o5OGn5rginsI",authDomain:"fixzy-update.firebaseapp.com",projectId:"fixzy-update",storageBucket:"fixzy-update.firebasestorage.app",messagingSenderId:"995892519622",appId:"1:995892519622:web:fa41047944d8e5b35d6dc7"};
 const app=getApps().length?getApp():initializeApp(cfg),auth=getAuth(app),db=getFirestore(app),$ = id=>document.getElementById(id);
+// simpan native open sebelum di-override wrapper artifact / iframe
+if(!window.__FIXZY_NATIVE_OPEN){ window.__FIXZY_NATIVE_OPEN = window.open.bind(window); }
 const rupiah=n=>"Rp "+(Number(n)||0).toLocaleString("id-ID"),esc=v=>String(v??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]));
 // PERMS SINKRON 100% DENGAN INDEX-FIXED-CEKKIS
 const PERMS=[
@@ -232,10 +234,60 @@ Terima kasih 🙏
  }catch(e){console.error(e);let m=e.message||String(e);if(e.code==="auth/email-already-in-use")m="Email sudah digunakan.";tampilNotice("❌ Gagal Menyimpan",esc(m))}
 };
 
-function nomorWhatsApp(v){let s=String(v||"").replace(/[^\d]/g,"");if(!s)return "";if(s.startsWith("0"))s="62"+s.slice(1);else if(s.startsWith("8"))s="62"+s;return s}
+function nomorWhatsApp(v){
+  let s=String(v||"").replace(/[^\d]/g,"");
+  if(!s) return "";
+  if(s.startsWith("0")) s="62"+s.slice(1);
+  else if(s.startsWith("8")) s="62"+s;
+  else if(!s.startsWith("62")) s=s; // sudah 62xxx biarin
+  return s;
+}
 function tampilWaPopup(data){$("waText").innerHTML=`Akun <b>${esc(data.name)}</b> berhasil disimpan.<br><br>Nomor WA: <b>${esc(data.phone||"-")}</b><br>Preview pesan:<div style="margin-top:8px;padding:11px;border:1px solid #e2e8f0;border-radius:10px;background:#f8fafc;white-space:pre-wrap;font-size:12px;line-height:1.6">${esc(data.message)}</div><div style="margin-top:8px;font-size:10px;color:#64748b">Pesan akan dibuka di WhatsApp dengan format tebal *...* otomatis.</div>`;$("waPopup").classList.add("show")}
 window.tutupWaPopup=()=>{$("waPopup").classList.remove("show");window._waPending=null};
-window.kirimWhatsApp=()=>{const d=window._waPending;if(!d)return;let nomor=nomorWhatsApp(d.phone);if(!nomor){$("waPopup").classList.remove("show");tampilNotice("⚠️ No. WA Tidak Valid","Nomor tidak valid.");return}if(nomor.startsWith("0")) nomor="62"+nomor.slice(1); const url="https://wa.me/"+nomor+"?text="+encodeURIComponent(d.message);$("waPopup").classList.remove("show");window.open(url,"_blank"); setTimeout(()=>{window._waPending=null;},500)};
+window.kirimWhatsApp=()=>{
+  const d=window._waPending;
+  if(!d) return;
+  let nomor=nomorWhatsApp(d.phone);
+  if(!nomor){
+    $("waPopup").classList.remove("show");
+    tampilNotice("⚠️ No. WA Tidak Valid","Nomor tidak valid. Cek kembali No. WA karyawan.");
+    return;
+  }
+  const url="https://wa.me/"+nomor+"?text="+encodeURIComponent(d.message);
+  $("waPopup").classList.remove("show");
+  // coba buka WA dengan beberapa cara agar work di iframe & artifact
+  let opened=false;
+  try{
+    const nativeOpen = window.__FIXZY_NATIVE_OPEN || window.open;
+    const w = nativeOpen.call(window, url, "_blank");
+    if(w) opened=true;
+  }catch(e){}
+  if(!opened){
+    try{
+      if(window.top && window.top!==window){
+        const topOpen = window.top.__FIXZY_NATIVE_OPEN || window.top.open;
+        const w2 = topOpen.call(window.top, url, "_blank");
+        if(w2) opened=true;
+      }
+    }catch(e){}
+  }
+  if(!opened){
+    try{
+      const a=document.createElement("a");
+      a.href=url; a.target="_blank"; a.rel="noopener noreferrer";
+      a.style.display="none";
+      document.body.appendChild(a);
+      a.click();
+      setTimeout(()=>{ try{a.remove();}catch{} }, 1500);
+      opened=true;
+    }catch(e){}
+  }
+  if(!opened){
+    // fallback terakhir - redirect halaman ini ke wa.me (akan membuka WA)
+    setTimeout(()=>{ window.location.href=url; }, 200);
+  }
+  setTimeout(()=>{ window._waPending=null; }, 800);
+};
 
 window.kirimResetPassword=async email=>{
  try{if(!validEmail(email))throw new Error("Email tidak valid.");await sendPasswordResetEmail(auth,email);tampilNotice("✅ Reset Password","Link reset dikirim ke "+esc(email)+".")}
