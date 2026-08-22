@@ -47,18 +47,22 @@ body.dark .summary{background:#0b0f14!important;border-color:#334155!important}
 @media(max-width:900px){.search-grid{grid-template-columns:1fr 1fr}table{min-width:900px}}
 @media(max-width:700px){.search-grid{grid-template-columns:1fr}.table-wrap{display:none}.cards{display:grid}header{height:68px}main{padding-top:80px}}
 </style>
-<script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/jspdf-autotable@3.8.2/dist/jspdf.plugin.autotable.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
+<script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
 </head>
 <body>
-<header><div class="head"><img class="logo" src="logo.png" alt="FIXZY"><div class="brand"><b>FIXZY - DATA SERVIS</b><small id="konterInfo">Memuat...</small></div><div class="head-btns"><button class="head-btn refresh" onclick="location.reload()">↻ Refresh</button><button class="head-btn" style="background:#16a34a;color:#fff" onclick="backupServisExcel()">📊 Excel</button><button class="head-btn" style="background:#dc2626;color:#fff" onclick="backupServisPDF()">📄 PDF</button><button class="head-btn moon" onclick="document.body.classList.toggle('dark')">🌙</button></div></div></header>
+<header><div class="head"><img class="logo" src="logo.png" alt="FIXZY"><div class="brand"><b>FIXZY - DATA SERVIS</b><small id="konterInfo">Memuat...</small></div><div class="head-btns"><button class="head-btn refresh" onclick="location.reload()">↻ Refresh</button><button class="head-btn moon" onclick="document.body.classList.toggle('dark')">🌙</button></div></div></header>
 <main>
 <div class="card summary" id="dataStats">Memuat data servis...</div>
 <div class="card"><div class="card-title">Pencarian Data Servis</div>
 <div class="search-grid"><div><label>CARI NOTA / NAMA / HP</label><input id="q" placeholder="Ketik nota, nama, no HP, barcode, produk..."></div><div><label>STATUS</label><select id="fStatus"><option value="">Semua Status</option><option value="masuk">Masuk</option><option value="nunggu_sparepart">Nunggu Sparepart</option><option value="proses">Proses</option><option value="selesai">Selesai</option><option value="diambil">Diambil</option><option value="batal">Batal</option></select></div><div><label>TANGGAL</label><input id="fTanggal" type="date"></div><div><label>SCAN BARCODE</label><button class="btn scan" onclick="bukaScan()" style="width:100%;height:43px">📷 Scan Barcode</button></div></div>
-<div id="statusMsg" style="font-size:11px;color:#64748b;margin-top:8px">Menunggu login...</div></div>
+<div id="statusMsg" style="font-size:11px;color:#64748b;margin-top:8px">Menunggu login...</div><div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px">
+<button class="btn" type="button" onclick="backupExcel()" style="background:#111827;color:#fff">📊 Backup ke Excel</button>
+<button class="btn" type="button" onclick="backupPDF()" style="background:#dc2626;color:#fff">📄 Backup ke PDF</button>
+</div>
+</div>
 <div class="table-wrap"><table><thead><tr><th>Tanggal</th><th>Nota & Barcode</th><th>Pelanggan & WA</th><th>Data Servisan</th><th>Produk Digunakan</th><th>Estimasi / Diskon / DP / Total</th><th>Pendapatan (jika Diambil)</th><th>Status & Aksi</th></tr></thead><tbody id="tbody"><tr><td colspan="8" style="text-align:center;color:#667085;padding:25px">Memuat Firebase...</td></tr></tbody></table></div>
 <div class="cards" id="cards"></div></main>
 <div class="popup" id="scanPopup"><div class="popup-box"><h3>📷 Scan Barcode Nota</h3><div style="font-size:11px;color:#64748b;margin-bottom:10px">Arahkan kamera ke barcode nota. Data tidak dirubah, hanya mencari.</div><div id="reader"></div><div id="scanResult" style="margin-top:10px;font-size:11px;color:#047857;font-weight:900"></div><div style="display:flex;gap:7px;justify-content:flex-end;margin-top:12px"><button class="btn secondary" onclick="tutupScan()">Tutup</button></div></div></div>
@@ -102,92 +106,112 @@ window.salinWA=async()=>{if(!pendingWA)return;try{await navigator.clipboard.writ
 window.bukaScan=()=>{$("scanPopup").classList.add("show");$("scanResult").textContent="Menyalakan kamera...";html5Qr=new Html5Qrcode("reader");html5Qr.start({facingMode:"environment"},{fps:10,qrbox:{width:250,height:250}},decodedText=>{$("scanResult").textContent="✅ Terdeteksi: "+decodedText;$("q").value=decodedText;render();setTimeout(()=>{tutupScan()},1000)},err=>{}).catch(e=>{$("scanResult").textContent="❌ Gagal buka kamera: "+e})};
 window.tutupScan=()=>{$("scanPopup").classList.remove("show");if(html5Qr){html5Qr.stop().then(()=>{html5Qr.clear();html5Qr=null}).catch(()=>{})}};
 $("q").addEventListener("input",render);$("fStatus").addEventListener("change",render);$("fTanggal").addEventListener("change",render);
-onAuthStateChanged(auth,async user=>{if(!user){location.replace("login.html");return}try{await loadProfile(user);await muatSemua()}catch(e){$("statusMsg").textContent="❌ "+e.message}});
 
 // =========================================================
-// BACKUP DATA SERVIS — TAMBAHAN SAJA
-// Tidak mengubah data Firebase.
-// Excel = seluruh data servis yang sudah dimuat.
-// PDF   = tabel backup seluruh data servis yang sudah dimuat.
+// BACKUP DATA SERVIS — POLA SAMA DENGAN DATA PENJUALAN
+// Tidak mengubah, menghapus, atau menulis ulang data Firebase.
 // =========================================================
-function servisBackupValue(v){
-  if(v===null||v===undefined)return "";
-  if(v instanceof Date)return v.toISOString();
-  if(typeof v==="object"){
-    try{return JSON.stringify(v);}
-    catch(e){return String(v);}
-  }
-  return v;
+function backupServisRows(){
+  const q=($("q").value||"").toLowerCase().trim();
+  const st=($("fStatus").value||"").toLowerCase().trim();
+  const tg=$("fTanggal").value||"";
+  return allRows.filter(r=>{
+    if(q){
+      const prodText=getProdukText(r).toLowerCase();
+      const hay=[getNota(r),getNama(r),getWa(r),getTipe(r),getKerusakan(r),prodText].join(" ").toLowerCase();
+      if(!hay.includes(q))return false;
+    }
+    if(st&&getStatus(r)!==st)return false;
+    if(tg&&!String(dateVal(r)).startsWith(tg))return false;
+    return true;
+  });
 }
-function servisBackupRows(){
-  return allRows.map(r=>({
-    "Tanggal":dateVal(r),
-    "Nota":getNota(r),
-    "Pelanggan":getNama(r),
-    "No WA":getWa(r),
-    "Tipe HP":getTipe(r),
-    "Kerusakan":getKerusakan(r),
-    "Produk":getProdukText(r),
-    "Estimasi":getEstimasi(r),
-    "Diskon":getDiskon(r),
-    "DP":getDP(r),
-    "Total":getTotal(r),
-    "Pendapatan":getPendapatan(r),
-    "Status":getStatus(r),
-    "ID Firebase":r.id,
-    "Data Lengkap":servisBackupValue(r)
-  }));
+function backupFileDateServis(){
+  const n=new Date(),z=x=>String(x).padStart(2,"0");
+  return `${n.getFullYear()}${z(n.getMonth()+1)}${z(n.getDate())}_${z(n.getHours())}${z(n.getMinutes())}`;
 }
-window.backupServisExcel=()=>{
+function backupProdukServis(r){
+  return getProdukText(r);
+}
+window.backupExcel=()=>{
   try{
-    if(!allRows.length){alert("Belum ada data servis untuk dibackup.");return;}
-    if(typeof XLSX==="undefined"){alert("Modul Excel belum termuat. Coba refresh halaman.");return;}
-    const rows=servisBackupRows();
-    const wb=XLSX.utils.book_new();
-    const ws=XLSX.utils.json_to_sheet(rows);
+    const rows=backupServisRows();
+    if(!rows.length){alert("Tidak ada data servis untuk dibackup.");return;}
+    const data=rows.map((r,i)=>({
+      "No":i+1,
+      "Tanggal":dateVal(r),
+      "Nomor Nota":getNota(r),
+      "Pelanggan":getNama(r),
+      "No WhatsApp":getWa(r),
+      "Tipe HP":getTipe(r),
+      "Kerusakan":getKerusakan(r),
+      "Produk Digunakan":backupProdukServis(r),
+      "Estimasi":getEstimasi(r),
+      "Diskon":getDiskon(r),
+      "DP":getDP(r),
+      "Total":getTotal(r),
+      "Pendapatan":getPendapatan(r),
+      "Status":getStatus(r),
+      "Tanggal Diambil":r.tanggalDiambil||"",
+      "Owner UID":r.ownerUid||r.ownerId||r.uid||""
+    }));
+    const ws=XLSX.utils.json_to_sheet(data);
     ws["!cols"]=[
-      {wch:12},{wch:18},{wch:22},{wch:16},{wch:22},{wch:28},{wch:35},
-      {wch:14},{wch:14},{wch:14},{wch:14},{wch:16},{wch:18},{wch:28},{wch:60}
+      {wch:6},{wch:12},{wch:24},{wch:24},{wch:18},{wch:22},{wch:32},
+      {wch:45},{wch:15},{wch:15},{wch:15},{wch:15},{wch:15},{wch:22},{wch:24},{wch:38}
     ];
+    const wb=XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb,ws,"Data Servis");
-    const meta=XLSX.utils.json_to_sheet([{
-      "Konter":konterName(),
-      "Owner UID":ownerUid,
-      "Tanggal Backup":new Date().toLocaleString("id-ID"),
-      "Jumlah Data":allRows.length
-    }]);
-    XLSX.utils.book_append_sheet(wb,meta,"Info Backup");
-    XLSX.writeFile(wb,`FIXZY-Backup-Servis-${new Date().toISOString().slice(0,10)}.xlsx`);
-  }catch(e){alert("Gagal backup Excel: "+e.message);}
+    XLSX.writeFile(wb,`backup-data-servis-${backupFileDateServis()}.xlsx`);
+  }catch(e){
+    alert("Backup Excel gagal: "+e.message);
+  }
 };
-
-window.backupServisPDF=()=>{
+window.backupPDF=()=>{
   try{
-    if(!allRows.length){alert("Belum ada data servis untuk dibackup.");return;}
-    if(!window.jspdf||!window.jspdf.jsPDF){alert("Modul PDF belum termuat. Coba refresh halaman.");return;}
+    const rows=backupServisRows();
+    if(!rows.length){alert("Tidak ada data servis untuk dibackup.");return;}
     const {jsPDF}=window.jspdf;
-    const doc=new jsPDF({orientation:"landscape",unit:"mm",format:"a4"});
-    const rows=servisBackupRows();
-    doc.setFontSize(14);doc.setFont("helvetica","bold");
-    doc.text("FIXZY - BACKUP DATA SERVIS",14,13);
-    doc.setFontSize(8);doc.setFont("helvetica","normal");
-    doc.text(`Konter: ${konterName()} | Backup: ${new Date().toLocaleString("id-ID")} | Data: ${rows.length}`,14,19);
-    doc.autoTable({
-      startY:23,
-      head:[["Tanggal","Nota","Pelanggan","Tipe HP","Produk","Total","DP","Pendapatan","Status"]],
-      body:rows.map(r=>[
-        r["Tanggal"],r["Nota"],r["Pelanggan"],r["Tipe HP"],r["Produk"],
-        money(r["Total"]),money(r["DP"]),money(r["Pendapatan"]),r["Status"]
-      ]),
-      styles:{fontSize:6,cellPadding:1.8,overflow:"linebreak"},
-      headStyles:{fillColor:[17,24,39],textColor:[255,255,255],fontStyle:"bold"},
-      columnStyles:{4:{cellWidth:48},2:{cellWidth:28},3:{cellWidth:28}},
-      margin:{left:10,right:10}
+    const pdf=new jsPDF({orientation:"landscape",unit:"mm",format:"a4"});
+    pdf.setFontSize(14);
+    pdf.text("BACKUP DATA SERVIS FIXZY",14,14);
+    pdf.setFontSize(8);
+    pdf.text(`Konter: ${konterName()} • Owner: ${ownerUid} • Data: ${rows.length} • Dibuat: ${new Date().toLocaleString("id-ID")}`,14,20);
+    const body=rows.map((r,i)=>[
+      i+1,
+      dateVal(r),
+      getNota(r),
+      getNama(r),
+      getTipe(r),
+      getKerusakan(r),
+      backupProdukServis(r),
+      money(getEstimasi(r)),
+      money(getDiskon(r)),
+      money(getDP(r)),
+      money(getTotal(r)),
+      money(getPendapatan(r)),
+      getStatus(r)
+    ]);
+    pdf.autoTable({
+      startY:25,
+      head:[["No","Tanggal","Nota","Pelanggan","Tipe HP","Kerusakan","Produk","Estimasi","Diskon","DP","Total","Pendapatan","Status"]],
+      body,
+      styles:{fontSize:5.5,cellPadding:1.3,overflow:"linebreak"},
+      headStyles:{fontSize:5.5},
+      columnStyles:{
+        0:{cellWidth:7},1:{cellWidth:17},2:{cellWidth:25},3:{cellWidth:25},
+        4:{cellWidth:25},5:{cellWidth:35},6:{cellWidth:45},7:{cellWidth:20},
+        8:{cellWidth:18},9:{cellWidth:18},10:{cellWidth:20},11:{cellWidth:22},12:{cellWidth:18}
+      },
+      margin:{left:8,right:8}
     });
-    doc.save(`FIXZY-Backup-Servis-${new Date().toISOString().slice(0,10)}.pdf`);
-  }catch(e){alert("Gagal backup PDF: "+e.message);}
+    pdf.save(`backup-data-servis-${backupFileDateServis()}.pdf`);
+  }catch(e){
+    alert("Backup PDF gagal: "+e.message);
+  }
 };
 
+onAuthStateChanged(auth,async user=>{if(!user){location.replace("login.html");return}try{await loadProfile(user);await muatSemua()}catch(e){$("statusMsg").textContent="❌ "+e.message}});
 </script>
 </body>
 </html>
