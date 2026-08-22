@@ -136,7 +136,7 @@ import{getFirestore,doc,getDoc,addDoc,collection,query,where,getDocs,runTransact
 const firebaseConfig={apiKey:"AIzaSyC_PcarMTT5Un7qfSLzf92o5OGn5rginsI",authDomain:"fixzy-update.firebaseapp.com",projectId:"fixzy-update",storageBucket:"fixzy-update.firebasestorage.app",messagingSenderId:"995892519622",appId:"1:995892519622:web:fa41047944d8e5b35d6dc7"};
 const app=getApps().length?getApp():initializeApp(firebaseConfig),auth=getAuth(app),db=getFirestore(app);
 
-let uid="",email="",profile={},balance=0,pendingWaUrl="";
+let uid="",email="",profile={},balance=0,pendingWaUrl="",balanceDocId="";
 let sessionReady=false,myOwnedPurchases=[],resellerTokenMap=new Map();
 
 const $=id=>document.getElementById(id);
@@ -199,16 +199,61 @@ async function loadAuthDirect(){
 }
 
 async function loadBalance(){
- if(!uid)return;
- try{
-  const s=await getDoc(doc(db,"resellerBalances",uid));
-  balance=s.exists()?Number(s.data()?.balance||0):0;
-  $("balance").textContent=rupiah(balance);
-  $("connectionState").textContent="● FIREBASE TERHUBUNG • SALDO TERBACA";
-  $("connectionState").style.color="#166534";
- }catch(e){
-  console.error(e);$("connectionState").textContent="● FIREBASE TERHUBUNG, SALDO GAGAL DIBACA";$("connectionState").style.color="#991b1b";
+ if(!uid)return false;
+ balanceDocId="";
+ const candidates=[];
+ const addCandidate=v=>{const x=String(v||"").trim();if(x&&!candidates.includes(x))candidates.push(x)};
+ addCandidate(uid);
+ addCandidate(profile.ownerUid);
+ addCandidate(profile.ownerId);
+ addCandidate(profile.resellerUid);
+ addCandidate(profile.userId);
+
+ let lastError=null;
+ for(const id of candidates){
+  try{
+   const s=await getDoc(doc(db,"resellerBalances",id));
+   if(s.exists()){
+    const d=s.data()||{};
+    balance=Number(d.balance??d.saldo??d.saldoTersedia??0)||0;
+    balanceDocId=id;
+    $("balance").textContent=rupiah(balance);
+    $("connectionState").textContent=id===uid
+      ?"● FIREBASE TERHUBUNG • SALDO TERBACA"
+      :"● FIREBASE TERHUBUNG • SALDO OWNER TERBACA";
+    $("connectionState").style.color="#166534";
+    return true;
+   }
+  }catch(e){
+   lastError=e;
+   /* Jika dokumen pertama ditolak rules, coba ID owner/reseller lain yang memang tersimpan di users. */
+  }
  }
+
+ /* Kompatibilitas jika saldo memang disimpan langsung di users/{uid}. */
+ try{
+  const us=await getDoc(doc(db,"users",uid));
+  if(us.exists()){
+   const d=us.data()||{};
+   const raw=d.resellerBalance??d.saldoReseller??d.saldoToken??d.saldo??d.balance;
+   if(raw!==undefined&&raw!==null&&raw!==""){
+    balance=Number(raw)||0;
+    balanceDocId="users/"+uid;
+    $("balance").textContent=rupiah(balance);
+    $("connectionState").textContent="● FIREBASE TERHUBUNG • SALDO AKUN TERBACA";
+    $("connectionState").style.color="#166534";
+    return true;
+   }
+  }
+ }catch(e){lastError=lastError||e}
+
+ balance=0;
+ $("balance").textContent="Rp 0";
+ $("connectionState").textContent=lastError?.code==="permission-denied"
+   ?"● FIREBASE TERHUBUNG, AKSES SALDO DITOLAK RULES"
+   :"● FIREBASE TERHUBUNG, DOKUMEN SALDO BELUM ADA";
+ $("connectionState").style.color="#991b1b";
+ return false;
 }
 
 function getPurchaseTokens(x){
@@ -321,8 +366,14 @@ async function createDepositRequest(){
  try{
   const nama=profile.namaKonter||profile.namaPemilik||profile.namaToko||profile.nama||profile.displayName||profile.name||email.split("@")[0]||"Reseller";
   const note=$("depositNote").value.trim();
+  const rawRole=String(profile.role||"owner").toLowerCase();
+  const ownerUid=String(profile.ownerUid||profile.ownerId||uid);
   const ref=await addDoc(collection(db,"saldoRequests"),{
-   resellerUid:uid,resellerEmail:email,resellerNama:nama,amount,jumlahSaldo:amount,status:"pending",requestStatus:"pending",
+   resellerUid:uid,resellerEmail:email,resellerNama:nama,
+   requesterUid:uid,requesterEmail:email,requesterRole:rawRole,
+   ownerUid,ownerId:ownerUid,
+   isOwnerReseller:rawRole==="owner",
+   amount,jumlahSaldo:amount,status:"pending",requestStatus:"pending",
    metode:"QRIS",catatan:note,notificationAdmin:true,notificationReseller:false,createdAt:serverTimestamp(),updatedAt:serverTimestamp()
   });
   $("depositAmount").value="";$("depositNote").value="";$("depositPreview").textContent="Rp 0";await loadHistory();
@@ -347,7 +398,13 @@ Terima kasih.`;
   const waUrl="https://api.whatsapp.com/send?phone="+waNumber+"&text="+encodeURIComponent(message);
   showModal("Request Saldo Terkirim",`Request ${rupiah(amount)} sudah tersimpan di Firebase dan berstatus MENUNGGU ADMIN.\n\nWhatsApp Admin akan dibuka untuk mengirim bukti transfer.`,waUrl);
   setTimeout(()=>openWhatsApp(waUrl),350);
- }catch(e){console.error(e);showModal("Gagal Mengirim",e?.message||String(e))}
+ }catch(e){
+  console.error(e);
+  const pesan=e?.code==="permission-denied"
+    ?"Akun OWNER sudah terbaca, tetapi Firestore Rules pada saldoRequests masih menolak OWNER. File ini sudah mengirim ownerUid, requesterUid, dan requesterRole; Rules perlu mengizinkan OWNER sebagai reseller."
+    :(e?.message||String(e));
+  showModal("Gagal Mengirim",pesan);
+ }
  finally{btn.disabled=false;btn.textContent="📨 Kirim Request Saldo"}
 }
 $("depositBtn").onclick=createDepositRequest;
@@ -414,9 +471,12 @@ async function buyTokens(){
   let purchasedTokens=[];
 
   await runTransaction(db,async tx=>{
-   const br=doc(db,"resellerBalances",uid);
+   if(!balanceDocId||balanceDocId.startsWith("users/")){
+    throw new Error("Saldo reseller belum memiliki dokumen resellerBalances yang bisa digunakan untuk transaksi. Silakan minta admin mengaktifkan saldo reseller untuk UID ini.");
+   }
+   const br=doc(db,"resellerBalances",balanceDocId);
    const bs=await tx.get(br);
-   const current=bs.exists()?Number(bs.data()?.balance||0):0;
+   const current=bs.exists()?Number(bs.data()?.balance??bs.data()?.saldo??0):0;
    if(current<total)throw new Error(`Saldo berubah. Saldo saat ini ${rupiah(current)}.`);
 
    const fresh=[];
@@ -435,12 +495,14 @@ async function buyTokens(){
    const tr=doc(collection(db,"balanceTransactions"));
 
    tx.set(br,{
-    balance:current-total,resellerUid:uid,updatedAt:serverTimestamp(),
+    balance:current-total,resellerUid:uid,ownerUid:String(profile.ownerUid||profile.ownerId||uid),
+    accountRole:String(profile.role||"owner").toLowerCase(),updatedAt:serverTimestamp(),
     lastPurchaseId:pr.id,lastPurchaseAmount:total
    },{merge:true});
 
    tx.set(tr,{
-    resellerUid:uid,type:"purchase",amount:-total,balanceBefore:current,balanceAfter:current-total,
+    resellerUid:uid,ownerUid:String(profile.ownerUid||profile.ownerId||uid),accountRole:String(profile.role||"owner").toLowerCase(),
+    type:"purchase",amount:-total,balanceBefore:current,balanceAfter:current-total,
     description:`Pembelian ${qty} token reseller • paket bebas campur`,
     purchaseId:pr.id,tokens:purchasedTokens,tokenType:"reseller",createdAt:serverTimestamp()
    });
@@ -457,7 +519,8 @@ async function buyTokens(){
    }));
 
    tx.set(pr,{
-    resellerUid:uid,resellerEmail:email,resellerNama:nama,tokenType:"reseller",
+    resellerUid:uid,ownerUid:String(profile.ownerUid||profile.ownerId||uid),accountRole:String(profile.role||"owner").toLowerCase(),
+    resellerEmail:email,resellerNama:nama,tokenType:"reseller",
     packageType:"mixed",
     packageLabel:selection.map(x=>`${x.qty}× ${x.month} Bulan / ${x.days} Hari`).join(" + "),
     packages:selection.map(x=>({months:x.month,days:x.days,quantity:x.qty,pricePerToken:x.price})),
@@ -482,9 +545,13 @@ async function buyTokens(){
   updatePurchase();
  }catch(e){
   console.error("buyTokens:",e);
-  $("buyError").textContent=e?.message||String(e);
+  $("buyError").textContent=e?.code==="permission-denied"
+    ?"Firebase Rules menolak transaksi OWNER. Akun sudah terbaca, tetapi Rules resellerBalances/resellerTokens/tokenPurchases/balanceTransactions belum mengizinkan OWNER sebagai reseller."
+    :(e?.message||String(e));
   $("buyError").classList.remove("hidden");
-  showModal("Pembelian Ditolak",e?.message||String(e));
+  showModal("Pembelian Ditolak",e?.code==="permission-denied"
+    ?"Akun OWNER sudah terdeteksi sebagai reseller, tetapi Firestore Rules masih menolak akses transaksi. Rules perlu mengizinkan OWNER pada collection reseller."
+    :(e?.message||String(e)));
  }finally{
   btn.disabled=getMixSelection().reduce((s,x)=>s+x.qty,0)<3;
   updatePurchase();
