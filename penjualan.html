@@ -1322,96 +1322,6 @@ document.addEventListener('DOMContentLoaded', ()=>{
     }
   });
 });
-
-// =========================================================
-// BACKUP TRANSAKSI PENJUALAN SAAT INI — TAMBAHAN SAJA
-// File penjualan.html adalah halaman INPUT, bukan daftar
-// data penjualan. Karena itu backup mengambil transaksi
-// yang sedang diisi pada form, tanpa mengubah Firebase.
-// =========================================================
-function penjualanBackupData(){
-  const escv=v=>String(v??"").trim();
-  const produk=(Array.isArray(rincianItems)?rincianItems:[]).map((x,i)=>({
-    No:i+1,
-    Produk:x.nama??"-",
-    Qty:Number(x.qty??1)||0,
-    Harga:Number(x.harga??0)||0,
-    Subtotal:Number(x.subtotal??((Number(x.qty??1)||0)*(Number(x.harga??0)||0)))||0
-  }));
-  const total=Number(document.getElementById("totalField")?.value||0)||0;
-  const diskon=Number(document.getElementById("diskonField")?.value||0)||0;
-  const dp=Number(document.getElementById("dpField")?.value||0)||0;
-  const sisa=Number(document.getElementById("sisaField")?.value||0)||0;
-  return {
-    meta:{
-      "Konter":escv(typeof konterName!=="undefined"?konterName:"FIXZY"),
-      "Akun":escv(document.getElementById("akunLoginField")?.value),
-      "Tanggal":escv(document.getElementById("tanggalField")?.value),
-      "Nota":escv(document.getElementById("notaField")?.value),
-      "Pelanggan":escv(document.getElementById("namaPelangganField")?.value),
-      "WA":escv(document.getElementById("waPelangganField")?.value),
-      "Teknisi":escv(document.getElementById("teknisiSelect")?.value),
-      "Status":escv(document.getElementById("statusField")?.value),
-      "Total":total,"Diskon":diskon,"DP":dp,"Sisa":sisa,
-      "Waktu Backup":new Date().toLocaleString("id-ID")
-    },
-    produk
-  };
-}
-window.backupPenjualanExcel=()=>{
-  try{
-    if(typeof XLSX==="undefined"){alert("Modul Excel belum termuat. Coba refresh halaman.");return;}
-    const d=penjualanBackupData();
-    if(!d.meta["Nota"] && d.produk.length===0){alert("Belum ada transaksi yang diisi untuk dibackup.");return;}
-    const wb=XLSX.utils.book_new();
-    const info=XLSX.utils.json_to_sheet([d.meta]);
-    info["!cols"]=Object.keys(d.meta).map(k=>({wch:Math.max(12,Math.min(28,k.length+8))}));
-    XLSX.utils.book_append_sheet(wb,info,"Transaksi");
-    const ws=XLSX.utils.json_to_sheet(d.produk.length?d.produk:[{No:"",Produk:"-",Qty:0,Harga:0,Subtotal:0}]);
-    ws["!cols"]=[{wch:6},{wch:40},{wch:10},{wch:16},{wch:16}];
-    XLSX.utils.book_append_sheet(wb,ws,"Produk");
-    XLSX.writeFile(wb,`FIXZY-Backup-Penjualan-${d.meta["Nota"]||"draft"}-${new Date().toISOString().slice(0,10)}.xlsx`);
-  }catch(e){alert("Gagal backup Excel: "+e.message);}
-};
-
-window.backupPenjualanPDF=()=>{
-  try{
-    if(typeof window.jspdf==="undefined"){alert("Modul PDF belum termuat. Coba refresh halaman.");return;}
-    const d=penjualanBackupData();
-    if(!d.meta["Nota"] && d.produk.length===0){alert("Belum ada transaksi yang diisi untuk dibackup.");return;}
-    const {jsPDF}=window.jspdf;
-    const doc=new jsPDF({orientation:"portrait",unit:"mm",format:"a4"});
-    doc.setFontSize(16);doc.setFont("helvetica","bold");
-    doc.text(d.meta["Konter"]||"FIXZY",14,14);
-    doc.setFontSize(13);doc.text("BACKUP TRANSAKSI PENJUALAN",14,21);
-    doc.setFontSize(9);doc.setFont("helvetica","normal");
-    let y=28;
-    const infoLines=[
-      ["Nota",d.meta["Nota"]],["Tanggal",d.meta["Tanggal"]],["Pelanggan",d.meta["Pelanggan"]],
-      ["WA",d.meta["WA"]],["Teknisi",d.meta["Teknisi"]],["Status",d.meta["Status"]]
-    ];
-    infoLines.forEach(([k,v])=>{doc.text(`${k}: ${v||"-"}`,14,y);y+=5;});
-    doc.autoTable({
-      startY:y+2,
-      head:[["No","Produk","Qty","Harga","Subtotal"]],
-      body:d.produk.map(x=>[x.No,x.Produk,x.Qty,money(x.Harga),money(x.Subtotal)]),
-      styles:{fontSize:8,cellPadding:2},
-      headStyles:{fillColor:[17,24,39],textColor:[255,255,255]},
-      columnStyles:{1:{cellWidth:75}}
-    });
-    let fy=doc.lastAutoTable.finalY+8;
-    if(fy>270){doc.addPage();fy=15;}
-    doc.setFont("helvetica","bold");
-    doc.text(`Total: ${money(d.meta["Total"])}`,120,fy);
-    doc.text(`Diskon: ${money(d.meta["Diskon"])}`,120,fy+6);
-    doc.text(`DP: ${money(d.meta["DP"])}`,120,fy+12);
-    doc.text(`Sisa: ${money(d.meta["Sisa"])}`,120,fy+18);
-    doc.setFont("helvetica","normal");
-    doc.setFontSize(8);doc.text(`Backup: ${d.meta["Waktu Backup"]}`,14,285);
-    doc.save(`FIXZY-Backup-Penjualan-${d.meta["Nota"]||"draft"}-${new Date().toISOString().slice(0,10)}.pdf`);
-  }catch(e){alert("Gagal backup PDF: "+e.message);}
-};
-
 </script>
 
 <style id="fixzy-info-servis-style">
@@ -1663,9 +1573,6 @@ body.dark #manualToggle + label{
 }
 </style>
 
-<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/jspdf-autotable@3.8.2/dist/jspdf.plugin.autotable.min.js"></script>
 </head>
 <body>
 <header>
@@ -1683,8 +1590,6 @@ body.dark #manualToggle + label{
   <button onclick="refreshHalaman()" style="background:transparent;color:#fff;padding:8px 10px;font-weight:800;font-size:13px;border:1px solid #ffffff30;border-radius:8px">
     Refresh
   </button>
-  <button onclick="backupPenjualanExcel()" style="background:#16a34a;color:#fff;padding:8px 10px;font-weight:800;font-size:12px;border:1px solid #ffffff30;border-radius:8px;margin-left:4px">📊 Excel</button>
-  <button onclick="backupPenjualanPDF()" style="background:#dc2626;color:#fff;padding:8px 10px;font-weight:800;font-size:12px;border:1px solid #ffffff30;border-radius:8px;margin-left:4px">📄 PDF</button>
   <button id="btnDark" class="btn-dark" style="margin-left:6px">🌙</button>
 </header>
 
