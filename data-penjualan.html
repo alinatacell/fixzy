@@ -28,6 +28,9 @@ body.dark{background:#0b0f14!important;color:#e5e7eb}.dark .card,.dark .table-wr
 @media(max-width:900px){.grid4{grid-template-columns:1fr 1fr}table{min-width:900px}}
 @media(max-width:700px){.grid4{grid-template-columns:1fr}.table-wrap{display:none}.sales{display:grid}header{height:68px}main{padding-top:80px}}
 </style>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
 <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
 </head>
 <body>
@@ -43,7 +46,11 @@ body.dark{background:#0b0f14!important;color:#e5e7eb}.dark .card,.dark .table-wr
 <div><label>TANGGAL</label><input id="from" type="date"></div>
 <div><label>SCAN BARCODE</label><button class="btn scan" onclick="bukaScan()" style="width:100%;height:43px">📷 Scan Barcode</button></div>
 </div>
-<div id="accessInfo" style="font-size:11px;color:#64748b;margin-top:9px"></div></section>
+<div id="accessInfo" style="font-size:11px;color:#64748b;margin-top:9px"></div><div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px">
+<button class="btn dark" type="button" onclick="backupExcel()">📊 Backup ke Excel</button>
+<button class="btn" type="button" onclick="backupPDF()" style="background:#dc2626;color:#fff">📄 Backup ke PDF</button>
+</div>
+</section>
 <div class="table-wrap"><table><thead><tr><th>Tanggal</th><th>Nota & Barcode</th><th>Pelanggan & WA</th><th>Produk</th><th>Total / Diskon / DP / Sisa</th><th>Pendapatan</th><th>Status & Aksi</th></tr></thead><tbody id="tbody"><tr><td colspan="7" style="text-align:center;padding:20px">Memuat...</td></tr></tbody></table></div>
 <section class="sales" id="sales"></section>
 </div></main>
@@ -151,6 +158,91 @@ window.editStatus=editStatus;window.openWA=openWA;window.loadAll=()=>location.re
 ["search","status","from"].forEach(id=>$(id).addEventListener(id==="search"?"input":"change",render));
 document.getElementById('modal').addEventListener("click",e=>{if(e.target.id==="modal")closeModal()});
 document.getElementById('scanPopup').addEventListener("click",e=>{if(e.target.id==="scanPopup")tutupScan()});
+
+// =========================================================
+// BACKUP DATA PENJUALAN — HANYA DATA YANG SUDAH DIMUAT
+// Tidak mengubah / menghapus data Firebase.
+// =========================================================
+function backupRows(){
+  return filtered.length ? filtered : all;
+}
+function backupItemsText(d){
+  const f=d.items||d.produkList||d.namaProduk||d.produk;
+  if(Array.isArray(f)) return f.map(i=>{
+    if(typeof i==="string") return i;
+    const n=i.nama||i.produk||"-";
+    const q=i.qty!==undefined?` x${i.qty}`:"";
+    return n+q;
+  }).join(", ");
+  return f ? String(f) : "-";
+}
+function backupFileDate(){
+  const n=new Date(), z=x=>String(x).padStart(2,"0");
+  return `${n.getFullYear()}${z(n.getMonth()+1)}${z(n.getDate())}_${z(n.getHours())}${z(n.getMinutes())}`;
+}
+window.backupExcel=()=>{
+  try{
+    const rows=backupRows();
+    if(!rows.length){modalUI("⚠️ Backup kosong","Tidak ada data penjualan untuk dibackup.",[{label:"Tutup",fn:closeModal}]);return;}
+    const data=rows.map((d,i)=>({
+      "No":i+1,
+      "Tanggal":date(d),
+      "Nomor Nota":d.nomorNota||d.nota||"",
+      "Barcode":d.barcode||"",
+      "Pelanggan":pname(d),
+      "No WhatsApp":phone(d),
+      "Produk":backupItemsText(d),
+      "Total":total(d),
+      "Diskon":diskon(d),
+      "DP":dp(d),
+      "Sisa":sisa(d),
+      "Pendapatan":income(d),
+      "Status":statusLabel(st(d)),
+      "Teknisi":d.teknisi||d.namaKaryawan||"",
+      "Konter":d.namaKonter||d.konter||"",
+      "Akun":d.akun||d.akunLogin||d.createdBy||"",
+      "Owner UID":d.ownerUid||d.ownerId||d.uid||""
+    }));
+    const ws=XLSX.utils.json_to_sheet(data);
+    ws["!cols"]=[
+      {wch:6},{wch:12},{wch:22},{wch:18},{wch:24},{wch:18},{wch:45},
+      {wch:15},{wch:15},{wch:15},{wch:15},{wch:15},{wch:14},{wch:20},{wch:24},{wch:28},{wch:38}
+    ];
+    const wb=XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb,ws,"Data Penjualan");
+    XLSX.writeFile(wb,`backup-data-penjualan-${backupFileDate()}.xlsx`);
+  }catch(e){
+    modalUI("❌ Backup Excel gagal",esc(e.message),[{label:"Tutup",fn:closeModal}]);
+  }
+};
+window.backupPDF=()=>{
+  try{
+    const rows=backupRows();
+    if(!rows.length){modalUI("⚠️ Backup kosong","Tidak ada data penjualan untuk dibackup.",[{label:"Tutup",fn:closeModal}]);return;}
+    const {jsPDF}=window.jspdf;
+    const pdf=new jsPDF({orientation:"landscape",unit:"mm",format:"a4"});
+    pdf.setFontSize(14); pdf.text("BACKUP DATA PENJUALAN FIXZY",14,14);
+    pdf.setFontSize(8); pdf.text(`Akun/Owner: ${ownerUid} • Data: ${rows.length} • Dibuat: ${new Date().toLocaleString("id-ID")}`,14,20);
+    const body=rows.map((d,i)=>[
+      i+1,date(d),d.nomorNota||d.nota||"-",pname(d),backupItemsText(d),
+      rupiah(total(d)),rupiah(diskon(d)),rupiah(dp(d)),rupiah(sisa(d)),
+      rupiah(income(d)),statusLabel(st(d))
+    ]);
+    pdf.autoTable({
+      startY:25,
+      head:[["No","Tanggal","Nota","Pelanggan","Produk","Total","Diskon","DP","Sisa","Pendapatan","Status"]],
+      body,
+      styles:{fontSize:6,cellPadding:1.5,overflow:"linebreak"},
+      headStyles:{fontSize:6},
+      columnStyles:{0:{cellWidth:8},1:{cellWidth:18},2:{cellWidth:27},3:{cellWidth:28},4:{cellWidth:55},5:{cellWidth:22},6:{cellWidth:20},7:{cellWidth:20},8:{cellWidth:22},9:{cellWidth:25},10:{cellWidth:18}},
+      margin:{left:10,right:10}
+    });
+    pdf.save(`backup-data-penjualan-${backupFileDate()}.pdf`);
+  }catch(e){
+    modalUI("❌ Backup PDF gagal",esc(e.message),[{label:"Tutup",fn:closeModal}]);
+  }
+};
+
 onAuthStateChanged(auth,async u=>{if(!u){location.replace("login.html");return}try{let s=await getDoc(doc(db,"users",u.uid));if(!s.exists())throw Error("Profil tidak ditemukan");let p=s.data()||{};ownerUid=String(p.role).toLowerCase()==="owner"?u.uid:(p.ownerUid||p.ownerId||u.uid);$("accountLine").textContent=`${u.email} • ${p.role} • Owner: ${ownerUid.slice(0,6)}`;await loadSales();$("loading").style.display="none";$("page").style.display="block";render()}catch(e){$("loading").innerHTML=`<span style="color:#b42318">Gagal: ${esc(e.message)}</span>`}});
 </script>
 </body>
