@@ -262,10 +262,45 @@ async function loadExisting(){
 async function saveAttendance(){
  if(!selectedEmployee)return alertBox("Pilih karyawan terlebih dahulu.");
  if(!selectedStatus)return alertBox("Pilih HADIR, TIDAK HADIR, atau LIBUR.");
- const tanggal=$("tanggal").value||today(),id=`${selectedEmployee.id}_${tanggal}`,old=await getDoc(doc(db,"absensi",id));
- const data={ownerUid,ownerId:ownerUid,userId:selectedEmployee.id,uid:selectedEmployee.id,nama:nama(selectedEmployee),namaKaryawan:nama(selectedEmployee),email:selectedEmployee.email||"",role:selectedEmployee.role||"employee",jabatan:selectedEmployee.jabatan||selectedEmployee.posisi||"",noWA:employeeWa(selectedEmployee),upahHarian:employeeWage(selectedEmployee),tanggal,status:selectedStatus,hadir:selectedStatus==="hadir",catatan:$("catatan").value.trim(),updatedAt:serverTimestamp(),updatedBy:uid};
- if(!old.exists()){data.createdAt=serverTimestamp();data.createdBy=uid;}
- try{$("saveBtn").disabled=true;$("saveBtn").textContent="Menyimpan...";await setDoc(doc(db,"absensi",id),data,{merge:true});await loadAll();render();$("status").innerHTML='<span class="ok">✓ Absensi berhasil disimpan.</span>';}catch(e){alertBox("Gagal menyimpan: "+(e.message||e));}finally{$("saveBtn").disabled=false;$("saveBtn").textContent="💾 Simpan Absensi";}
+ const tanggal=$("tanggal").value||today();
+ const id=`${selectedEmployee.id}_${tanggal}`;
+ const data={
+  ownerUid,
+  ownerId:ownerUid,
+  userId:selectedEmployee.id,
+  uid:selectedEmployee.id,
+  nama:nama(selectedEmployee),
+  namaKaryawan:nama(selectedEmployee),
+  email:selectedEmployee.email||"",
+  role:selectedEmployee.role||"employee",
+  jabatan:selectedEmployee.jabatan||selectedEmployee.posisi||"",
+  noWA:employeeWa(selectedEmployee),
+  upahHarian:employeeWage(selectedEmployee),
+  tanggal,
+  status:selectedStatus,
+  hadir:selectedStatus==="hadir",
+  catatan:$("catatan").value.trim(),
+  updatedAt:serverTimestamp(),
+  updatedBy:uid
+ };
+ try{
+  $("saveBtn").disabled=true;
+  $("saveBtn").textContent="Menyimpan...";
+  // Jangan getDoc() sebelum menulis. Rules absensi membatasi READ pada data milik owner,
+  // sehingga membaca dokumen lama yang belum ada bisa terkena permission-denied.
+  // setDoc merge langsung aman untuk CREATE maupun UPDATE.
+  await setDoc(doc(db,"absensi",id),data,{merge:true});
+  await loadAll();
+  render();
+  setStatus(selectedStatus);
+  $("status").innerHTML='<span class="ok">✓ Absensi berhasil disimpan.</span>';
+ }catch(e){
+  console.error("SAVE ABSENSI ERROR",e);
+  alertBox("Gagal menyimpan: "+(e?.message||e));
+ }finally{
+  $("saveBtn").disabled=false;
+  $("saveBtn").textContent="💾 Simpan Absensi";
+ }
 }
 function editAttendance(id){const x=absensi.find(a=>a.id===id);if(!x)return;$("tanggal").value=x.tanggal||today();$("employeeSelect").value=x.userId||x.uid||"";selectEmployee();setStatus(norm(x.status)||"tidak_hadir");$("catatan").value=x.catatan||"";window.scrollTo({top:0,behavior:"smooth"});}
 function render(){
