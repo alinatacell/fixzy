@@ -96,7 +96,12 @@ td{padding:10px;border-bottom:1px solid #edf1f5;font-size:11px;vertical-align:mi
 .salary-gross b{color:#047857;font-size:16px}.salary-net b{color:#1d4ed8;font-size:16px}
 .salary-note{font-size:9px;color:#64748b;margin-top:8px;line-height:1.45}
 .action-row{display:flex;gap:7px;flex-wrap:wrap}.action{height:38px;border:0;border-radius:9px;padding:0 12px;font-size:10px;font-weight:900}
-.action.hadir{background:#dcfce7;color:#166534}.action.tidak{background:#fee2e2;color:#991b1b}.action.edit{background:#fef3c7;color:#92400e}
+.action.hadir{background:#dcfce7;color:#166534}.action.tidak{background:#fee2e2;color:#991b1b}.action.libur{background:#fef3c7;color:#92400e}
+.action{cursor:pointer!important;pointer-events:auto!important;touch-action:manipulation;-webkit-tap-highlight-color:transparent;transition:.15s transform,.15s box-shadow,.15s opacity}
+.action:active{transform:scale(.97)}
+.action.hadir.active{background:#16a34a!important;color:#fff!important;box-shadow:0 0 0 3px #16a34a33}
+.action.tidak.active{background:#dc2626!important;color:#fff!important;box-shadow:0 0 0 3px #dc262633}
+.action.libur.active{background:#f59e0b!important;color:#111!important;box-shadow:0 0 0 3px #f59e0b33}
 .status-pill{display:inline-block;padding:5px 8px;border-radius:999px;font-size:9px;font-weight:900}
 .status-hadir{background:#dcfce7;color:#166534}.status-tidak{background:#fee2e2;color:#991b1b}.status-libur{background:#e2e8f0;color:#475569}
 .form-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}.full{grid-column:1/-1}
@@ -127,7 +132,7 @@ td{padding:10px;border-bottom:1px solid #edf1f5;font-size:11px;vertical-align:mi
   <div class="field"><label>NAMA KARYAWAN / TEKNISI</label><select id="employeeSelect"><option value="">-- Pilih Karyawan --</option></select></div>
   <div class="field"><label>NO. WHATSAPP</label><input id="wa" class="readonly" readonly></div>
   <div class="field"><label>UPAH HARIAN</label><input id="upah" class="readonly" readonly></div>
-  <div class="full"><div class="action-row"><button class="action hadir" id="hadirBtn">✓ HADIR</button><button class="action tidak" id="tidakBtn">✕ TIDAK HADIR</button><button class="action edit" id="liburBtn">• LIBUR</button></div></div>
+  <div class="full"><div class="action-row"><button type="button" class="action hadir" id="hadirBtn">✓ HADIR</button><button type="button" class="action tidak" id="tidakBtn">✕ TIDAK HADIR</button><button type="button" class="action libur" id="liburBtn">• LIBUR</button></div></div>
   <div class="field full"><label>CATATAN</label><input id="catatan" placeholder="Catatan absensi (opsional)"></div>
   <div class="full"><button class="btn yellow" id="saveBtn">💾 Simpan Absensi</button></div>
  </div>
@@ -237,7 +242,17 @@ async function boot(loadFn){
 let selectedEmployee=null,selectedStatus="";
 function employeeWa(a){return a.noWA||a.wa||a.noHp||a.whatsapp||"";}
 function employeeWage(a){return upahHarian(a);}
-function setStatus(v){selectedStatus=v;["hadir","tidak_hadir","libur"].forEach(x=>$(x+"Btn")?.classList.toggle("active",v===x));}
+function setStatus(v){
+  selectedStatus=String(v||"");
+  const map={hadir:"hadirBtn",tidak_hadir:"tidakBtn",libur:"liburBtn"};
+  Object.entries(map).forEach(([status,id])=>{
+    const b=$(id);
+    if(!b)return;
+    const active=selectedStatus===status;
+    b.classList.toggle("active",active);
+    b.setAttribute("aria-pressed",active?"true":"false");
+  });
+}
 function selectEmployee(){selectedEmployee=accounts.find(x=>x.id===$("employeeSelect").value)||null;if(!selectedEmployee){$("wa").value="";$("upah").value="";return;}$("wa").value=employeeWa(selectedEmployee);$("upah").value=money(employeeWage(selectedEmployee));loadExisting();}
 async function loadExisting(){
  if(!selectedEmployee)return;
@@ -262,7 +277,19 @@ function render(){
 function alertBox(msg){$("status").innerHTML='<span class="err">❌ '+esc(msg)+'</span>';window.scrollTo({top:0,behavior:"smooth"});}
 async function refresh(){$("status").textContent="⏳ Membaca data Firebase...";try{await loadAll();$("karyawanCount").textContent=accounts.length;$("karyawanCount").textContent=accounts.length;$("karyawanCount").textContent=accounts.length;const sel=$("employeeSelect");sel.innerHTML='<option value="">-- Pilih Karyawan --</option>'+accounts.map(a=>`<option value="${esc(a.id)}">${esc(nama(a))}</option>`).join("");render();$("status").innerHTML='<span class="ok">✓ Data absensi siap • hanya owner ini</span>';}catch(e){alertBox(e.message||e);}}
 $("tanggal").value=today();$("bulan").value=monthNow();$("employeeSelect").onchange=selectEmployee;$("tanggal").onchange=loadExisting;
-$("hadirBtn").onclick=()=>setStatus("hadir");$("tidakBtn").onclick=()=>setStatus("tidak_hadir");$("liburBtn").onclick=()=>setStatus("libur");$("saveBtn").onclick=saveAttendance;
+[
+  ["hadirBtn","hadir"],
+  ["tidakBtn","tidak_hadir"],
+  ["liburBtn","libur"]
+].forEach(([id,status])=>{
+  const b=$(id);
+  if(b){
+    b.type="button";
+    b.addEventListener("click",e=>{e.preventDefault();e.stopPropagation();setStatus(status);});
+    b.addEventListener("touchend",e=>{e.preventDefault();setStatus(status);},{passive:false});
+  }
+});
+$("saveBtn").addEventListener("click",e=>{e.preventDefault();saveAttendance();});
 $("cari").oninput=render;$("bulan").onchange=refresh;$("refreshBtn").onclick=refresh;$("refresh2").onclick=refresh;
 $("tbody").onclick=e=>{const b=e.target.closest("[data-edit]");if(b)editAttendance(b.dataset.edit);};
 boot(refresh);
