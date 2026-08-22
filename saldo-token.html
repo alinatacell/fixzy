@@ -182,15 +182,19 @@ function openWhatsApp(url){const w=window.open(url,"_blank");if(!w)location.href
 
 function applySession(s){
  if(!s?.uid)return false;
- uid=String(s.uid);
- email=String(s.email||s.profile?.email||"");
+ // Untuk operasi Firestore, UID Firebase Auth harus menjadi sumber kebenaran.
+ // Sesi parent hanya dipakai sebagai fallback tampilan.
+ const authUid=auth.currentUser?.uid||"";
+ uid=String(authUid||s.uid);
+ email=String(auth.currentUser?.email||s.email||s.profile?.email||"");
  profile={...(s.profile||{})};
  role=String(s.role||profile.role||"reseller");
  $("email").textContent=email||"-";
  $("nama").textContent=profile.namaKonter||profile.namaPemilik||profile.namaToko||profile.nama||profile.displayName||profile.name||email.split("@")[0]||"-";
  $("role").textContent=role.toUpperCase();
  $("status").textContent=profile.status||"aktif";
- $("connectionState").textContent="● TERHUBUNG • UID: "+uid.slice(0,8)+"...";
+ const authUidForDisplay=auth.currentUser?.uid||uid;
+ $("connectionState").textContent="● TERHUBUNG • UID: "+String(authUidForDisplay).slice(0,8)+"...";
  $("connectionState").style.color="#166534";
 
  const allowed=canUseSaldo();
@@ -369,8 +373,27 @@ document.querySelectorAll(".tab").forEach(b=>b.onclick=()=>{
 $("depositAmount").oninput=()=>$("depositPreview").textContent=rupiah(Math.max(0,Number($("depositAmount").value||0)));
 
 async function createDepositRequest(){
- if(!sessionReady||!uid){showModal("Sesi Belum Siap","Akun Firebase belum terbaca.");return}
- if(!canUseSaldo()){showModal("Tidak Diizinkan","Hanya OWNER, RESELLER, ADMIN, atau SUPERADMIN yang dapat request saldo.");return}
+ const firebaseUser=auth.currentUser;
+ const authUid=firebaseUser?.uid||"";
+
+ if(!firebaseUser||!authUid){
+  showModal("Sesi Firebase Belum Siap","Akun Firebase Auth belum terbaca. Tekan Refresh lalu coba lagi.");
+  return;
+ }
+
+ // Jangan memakai UID dari parent/index untuk kepemilikan request.
+ // Firestore Rules membandingkan resellerUid dengan request.auth.uid.
+ uid=authUid;
+ email=String(firebaseUser.email||email||"");
+
+ if(!sessionReady){
+  try{await loadAuthDirect()}catch(e){}
+ }
+ if(!canUseSaldo()){
+  showModal("Tidak Diizinkan","Hanya OWNER, RESELLER, ADMIN, atau SUPERADMIN yang dapat request saldo.");
+  return;
+ }
+
  const amount=Number($("depositAmount").value||0);
  if(!Number.isSafeInteger(amount)||amount<10000){showModal("Nominal Tidak Valid","Nominal request saldo minimal Rp10.000.");return}
  const btn=$("depositBtn");btn.disabled=true;btn.textContent="Mengirim...";
@@ -378,7 +401,7 @@ async function createDepositRequest(){
   const nama=profile.namaKonter||profile.namaPemilik||profile.namaToko||profile.nama||profile.displayName||profile.name||email.split("@")[0]||"Reseller";
   const note=$("depositNote").value.trim();
   const ref=await addDoc(collection(db,"saldoRequests"),{
-   resellerUid:uid,resellerEmail:email,resellerNama:nama,
+   resellerUid:authUid,resellerEmail:email,resellerNama:nama,
    amount,jumlahSaldo:amount,
    status:"pending",requestStatus:"pending",
    metode:"QRIS",catatan:note,
@@ -394,7 +417,7 @@ Saya mengajukan request saldo untuk pembelian token.
 
 Nama / Toko: ${nama}
 Email: ${email||"-"}
-UID: ${uid}
+UID: ${authUid}
 Nominal request saldo: ${rupiah(amount)}
 Metode transfer: QRIS
 Keterangan transfer: ${note||"-"}
@@ -592,23 +615,37 @@ $("refreshBtn").onclick=async()=>{
 $("darkBtn").onclick=()=>document.body.classList.toggle("dark");
 
 onAuthStateChanged(auth,async u=>{
- if(u&&!sessionReady){
+ if(u){
+  // Firebase Auth selalu menjadi sumber UID utama.
   await loadAuthDirect();
-  if(sessionReady){await loadBalance();await loadHistory()}
+  if(sessionReady){
+   await loadBalance();
+   await loadHistory();
+  }
  }
 });
 
 async function start(){
- const p=readParentSession();
- if(p){applySession(p);await loadBalance();await loadHistory();return}
+ // Prioritaskan Firebase Auth. Ini mencegah UID dari parent/index tertukar
+ // dengan request.auth.uid sehingga addDoc saldoRequests ditolak Rules.
  if(await loadAuthDirect()){await loadBalance();await loadHistory();return}
+
+ const p=readParentSession();
+ if(p){
+  applySession(p);
+  // Parent session hanya boleh dipakai jika Firebase Auth juga sudah tersedia.
+  if(auth.currentUser?.uid){await loadBalance();await loadHistory();return}
+ }
  $("connectionState").textContent="● MENUNGGU SESI DARI INDEX/FIREBASE...";
  $("connectionState").style.color="#92400e";
  setTimeout(async()=>{
   if(sessionReady)return;
-  const p2=readParentSession();
-  if(p2){applySession(p2);await loadBalance();await loadHistory();return}
   if(await loadAuthDirect()){await loadBalance();await loadHistory();return}
+  const p2=readParentSession();
+  if(p2){
+   applySession(p2);
+   if(auth.currentUser?.uid){await loadBalance();await loadHistory();return}
+  }
   $("email").textContent="-";$("nama").textContent="Sesi belum terbaca";$("role").textContent="-";$("status").textContent="Menunggu sesi";
   $("connectionState").textContent="● SESI BELUM DITERIMA";
   $("connectionState").style.color="#991b1b";
