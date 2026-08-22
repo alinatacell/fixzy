@@ -378,6 +378,7 @@ function render(){
  const q=norm($("cari").value);
  const all=accounts.map(a=>({a,c:calculate(a)}));
  const rows=all.filter(r=>!q||[nama(r.a),r.a.jabatan,r.a.posisi,r.a.role,r.a.email].join(" ").toLowerCase().includes(q));
+ renderSalarySummary(rows);
  $("karyawan").textContent=all.length;
  $("hadir").textContent=all.reduce((s,r)=>s+r.c.hadir,0);
  $("gross").textContent=money(all.reduce((s,r)=>s+r.c.gross,0));
