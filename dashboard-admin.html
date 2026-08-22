@@ -251,11 +251,7 @@ function renderStats(){
 
   const pendJualTunai = allJual
     .filter(r => norm(r.status) === "tunai")
-    .reduce((a,r) => {
-      const nilai = nilaiTransaksi(r);
-      const sisa = sisaTagihan(r);
-      return a + Math.max(0, nilai - sisa);
-    }, 0);
+    .reduce((a,r) => a + nilaiTransaksi(r), 0);
 
   const pendJualDP = allJual
     .filter(r => ["masuk","tagihan","tunai"].includes(norm(r.status)))
@@ -282,9 +278,13 @@ function renderStats(){
     allJual.reduce((a,r) => {
       const s = norm(r.status);
       if (s === "tunai") {
-        return a + Math.max(0, nilaiTransaksi(r) - sisaTagihan(r));
+        // Status tunai berarti transaksi sudah dibayar penuh.
+        // Jangan gunakan field sisa karena pada sebagian data lama
+        // field tersebut masih berisi nilai transaksi.
+        return a + nilaiTransaksi(r);
       }
       if (s === "masuk" || s === "tagihan") {
+        // Hanya DP yang benar-benar diterima yang menjadi pendapatan.
         return a + (Number(r.dp ?? 0) || 0);
       }
       return a;
@@ -488,7 +488,7 @@ function renderStats(){
     .filter(r => date(r)===today)
     .reduce((a,r) => {
       const s=norm(r.status);
-      if(s==="tunai") return a + Math.max(0,nilaiTransaksi(r)-sisaTagihan(r));
+      if(s==="tunai") return a + nilaiTransaksi(r);
       if(s==="masuk" || s==="tagihan") return a + (Number(r.dp)||0);
       return a;
     },0);
