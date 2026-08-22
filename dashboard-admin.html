@@ -117,11 +117,11 @@ body.dark{background:#0b0f14!important;color:#e5e7eb}.dark .card,.dark .table-wr
 </div>
 </main>
 <script type="module">
-import{initializeApp}from"https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js";import{getAuth,onAuthStateChanged}from"https://www.gstatic.com/firebasejs/11.10.0/firebase-auth.js";import{getFirestore,collection,query,where,getDocs,doc,getDoc}from"https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js";
+import{initializeApp}from"https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js";import{getAuth,onAuthStateChanged}from"https://www.gstatic.com/firebasejs/11.10.0/firebase-auth.js";import{getFirestore,collection,query,where,getDocs,getDocsFromServer,doc,getDoc}from"https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js";
 const cfg={apiKey:"AIzaSyC_PcarMTT5Un7qfSLzf92o5OGn5rginsI",authDomain:"fixzy-update.firebaseapp.com",projectId:"fixzy-update",storageBucket:"fixzy-update.firebasestorage.app",messagingSenderId:"995892519622",appId:"1:995892519622:web:fa41047944d8e5b35d6dc7"};
 const app=initializeApp(cfg),auth=getAuth(app),db=getFirestore(app);
 const $=id=>document.getElementById(id);const rupiah=n=>"Rp "+(Number(n)||0).toLocaleString("id-ID");const esc=s=>String(s??"").replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
-let ownerUid="",allServis=[],allJual=[],allKeluar=[];
+let ownerUid="",allServis=[],allJual=[],allKeluar=[],allUsers=[],allAbsensi=[];
 const pname=d=>d.pelanggan?.nama||d.namaPelanggan||d.nama||"-";const date=d=>String(d.tanggal||"").slice(0,10)||(d.createdAt?.toDate?d.createdAt.toDate().toISOString().slice(0,10):"");
 async function getAll(colName){
  let rows=[];let logs=[];const fields=["ownerUid","ownerId","uid","createdBy","businessUid","userId"];
@@ -129,6 +129,182 @@ async function getAll(colName){
  try{const allSnap=await getDocs(collection(db,colName));logs.push(`total:${allSnap.size}`);}catch{}
  let m=new Map();rows.forEach(x=>m.set(x.id,x));return {data:[...m.values()],logs};
 }
+
+async function getOwnedUsers(){
+  const map=new Map();
+  for(const field of ["ownerUid","ownerId"]){
+    try{
+      const snap=await getDocsFromServer(
+        query(collection(db,"users"),where(field,"==",ownerUid))
+      );
+      snap.forEach(d=>map.set(d.id,{id:d.id,...d.data()}));
+    }catch(e){}
+  }
+
+  // Jika akun yang login adalah owner, masukkan profil owner juga hanya
+  // bila memang mempunyai konfigurasi upah/gaji.
+  try{
+    const me=await getDoc(doc(db,"users",ownerUid));
+    if(me.exists())map.set(ownerUid,{id:ownerUid,...me.data()});
+  }catch(e){}
+
+  return [...map.values()].filter(a=>{
+    const role=String(a.role??"").trim().toLowerCase();
+    const jabatan=String(a.jabatan??a.posisi??"").trim().toLowerCase();
+    const harian=Number(a.upahHarian??a.upah??a.gajiHarian??0)||0;
+    const bulanan=Number(a.upahBulanan??a.gajiBulanan??a.gaji??0)||0;
+    const persen=Number(a.persentase??a.persen??a.bonusPersen??0)||0;
+    return ["employee","karyawan","kasir","kurir","teknisi","staff"].includes(role) ||
+           harian>0 || bulanan>0 || persen>0 ||
+           /karyawan|kasir|kurir|teknisi|staff/.test(jabatan);
+  });
+}
+
+async function getOwnedCollection(colName){
+  const map=new Map();
+  for(const field of ["ownerUid","ownerId","uid"]){
+    try{
+      const snap=await getDocsFromServer(
+        query(collection(db,colName),where(field,"==",ownerUid))
+      );
+      snap.forEach(d=>map.set(d.id,{id:d.id,...d.data()}));
+    }catch(e){}
+  }
+
+  // Kompatibilitas untuk data lama yang tersimpan dengan uid pemilik.
+  if(ownerUid){
+    for(const field of ["ownerUid","ownerId"]){
+      try{
+        const snap=await getDocsFromServer(
+          query(collection(db,colName),where(field,"==",ownerUid))
+        );
+        snap.forEach(d=>map.set(d.id,{id:d.id,...d.data()}));
+      }catch(e){}
+    }
+  }
+  return [...map.values()];
+}
+
+function salaryName(a){
+  return String(a.nama??a.namaKaryawan??a.namaLengkap??a.displayName??a.email??"").trim();
+}
+
+function salaryNorm(v){
+  return String(v??"").trim().toLowerCase();
+}
+
+function salaryDate(x){
+  return String(x.tanggal??x.date??x.tanggalAbsen??"").slice(0,10);
+}
+
+function salaryIsHadir(x){
+  return salaryNorm(x.status)==="hadir" || !!(x.jamMasuk||x.masuk||x.hadir===true);
+}
+
+function salaryIsLibur(x){
+  return salaryNorm(x.status)==="libur";
+}
+
+function salaryHarian(a){
+  return Number(a.upahHarian??a.upah??a.gajiHarian??0)||0;
+}
+
+function salaryBulanan(a){
+  return Number(a.upahBulanan??a.gajiBulanan??a.gaji??0)||0;
+}
+
+function salaryPersen(a){
+  return Number(a.persentase??a.persen??a.bonusPersen??0)||0;
+}
+
+function salaryJenis(a){
+  return salaryNorm(a.jenisUpah??a.sistemUpah??a.tipeUpah??"harian")||"harian";
+}
+
+function salarySameEmployee(x,a){
+  const xid=x.userId??x.uid??x.karyawanUid??x.employeeUid??"";
+  if(xid && String(xid)===String(a.id))return true;
+
+  const an=salaryNorm(salaryName(a));
+  const xn=salaryNorm(x.nama??x.namaKaryawan??x.namaTeknisi??"");
+  const xe=salaryNorm(x.email??x.emailKaryawan??"");
+  const ae=salaryNorm(a.email??"");
+
+  if(xe && ae && xe===ae)return true;
+  return !!an && !!xn && (an===xn || an.includes(xn) || xn.includes(an));
+}
+
+function salaryKasbonAmount(x){
+  return Number(x.nominal??x.jumlah??x.amount??0)||0;
+}
+
+function salaryIsKasbon(x){
+  const j=salaryNorm(x.jenis??x.type??"");
+  return j.includes("kasbon")||j.includes("bon");
+}
+
+function calculateCurrentSalary(a){
+  const month=new Date().toISOString().slice(0,7);
+  const rows=allAbsensi.filter(x=>
+    salaryDate(x).startsWith(month) &&
+    salarySameEmployee(x,a)
+  );
+
+  // Sama dengan halaman Ringkasan Gaji:
+  // satu data hadir = satu hari kerja, berdasarkan data absensi.
+  const hadir=rows.filter(salaryIsHadir).length;
+  const jenis=salaryJenis(a);
+  const hd=salaryHarian(a);
+  const bm=salaryBulanan(a);
+  const ps=salaryPersen(a);
+
+  let base=0;
+  let percentPay=0;
+
+  if(jenis==="harian")base=hadir*hd;
+  else if(jenis==="bulanan")base=bm;
+  else if(jenis==="persentase"){
+    percentPay=rows.reduce((s,x)=>
+      s+Number(x.omzet??x.pendapatan??x.nilaiOmzet??x.totalOmzet??0),0
+    )*ps/100;
+  }
+  else if(jenis==="harian_persentase"){
+    base=hadir*hd;
+    percentPay=rows.reduce((s,x)=>
+      s+Number(x.omzet??x.pendapatan??x.nilaiOmzet??x.totalOmzet??0),0
+    )*ps/100;
+  }
+  else if(jenis==="bulanan_persentase"){
+    base=bm;
+    percentPay=rows.reduce((s,x)=>
+      s+Number(x.omzet??x.pendapatan??x.nilaiOmzet??x.totalOmzet??0),0
+    )*ps/100;
+  }
+
+  const gross=base+percentPay;
+
+  const kasbon=allKeluar
+    .filter(x=>
+      String(x.tanggal??x.date??"").slice(0,10).startsWith(month) &&
+      salaryIsKasbon(x) &&
+      salarySameEmployee(x,{id:"",nama:salaryName(a),email:a.email||""})
+    )
+    .reduce((s,x)=>s+salaryKasbonAmount(x),0);
+
+  return {
+    hadir,
+    gross,
+    kasbon,
+    net:Math.max(0,gross-kasbon)
+  };
+}
+
+function calculateCurrentEmployeeSalaryTotal(){
+  return allUsers.reduce((total,a)=>{
+    return total+calculateCurrentSalary(a).gross;
+  },0);
+}
+
 function renderStats(){
   // =========================================================
   // LOGIKA KEUANGAN BERDASARKAN STATUS TERKINI
@@ -242,16 +418,20 @@ function renderStats(){
     .filter(r => !isBelanjaStock(r))
     .reduce((a,r) => a + (Number(r.nominal) || 0), 0);
 
-  const upahKaryawan = allKeluar
+  // UPAH KARYAWAN mengikuti halaman Ringkasan Gaji:
+  // users + absensi bulan berjalan, bukan hanya dokumen pengeluaran.
+  // Jadi 2 hari hadir x Rp100.000 = Rp200.000 meskipun belum
+  // ada transaksi pembayaran gaji di koleksi pengeluaran.
+  const upahKaryawan = calculateCurrentEmployeeSalaryTotal();
+
+  const upahDibayarDariPengeluaran = allKeluar
     .filter(r => !isBelanjaStock(r) && (
       norm(r.jenis).includes("upah") ||
-      norm(r.jenis).includes("gaji") ||
-      norm(r.jenis).includes("karyawan") ||
-      norm(r.jenis).includes("kasbon")
+      norm(r.jenis).includes("gaji")
     ))
     .reduce((a,r) => a + (Number(r.nominal) || 0), 0);
 
-  const pengeluaranLain = Math.max(0, pengeluaran - upahKaryawan);
+  const pengeluaranLain = pengeluaran;
 
   // Sesuai kesepakatan terakhir:
   // stock/belanja ditampilkan terpisah, tidak dicampur ke pengeluaran.
@@ -403,7 +583,7 @@ function renderStats(){
   `;
 
   $("keluarDetail").textContent=
-    `Operasional: ${rupiah(pengeluaran)} • Belanja/stock: ${rupiah(belanjaStock)} • Upah: ${rupiah(upahKaryawan)} • Lainnya: ${rupiah(pengeluaranLain)}`;
+    `Operasional: ${rupiah(pengeluaran)} • Belanja/stock: ${rupiah(belanjaStock)} • Upah karyawan berjalan: ${rupiah(upahKaryawan)} • Upah sudah dibayar: ${rupiah(upahDibayarDariPengeluaran)}`;
 }
 
 onAuthStateChanged(auth,async u=>{
@@ -414,11 +594,19 @@ onAuthStateChanged(auth,async u=>{
   const p=snap.data()||{};
   ownerUid=String(p.role).toLowerCase()==="owner"||String(p.role).toLowerCase()==="superadmin"?u.uid:(p.ownerUid||p.ownerId||u.uid);
   $("accountLine").textContent=`${u.email} • ${p.role} • Owner: ${ownerUid.slice(0,6)}`;
-  const [servisRes,jualRes,keluarRes]=await Promise.all([getAll("servis"),getAll("penjualan"),getAll("pengeluaran")]);
+  const [servisRes,jualRes,keluarRes,salaryUsers,salaryAbsensi]=await Promise.all([
+    getAll("servis"),
+    getAll("penjualan"),
+    getAll("pengeluaran"),
+    getOwnedUsers(),
+    getOwnedCollection("absensi")
+  ]);
   allServis=servisRes.data.sort((a,b)=>String(b.tanggal||"").localeCompare(String(a.tanggal||"")));
   allJual=jualRes.data.sort((a,b)=>String(b.tanggal||"").localeCompare(String(a.tanggal||"")));
   allKeluar=keluarRes.data.sort((a,b)=>String(b.tanggal||"").localeCompare(String(a.tanggal||"")));
-  $("debug").textContent=`Servis ${servisRes.logs.join(" | ")} • Jual ${jualRes.logs.join(" | ")} • Keluar ${keluarRes.logs.join(" | ")}`;
+  allUsers=salaryUsers;
+  allAbsensi=salaryAbsensi;
+  $("debug").textContent=`Servis ${servisRes.logs.join(" | ")} • Jual ${jualRes.logs.join(" | ")} • Keluar ${keluarRes.logs.join(" | ")} • Karyawan:${allUsers.length} • Absensi:${allAbsensi.length}`;
   $("loading").style.display="none";$("page").style.display="block";renderStats();
  }catch(e){$("loading").innerHTML=`<span style="color:#b42318">Gagal: ${esc(e.message)}</span>`}
 });
