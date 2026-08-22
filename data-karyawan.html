@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="theme-color" content="#081326">
-<title>FIXZY | Data Upah Karyawan</title>
+<title>FIXZY | RINGKASAN GAJI KARYAWAN</title>
 <style>
 *{box-sizing:border-box}
 :root{--navy:#081326;--navy2:#101d33;--yellow:#ffc107;--bg:#f2f5f9;--card:#fff;--line:#dbe3ed;--text:#172033;--muted:#64748b;--green:#16a34a;--red:#dc2626;--blue:#2563eb;--orange:#f59e0b}
@@ -79,49 +79,57 @@ td{padding:10px;border-bottom:1px solid #edf1f5;font-size:11px;vertical-align:mi
 @media(max-width:700px){
   .salary-summary{grid-template-columns:1fr}
 }
+
+.page-nav{display:flex;gap:8px;overflow:auto;margin-bottom:12px}
+.page-nav a{flex:1;min-width:130px;text-decoration:none;text-align:center;padding:10px 8px;border-radius:11px;background:#e2e8f0;color:#172033;font-size:11px;font-weight:900}
+.page-nav a.active{background:#ffc107;color:#111}
+.card-title{font-size:17px;font-weight:900;margin:0 0 10px}
+.salary-summary{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.salary-card{border:1px solid var(--line);border-radius:14px;background:#fff;overflow:hidden}
+.salary-head{padding:12px 13px;background:var(--navy2);color:#fff;display:flex;align-items:center;justify-content:space-between;gap:10px}
+.salary-head b{font-size:14px}.salary-head small{display:block;color:#cbd5e1;font-size:9px;margin-top:3px}
+.salary-body{padding:12px}.salary-grid{display:grid;grid-template-columns:1fr 1fr;gap:7px}
+.salary-item{border:1px solid #e5e7eb;border-radius:9px;padding:8px;background:#f8fafc}
+.salary-item small{display:block;font-size:9px;color:#64748b;font-weight:900}.salary-item b{display:block;margin-top:3px;font-size:12px}
+.salary-total{margin-top:8px;display:grid;grid-template-columns:1fr 1fr;gap:7px}
+.salary-total>div{border-radius:10px;padding:10px}.salary-gross{background:#ecfdf5;border:1px solid #a7f3d0}.salary-net{background:#eff6ff;border:1px solid #bfdbfe}
+.salary-gross b{color:#047857;font-size:16px}.salary-net b{color:#1d4ed8;font-size:16px}
+.salary-note{font-size:9px;color:#64748b;margin-top:8px;line-height:1.45}
+.action-row{display:flex;gap:7px;flex-wrap:wrap}.action{height:38px;border:0;border-radius:9px;padding:0 12px;font-size:10px;font-weight:900}
+.action.hadir{background:#dcfce7;color:#166534}.action.tidak{background:#fee2e2;color:#991b1b}.action.edit{background:#fef3c7;color:#92400e}
+.status-pill{display:inline-block;padding:5px 8px;border-radius:999px;font-size:9px;font-weight:900}
+.status-hadir{background:#dcfce7;color:#166534}.status-tidak{background:#fee2e2;color:#991b1b}.status-libur{background:#e2e8f0;color:#475569}
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}.full{grid-column:1/-1}
+.readonly{background:#f8fafc!important;color:#475569}
+@media(max-width:700px){.salary-summary{grid-template-columns:1fr}.form-grid{grid-template-columns:1fr}.full{grid-column:auto}}
 </style>
 </head>
 <body>
 <header class="header">
   <img src="logo.png" class="logo" alt="FIXZY">
-  <div class="brand">
-    <h1>FIXZY - DATA UPAH KARYAWAN</h1>
-    <p>Per karyawan • kalender • absensi • isolasi per konter</p>
-  </div>
+  <div class="brand"><h1>FIXZY - RINGKASAN GAJI KARYAWAN</h1><p>Per karyawan • kalender • absensi • isolasi per konter</p></div>
   <div class="owner"><b id="ownerName">Memuat...</b><span id="ownerEmail">Firebase</span></div>
   <button class="refresh" id="refreshBtn" title="Refresh">↻</button>
 </header>
-
 <main class="wrap">
-<section class="card">
-  <div id="status" class="status">Memeriksa sesi Firebase...</div>
-</section>
+
+    <div class="page-nav">
+      <a class="active" href="data-upah-ringkasan-FIXZY.html">📄 Ringkasan Gaji</a>
+      <a class="" href="data-absensi-karyawan-FIXZY.html">📅 Absensi</a>
+      <a class="" href="setting-upah-karyawan-FIXZY.html">⚙️ Setting Upah</a>
+    </div>
+    
+<section class="card"><div id="status" class="status">Memeriksa sesi Firebase...</div></section>
 
 <section class="card">
   <div class="toolbar">
-    <div class="field">
-      <label>PERIODE UPAH</label>
-      <select id="periode">
-        <option value="bulan">Bulan ini</option>
-        <option value="hari">Hari ini</option>
-        <option value="tahun">Tahun ini</option>
-      </select>
-    </div>
-    <div class="field">
-      <label>TANGGAL / BULAN</label>
-      <input id="periodeTanggal" type="month">
-    </div>
-    <div class="field">
-      <label>CARI KARYAWAN</label>
-      <input id="cari" placeholder="Nama, jabatan, role..." />
-    </div>
+    <div class="field"><label>PERIODE UPAH</label><select id="periode"><option value="bulan">Bulan ini</option><option value="hari">Hari ini</option><option value="tahun">Tahun ini</option></select></div>
+    <div class="field"><label>TANGGAL / BULAN</label><input id="periodeTanggal" type="month"></div>
+    <div class="field"><label>CARI KARYAWAN</label><input id="cari" placeholder="Nama, jabatan, role..."></div>
     <button class="btn dark" id="refresh2">↻ Refresh</button>
   </div>
-  <div class="notice">
-    <b>Perhitungan:</b> Harian dibayar berdasarkan hari HADIR. Bulanan memakai gaji bulanan dan tidak otomatis dipotong hanya karena hari libur. Tidak hadir tidak menambah upah harian. Persentase dihitung dari basis omzet yang tersedia pada data pengeluaran/pendapatan.
-  </div>
+  <div class="notice"><b>Perhitungan:</b> Harian berdasarkan HADIR. Bulanan memakai gaji bulanan dan hari libur tidak otomatis memotong. Persentase mengikuti basis yang tersedia pada data.</div>
 </section>
-
 <section class="kpis">
   <div class="kpi k1"><small>KARYAWAN</small><b id="karyawan">0</b></div>
   <div class="kpi k2"><small>HARI HADIR</small><b id="hadir">0</b></div>
@@ -129,88 +137,23 @@ td{padding:10px;border-bottom:1px solid #edf1f5;font-size:11px;vertical-align:mi
   <div class="kpi k4"><small>KASBON</small><b id="kasbon">Rp 0</b></div>
   <div class="kpi k5"><small>SISA UPAH</small><b id="net">Rp 0</b></div>
 </section>
-
 <section class="card">
-  <h2 class="section-title">💰 Rincian Upah Masing-Masing Karyawan</h2>
-  <div class="table-wrap">
-    <table>
-      <thead>
-        <tr>
-          <th>No</th><th>Nama</th><th>Jabatan</th><th>Sistem Upah</th><th>Tarif</th><th>Hari Kalender</th><th>Hadir</th><th>Libur</th><th>Tidak Hadir</th><th>Upah</th><th>Kasbon</th><th>Sisa</th><th>Aksi</th>
-        </tr>
-      </thead>
-      <tbody id="tbody"><tr><td colspan="13" class="empty">Memuat...</td></tr></tbody>
-    </table>
-  </div>
+  <h2 class="card-title">📄 Ringkasan Gaji Masing-Masing Karyawan</h2>
+  <div id="salarySummary" class="salary-summary"><div class="empty">Memuat...</div></div>
 </section>
 
-
-<section class="card" id="summaryCard">
-  <h2 class="section-title">📄 Ringkasan Gaji Masing-Masing Karyawan</h2>
-  <div id="salarySummary" class="salary-summary">
-    <div class="empty">Memuat ringkasan gaji...</div>
-  </div>
-</section>
-
-<section class="card">
-  <h2 class="section-title">📅 Absensi Periode Ini</h2>
-  <div class="table-wrap">
-    <table>
-      <thead><tr><th>Tanggal</th><th>Nama</th><th>Status</th><th>Masuk</th><th>Pulang</th><th>Catatan</th></tr></thead>
-      <tbody id="absensiBody"><tr><td colspan="6" class="empty">Memuat...</td></tr></tbody>
-    </table>
-  </div>
-</section>
-
-<section class="card">
-  <h2 class="section-title">💸 Kasbon Periode Ini</h2>
-  <div class="table-wrap">
-    <table>
-      <thead><tr><th>Tanggal</th><th>Nama</th><th>Jenis</th><th>Keterangan</th><th>Nominal</th></tr></thead>
-      <tbody id="kasbonBody"><tr><td colspan="5" class="empty">Memuat...</td></tr></tbody>
-    </table>
-  </div>
-</section>
 </main>
-
-<div class="popup" id="popup">
- <div class="popup-box">
-  <h3 id="popupTitle">Pengaturan Upah</h3>
-  <div class="grid">
-   <div class="field"><label>NAMA KARYAWAN</label><input id="fNama" readonly></div>
-   <div class="field"><label>JABATAN</label><input id="fJabatan" readonly></div>
-   <div class="field">
-    <label>SISTEM UPAH</label>
-    <select id="fJenis">
-      <option value="harian">Harian</option>
-      <option value="bulanan">Bulanan</option>
-      <option value="persentase">Persentase</option>
-      <option value="harian_persentase">Harian + Persentase</option>
-      <option value="bulanan_persentase">Bulanan + Persentase</option>
-    </select>
-   </div>
-   <div class="field"><label>NOMINAL UPAH</label><input id="fNominal" type="number" min="0" step="1000"></div>
-   <div class="field"><label>PERSENTASE (%)</label><input id="fPersen" type="number" min="0" max="100" step="0.01" value="0"></div>
-   <div class="field"><label>BASIS PERSENTASE</label><select id="fBasis"><option value="omzet">Omzet/Pendapatan</option><option value="servis">Pendapatan Servis</option><option value="penjualan">Pendapatan Penjualan</option></select></div>
-   <div class="field full"><label>CATATAN</label><input id="fCatatan" placeholder="Contoh: gaji bulanan tetap, bonus 5% servis"></div>
-  </div>
-  <div class="notice warn">Pengaturan ini hanya mengubah data karyawan pada konter yang sedang login. Tidak menyentuh karyawan owner lain.</div>
-  <div class="popup-actions">
-   <button class="btn light" id="cancelPopup">Batal</button>
-   <button class="btn yellow" id="savePay">💾 Simpan</button>
-  </div>
- </div>
-</div>
-
 <script type="module">
+
+
 import {initializeApp,getApps,getApp} from "https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js";
 import {getAuth,onAuthStateChanged} from "https://www.gstatic.com/firebasejs/11.10.0/firebase-auth.js";
-import {getFirestore,doc,getDoc,setDoc,collection,query,where,getDocs,getDocsFromServer,serverTimestamp} from "https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js";
+import {getFirestore,doc,getDoc,setDoc,collection,query,where,getDocsFromServer,serverTimestamp} from "https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js";
 
 const cfg={apiKey:"AIzaSyC_PcarMTT5Un7qfSLzf92o5OGn5rginsI",authDomain:"fixzy-update.firebaseapp.com",projectId:"fixzy-update",storageBucket:"fixzy-update.firebasestorage.app",messagingSenderId:"995892519622",appId:"1:995892519622:web:fa41047944d8e5b35d6dc7"};
 const app=getApps().length?getApp():initializeApp(cfg),auth=getAuth(app),db=getFirestore(app);
 const $=id=>document.getElementById(id);
-let uid="",ownerUid="",profile={},accounts=[],absensi=[],pengeluaran=[],editing=null;
+let uid="",ownerUid="",profile={},accounts=[],absensi=[],pengeluaran=[];
 
 function esc(v){return String(v??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]));}
 function money(n){return "Rp "+(Number(n)||0).toLocaleString("id-ID");}
@@ -219,8 +162,6 @@ function today(){return new Date().toISOString().slice(0,10);}
 function monthNow(){return new Date().toISOString().slice(0,7);}
 function daysInMonth(ym){const [y,m]=ym.split("-").map(Number);return new Date(y,m,0).getDate();}
 function dateOf(x){return String(x.tanggal||x.date||x.tanggalAbsen||"").slice(0,10);}
-function periodKey(){const p=$("periode").value,v=$("periodeTanggal").value;if(p==="hari")return v||today();if(p==="tahun")return(v||monthNow()).slice(0,4);return v||monthNow();}
-function matchPeriod(x){const d=dateOf(x),k=periodKey();if(!d||!k)return false;if(k.length===10)return d===k;if(k.length===7)return d.startsWith(k);return d.startsWith(k);}
 function nama(a){return String(a.nama||a.namaKaryawan||a.namaLengkap||a.displayName||a.email||"").trim();}
 function upahHarian(a){return Number(a.upahHarian??a.upah??a.gajiHarian??0)||0;}
 function upahBulanan(a){return Number(a.upahBulanan??a.gajiBulanan??a.gaji??0)||0;}
@@ -228,9 +169,8 @@ function persen(a){return Number(a.persentase??a.persen??a.bonusPersen??0)||0;}
 function jenisUpah(a){return norm(a.jenisUpah||a.sistemUpah||a.tipeUpah||"harian")||"harian";}
 function isHadir(x){return norm(x.status)==="hadir"||!!(x.jamMasuk||x.masuk||x.hadir===true);}
 function isLibur(x){return norm(x.status)==="libur";}
-function isTidakHadir(x){return !isHadir(x)&&!isLibur(x);}
-function kasbonAmount(x){return Number(x.nominal||x.jumlah||x.amount||0)||0;}
 function isKasbon(x){const j=norm(x.jenis||x.type||"");return j.includes("kasbon")||j.includes("bon");}
+function kasbonAmount(x){return Number(x.nominal||x.jumlah||x.amount||0)||0;}
 function kasbonName(x){return String(x.namaKaryawan||x.nama||x.karyawan||"");}
 function sameEmployee(x,a){
  const id=x.userId||x.uid||x.karyawanUid||x.employeeUid||"";
@@ -238,7 +178,6 @@ function sameEmployee(x,a){
  const an=norm(nama(a)),xn=norm(x.nama||x.namaKaryawan||x.namaTeknisi||"");
  return !!an&&!!xn&&(an===xn||an.includes(xn)||xn.includes(an));
 }
-
 async function loadProfile(user){
  const s=await getDoc(doc(db,"users",user.uid));
  if(!s.exists())throw new Error("Profil users tidak ditemukan.");
@@ -247,7 +186,6 @@ async function loadProfile(user){
  if(!["owner","superadmin"].includes(r))throw new Error("Halaman ini hanya untuk OWNER dan SUPERADMIN.");
  ownerUid=r==="owner"?user.uid:(profile.ownerUid||profile.ownerId||user.uid);
 }
-
 async function ownedUsers(){
  const map=new Map();
  for(const field of ["ownerUid","ownerId"]){
@@ -256,15 +194,12 @@ async function ownedUsers(){
    s.docs.forEach(d=>map.set(d.id,{id:d.id,...d.data()}));
   }catch(e){console.warn("users",field,e.message);}
  }
- if(uid===ownerUid){
-  try{const s=await getDoc(doc(db,"users",uid));if(s.exists())map.set(uid,{id:uid,...s.data()});}catch{}
- }
+ try{const s=await getDoc(doc(db,"users",uid));if(s.exists())map.set(uid,{id:uid,...s.data()});}catch{}
  return [...map.values()].filter(x=>{
   const r=norm(x.role);
   return ["employee","karyawan","kasir","kurir","teknisi"].includes(r)||upahHarian(x)>0||upahBulanan(x)>0||persen(x)>0;
- });
+ }).sort((a,b)=>nama(a).localeCompare(nama(b),"id"));
 }
-
 async function ownedCollection(name){
  const map=new Map();
  for(const field of ["ownerUid","ownerId","uid"]){
@@ -273,181 +208,56 @@ async function ownedCollection(name){
    s.docs.forEach(d=>map.set(d.id,{id:d.id,...d.data()}));
   }catch(e){console.warn(name,field,e.message);}
  }
- if(uid!==ownerUid){
-  for(const field of ["ownerUid","ownerId"]){
-   try{
-    const s=await getDocsFromServer(query(collection(db,name),where(field,"==",uid)));
-    s.docs.forEach(d=>map.set(d.id,{id:d.id,...d.data()}));
-   }catch{}
-  }
- }
  return [...map.values()];
 }
-
-async function loadData(){
+async function loadAll(){
  [accounts,absensi,pengeluaran]=await Promise.all([ownedUsers(),ownedCollection("absensi"),ownedCollection("pengeluaran")]);
- accounts.sort((a,b)=>nama(a).localeCompare(nama(b),"id"));
+}
+function setupHeader(user){
+ $("ownerName").textContent=profile.namaKonter||profile.nama||user.displayName||"Akun FIXZY";
+ $("ownerEmail").textContent=user.email||"Firebase";
+}
+async function boot(loadFn){
+ onAuthStateChanged(auth,async user=>{
+  if(!user){$("status").innerHTML='<span class="err">❌ Sesi login tidak ditemukan.</span>';return;}
+  uid=user.uid;
+  try{await loadProfile(user);setupHeader(user);await loadFn();}
+  catch(e){$("status").innerHTML='<span class="err">🔒 '+esc(e.message||e)+'</span>';}
+ });
 }
 
-function attendanceFor(a){
- return absensi.filter(x=>matchPeriod(x)&&sameEmployee(x,a));
-}
-function kasbonFor(a){
- return pengeluaran.filter(x=>matchPeriod(x)&&isKasbon(x)&&sameEmployee(x,{id:"",nama:kasbonName(x)}));
-}
-function percentBase(a){
- // Jika tersedia nominal basis pada dokumen, gunakan; jika tidak, 0.
- return absensi.filter(x=>matchPeriod(x)&&sameEmployee(x,a)).reduce((s,x)=>
-   s+Number(x.omzet||x.pendapatan||x.nilaiOmzet||x.totalOmzet||0),0);
-}
+function periodKey(){const p=$("periode").value,v=$("periodeTanggal").value;if(p==="hari")return v||today();if(p==="tahun")return(v||monthNow()).slice(0,4);return v||monthNow();}
+function matchPeriod(x){const d=dateOf(x),k=periodKey();if(!d||!k)return false;if(k.length===10)return d===k;if(k.length===7)return d.startsWith(k);return d.startsWith(k);}
+function kasbonFor(a){return pengeluaran.filter(x=>matchPeriod(x)&&isKasbon(x)&&sameEmployee(x,{id:"",nama:kasbonName(x)}));}
 function calculate(a){
- const rows=attendanceFor(a);
- const hadir=rows.filter(isHadir).length;
- const libur=rows.filter(isLibur).length;
- const tidak=rows.filter(isTidakHadir).length;
- const jenis=jenisUpah(a);
- const ym=periodKey().length>=7?periodKey().slice(0,7):monthNow();
- const kalender=daysInMonth(ym);
- const hd=upahHarian(a),bm=upahBulanan(a),ps=persen(a);
+ const rows=absensi.filter(x=>matchPeriod(x)&&sameEmployee(x,a));
+ const hadir=rows.filter(isHadir).length,libur=rows.filter(isLibur).length,tidak=rows.filter(x=>!isHadir(x)&&!isLibur(x)).length;
+ const jenis=jenisUpah(a),ym=periodKey().slice(0,7)||monthNow(),kalender=daysInMonth(ym),hd=upahHarian(a),bm=upahBulanan(a),ps=persen(a);
  let base=0,percentPay=0;
  if(jenis==="harian")base=hadir*hd;
  else if(jenis==="bulanan")base=bm;
- else if(jenis==="persentase"){base=0;percentPay=percentBase(a)*ps/100;}
- else if(jenis==="harian_persentase"){base=hadir*hd;percentPay=percentBase(a)*ps/100;}
- else if(jenis==="bulanan_persentase"){base=bm;percentPay=percentBase(a)*ps/100;}
- const gross=base+percentPay;
- const kb=kasbonFor(a).reduce((s,x)=>s+kasbonAmount(x),0);
- return {kalender,hadir,libur,tidak,gross,kb,net:Math.max(0,gross-kb),jenis,hd,bm,ps,percentPay};
+ else if(jenis==="persentase")percentPay=0;
+ else if(jenis==="harian_persentase")base=hadir*hd;
+ else if(jenis==="bulanan_persentase")base=bm;
+ const gross=base+percentPay,kb=kasbonFor(a).reduce((s,x)=>s+kasbonAmount(x),0);
+ return {kalender,hadir,libur,tidak,gross,kb,net:Math.max(0,gross-kb),jenis,hd,bm,ps};
 }
 function jenisLabel(j){return({harian:"Harian",bulanan:"Bulanan",persentase:"Persentase",harian_persentase:"Harian + %",bulanan_persentase:"Bulanan + %"})[j]||"Harian";}
-function tarifLabel(a,c){
- if(c.jenis==="harian")return money(c.hd)+"/hari";
- if(c.jenis==="bulanan")return money(c.bm)+"/bulan";
- if(c.jenis==="persentase")return c.ps+"%";
- if(c.jenis==="harian_persentase")return money(c.hd)+" + "+c.ps+"%";
- return money(c.bm)+" + "+c.ps+"%";
-}
-
-function renderSalarySummary(all){
-  const box=$("salarySummary");
-  if(!box)return;
-  if(!all.length){
-    box.innerHTML='<div class="empty">Belum ada karyawan untuk periode ini.</div>';
-    return;
-  }
-  box.innerHTML=all.map(({a,c})=>{
-    const name=nama(a)||"-";
-    const jabatan=a.jabatan||a.posisi||"-";
-    const status=c.hadir>0?"Ada Kehadiran":"Belum Hadir";
-    const persenText=c.ps?` • ${c.ps}%`: "";
-    return `<div class="salary-card">
-      <div class="salary-head">
-        <div>
-          <b>${esc(name)}</b>
-          <small>${esc(jabatan)} • ${esc(jenisLabel(c.jenis))}${esc(persenText)}</small>
-        </div>
-        <span class="badge ${c.hadir>0?"green":"orange"}">${status}</span>
-      </div>
-      <div class="salary-body">
-        <div class="salary-grid">
-          <div class="salary-item"><small>HARI KALENDER</small><b>${c.kalender} hari</b></div>
-          <div class="salary-item"><small>HADIR</small><b>${c.hadir} hari</b></div>
-          <div class="salary-item"><small>LIBUR</small><b>${c.libur} hari</b></div>
-          <div class="salary-item"><small>TIDAK HADIR</small><b>${c.tidak} hari</b></div>
-          <div class="salary-item"><small>TARIF</small><b>${esc(tarifLabel(a,c))}</b></div>
-          <div class="salary-item"><small>KASBON</small><b>${money(c.kb)}</b></div>
-        </div>
-        <div class="salary-total">
-          <div class="salary-gross"><small>UPAH KOTOR</small><b>${money(c.gross)}</b></div>
-          <div class="salary-net"><small>SISA DITERIMA</small><b>${money(c.net)}</b></div>
-        </div>
-        <div class="salary-note">
-          ${c.jenis==="bulanan"||c.jenis==="bulanan_persentase"
-            ? "Gaji bulanan tidak otomatis dipotong karena hari libur."
-            : c.jenis==="persentase"
-              ? `Komisi ${c.ps}% dari basis persentase yang tersedia.`
-              : "Upah dihitung berdasarkan hari HADIR."}
-          ${c.percentPay?` Tambahan persentase: ${money(c.percentPay)}.`:""}
-        </div>
-      </div>
-    </div>`;
-  }).join("");
-}
-
+function tarifLabel(c){if(c.jenis==="harian")return money(c.hd)+"/hari";if(c.jenis==="bulanan")return money(c.bm)+"/bulan";if(c.jenis==="persentase")return c.ps+"%";if(c.jenis==="harian_persentase")return money(c.hd)+" + "+c.ps+"%";return money(c.bm)+" + "+c.ps+"%";}
 function render(){
- const q=norm($("cari").value);
- const all=accounts.map(a=>({a,c:calculate(a)}));
- const rows=all.filter(r=>!q||[nama(r.a),r.a.jabatan,r.a.posisi,r.a.role,r.a.email].join(" ").toLowerCase().includes(q));
- renderSalarySummary(rows);
- $("karyawan").textContent=all.length;
- $("hadir").textContent=all.reduce((s,r)=>s+r.c.hadir,0);
- $("gross").textContent=money(all.reduce((s,r)=>s+r.c.gross,0));
- $("kasbon").textContent=money(all.reduce((s,r)=>s+r.c.kb,0));
- $("net").textContent=money(all.reduce((s,r)=>s+r.c.net,0));
- $("tbody").innerHTML=rows.map((r,i)=>`<tr>
- <td>${i+1}</td><td><b>${esc(nama(r.a))}</b><div style="font-size:9px;color:#94a3b8">${esc(r.a.email||"")}</div></td>
- <td>${esc(r.a.jabatan||r.a.posisi||"-")}</td><td><span class="badge blue">${esc(jenisLabel(r.c.jenis))}</span></td>
- <td>${esc(tarifLabel(r.a,r.c))}</td><td>${r.c.kalender} hari</td><td><span class="badge green">${r.c.hadir}</span></td>
- <td><span class="badge gray">${r.c.libur}</span></td><td><span class="badge orange">${r.c.tidak}</span></td>
- <td class="num"><b>${money(r.c.gross)}</b>${r.c.percentPay?`<div style="font-size:9px;color:#7c3aed">Termasuk % ${money(r.c.percentPay)}</div>`:""}</td>
- <td class="num">${r.c.kb?`<span class="badge red">${money(r.c.kb)}</span>`:money(0)}</td>
- <td class="num"><b>${money(r.c.net)}</b></td>
- <td><button class="edit" data-edit="${esc(r.a.id)}">✏️ Atur</button></td>
- </tr>`).join("")||'<tr><td colspan="13" class="empty">Belum ada karyawan untuk konter ini.</td></tr>';
-
- const ab=absensi.filter(matchPeriod).sort((a,b)=>dateOf(b).localeCompare(dateOf(a)));
- $("absensiBody").innerHTML=ab.map(x=>`<tr><td>${esc(dateOf(x))}</td><td><b>${esc(x.nama||x.namaKaryawan||"-")}</b></td><td><span class="badge ${isHadir(x)?"green":isLibur(x)?"gray":"orange"}">${esc(x.status||"-")}</span></td><td>${esc(x.jamMasuk||"-")}</td><td>${esc(x.jamPulang||"-")}</td><td>${esc(x.catatan||"-")}</td></tr>`).join("")||'<tr><td colspan="6" class="empty">Belum ada absensi.</td></tr>';
-
- const kb=pengeluaran.filter(x=>matchPeriod(x)&&isKasbon(x)).sort((a,b)=>dateOf(b).localeCompare(dateOf(a)));
- $("kasbonBody").innerHTML=kb.map(x=>`<tr><td>${esc(dateOf(x))}</td><td>${esc(kasbonName(x)||"-")}</td><td>${esc(x.jenis||"Kasbon")}</td><td>${esc(x.keterangan||"-")}</td><td class="num">${money(kasbonAmount(x))}</td></tr>`).join("")||'<tr><td colspan="5" class="empty">Belum ada kasbon.</td></tr>';
+ const q=norm($("cari").value),all=accounts.map(a=>({a,c:calculate(a)})),rows=all.filter(r=>!q||[nama(r.a),r.a.jabatan,r.a.posisi,r.a.role,r.a.email].join(" ").toLowerCase().includes(q));
+ $("karyawan").textContent=all.length;$("hadir").textContent=all.reduce((s,r)=>s+r.c.hadir,0);$("gross").textContent=money(all.reduce((s,r)=>s+r.c.gross,0));$("kasbon").textContent=money(all.reduce((s,r)=>s+r.c.kb,0));$("net").textContent=money(all.reduce((s,r)=>s+r.c.net,0));
+ $("salarySummary").innerHTML=rows.map(r=>`<div class="salary-card"><div class="salary-head"><div><b>${esc(nama(r.a))}</b><small>${esc(r.a.jabatan||r.a.posisi||"-")} • ${esc(jenisLabel(r.c.jenis))}</small></div><span class="status-pill ${r.c.hadir?"status-hadir":"status-tidak"}">${r.c.hadir?"Ada Kehadiran":"Belum Hadir"}</span></div><div class="salary-body"><div class="salary-grid">
+ <div class="salary-item"><small>HARI KALENDER</small><b>${r.c.kalender} hari</b></div><div class="salary-item"><small>HADIR</small><b>${r.c.hadir} hari</b></div><div class="salary-item"><small>LIBUR</small><b>${r.c.libur} hari</b></div><div class="salary-item"><small>TIDAK HADIR</small><b>${r.c.tidak} hari</b></div><div class="salary-item"><small>TARIF</small><b>${esc(tarifLabel(r.c))}</b></div><div class="salary-item"><small>KASBON</small><b>${money(r.c.kb)}</b></div></div>
+ <div class="salary-total"><div class="salary-gross"><small>UPAH KOTOR</small><b>${money(r.c.gross)}</b></div><div class="salary-net"><small>SISA DITERIMA</small><b>${money(r.c.net)}</b></div></div>
+ <div class="salary-note">${r.c.jenis==="bulanan"||r.c.jenis==="bulanan_persentase"?"Gaji bulanan tidak otomatis dipotong karena hari libur.":"Upah harian dihitung berdasarkan hari HADIR."}</div></div></div>`).join("")||'<div class="empty">Belum ada karyawan.</div>';
 }
-function openEdit(id){
- const a=accounts.find(x=>x.id===id);if(!a)return;
- editing=a;$("fNama").value=nama(a);$("fJabatan").value=a.jabatan||a.posisi||"";
- $("fJenis").value=jenisUpah(a);$("fNominal").value=jenisUpah(a).includes("bulanan")?upahBulanan(a):upahHarian(a);
- $("fPersen").value=persen(a);$("fBasis").value=a.basisPersentase||"omzet";$("fCatatan").value=a.catatanUpah||"";
- $("popup").classList.add("show");
-}
-async function savePay(){
- if(!editing)return;
- const jenis=$("fJenis").value,nom=Number($("fNominal").value)||0,ps=Number($("fPersen").value)||0;
- if((jenis==="harian"||jenis==="harian_persentase")&&nom<=0)return alertBox("Nominal upah harian harus diisi.");
- if((jenis==="bulanan"||jenis==="bulanan_persentase")&&nom<=0)return alertBox("Nominal upah bulanan harus diisi.");
- if((jenis.includes("persentase"))&&(ps<=0||ps>100))return alertBox("Persentase harus antara 0 sampai 100.");
- const data={jenisUpah:jenis,sistemUpah:jenis,upahHarian:jenis.includes("harian")?nom:(editing.upahHarian||0),upahBulanan:jenis.includes("bulanan")?nom:(editing.upahBulanan||0),persentase:jenis.includes("persentase")?ps:0,basisPersentase:jenis.includes("persentase")?$("fBasis").value:(editing.basisPersentase||"omzet"),catatanUpah:$("fCatatan").value.trim(),updatedAt:serverTimestamp()};
- try{
-  $("savePay").disabled=true;$("savePay").textContent="Menyimpan...";
-  await setDoc(doc(db,"users",editing.id),data,{merge:true});
-  $("popup").classList.remove("show");editing=null;await loadData();render();
-  $("status").innerHTML='<span class="ok">✓ Pengaturan upah berhasil disimpan.</span>';
- }catch(e){alertBox("Gagal menyimpan: "+(e.message||e));}
- finally{$("savePay").disabled=false;$("savePay").textContent="💾 Simpan";}
-}
-function alertBox(msg){$("status").innerHTML='<span class="err">❌ '+esc(msg)+'</span>';window.scrollTo({top:0,behavior:"smooth"});}
-async function refresh(){
- if(!ownerUid)return;
- $("status").textContent="⏳ Membaca data Firebase...";
- try{await loadData();render();$("status").innerHTML=`<span class="ok">✓ ${accounts.length} karyawan • Absensi ${absensi.length} • Pengeluaran ${pengeluaran.length} • Owner ${esc(ownerUid.slice(0,8))}... • Isolasi aktif</span>`;}
- catch(e){$("status").innerHTML='<span class="err">❌ '+esc(e.message||e)+'</span>';}
-}
+async function refresh(){$("status").textContent="⏳ Membaca data Firebase...";try{await loadAll();render();$("status").innerHTML=`<span class="ok">✓ ${accounts.length} karyawan • Absensi ${absensi.length} • Pengeluaran ${pengeluaran.length} • Isolasi aktif</span>`;}catch(e){$("status").innerHTML='<span class="err">❌ '+esc(e.message||e)+'</span>';}}
 $("refreshBtn").onclick=refresh;$("refresh2").onclick=refresh;$("cari").oninput=render;
 $("periode").onchange=()=>{const p=$("periode").value,f=$("periodeTanggal");f.type=p==="hari"?"date":"month";f.value=p==="hari"?today():monthNow();refresh();};
-$("periodeTanggal").onchange=refresh;
-$("cancelPopup").onclick=()=>{$("popup").classList.remove("show");editing=null};
-$("savePay").onclick=savePay;
-$("tbody").onclick=e=>{const b=e.target.closest("[data-edit]");if(b)openEdit(b.dataset.edit);};
-$("periodeTanggal").value=monthNow();
+$("periodeTanggal").onchange=refresh;$("periodeTanggal").value=monthNow();
+boot(refresh);
 
-onAuthStateChanged(auth,async user=>{
- if(!user){$("status").innerHTML='<span class="err">❌ Sesi login tidak ditemukan.</span>';return;}
- uid=user.uid;
- try{
-  await loadProfile(user);
-  $("ownerName").textContent=profile.namaKonter||profile.nama||user.displayName||"Akun FIXZY";
-  $("ownerEmail").textContent=user.email||"Firebase";
-  await refresh();
- }catch(e){$("status").innerHTML='<span class="err">🔒 '+esc(e.message||e)+'</span>';}
-});
 </script>
 </body>
 </html>
