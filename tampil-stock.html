@@ -153,17 +153,21 @@ function stockOf(p){
  return num(p.sisa??p.sisaStok??p.stokTersedia??p.stokAkhir??p.stok??p.qty??p.jumlah??p.stock);
 }
 
-function roleOf(p){return String(p.role||"").toLowerCase()}
+function roleOf(p){return String(p.role||"").toLowerCase().replace(/[\s_-]+/g,"")}
 
 function isSuperAdmin(p){
   const r=roleOf(p);
   return r==="superadmin" || r==="super_admin" || p.isSuperAdmin===true;
 }
 
-function getOwner(u,p){
+function isSuperAdmin(p){
   const r=roleOf(p);
-  if(isSuperAdmin(p)) return "__ALL__";
-  if(r==="owner" || p.isOwner===true) return u.uid;
+  return r==="superadmin" || p.isSuperAdmin===true;
+}
+
+function getOwner(u,p){
+  if(isSuperAdmin(p)) return u.uid;
+  if(roleOf(p)==="owner" || p.isOwner===true) return u.uid;
   return String(p.ownerUid||p.ownerId||u.uid);
 }
 
@@ -172,27 +176,29 @@ async function loadProducts(){
   $("listMsg").textContent="Memuat data stok...";
   try{
     const map=new Map();
-
-    if(ownerUid==="__ALL__"){
-      // Superadmin boleh melihat seluruh stok.
-      // Firestore Rules tetap harus membatasi hak ini di server.
-      const snap=await getDocs(collection(db,"stok"));
-      snap.forEach(d=>map.set(d.id,{id:d.id,...d.data()}));
-    }else{
-      // Owner/karyawan hanya membaca stok owner terkait.
-      const qs=[
-        query(collection(db,"stok"),where("ownerUid","==",ownerUid)),
-        query(collection(db,"stok"),where("ownerId","==",ownerUid))
-      ];
-      for(const q of qs){
-        try{
-          const snap=await getDocs(q);
-          snap.forEach(d=>map.set(d.id,{id:d.id,...d.data()}));
-        }catch(e){console.warn("Query stok:",e)}
-      }
+    // SEMUA ROLE HANYA MEMBACA STOK MILIK OWNER YANG DITENTUKAN AKUN AKTIF.
+    // SUPERADMIN TIDAK BOLEH mengambil seluruh koleksi karena itu menyebabkan kebocoran data antar-akun.
+    const qs=[
+      query(collection(db,"stok"),where("ownerUid","==",ownerUid)),
+      query(collection(db,"stok"),where("ownerId","==",ownerUid))
+    ];
+    // Beberapa data stok lama memakai field uid. Hanya superadmin yang boleh
+    // memakai fallback ini, dan nilainya tetap harus persis UID akun login.
+    if(isSuperAdmin({role})) {
+      qs.push(query(collection(db,"stok"),where("uid","==",uid)));
+    }
+    for(const q of qs){
+      try{
+        const snap=await getDocs(q);
+        snap.forEach(d=>map.set(d.id,{id:d.id,...d.data()}));
+      }catch(e){console.warn("Query stok:",e)}
     }
 
-    products=[...map.values()].map(p=>{
+    products=[...map.values()].filter(p=>{
+      // Pertahanan tambahan di sisi client: data harus benar-benar milik owner aktif.
+      const owners=[p.ownerUid,p.ownerId,p.uid,p.ownerUID].map(v=>String(v||""));
+      return owners.includes(String(ownerUid));
+    }).map(p=>{
       if(p.hargaModal==null&&p.hargaBeli!=null)p.hargaModal=p.hargaBeli;
       if(p.hargaJual==null&&p.harga!=null)p.hargaJual=p.harga;
       if(p.sisa==null&&p.stok!=null)p.sisa=p.stok;
@@ -204,8 +210,8 @@ async function loadProducts(){
     fillCategories();
     render();
     $("listMsg").textContent=products.length
-      ? `${products.length} produk ditampilkan${ownerUid==="__ALL__"?" • MODE SUPERADMIN":""}`
-      : "Belum ada data stok.";
+      ? `${products.length} produk ditampilkan • Owner: ${ownerUid.slice(0,8)}`
+      : "Belum ada data stok untuk akun ini.";
   }catch(e){
     console.error(e);
     $("listMsg").textContent="Gagal membaca stok.";
