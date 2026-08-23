@@ -153,47 +153,68 @@ function stockOf(p){
  return num(p.sisa??p.sisaStok??p.stokTersedia??p.stokAkhir??p.stok??p.qty??p.jumlah??p.stock);
 }
 
-function roleOf(p){return String(p.role||"").toLowerCase().replace(/[\s_-]/g,"")}
+function roleOf(p){return String(p.role||"").toLowerCase()}
 
-// Harus sama dengan Firestore Rules: superadmin ditentukan oleh email resmi.
-function isSuperAdminAccount(user){
- return String(user?.email||"").toLowerCase()==="servicehpmaja@gmail.com";
+function isSuperAdminProfile(p,u){
+ const r=roleOf(p);
+ const email=String(u?.email||"").toLowerCase();
+ return r==="superadmin" || email==="servicehpmaja@gmail.com";
 }
 
-async function getOwner(u,p){
+function getOwner(u,p){
  const r=roleOf(p);
- // Super Admin dan Owner memakai UID akun sendiri.
- if(isSuperAdminAccount(u)||r==="owner"||p.isOwner===true)return u.uid;
- // Karyawan/teknisi/kurir mengikuti owner pada profil users.
- return String(p.ownerUid||p.ownerId||u.uid);
+ // SUPER ADMIN adalah pembuat/pengelola aplikasi, BUKAN owner konter.
+ // Jangan pernah menganggap UID Super Admin sebagai ownerUid stok.
+ if(isSuperAdminProfile(p,u)) return "";
+
+ // OWNER: stok milik UID Owner sendiri.
+ if(r==="owner" || p.isOwner===true) return String(u.uid);
+
+ // KARYAWAN/TEKNISI: stok milik Owner yang tercantum di profil akun.
+ return String(p.ownerUid||p.ownerId||"").trim();
+}
+
+function belongsToOwner(p,activeOwnerUid){
+ const a=String(p?.ownerUid||"").trim();
+ const b=String(p?.ownerId||"").trim();
+ const target=String(activeOwnerUid||"").trim();
+ if(!target) return false;
+ // Jika dua identitas tersedia, KEDUANYA harus menunjuk owner yang sama.
+ if(a && b) return a===target && b===target;
+ return a===target || b===target;
 }
 
 async function loadProducts(){
  if(!uid)return;
+
+ // SUPER ADMIN tidak boleh membaca stok Owner mana pun.
+ if(!ownerUid){
+  products=[];
+  fillCategories();
+  render();
+  $("listMsg").textContent="Super Admin: data stok Owner tidak ditampilkan.";
+  return;
+ }
+
  $("listMsg").textContent="Memuat data stok...";
  try{
+  // Query hanya berdasarkan Owner aktif. Tidak pernah membaca seluruh koleksi stok.
   const map=new Map();
-
-  // SESUAI RULES FIRESTORE:
-  // 1) Super Admin (email servicehpmaja@gmail.com) boleh membaca seluruh stok.
-  // 2) Owner hanya membaca stok milik UID owner tersebut.
-  // 3) Karyawan hanya membaca stok milik ownerUid/ownerId pada profilnya.
-  if(isSuperAdminAccount(auth.currentUser)){
-   const snap=await getDocs(collection(db,"stok"));
-   snap.forEach(d=>map.set(d.id,{id:d.id,...d.data()}));
-  }else{
-   const qs=[
-    query(collection(db,"stok"),where("ownerUid","==",ownerUid)),
-    query(collection(db,"stok"),where("ownerId","==",ownerUid)),
-    query(collection(db,"stok"),where("uid","==",ownerUid))
-   ];
-   for(const q of qs){
-    try{
-     const snap=await getDocs(q);
-     snap.forEach(d=>map.set(d.id,{id:d.id,...d.data()}));
-    }catch(e){console.warn("Query stok:",e)}
-   }
+  const qs=[
+   query(collection(db,"stok"),where("ownerUid","==",ownerUid)),
+   query(collection(db,"stok"),where("ownerId","==",ownerUid))
+  ];
+  for(const q of qs){
+   try{
+    const snap=await getDocs(q);
+    snap.forEach(d=>{
+     const item={id:d.id,...d.data()};
+     // Pengaman kedua: dokumen harus benar-benar milik Owner aktif.
+     if(belongsToOwner(item,ownerUid)) map.set(d.id,item);
+    });
+   }catch(e){console.warn("Query stok:",e)}
   }
+
   products=[...map.values()].map(p=>{
    if(p.hargaModal==null&&p.hargaBeli!=null)p.hargaModal=p.hargaBeli;
    if(p.hargaJual==null&&p.harga!=null)p.hargaJual=p.harga;
@@ -296,7 +317,16 @@ onAuthStateChanged(auth,async u=>{
   if(!snap.exists())throw Error("Profil akun tidak ditemukan.");
   const p=snap.data()||{};
   role=roleOf(p);
-  ownerUid=await getOwner(u,p);
+  ownerUid=getOwner(u,p);
+
+  // Hak akses data stok:
+  // Owner    -> UID sendiri
+  // Karyawan -> ownerUid/ownerId dari profilnya
+  // Superadmin-> TIDAK ADA ownerUid, sehingga tidak membaca stok Owner.
+  if(!isSuperAdminProfile(p,u) && !ownerUid){
+   throw Error("Owner akun tidak ditemukan. Data stok tidak dapat dibuka.");
+  }
+
   await loadProducts();
  }catch(e){
   console.error(e);
