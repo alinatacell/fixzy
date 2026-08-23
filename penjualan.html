@@ -635,15 +635,16 @@ let currentUser=null, ownerUid=null, isOwner=false, allProduk=[], konterName="",
 // SESI AKUN — ACUAN servisan.html
 // businessUid adalah pemisah data utama:
 // OWNER      -> UID akun sendiri
-// SUPERADMIN -> UID akun sendiri
+// SUPERADMIN -> TIDAK BOLEH masuk transaksi bisnis
 // KARYAWAN   -> ownerUid/ownerId pada profil karyawan
 // =========================================================
 function roleNorm(v){return String(v||"").trim().toLowerCase();}
 function resolveBusinessUid(profile,user){
   const role=roleNorm(profile?.role);
-  if(role==="owner" || role==="superadmin" || role==="super_admin" || profile?.isOwner===true){
+  if(role==="owner" || profile?.isOwner===true){
     return String(user.uid||"").trim();
   }
+  if(role==="superadmin" || role==="super_admin") return "";
   return String(profile?.ownerUid||profile?.ownerId||"").trim();
 }
 
@@ -664,11 +665,14 @@ onAuthStateChanged(auth, async u=>{
     const email=String(u.email||"").trim().toLowerCase();
     const superAdmin=(role==="superadmin"||role==="super_admin"||email==="servicehpmaja@gmail.com");
 
-    if(!superAdmin && !["owner","employee","karyawan"].includes(role)){
+    if(superAdmin){
+      throw new Error("SUPERADMIN hanya mengelola sistem dan tidak boleh mengakses data bisnis Owner.");
+    }
+    if(!["owner","employee","karyawan"].includes(role)){
       throw new Error("Akun tidak memiliki akses input penjualan.");
     }
 
-    isOwner=(role==="owner" || p.isOwner===true || superAdmin);
+    isOwner=(role==="owner" || p.isOwner===true);
     ownerUid=resolveBusinessUid(p,u);
     if(!ownerUid) throw new Error("Identitas owner akun tidak ditemukan.");
 
@@ -678,8 +682,7 @@ onAuthStateChanged(auth, async u=>{
     currentUser.businessOwnerUid=ownerUid;
     currentUser.isOwner=isOwner;
 
-    // Sama seperti servisan: akun Owner/Superadmin memakai profil sendiri.
-    // Karyawan tidak dipaksa membaca profil Owner jika rules tidak mengizinkan.
+    // Owner memakai profil sendiri. Karyawan memakai ownerUid/ownerId dari profilnya.
     if(isOwner){
       konterName=p.namaKonter||p.namaToko||p.tokoName||p.namaKonterToko||p.konter||p.storeName||p.displayName||p.nama||p.name||p.username||"Fixzy - A Yudi Thea";
     }else{
@@ -837,9 +840,10 @@ function activeStockOwner(){
   // PERSIS pola servisan:
   // Owner/Superadmin -> UID sendiri
   // Karyawan -> businessOwnerUid yang berasal dari ownerUid/ownerId profil
-  if(role==="owner" || role==="superadmin" || currentUser?.isOwner===true){
+  if(role==="owner" || currentUser?.isOwner===true){
     return String(currentUser?.uid||"").trim();
   }
+  if(role==="superadmin" || role==="super_admin") return "";
   return String(currentUser?.businessOwnerUid||currentUser?.ownerUid||currentUser?.ownerId||"").trim();
 }
 
@@ -857,11 +861,6 @@ async function loadProduk(){
     query(collection(db,"stok"),where("ownerUid","==",businessUid)),
     query(collection(db,"stok"),where("ownerId","==",businessUid))
   ];
-  const role=roleNorm(currentUser?.profileRole||"");
-  if(role==="superadmin"){
-    queries.push(query(collection(db,"stok"),where("uid","==",businessUid)));
-  }
-
   for(const q of queries){
     try{
       const snap=await getDocs(q);
@@ -869,9 +868,7 @@ async function loadProduk(){
         const data=d.data()||{};
         // Filter kedua untuk memastikan dokumen benar-benar milik businessUid.
         const owner=String(data.ownerUid||data.ownerId||"").trim();
-        const creator=String(data.uid||"").trim();
-        const valid=owner===businessUid || (role==="superadmin" && creator===businessUid);
-        if(!valid) return;
+        if(owner!==businessUid) return;
 
         const stokVal=Number(data.sisa??data.sisaStok??data.stokTersedia??data.stokAkhir??data.pcs??data.ready??data.stok??data.qty??data.jumlah??data.stock??0)||0;
         docsById.set(d.id,{id:d.id,_col:"stok",_stok:stokVal,...data});
