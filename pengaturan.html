@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="id">  
+<html lang="id">
 <head><style>
 @font-face {
   font-family: "Optimistic";
@@ -21,53 +21,49 @@
 :where(code, pre, kbd, samp) {
   font-family: "Optimistic Mono", ui-monospace, monospace;
 }
-</style>  
-<meta charset="UTF-8">  
-<meta name="viewport" content="width=device-width,initial-scale=1">  
-<meta name="theme-color" content="#081326">  
-<title>FIXZY | SETTING UPAH & IZIN KARYAWAN</title>  
-<style>  
-*{box-sizing:border-box}  
-:root{--navy:#081326;--navy2:#101d33;--yellow:#ffc107;--bg:#f2f5f9;--card:#fff;--line:#dbe3ed;--text:#172033;--muted:#64748b;--green:#16a34a;--red:#dc2626;--blue:#2563eb;--orange:#f59e0b}  
-body{margin:0;background:var(--bg);color:var(--text);font-family:Arial,Helvetica,sans-serif}  
-button,input,select{font:inherit}button{cursor:pointer}  
-.header{position:sticky;top:0;z-index:30;background:var(--navy);color:#fff;min-height:74px;padding:9px 14px;display:flex;align-items:center;gap:12px;box-shadow:0 4px 16px #0004}  
-.logo{width:52px;height:52px;object-fit:contain;border-radius:10px;flex:none}  
-.brand{flex:1;min-width:0}.brand h1{font-size:18px;margin:0;font-weight:900;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.brand p{font-size:11px;color:#cbd5e1;margin:3px 0 0}  
-.owner{text-align:right;max-width:250px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.owner b{display:block;font-size:12px}.owner span{display:block;font-size:10px;color:#cbd5e1;margin-top:3px}  
-.refresh{height:44px;width:44px;border:0;border-radius:12px;background:var(--yellow);font-weight:900;color:#111;font-size:20px}  
-.wrap{max-width:1280px;margin:auto;padding:12px}  
-.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:14px;margin-bottom:12px;box-shadow:0 4px 16px #0000000a}  
-.status{font-size:12px;color:var(--muted);line-height:1.5}.ok{color:#15803d;font-weight:800}.err{color:#b91c1c;font-weight:800}  
+</style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#081326">
+<title>FIXZY | SETTING UPAH & IZIN - UI FINAL + FLOW FIXED</title>
+<style>
+*{box-sizing:border-box}
+:root{--navy:#081326;--navy2:#101d33;--yellow:#ffc107;--bg:#f2f5f9;--card:#fff;--line:#dbe3ed;--text:#172033;--muted:#64748b}
+body{margin:0;background:var(--bg);color:var(--text);font-family:Arial,Helvetica,sans-serif}
+button,input,select{font:inherit}button{cursor:pointer}
+.header{position:sticky;top:0;z-index:30;background:var(--navy);color:#fff;min-height:74px;padding:9px 14px;display:flex;align-items:center;gap:12px;box-shadow:0 4px 16px #0004}
+.logo{width:52px;height:52px;object-fit:contain;border-radius:10px;flex:none;background:#000}
+.brand{flex:1;min-width:0}.brand h1{font-size:18px;margin:0;font-weight:900;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.brand p{font-size:11px;color:#cbd5e1;margin:3px 0 0}
+.owner{text-align:right;max-width:250px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.owner b{display:block;font-size:12px}.owner span{display:block;font-size:10px;color:#cbd5e1;margin-top:3px}
+.refresh{height:44px;width:44px;border:0;border-radius:12px;background:var(--yellow);font-weight:900;color:#111;font-size:20px}
+.wrap{max-width:1280px;margin:auto;padding:12px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:14px;margin-bottom:12px;box-shadow:0 4px 16px #0000000a}
+.status{font-size:12px;color:var(--muted);line-height:1.5}.ok{color:#15803d;font-weight:800}.err{color:#b91c1c;font-weight:800}
 .page-nav{display:flex;gap:8px;overflow:auto;margin-bottom:12px}
 .page-nav a{flex:1;min-width:130px;text-decoration:none;text-align:center;padding:10px 8px;border-radius:11px;background:#e2e8f0;color:#172033;font-size:11px;font-weight:900}
 .page-nav a.active{background:#ffc107;color:#111}
-.kpis{display:grid;grid-template-columns:repeat(5,1fr);gap:9px}  
-.kpi{padding:13px;border-radius:14px;color:#fff}.kpi small{display:block;font-size:10px;font-weight:900;opacity:.9}.kpi b{display:block;font-size:20px;margin-top:6px}  
-.k1{background:linear-gradient(135deg,#2563eb,#1d4ed8)}.k2{background:linear-gradient(135deg,#16a34a,#059669)}.k3{background:linear-gradient(135deg,#7c3aed,#4f46e5)}.k4{background:linear-gradient(135deg,#ef4444,#dc2626)}.k5{background:linear-gradient(135deg,#f59e0b,#d97706)}  
+.kpis{display:grid;grid-template-columns:repeat(5,1fr);gap:9px}
+.kpi{padding:13px;border-radius:14px;color:#fff}.kpi small{display:block;font-size:10px;font-weight:900;opacity:.9}.kpi b{display:block;font-size:20px;margin-top:6px}
+.k1{background:linear-gradient(135deg,#2563eb,#1d4ed8)}.k2{background:linear-gradient(135deg,#16a34a,#059669)}.k3{background:linear-gradient(135deg,#7c3aed,#4f46e5)}.k4{background:linear-gradient(135deg,#ef4444,#dc2626)}.k5{background:linear-gradient(135deg,#f59e0b,#d97706)}
 .toolbar{display:grid;grid-template-columns:1.6fr 1fr 1fr auto;gap:9px;align-items:end}
-.field{display:flex;flex-direction:column;gap:5px}label{font-size:11px;font-weight:900;color:#475569}  
-input,select{height:43px;width:100%;border:1px solid #cbd5e1;border-radius:11px;padding:0 11px;background:#fff;outline:none}  
-input:focus,select:focus{border-color:var(--yellow);box-shadow:0 0 0 3px #ffc10722}  
-.btn{height:43px;border:0;border-radius:11px;padding:0 15px;font-weight:900}.dark{background:var(--navy);color:#fff}.yellow{background:var(--yellow);color:#111}.green{background:var(--green);color:#fff}.light{background:#e2e8f0;color:#111}  
-.section-title{font-size:17px;font-weight:900;margin:0 0 10px}  
-.table-wrap{overflow:auto;border:1px solid var(--line);border-radius:13px}  
-table{width:100%;border-collapse:collapse;min-width:1240px}  
-th{background:var(--navy2);color:#fff;text-align:left;padding:10px;font-size:11px;white-space:nowrap}  
-td{padding:10px;border-bottom:1px solid #edf1f5;font-size:11px;vertical-align:middle}  
-.badge{display:inline-block;padding:4px 8px;border-radius:999px;font-size:9px;font-weight:900;white-space:nowrap}  
-.badge.green{background:#dcfce7;color:#166534}.badge.red{background:#fee2e2;color:#991b1b}.badge.blue{background:#dbeafe;color:#1d4ed8}.badge.orange{background:#fef3c7;color:#92400e}.badge.gray{background:#e2e8f0;color:#475569}.badge.yellow{background:#fef9c3;color:#854d0e}
+.field{display:flex;flex-direction:column;gap:5px}label{font-size:11px;font-weight:900;color:#475569}
+input,select{height:43px;width:100%;border:1px solid #cbd5e1;border-radius:11px;padding:0 11px;background:#fff;outline:none}
+input:focus,select:focus{border-color:var(--yellow);box-shadow:0 0 0 3px #ffc10722}
+.btn{height:43px;border:0;border-radius:11px;padding:0 15px;font-weight:900}.dark{background:var(--navy);color:#fff}.yellow{background:var(--yellow);color:#111}.green{background:var(--green);color:#fff}.light{background:#e2e8f0;color:#111}
+.table-wrap{overflow:auto;border:1px solid var(--line);border-radius:13px}
+table{width:100%;border-collapse:collapse;min-width:1240px}
+th{background:var(--navy2);color:#fff;text-align:left;padding:10px;font-size:11px;white-space:nowrap}
+td{padding:10px;border-bottom:1px solid #edf1f5;font-size:11px;vertical-align:middle}
+.badge{display:inline-block;padding:4px 8px;border-radius:999px;font-size:9px;font-weight:900;white-space:nowrap;margin:2px}
+.badge.green{background:#dcfce7;color:#166534}.badge.red{background:#fee2e2;color:#991b1b}.badge.blue{background:#dbeafe;color:#1d4ed8}.badge.orange{background:#fef3c7;color:#92400e}.badge.gray{background:#e2e8f0;color:#475569}
 .edit{height:36px;border:0;border-radius:9px;background:#fef3c7;color:#92400e;font-weight:900;padding:0 11px}
-.action-row{display:flex;gap:6px;flex-wrap:wrap}
-.mini{height:32px;padding:0 10px;border:0;border-radius:8px;font-size:10px;font-weight:900}
-.mini.dark{background:var(--navy2);color:#fff}
-.empty{text-align:center;color:var(--muted);padding:25px}  
-.notice{padding:10px 12px;border-radius:10px;background:#f8fafc;border:1px solid var(--line);font-size:11px;color:var(--muted);margin-top:9px}  
-.notice.warn{background:#fff7ed;border-color:#fed7aa;color:#9a3412}  
-.popup{position:fixed;inset:0;background:#0008;display:none;align-items:center;justify-content:center;z-index:100;padding:12px}  
-.popup.show{display:flex}.popup-box{width:min(860px,100%);max-height:94vh;overflow:auto;background:#fff;border-radius:15px;padding:17px}  
+.empty{text-align:center;color:var(--muted);padding:25px}
+.notice{padding:10px 12px;border-radius:10px;background:#f8fafc;border:1px solid var(--line);font-size:11px;color:var(--muted);margin-top:9px}
+.notice.warn{background:#fff7ed;border-color:#fed7aa;color:#9a3412}
+.popup{position:fixed;inset:0;background:#0008;display:none;align-items:center;justify-content:center;z-index:100;padding:12px}
+.popup.show{display:flex}.popup-box{width:min(860px,100%);max-height:94vh;overflow:auto;background:#fff;border-radius:15px;padding:17px}
 .popup-box h3{margin:0 0 12px}.popup-box h4{margin:18px 0 10px;font-size:13px;font-weight:900;color:var(--navy2);border-bottom:1px solid var(--line);padding-bottom:6px}
-.grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}.full{grid-column:1/-1}  
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}.full{grid-column:1/-1}
 .popup-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:16px;position:sticky;bottom:0;background:#fff;padding-top:10px}
 .izin-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
 .izin-item{display:flex;gap:10px;align-items:flex-start;border:1px solid #e2e8f0;border-radius:10px;padding:10px;background:#f8fafc;cursor:pointer;transition:.15s}
@@ -75,34 +71,35 @@ td{padding:10px;border-bottom:1px solid #edf1f5;font-size:11px;vertical-align:mi
 .izin-item input{width:18px;height:18px;margin-top:1px;flex:none;accent-color:#081326}
 .izin-item b{font-size:11px;display:block;line-height:1.2}
 .izin-item small{font-size:9px;color:#64748b;display:block;margin-top:2px;line-height:1.3}
-.izin-actions{display:flex;gap:8px;margin-bottom:10px}
+.izin-actions{display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap}
 .toggle-row{display:flex;align-items:center;gap:10px;border:1px solid var(--line);border-radius:11px;padding:0 11px;height:43px;background:#f8fafc}
 .toggle-row input{width:20px;height:20px}
-@media(max-width:1050px){.kpis{grid-template-columns:repeat(3,1fr)}.toolbar{grid-template-columns:1fr 1fr}.izin-grid{grid-template-columns:1fr}}  
-@media(max-width:700px){  
-.header{min-height:64px;padding:8px 10px;gap:8px}.logo{width:42px;height:42px}.brand h1{font-size:14px}.brand p{font-size:9px}.owner{display:none}  
+.count{font-size:10px;color:#64748b;margin-left:auto;align-self:center}
+@media(max-width:1050px){.kpis{grid-template-columns:repeat(3,1fr)}.toolbar{grid-template-columns:1fr 1fr}.izin-grid{grid-template-columns:1fr}}
+@media(max-width:700px){
+.header{min-height:64px;padding:8px 10px;gap:8px}.logo{width:42px;height:42px}.brand h1{font-size:14px}.brand p{font-size:9px}.owner{display:none}
 .wrap{padding:9px 8px}.card{padding:10px;border-radius:14px}.toolbar{grid-template-columns:1fr}.kpis{grid-template-columns:1fr 1fr}
 .grid{grid-template-columns:1fr}.full{grid-column:auto}
 .table-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
 .izin-grid{grid-template-columns:1fr}
 }
 </style>
-</head>  
-<body>  
-<header class="header">  
-  <img src="logo.png" class="logo" alt="FIXZY">  
-  <div class="brand"><h1>FIXZY - SETTING UPAH & IZIN</h1><p>Karyawan • upah harian/bulanan/persentase • izin akses ceklis</p></div>  
-  <div class="owner"><b id="ownerName">Memuat...</b><span id="ownerEmail">Firebase</span></div>  
-  <button class="refresh" id="refreshBtn" title="Refresh">↻</button>  
-</header>  
+</head>
+<body>
+<header class="header">
+  <img src="logo.png" class="logo" alt="FIXZY">
+  <div class="brand"><h1>FIXZY - SETTING UPAH & IZIN</h1><p>Tampilan final kamu • flow Firebase FIXED LENGKAP • isolasi ownerUid</p></div>
+  <div class="owner"><b id="ownerName">Memuat...</b><span id="ownerEmail">Firebase</span></div>
+  <button class="refresh" id="refreshBtn" title="Refresh">↻</button>
+</header>
 <main class="wrap">
-  <div class="page-nav">  
-    <a href="data-karyawan.html">📄 Ringkasan Gaji</a>  
-    <a href="data-absensi-karyawan-FIXZY.html">📅 Absensi</a>  
-    <a class="active" href="izin-akses.html">⚙️ Setting Upah & Izin</a>  
+  <div class="page-nav">
+    <a href="data-karyawan.html">📄 Ringkasan Gaji</a>
+    <a href="data-absensi-karyawan-FIXZY.html">📅 Absensi</a>
+    <a class="active" href="izin-akses.html">⚙️ Setting Upah & Izin</a>
   </div>
 
-  <section class="card"><div id="status" class="status">Memeriksa sesi Firebase...</div></section>  
+  <section class="card"><div id="status" class="status">Memeriksa sesi Firebase...</div></section>
 
   <section class="card">
     <div class="kpis" id="kpis">
@@ -112,197 +109,185 @@ td{padding:10px;border-bottom:1px solid #edf1f5;font-size:11px;vertical-align:mi
       <div class="kpi k4"><small>KASIR / ADMIN</small><b id="kKasir">-</b></div>
       <div class="kpi k5"><small>NON-AKTIF</small><b id="kNon">-</b></div>
     </div>
-    <div class="notice">Halaman khusus <b>OWNER dan SUPER ADMIN</b>. Perubahan izin disimpan ke dokumen <b>users/{UID}</b> field <b>akses / izinAkses</b> dan <b>isActive</b>. Sistem login tetap cek role ini.</div>
+    <div class="notice">Tampilan pakai desain kamu. Alur Firebase pakai acuan file FIXED LENGKAP: create user via secondary App, ganti email = buat akun baru + nonaktifkan lama, isolasi hanya <b>ownerUid == ownerUid ini</b>, checklist disimpan ke <b>izin & permissions</b> sinkron index.</div>
   </section>
 
-  <section class="card">  
-    <h2 class="section-title">📋 Data Karyawan & Akses</h2>
+  <section class="card">
+    <h2 style="font-size:14px;font-weight:900;margin:0 0 10px">📋 Data Karyawan & Akses (Isolasi Konter Ini)</h2>
     <div class="toolbar">
-      <div class="field"><label>CARI NAMA / EMAIL</label><input id="searchInput" placeholder="Ketik nama atau email..."></div>
-      <div class="field"><label>FILTER JABATAN</label><select id="filterJabatan"><option value="">Semua</option><option value="teknisi">Teknisi</option><option value="kasir">Kasir</option><option value="kurir">Kurir</option><option value="admin">Admin</option><option value="employee">Employee</option></select></div>
+      <div class="field"><label>CARI NAMA / EMAIL / WA</label><input id="searchInput" placeholder="Ketik nama, email, WA..."></div>
+      <div class="field"><label>FILTER ROLE</label><select id="filterJabatan"><option value="">Semua</option><option value="teknisi">Teknisi</option><option value="kasir">Kasir</option><option value="kurir">Kurir</option><option value="admin">Admin</option><option value="employee">Employee</option><option value="reseller">Reseller</option></select></div>
       <div class="field"><label>FILTER STATUS</label><select id="filterStatus"><option value="">Semua Status</option><option value="aktif">Aktif</option><option value="nonaktif">Non-Aktif</option></select></div>
       <div class="field"><label>&nbsp;</label><button class="btn yellow" id="addBtn">+ Tambah Karyawan</button></div>
     </div>
     <div style="height:10px"></div>
-    <div class="table-wrap"><table><thead><tr><th>No</th><th>Karyawan</th><th>Jabatan / Role</th><th>Status</th><th>Sistem Upah</th><th>Tarif</th><th>Izin Akses (Ceklis)</th><th>Aksi</th></tr></thead><tbody id="tbody"><tr><td colspan="8" class="empty">Memuat...</td></tr></tbody></table></div>  
+    <div class="table-wrap"><table><thead><tr><th>No</th><th>Karyawan</th><th>Jabatan / Role</th><th>WA</th><th>Status</th><th>Sistem Upah / Tarif</th><th>Izin Akses (Ceklis)</th><th>Aksi</th></tr></thead><tbody id="tbody"><tr><td colspan="8" class="empty">Memuat Firebase...</td></tr></tbody></table></div>
   </section>
 
-  <div class="popup" id="popup">  
-    <div class="popup-box">  
-      <h3 id="popupTitle">Pengaturan Karyawan</h3>  
-      
-      <h4>1. Data Karyawan Lengkap</h4>
-      <div class="grid">  
-        <div class="field"><label>NAMA LENGKAP *</label><input id="fNama" placeholder="Nama karyawan"></div>  
-        <div class="field"><label>EMAIL / USERNAME</label><input id="fEmail" placeholder="email@..."></div>
-        <div class="field"><label>JABATAN</label><input id="fJabatan" placeholder="Teknisi Senior, Kasir, dll"></div>  
-        <div class="field"><label>ROLE SISTEM *</label><select id="fRole"><option value="teknisi">Teknisi</option><option value="kasir">Kasir</option><option value="kurir">Kurir</option><option value="admin">Admin Toko</option><option value="employee">Employee</option><option value="admin_toko">Admin_Toko</option><option value="karyawan">Karyawan</option></select></div>  
-        <div class="field full"><label>STATUS KARYAWAN</label><div class="toggle-row"><input type="checkbox" id="fAktif" checked><label for="fAktif" style="margin:0">Aktif - bisa login & akses sesuai izin</label></div></div>
+  <div class="popup" id="popup">
+    <div class="popup-box">
+      <h3 id="popupTitle">Pengaturan Karyawan</h3>
+
+      <h4>1. Data Karyawan Lengkap (Flow FIXED LENGKAP)</h4>
+      <div class="grid">
+        <div class="field"><label>NAMA LENGKAP *</label><input id="fNama" placeholder="Nama karyawan"></div>
+        <div class="field"><label>ROLE SISTEM *</label><select id="fRole"><option value="teknisi">Teknisi</option><option value="kasir">Kasir</option><option value="kurir">Kurir</option><option value="admin">Admin Toko</option><option value="employee">Employee</option><option value="reseller">Reseller</option><option value="karyawan">Karyawan</option></select></div>
+        <div class="field"><label>EMAIL LOGIN *</label><input id="fEmail" type="email" placeholder="email@..."></div>
+        <div class="field"><label>NO. WA *</label><input id="fWA" type="tel" inputmode="numeric" maxlength="15" placeholder="08xxxxxxxxxx"></div>
+        <div class="field" id="passWrap"><label id="passLabel">PASSWORD AWAL *</label><input id="fPassword" type="password" placeholder="Minimal 6 karakter"></div>
+        <div class="field"><label>JABATAN / POSISI</label><input id="fJabatan" placeholder="Teknisi Senior, Kasir, dll"></div>
+        <div class="field full"><label>STATUS AKUN</label><div class="toggle-row"><input type="checkbox" id="fAktif" checked><label for="fAktif" style="margin:0">Aktif - bisa login & akses sesuai izin ceklis</label></div></div>
       </div>
 
       <h4>2. Setting Sistem Upah</h4>
       <div class="grid">
-        <div class="field"><label>SISTEM UPAH</label><select id="fJenis"><option value="harian">Harian</option><option value="bulanan">Bulanan</option><option value="persentase">Persentase</option><option value="harian_persentase">Harian + Persentase</option><option value="bulanan_persentase">Bulanan + Persentase</option></select></div>  
-        <div class="field"><label>NOMINAL UPAH (Rp)</label><input id="fNominal" type="number" min="0" step="1000"></div>  
-        <div class="field"><label>PERSENTASE (%)</label><input id="fPersen" type="number" min="0" max="100" step="0.01" value="0"></div>  
-        <div class="field"><label>BASIS PERSENTASE</label><select id="fBasis"><option value="omzet">Omzet/Pendapatan</option><option value="servis">Pendapatan Servis</option><option value="penjualan">Pendapatan Penjualan</option><option value="laba">Laba Bersih</option></select></div>  
-        <div class="field full"><label>CATATAN UPAH</label><input id="fCatatan" placeholder="Contoh: gaji bulanan tetap, bonus 5% servis"></div>  
+        <div class="field"><label>SISTEM UPAH</label><select id="fJenis"><option value="harian">Harian</option><option value="bulanan">Bulanan</option><option value="persentase">Persentase</option><option value="harian_persentase">Harian + Persentase</option><option value="bulanan_persentase">Bulanan + Persentase</option></select></div>
+        <div class="field"><label>NOMINAL UPAH (Rp)</label><input id="fNominal" type="number" min="0" step="1000"></div>
+        <div class="field"><label>PERSENTASE (%)</label><input id="fPersen" type="number" min="0" max="100" step="0.01" value="0"></div>
+        <div class="field"><label>BASIS PERSENTASE</label><select id="fBasis"><option value="omzet">Omzet/Pendapatan</option><option value="servis">Pendapatan Servis</option><option value="penjualan">Pendapatan Penjualan</option><option value="laba">Laba Bersih</option></select></div>
+        <div class="field full"><label>CATATAN UPAH</label><input id="fCatatan" placeholder="Contoh: gaji bulanan tetap, bonus 5% servis"></div>
       </div>
 
-      <h4>3. Izin Akses Modul (Bentuk Ceklis) *</h4>
+      <h4>3. Izin Akses Modul (Bentuk Ceklis) - Sync Index</h4>
       <div class="izin-actions">
-        <button class="mini dark" id="checkAll">✓ Pilih Semua</button>
-        <button class="mini light" id="uncheckAll">✕ Kosongkan</button>
-        <span style="font-size:10px;color:#64748b;margin-left:6px">Centang sesuai hak akses karyawan</span>
+        <button type="button" class="btn dark" style="height:32px;font-size:10px" id="checkAll">☑ Pilih Semua</button>
+        <button type="button" class="btn light" style="height:32px;font-size:10px" id="uncheckAll">☐ Hapus Semua</button>
+        <button type="button" class="btn light" style="height:32px;font-size:10px" id="pilihOperasional">⚙️ Hanya Operasional</button>
+        <button type="button" class="btn light" style="height:32px;font-size:10px" id="pilihKaryawan">👥 Karyawan Kasir Kurir</button>
+        <span id="izinCount" class="count">0 izin dipilih</span>
       </div>
       <div class="izin-grid" id="izinGrid"></div>
-      <div class="notice warn">Izin disimpan di field <b>akses</b> (object) dan <b>izinAkses</b> (array). Di halaman login / middleware kamu cukup cek: <code>if(user.akses.pos) ...</code>. Owner & Superadmin otomatis full akses.</div>
+      <div id="editInfo" class="notice" style="margin-top:10px"></div>
+      <div class="notice warn">Disimpan ke <b>izin</b> & <b>permissions</b> (object) + <b>izinAkses[]</b> array. Index kamu baca via <code>normalisasiIzin(data.izin)</code>. Owner Only tetap hanya owner, Superadmin menu tidak bisa diberikan ke karyawan.</div>
 
       <div class="popup-actions">
         <button class="btn light" id="cancelPopup">Batal</button>
-        <button class="btn yellow" id="savePay">💾 Simpan Setting</button>
-      </div>  
-    </div>  
-  </div>  
-</main>  
+        <button class="btn yellow" id="savePay">💾 Simpan</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- POPUP NOTICE & WA - DARI FILE ACUAN -->
+  <div class="popup" id="notice"><div class="popup-box" style="width:min(500px,100%)"><h3 id="noticeTitle">FIXZY</h3><div id="noticeText" style="font-size:12px;line-height:1.6;color:#475569"></div><div class="popup-actions"><button class="btn dark" onclick="document.getElementById('notice').classList.remove('show')">OK</button></div></div></div>
+  <div class="popup" id="waPopup"><div class="popup-box" style="width:min(540px,100%)"><h3>📲 Kirim Data Login ke WhatsApp?</h3><div id="waText" style="font-size:12px;line-height:1.6;color:#475569;white-space:pre-wrap"></div><div class="popup-actions"><button class="btn light" id="waCancel">Tidak</button><button class="btn dark" id="waSend">📲 Kirim WhatsApp</button></div></div></div>
+</main>
 
 <script type="module">
-import {initializeApp,getApps,getApp} from "https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js";
-import {getAuth,onAuthStateChanged} from "https://www.gstatic.com/firebasejs/11.10.0/firebase-auth.js";
-import {getFirestore,doc,getDoc,setDoc,collection,query,where,getDocsFromServer,serverTimestamp} from "https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js";
+import {initializeApp,getApps,getApp,deleteApp} from "https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js";
+import {getAuth,onAuthStateChanged,createUserWithEmailAndPassword,updateProfile} from "https://www.gstatic.com/firebasejs/11.10.0/firebase-auth.js";
+import {getFirestore,doc,getDoc,setDoc,collection,query,where,getDocs,getDocsFromServer,serverTimestamp} from "https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js";
 
 const cfg={apiKey:"AIzaSyC_PcarMTT5Un7qfSLzf92o5OGn5rginsI",authDomain:"fixzy-update.firebaseapp.com",projectId:"fixzy-update",storageBucket:"fixzy-update.firebasestorage.app",messagingSenderId:"995892519622",appId:"1:995892519622:web:fa41047944d8e5b35d6dc7"};
 const app=getApps().length?getApp():initializeApp(cfg),auth=getAuth(app),db=getFirestore(app);
 const $=id=>document.getElementById(id);
-let uid="",ownerUid="",profile={},accounts=[],filtered=[];
+let uid="",ownerUid="",profile={},accounts=[],filtered=[],editId=null,ready=false,editEmailLama="";
 
+// PERMS FINAL SYNC DENGAN INDEX KAMU + REFERENSI FILE ACUAN
 const PERMISSIONS=[
-  {key:'pos', label:'Penjualan / POS', desc:'Akses kasir, transaksi jual beli'},
-  {key:'service_in', label:'Terima Servis', desc:'Input servis masuk & data pelanggan'},
-  {key:'service_process', label:'Proses Servis', desc:'Update status, teknisi, biaya servis'},
-  {key:'service_done', label:'Serah Terima Servis', desc:'Selesaikan & serahkan barang servis'},
-  {key:'stock', label:'Stok Sparepart', desc:'Lihat & kelola stok barang'},
-  {key:'purchase', label:'Pembelian / Kulakan', desc:'Input pembelian & hutang supplier'},
-  {key:'expense', label:'Pengeluaran', desc:'Catat pengeluaran operasional'},
-  {key:'attendance', label:'Absensi', desc:'Lihat & kelola absensi karyawan'},
-  {key:'salary_view', label:'Lihat Gaji Sendiri', desc:'Lihat ringkasan gaji pribadi saja'},
-  {key:'salary_manage', label:'Kelola Gaji (Owner)', desc:'Atur upah & lihat semua gaji'},
-  {key:'report', label:'Laporan Keuangan', desc:'Laporan omzet, laba, servis'},
-  {key:'customer', label:'Data Pelanggan', desc:'Kelola data pelanggan & histori'},
-  {key:'manage_employee', label:'Kelola Karyawan', desc:'Tambah/edit karyawan (supervisor)'},
-  {key:'settings', label:'Setting Toko', desc:'Ubah profil konter, printer, dll'},
+  {key:'servis', label:'Input Servisan', desc:'servisan.html'},
+  {key:'penjualan', label:'Penjualan / POS', desc:'penjualan.html'},
+  {key:'pengeluaran', label:'Input Pengeluaran', desc:'pengeluaran.html'},
+  {key:'dataServis', label:'Data Servisan', desc:'data-servis.html'},
+  {key:'dataPenjualan', label:'Data Penjualan', desc:'data-penjualan.html'},
+  {key:'stock', label:'Stok Sparepart', desc:'tampil-stock.html & stock.html'},
+  {key:'laporanKeuangan', label:'Laporan Keuangan', desc:'ringkasan-pendapatan.html'},
+  {key:'laporanPendapatan', label:'Ringkasan Pendapatan', desc:'alias laporanKeuangan'},
+  {key:'dashboardPendapatan', label:'Dashboard Admin', desc:'dashboard-admin.html'},
+  {key:'absensi', label:'Absensi Karyawan', desc:'absensi-karyawan.html'},
+  {key:'saldoToken', label:'Saldo & Token', desc:'saldo-token.html'},
+  {key:'cekPaket', label:'Cek Paket Langganan', desc:'cek-paket.html'},
 ];
 
 function esc(v){return String(v??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]));}
-function money(n){return "Rp "+(Number(n)||0).toLocaleString("id-ID");}
 function norm(v){return String(v??"").trim().toLowerCase();}
-function nama(a){return String(a.nama||a.namaKaryawan||a.namaLengkap||a.displayName||a.email||"").trim();}
+function nama(a){return String(a.nama||a.namaKaryawan||a.name||a.email||"-").trim();}
+function validEmail(v){return /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(String(v||"").trim());}
+function validWA(v){const s=String(v||"").replace(/\D/g,"");return /^(08\d{8,11}|628\d{8,11})$/.test(s);}
+function rupiah(n){return "Rp "+(Number(n)||0).toLocaleString("id-ID");}
+function money(n){return rupiah(n);}
+function jenisUpah(a){return norm(a.jenisUpah||a.sistemUpah||"harian")||"harian";}
 function upahHarian(a){return Number(a.upahHarian??a.upah??a.gajiHarian??0)||0;}
-function upahBulanan(a){return Number(a.upahBulanan??a.gajiBulanan??a.gaji??0)||0;}
-function persen(a){return Number(a.persentase??a.persen??a.bonusPersen??0)||0;}
-function jenisUpah(a){return norm(a.jenisUpah||a.sistemUpah||a.tipeUpah||"harian")||"harian";}
-function isAktif(a){
-  if(a.isActive===false) return false;
-  if(a.aktif===false) return false;
-  if(a.statusAktif===false) return false;
-  if(norm(a.status)==="nonaktif" || norm(a.status)==="tidak aktif") return false;
-  return true;
-}
-function getAkses(a){
-  // support 3 format: akses object, izinAkses array, permissions object
-  if(a.akses && typeof a.akses==='object') return a.akses;
-  if(a.izinAkses && typeof a.izinAkses==='object' && !Array.isArray(a.izinAkses)) return a.izinAkses;
-  if(Array.isArray(a.izinAkses)){
-    const obj={}; a.izinAkses.forEach(k=>obj[k]=true); return obj;
-  }
-  if(a.permissions && typeof a.permissions==='object') return a.permissions;
-  return {};
-}
+function upahBulanan(a){return Number(a.upahBulanan??a.gajiBulanan??0)||0;}
+function persen(a){return Number(a.persentase??a.persen??0)||0;}
+function isAktif(a){if(a.isActive===false||a.aktif===false||norm(a.status)==="nonaktif")return false;return true;}
+function normalisasiIzin(v){const out=[];const add=x=>{x=String(x??"").trim();if(x&&!out.includes(x))out.push(x);};if(Array.isArray(v))v.forEach(add);else if(v&&typeof v==="object")Object.keys(v).forEach(k=>{if(v[k]===true||v[k]==="true")add(k);});else if(typeof v==="string")v.split(/[,|;]+/).forEach(add);return out;}
+function gabungIzin(a){return [...new Set([...normalisasiIzin(a.izin),...normalisasiIzin(a.permissions),...normalisasiIzin(a.akses)])];}
+function getAksesObj(a){const obj={}; gabungIzin(a).forEach(k=>obj[k]=true); return obj;}
 function jenisLabel(j){return({harian:"Harian",bulanan:"Bulanan",persentase:"Persentase",harian_persentase:"Harian + %",bulanan_persentase:"Bulanan + %"})[j]||"Harian";}
 function tarif(a){const j=jenisUpah(a),h=upahHarian(a),b=upahBulanan(a),p=persen(a);if(j==="harian")return money(h)+"/hari";if(j==="bulanan")return money(b)+"/bulan";if(j==="persentase")return p+"%";if(j==="harian_persentase")return money(h)+" + "+p+"%";return money(b)+" + "+p+"%";}
+
+$("fWA").addEventListener("input",function(){this.value=this.value.replace(/\D/g,"").slice(0,15);});
+
+function tampilNotice(t,x){$("noticeTitle").textContent=t; $("noticeText").innerHTML=x; $("notice").classList.add("show");}
+function updateCount(){const c=document.querySelectorAll(".izin:checked").length; $("izinCount").textContent=c+" izin dipilih";}
+
+function renderIzinGrid(current={}){
+  const curArr = Array.isArray(current) ? current : Object.keys(current).filter(k=>current[k]);
+  const curNorm = curArr.map(x=>String(x).toLowerCase().replace(/[\s_-]/g,""));
+  $("izinGrid").innerHTML=PERMISSIONS.map(p=>{
+    const checked = curNorm.includes(p.key.toLowerCase().replace(/[\s_-]/g,"")) ? "checked" : "";
+    return `<label class="izin-item"><input type="checkbox" value="${p.key}" class="izin" ${checked}><span><b>${esc(p.label)}</b><small>${esc(p.key)} • ${esc(p.desc)}</small></span></label>`;
+  }).join("");
+  updateCount();
+}
+function izinValues(){return [...document.querySelectorAll(".izin:checked")].map(x=>x.value);}
+function izinPreview(a){
+  const izin=gabungIzin(a);
+  if(!izin.length) return '<span class="badge gray">Tidak ada akses</span>';
+  if(izin.length>=10) return `<span class="badge green">${izin.length} akses • Full</span>`;
+  return izin.slice(0,3).map(v=>`<span class="badge blue">${esc(v)}</span>`).join("") + (izin.length>3?` <small style="color:#64748b">+${izin.length-3}</small>`:"");
+}
 
 async function loadProfile(user){
   const s=await getDoc(doc(db,"users",user.uid));
   if(!s.exists())throw new Error("Profil users tidak ditemukan.");
   profile=s.data()||{};
   const r=norm(profile.role);
-  if(!["owner","superadmin","super_admin","admin"].includes(r))throw new Error("Halaman ini hanya untuk OWNER dan SUPERADMIN.");
+  if(!["owner","superadmin","admin"].includes(r))throw new Error("Halaman ini hanya untuk OWNER dan SUPERADMIN.");
   ownerUid=r==="owner"?user.uid:(profile.ownerUid||profile.ownerId||user.uid);
 }
 async function ownedUsers(){
-  const map=new Map();
-  for(const field of ["ownerUid","ownerId"]){
-    try{
-      const s=await getDocsFromServer(query(collection(db,"users"),where(field,"==",ownerUid)));
-      s.docs.forEach(d=>map.set(d.id,{id:d.id,...d.data()}));
-    }catch(e){console.warn("users",field,e.message);}
-  }
-  try{const s=await getDoc(doc(db,"users",uid));if(s.exists())map.set(uid,{id:uid,...s.data()});}catch{}
-  // jangan filter terlalu ketat, tampilkan semua user di bawah owner
-  return [...map.values()].filter(x=>{
-    const r=norm(x.role);
-    // tampilkan semua kecuali owner itu sendiri (owner tidak perlu setting upah)
-    if(r==="owner") return false;
-    if(x.id===ownerUid) return false;
-    return true;
-  }).sort((a,b)=>nama(a).localeCompare(nama(b),"id"));
+  // FLOW DARI FILE ACUAN: hanya ownerUid == ownerUid ini, dan role employee/reseller/karyawan/kasir/teknisi/kurir
+  const snap=await getDocs(query(collection(db,"users"),where("ownerUid","==",ownerUid)));
+  const list=snap.docs.map(d=>({id:d.id,...d.data()}))
+    .filter(x=>{
+      const r=norm(x.role);
+      if(r==="owner") return false;
+      if(x.id===ownerUid) return false;
+      return ["employee","karyawan","kasir","teknisi","kurir","admin","admin_toko","reseller"].includes(r);
+    });
+  return list.sort((a,b)=>nama(a).localeCompare(nama(b),"id"));
 }
 function setupHeader(user){
   $("ownerName").textContent=profile.namaKonter||profile.nama||user.displayName||"Akun FIXZY";
   $("ownerEmail").textContent=user.email||"Firebase";
 }
-
-function renderIzinGrid(current={}){
-  $("izinGrid").innerHTML=PERMISSIONS.map(p=>{
-    const checked=current[p.key]?"checked":"";
-    return `<label class="izin-item"><input type="checkbox" data-perm="${p.key}" ${checked}><span><b>${esc(p.label)}</b><small>${esc(p.desc)}</small></span></label>`;
-  }).join("");
-}
-function getCheckedPerms(){
-  const obj={};
-  $("izinGrid").querySelectorAll("input[data-perm]").forEach(i=>{obj[i.dataset.perm]=i.checked;});
-  return obj;
-}
-function izinPreview(a){
-  const aks=getAkses(a);
-  const keys=Object.keys(aks).filter(k=>aks[k]);
-  if(!keys.length) return '<span class="badge gray">Tidak ada akses</span>';
-  if(keys.length>=10) return `<span class="badge green">${keys.length} akses • Full</span>`;
-  const labels=keys.slice(0,3).map(k=>{
-    const p=PERMISSIONS.find(x=>x.key===k);
-    return p? p.label.split(" ")[0] : k;
-  }).join(", ");
-  return `<span class="badge blue" title="${esc(keys.join(", "))}">${esc(labels)}${keys.length>3?` +${keys.length-3}`:''}</span> <small style="color:#64748b">${keys.length} modul</small>`;
-}
-
 function render(){
-  const s=($("searchInput").value||"").toLowerCase();
+  const s=norm($("searchInput").value||"");
   const fj=norm($("filterJabatan").value||"");
   const fs=norm($("filterStatus").value||"");
   filtered=accounts.filter(a=>{
-    const n=(nama(a)+" "+(a.email||"")+" "+(a.jabatan||"")).toLowerCase();
-    if(s && !n.includes(s)) return false;
-    if(fj && !norm(a.jabatan||a.role||"").includes(fj)) return false;
+    const hay=(nama(a)+" "+(a.email||"")+" "+(a.noWA||a.wa||"")+" "+(a.jabatan||"")).toLowerCase();
+    if(s && !hay.includes(s)) return false;
+    if(fj && !norm(a.role||a.jabatan||"").includes(fj)) return false;
     if(fs==="aktif" && !isAktif(a)) return false;
     if(fs==="nonaktif" && isAktif(a)) return false;
     return true;
   });
-
   $("tbody").innerHTML=filtered.map((a,i)=>{
     const aktif=isAktif(a);
     return `<tr>
       <td>${i+1}</td>
-      <td><b>${esc(nama(a))}</b><div style="font-size:9px;color:#94a3b8">${esc(a.email||a.username||"-")}</div></td>
-      <td><span class="badge orange">${esc(a.jabatan||"-")}</span><div style="margin-top:3px"><span class="badge gray">${esc(a.role||a.posisi||"-")}</span></div></td>
+      <td><b>${esc(nama(a))}</b><div style="font-size:9px;color:#94a3b8">${esc(a.email||"-")}</div></td>
+      <td><span class="badge orange">${esc(a.jabatan||"-")}</span><div style="margin-top:3px"><span class="badge gray">${esc(a.role||"-")}</span></div></td>
+      <td>${esc(a.noWA||a.wa||"-")}</td>
       <td>${aktif?'<span class="badge green">Aktif</span>':'<span class="badge red">Non-Aktif</span>'}</td>
-      <td><span class="badge blue">${esc(jenisLabel(jenisUpah(a)))}</span></td>
-      <td>${esc(tarif(a))}<div style="font-size:9px;color:#94a3b8">${persen(a)}%</div></td>
+      <td><span class="badge blue">${esc(jenisLabel(jenisUpah(a)))}</span><div style="margin-top:3px">${esc(tarif(a))}</div></td>
       <td>${izinPreview(a)}</td>
-      <td><div class="action-row"><button class="edit" data-edit="${esc(a.id)}">✏️ Atur</button></div></td>
+      <td><button class="edit" data-edit="${a.id}">✏️ Atur</button></td>
     </tr>`;
-  }).join("")||'<tr><td colspan="8" class="empty">Belum ada karyawan. Klik + Tambah Karyawan</td></tr>';
+  }).join("")||'<tr><td colspan="8" class="empty">Belum ada karyawan untuk konter ini.</td></tr>';
 
-  // KPI
   $("kTotal").textContent=accounts.length;
   $("kAktif").textContent=accounts.filter(isAktif).length;
   $("kTeknisi").textContent=accounts.filter(a=>norm(a.role||a.jabatan||"").includes("teknisi")).length;
@@ -310,133 +295,201 @@ function render(){
   $("kNon").textContent=accounts.filter(a=>!isAktif(a)).length;
 }
 
-let editing=null;
-let isNew=false;
+// FLOW CREATE USER BARU VIA SECONDARY APP - DARI FILE ACUAN
+async function buatAuthBaru(email,pass,displayName){
+  const name="createUser-"+Date.now()+"-"+Math.random().toString(36).slice(2);
+  const secondaryApp=initializeApp(cfg,name);
+  const secondaryAuth=getAuth(secondaryApp);
+  try{
+    const cred=await createUserWithEmailAndPassword(secondaryAuth,email,pass);
+    try{await updateProfile(cred.user,{displayName})}catch{}
+    await secondaryAuth.signOut();
+    return cred.user.uid;
+  }finally{try{await deleteApp(secondaryApp)}catch{}}
+}
+function nomorWhatsApp(v){let s=String(v||"").replace(/[^\d]/g,"");if(!s)return"";if(s.startsWith("0"))s="62"+s.slice(1);else if(s.startsWith("8"))s="62"+s;return s;}
 
+let _waPending=null;
+function tampilWaPopup(data){
+  $("waText").innerHTML=`Akun <b>${esc(data.name)}</b> berhasil disimpan.<br><br>Nomor WA: <b>${esc(data.phone||"-")}</b><br>Preview pesan:<div style="margin-top:8px;padding:11px;border:1px solid #e2e8f0;border-radius:10px;background:#f8fafc;white-space:pre-wrap;font-size:12px;line-height:1.6">${esc(data.message)}</div>`;
+  $("waPopup").classList.add("show");
+}
+$("waCancel").onclick=()=>{$("waPopup").classList.remove("show");_waPending=null;};
+$("waSend").onclick=()=>{
+  const d=_waPending; if(!d) return;
+  const nomor=nomorWhatsApp(d.phone); if(!nomor){$("waPopup").classList.remove("show");tampilNotice("⚠️ No. WA Tidak Valid","Nomor tidak valid.");return;}
+  const text=encodeURIComponent(d.message);
+  const webUrl="https://wa.me/"+nomor+"?text="+text;
+  const waUrl="whatsapp://send?phone="+nomor+"&text="+text;
+  const isAndroid=/Android/i.test(navigator.userAgent||"");
+  $("waPopup").classList.remove("show");
+  try{
+    if(isAndroid){
+      const intentUrl="intent://send?phone="+nomor+"&text="+text+"#Intent;scheme=whatsapp;package=com.whatsapp;end";
+      const a=document.createElement("a"); a.href=intentUrl; a.target="_blank"; a.rel="noopener"; a.style.display="none"; document.body.appendChild(a); a.click(); setTimeout(()=>a.remove(),1000);
+    }else{
+      const a=document.createElement("a"); a.href=webUrl; a.target="_blank"; a.rel="noopener"; a.style.display="none"; document.body.appendChild(a); a.click(); setTimeout(()=>a.remove(),1000);
+    }
+  }catch{}
+  setTimeout(()=>{_waPending=null},1500);
+};
+
+let editing=null; let isNew=false;
 function openEdit(id){
   const a=accounts.find(x=>x.id===id); if(!a) return;
-  editing=a; isNew=false;
-  $("popupTitle").textContent="Edit: "+nama(a);
+  editing=a; isNew=false; editId=a.id; editEmailLama=String(a.email||"").trim();
+  $("popupTitle").textContent="✏️ Edit: "+nama(a);
   $("fNama").value=nama(a);
-  $("fEmail").value=a.email||a.username||"";
-  $("fJabatan").value=a.jabatan||a.posisi||"";
+  $("fEmail").value=a.email||"";
+  $("fWA").value=a.noWA||a.wa||a.noWa||a.noHp||"";
   $("fRole").value=norm(a.role||"teknisi");
+  $("fJabatan").value=a.jabatan||a.posisi||"";
   $("fAktif").checked=isAktif(a);
   $("fJenis").value=jenisUpah(a);
   $("fNominal").value=jenisUpah(a).includes("bulanan")?upahBulanan(a):upahHarian(a);
   $("fPersen").value=persen(a);
-  $("fBasis").value=a.basisPersentase||a.basis||"omzet";
-  $("fCatatan").value=a.catatanUpah||a.catatan||"";
-  renderIzinGrid(getAkses(a));
+  $("fBasis").value=a.basisPersentase||"omzet";
+  $("fCatatan").value=a.catatanUpah||"";
+  $("fPassword").value=""; $("passLabel").textContent="PASSWORD BARU (isi bila ganti email)"; $("fPassword").placeholder="Isi bila email diganti";
+  renderIzinGrid(getAksesObj(a));
+  $("editInfo").innerHTML='Jika email tetap, password tidak perlu diisi. Jika email diganti, wajib isi password baru. Checklist sinkron dengan index.';
   $("popup").classList.add("show");
 }
 function openAdd(){
-  editing={}; isNew=true;
-  $("popupTitle").textContent="Tambah Karyawan Baru";
-  $("fNama").value="";
-  $("fEmail").value="";
-  $("fJabatan").value="Teknisi";
-  $("fRole").value="teknisi";
-  $("fAktif").checked=true;
-  $("fJenis").value="harian";
-  $("fNominal").value="75000";
-  $("fPersen").value="0";
-  $("fBasis").value="omzet";
-  $("fCatatan").value="";
-  renderIzinGrid({pos:true, service_in:true, service_process:true, stock:false, report:false}); // default teknisi
+  editing={}; isNew=true; editId=null; editEmailLama="";
+  $("popupTitle").textContent="＋ Tambah Karyawan Baru";
+  $("fNama").value=""; $("fEmail").value=""; $("fWA").value=""; $("fJabatan").value="Teknisi"; $("fRole").value="teknisi"; $("fAktif").checked=true;
+  $("fJenis").value="harian"; $("fNominal").value="75000"; $("fPersen").value="0"; $("fBasis").value="omzet"; $("fCatatan").value="";
+  $("fPassword").value=""; $("passLabel").textContent="PASSWORD AWAL"; $("fPassword").placeholder="Minimal 6 karakter";
+  renderIzinGrid({servis:true,dataServis:true,stock:true,absensi:true});
+  $("editInfo").textContent="Akun dibuat di Firebase Auth via secondary App (owner tidak logout) dan dihubungkan ke ownerUid ini.";
   $("popup").classList.add("show");
 }
 
 async function savePay(){
+  if(!ready) return;
   const namaVal=$("fNama").value.trim();
-  if(!namaVal) return alertBox("Nama karyawan wajib diisi.");
+  const email=$("fEmail").value.trim().toLowerCase();
+  const wa=$("fWA").value.trim();
+  const roleVal=$("fRole").value;
+  const pass=$("fPassword").value;
+  const jabatan=$("fJabatan").value.trim();
+  if(!namaVal) return tampilNotice("⚠️ Data Belum Lengkap","Nama wajib diisi.");
+  if(!validEmail(email)) return tampilNotice("⚠️ Email Tidak Valid","Masukkan email yang benar.");
+  if(!validWA(wa)) return tampilNotice("⚠️ No. WA Tidak Valid","Gunakan nomor WA Indonesia.");
   const jenis=$("fJenis").value,nom=Number($("fNominal").value)||0,ps=Number($("fPersen").value)||0;
-  if((jenis==="harian"||jenis==="harian_persentase")&&nom<=0) return alertBox("Nominal upah harian harus diisi.");
-  if((jenis==="bulanan"||jenis==="bulanan_persentase")&&nom<=0) return alertBox("Nominal upah bulanan harus diisi.");
-  if(jenis.includes("persentase")&&(ps<=0||ps>100)) return alertBox("Persentase harus 1-100%.");
-  const aksesObj=getCheckedPerms();
-  const aksesArray=Object.keys(aksesObj).filter(k=>aksesObj[k]);
+  if((jenis==="harian"||jenis==="harian_persentase")&&nom<=0) return tampilNotice("⚠️ Upah","Nominal upah harian harus diisi.");
+  if((jenis==="bulanan"||jenis==="bulanan_persentase")&&nom<=0) return tampilNotice("⚠️ Upah","Nominal upah bulanan harus diisi.");
+  if(jenis.includes("persentase")&&(ps<=0||ps>100)) return tampilNotice("⚠️ Persentase","Persentase harus 1-100%.");
 
-  const payload={
-    nama:namaVal,
-    namaKaryawan:namaVal,
-    email:$("fEmail").value.trim()|| (editing?.email||""),
-    jabatan:$("fJabatan").value.trim(),
-    posisi:$("fJabatan").value.trim(),
-    role:$("fRole").value,
-    isActive:$("fAktif").checked,
-    aktif:$("fAktif").checked,
-    status:$("fAktif").checked?"aktif":"nonaktif",
-    jenisUpah:jenis,
-    sistemUpah:jenis,
-    upahHarian:jenis.includes("harian")?nom:(editing?.upahHarian||0),
-    upahBulanan:jenis.includes("bulanan")?nom:(editing?.upahBulanan||0),
-    persentase:jenis.includes("persentase")?ps:0,
-    basisPersentase:jenis.includes("persentase")?$("fBasis").value:(editing?.basisPersentase||"omzet"),
-    catatanUpah:$("fCatatan").value.trim(),
-    akses:aksesObj,
-    izinAkses:aksesArray, // array untuk mudah query
-    permissions:aksesObj, // kompatibilitas lama
-    ownerUid:ownerUid,
-    ownerId:ownerUid,
-    updatedAt:serverTimestamp()
-  };
+  const izinObj={}; document.querySelectorAll(".izin").forEach(i=>{if(i.checked) izinObj[i.value]=true;});
+  const izinArr=Object.keys(izinObj);
+  const namaKonter=profile.namaKonter||profile.namaToko||"FIXZY";
 
   try{
     $("savePay").disabled=true; $("savePay").textContent="Menyimpan...";
-    let docId=editing?.id;
     if(isNew){
-      docId="emp_"+Date.now()+"_"+Math.random().toString(36).slice(2,6);
-      payload.createdAt=serverTimestamp();
-      // jika karyawan baru, buat role default
-      if(!payload.role) payload.role="teknisi";
+      if(pass.length<6) throw new Error("Password minimal 6 karakter.");
+      const newUid=await buatAuthBaru(email,pass,namaVal);
+      const payload={
+        uid:newUid,ownerUid,ownerId:ownerUid,role:roleVal,status:$("fAktif").checked?"aktif":"nonaktif",
+        nama:namaVal,namaKaryawan:namaVal,email,noWA:wa,wa,noWa:wa,jabatan,posisi:jabatan,
+        jenisUpah:jenis,sistemUpah:jenis,upahHarian:jenis.includes("harian")?nom:0,upahBulanan:jenis.includes("bulanan")?nom:0,persentase:jenis.includes("persentase")?ps:0,
+        basisPersentase:$("fBasis").value,catatanUpah:$("fCatatan").value.trim(),
+        isActive:$("fAktif").checked,aktif:$("fAktif").checked,
+        izin:izinObj,permissions:izinObj,akses:izinObj,izinAkses:izinArr,
+        tanggalDaftar:new Date().toISOString(),createdAt:serverTimestamp(),updatedAt:serverTimestamp()
+      };
+      await setDoc(doc(db,"users",newUid),payload);
+      $("popup").classList.remove("show");
+      const pesan=`Halo ${namaVal} 👋\n\nAkun FIXZY kamu sudah aktif di konter *${namaKonter}*.\n\n🔐 DATA LOGIN:\n• Nama: ${namaVal}\n• Email: ${email}\n• Password: ${pass}\n• Role: ${roleVal}\n• Jabatan: ${jabatan||"-"}\n• Upah/Hari: ${rupiah(nom)}\n• Status: Aktif\n\n🔗 LINK LOGIN:\nhttps://fixzy-olive.vercel.app\n\n📌 Simpan email & password ini.\n\nTerima kasih 🙏\n*${namaKonter} - FIXZY*`;
+      _waPending={phone:wa,message:pesan,name:namaVal}; await refresh(); tampilWaPopup(_waPending);
+      $("status").innerHTML='<span class="ok">✓ Karyawan baru berhasil dibuat & terhubung ke ownerUid ini.</span>';
+    }else{
+      const lama=accounts.find(x=>x.id===editId);
+      const emailBerubah=norm(email)!==norm(editEmailLama);
+      if(emailBerubah){
+        if(pass.length<6) throw new Error("Karena email diganti, isi password baru minimal 6 karakter.");
+        const newUid=await buatAuthBaru(email,pass,namaVal);
+        const newData={
+          ...lama,uid:newUid,ownerUid,ownerId:ownerUid,role:roleVal,status:$("fAktif").checked?"aktif":"nonaktif",
+          nama:namaVal,namaKaryawan:namaVal,email,noWA:wa,wa,noWa:wa,jabatan,posisi:jabatan,
+          jenisUpah:jenis,sistemUpah:jenis,upahHarian:jenis.includes("harian")?nom:(lama.upahHarian||0),upahBulanan:jenis.includes("bulanan")?nom:(lama.upahBulanan||0),persentase:jenis.includes("persentase")?ps:(lama.persentase||0),
+          basisPersentase:$("fBasis").value,catatanUpah:$("fCatatan").value.trim(),
+          isActive:$("fAktif").checked,aktif:$("fAktif").checked,
+          izin:izinObj,permissions:izinObj,akses:izinObj,izinAkses:izinArr,
+          replacesUid:editId,replacesEmail:editEmailLama,tanggalDaftar:new Date().toISOString(),updatedAt:serverTimestamp()
+        };
+        delete newData.id;
+        await setDoc(doc(db,"users",newUid),newData,{merge:true});
+        await setDoc(doc(db,"users",editId),{status:"nonaktif",replacedByUid:newUid,replacedByEmail:email,updatedAt:serverTimestamp()},{merge:true});
+        $("popup").classList.remove("show");
+        const pesan=`Halo ${namaVal} 👋\n\nAkun FIXZY kamu diperbarui di konter *${namaKonter}*.\n\n🔐 DATA LOGIN BARU:\n• Email: ${email}\n• Password: ${pass}\n• Role: ${roleVal}\n\n🔗 LOGIN:\nhttps://fixzy-olive.vercel.app\n\n*${namaKonter} - FIXZY*`;
+        _waPending={phone:wa,message:pesan,name:namaVal}; await refresh(); tampilWaPopup(_waPending);
+      }else{
+        const payload={
+          nama:namaVal,namaKaryawan:namaVal,role:roleVal,jabatan,posisi:jabatan,
+          noWA:wa,wa,noWa:wa,status:$("fAktif").checked?"aktif":"nonaktif",
+          isActive:$("fAktif").checked,aktif:$("fAktif").checked,
+          jenisUpah:jenis,sistemUpah:jenis,upahHarian:jenis.includes("harian")?nom:0,upahBulanan:jenis.includes("bulanan")?nom:0,persentase:jenis.includes("persentase")?ps:0,
+          basisPersentase:$("fBasis").value,catatanUpah:$("fCatatan").value.trim(),
+          izin:izinObj,permissions:izinObj,akses:izinObj,izinAkses:izinArr,ownerUid,ownerId:ownerUid,updatedAt:serverTimestamp()
+        };
+        await setDoc(doc(db,"users",editId),payload,{merge:true});
+        $("popup").classList.remove("show"); await refresh();
+        tampilNotice("✅ Berhasil","Data akun, WA, upah, status, dan checklist hak akses berhasil diperbarui.");
+      }
     }
-    await setDoc(doc(db,"users",docId),payload,{merge:true});
-    $("popup").classList.remove("show");
-    editing=null;
-    await refresh();
-    $("status").innerHTML='<span class="ok">✓ Setting karyawan & izin akses berhasil disimpan ('+esc(namaVal)+')</span>';
-  }catch(e){alertBox("Gagal menyimpan: "+(e.message||e));}
-  finally{$("savePay").disabled=false;$("savePay").textContent="💾 Simpan Setting";}
+  }catch(e){
+    console.error(e);
+    let m=e.message||String(e);
+    if(e.code==="auth/email-already-in-use") m="Email sudah digunakan.";
+    tampilNotice("❌ Gagal Menyimpan",esc(m));
+  }finally{
+    $("savePay").disabled=false; $("savePay").textContent="💾 Simpan Setting";
+  }
 }
 
 function alertBox(msg){$("status").innerHTML='<span class="err">❌ '+esc(msg)+'</span>';window.scrollTo({top:0,behavior:"smooth"});}
 async function refresh(){
-  $("status").textContent="⏳ Membaca data karyawan...";
-  try{accounts=await ownedUsers();render();$("status").innerHTML='<span class="ok">✓ '+accounts.length+' karyawan • Klik ✏️ Atur untuk seting upah & izin ceklis</span>';}
-  catch(e){alertBox(e.message||e);}
+  if(!ready) return;
+  $("status").textContent="⏳ Membaca data karyawan (ownerUid == "+ownerUid.slice(0,6)+"...)...";
+  try{
+    accounts=await ownedUsers();
+    render();
+    $("status").innerHTML='<span class="ok">✓ '+accounts.length+' akun untuk konter ini • Isolasi ownerUid • Flow FIXED LENGKAP</span>';
+  }catch(e){alertBox(e.message||e);}
 }
 
 $("refreshBtn").onclick=refresh;
 $("tbody").onclick=e=>{const b=e.target.closest("[data-edit]");if(b)openEdit(b.dataset.edit);};
-$("cancelPopup").onclick=()=>{$("popup").classList.remove("show");editing=null;};
+$("cancelPopup").onclick=()=>{$("popup").classList.remove("show");editId=null;};
 $("savePay").onclick=savePay;
 $("addBtn").onclick=openAdd;
 $("searchInput").oninput=render;
 $("filterJabatan").onchange=render;
 $("filterStatus").onchange=render;
-$("checkAll").onclick=()=>{ $("izinGrid").querySelectorAll("input[data-perm]").forEach(i=>i.checked=true); };
-$("uncheckAll").onclick=()=>{ $("izinGrid").querySelectorAll("input[data-perm]").forEach(i=>i.checked=false); };
-$("fRole").onchange=()=>{
-  const role=norm($("fRole").value);
-  // auto suggest izin berdasarkan role
-  let suggest={};
-  if(role.includes("teknisi")) suggest={service_in:true,service_process:true,service_done:true,stock:true,attendance:true,salary_view:true};
-  else if(role.includes("kasir")) suggest={pos:true,service_in:true,service_done:true,customer:true,expense:true,report:true,salary_view:true};
-  else if(role.includes("kurir")) suggest={service_done:true,customer:true,salary_view:true};
-  else if(role.includes("admin")) suggest={pos:true,service_in:true,service_process:true,service_done:true,stock:true,purchase:true,expense:true,report:true,customer:true,salary_view:true,salary_manage:true};
-  renderIzinGrid(suggest);
+$("checkAll").onclick=()=>{document.querySelectorAll(".izin").forEach(i=>i.checked=true);updateCount();};
+$("uncheckAll").onclick=()=>{document.querySelectorAll(".izin").forEach(i=>i.checked=false);updateCount();};
+$("pilihOperasional").onclick=()=>{
+  const allowed=new Set(["servis","penjualan","pengeluaran","dataServis","dataPenjualan","stock","laporanKeuangan","absensi","saldoToken","cekPaket"]);
+  document.querySelectorAll(".izin").forEach(x=>x.checked=allowed.has(x.value));updateCount();
 };
+$("pilihKaryawan").onclick=()=>{
+  const allowed=new Set(["servis","penjualan","dataServis","dataPenjualan","stock","absensi"]);
+  document.querySelectorAll(".izin").forEach(x=>x.checked=allowed.has(x.value));updateCount();
+};
+document.addEventListener("change",e=>{if(e.target.classList?.contains("izin"))updateCount();});
 
 async function boot(){
   onAuthStateChanged(auth,async user=>{
     if(!user){$("status").innerHTML='<span class="err">❌ Sesi login tidak ditemukan.</span>';return;}
     uid=user.uid;
-    try{await loadProfile(user);setupHeader(user);await refresh();}
+    try{await loadProfile(user);setupHeader(user);ready=true;await refresh();}
     catch(e){$("status").innerHTML='<span class="err">🔒 '+esc(e.message||e)+'</span>';}
   });
 }
 boot();
-</script>  
-<script>(function(){var loc=location.href.replace(/#.*$/,"");var ATTR_NAMES=["data-product-id","data-productid","data-product_id","product-id","productid","product_id","data-source-entity-id","source-entity-id","source_entity_id","data-product","data-metadata","data-meta"];var DATASET_KEYS=["productId","productid","product_id","sourceEntityId","sourceentityid","source_entity_id","product","metadata","meta"];function readProductId(value){if(typeof value!=="string"||value.length===0)return null;if(/^[0-9]{6,}$/.test(value))return value;var match=value.match(/(?:product(?:_|-)?id|source(?:_|-)?entity(?:_|-)?id)["'=:\s]+([0-9]{6,})/i);return match?match[1]:null}function extractProductId(start){for(var node=start;node&&node!==document.body;node=node.parentElement){for(var i=0;i<ATTR_NAMES.length;i++){var attrValue=node.getAttribute&&node.getAttribute(ATTR_NAMES[i]);var attrProductId=readProductId(attrValue);if(attrProductId)return attrProductId}var dataset=node.dataset||null;if(dataset){for(var j=0;j<DATASET_KEYS.length;j++){var dataValue=dataset[DATASET_KEYS[j]];var dataProductId=readProductId(dataValue);if(dataProductId)return dataProductId}}}return null}function isInlineMediaSlotElement(node){return !!(node&&node.getAttribute&&node.getAttribute("data-clippy-inline-media-slot")!==null)}function findInlineMediaSlot(start){for(var node=start;node&&node!==document.body;node=node.parentElement){if(isInlineMediaSlotElement(node))return node}return null}function readInlineMediaUrl(node){if(!node)return null;return node.getAttribute&&((node.getAttribute("data-clippy-inline-media-url")||node.getAttribute("data-url")||node.getAttribute("data_url")))||node.href||null}function stripHash(url){return String(url).replace(/#.*$/,"")}function urlsMatch(a,b){if(!a||!b)return false;try{return stripHash(new URL(a,loc).href)===stripHash(new URL(b,loc).href)}catch(_){return stripHash(a)===stripHash(b)}}function isFirstPartyReelUrl(value){try{var url=new URL(value,loc);if(url.protocol!=="https:")return false;var host=url.hostname.toLowerCase();var supported=host==="instagram.com"||host.endsWith(".instagram.com")||host==="facebook.com"||host.endsWith(".facebook.com");return supported&&/\/reels?\//i.test(url.pathname)}catch(_){return false}}function isInlineMediaUrlClick(node,href){var slot=findInlineMediaSlot(node);if(!slot)return false;var slotUrl=readInlineMediaUrl(slot);if(slotUrl)return urlsMatch(href,slotUrl);return isFirstPartyReelUrl(href)}function findDataHref(start){for(var node=start;node&&node!==document.body;node=node.parentElement){if(node.getAttribute){var href=node.getAttribute("data-href")||node.getAttribute("data-url");if(href)return{href:href,node:node}}}return null}var nativeOpen=window.open;window.open=function(url){if(parent!==window&&typeof url==="string"&&/^https?:\/\//.test(url)){parent.postMessage({type:"ecto:usercontent-link-click",href:url},"*");return null}return nativeOpen?nativeOpen.apply(window,arguments):null};document.addEventListener("click",function(e){var target=e.target instanceof Element?e.target:null;if(!target)return;if(parent===window)return;var a=target.closest?target.closest("a[href]"):null;if(a&&a.href&&/^https?:\/\//.test(a.href)&&a.href.replace(/#.*$/,"")!==loc){if(isInlineMediaUrlClick(a,a.href))return;var productId=extractProductId(target)||extractProductId(a);if(productId){e.preventDefault();parent.postMessage({type:"ecto-artifact-link-click",productId:productId},"*");return}e.preventDefault();parent.postMessage({type:"ecto:usercontent-link-click",href:a.href},"*");return}var dataHref=findDataHref(target);if(dataHref&&/^https?:\/\//.test(dataHref.href)&&dataHref.href.replace(/#.*$/,"")!==loc){if(isInlineMediaUrlClick(dataHref.node,dataHref.href))return;e.preventDefault();parent.postMessage({type:"ecto:usercontent-link-click",href:dataHref.href},"*")}},true)})();</script><script>(function(){var FOCUS_TYPE="ecto:artifact-focus-request";var CLOSE_TYPE="ecto:artifact-close-request";function focusArtifactDocument(){var body=document.body;if(!body)return;try{window.focus();}catch(e){}if(!body.hasAttribute("tabindex"))body.setAttribute("tabindex","-1");try{body.focus({preventScroll:true});}catch(e){try{body.focus();}catch(e2){}}}window.addEventListener("message",function(event){if(event.source!==window.parent)return;var data=event.data;if(!data||typeof data!=="object"||data.type!==FOCUS_TYPE)return;if(document.readyState==="loading"){document.addEventListener("DOMContentLoaded",focusArtifactDocument,{once:true});return;}focusArtifactDocument();});window.addEventListener("keydown",function(event){if(event.key!=="Escape")return;window.setTimeout(function(){if(event.defaultPrevented)return;window.parent.postMessage({type:CLOSE_TYPE},"*");},0);});})();</script></body>  
+</script>
+<script>(function(){var loc=location.href.replace(/#.*$/,"");var ATTR_NAMES=["data-product-id","data-productid","data-product_id","product-id","productid","product_id","data-source-entity-id","source-entity-id","source_entity_id","data-product","data-metadata","data-meta"];var DATASET_KEYS=["productId","productid","product_id","sourceEntityId","sourceentityid","source_entity_id","product","metadata","meta"];function readProductId(value){if(typeof value!=="string"||value.length===0)return null;if(/^[0-9]{6,}$/.test(value))return value;var match=value.match(/(?:product(?:_|-)?id|source(?:_|-)?entity(?:_|-)?id)["'=:\s]+([0-9]{6,})/i);return match?match[1]:null}function extractProductId(start){for(var node=start;node&&node!==document.body;node=node.parentElement){for(var i=0;i<ATTR_NAMES.length;i++){var attrValue=node.getAttribute&&node.getAttribute(ATTR_NAMES[i]);var attrProductId=readProductId(attrValue);if(attrProductId)return attrProductId}var dataset=node.dataset||null;if(dataset){for(var j=0;j<DATASET_KEYS.length;j++){var dataValue=dataset[DATASET_KEYS[j]];var dataProductId=readProductId(dataValue);if(dataProductId)return dataProductId}}}return null}function isInlineMediaSlotElement(node){return !!(node&&node.getAttribute&&node.getAttribute("data-clippy-inline-media-slot")!==null)}function findInlineMediaSlot(start){for(var node=start;node&&node!==document.body;node=node.parentElement){if(isInlineMediaSlotElement(node))return node}return null}function readInlineMediaUrl(node){if(!node)return null;return node.getAttribute&&((node.getAttribute("data-clippy-inline-media-url")||node.getAttribute("data-url")||node.getAttribute("data_url")))||node.href||null}function stripHash(url){return String(url).replace(/#.*$/,"")}function urlsMatch(a,b){if(!a||!b)return false;try{return stripHash(new URL(a,loc).href)===stripHash(new URL(b,loc).href)}catch(_){return stripHash(a)===stripHash(b)}}function isFirstPartyReelUrl(value){try{var url=new URL(value,loc);if(url.protocol!=="https:")return false;var host=url.hostname.toLowerCase();var supported=host==="instagram.com"||host.endsWith(".instagram.com")||host==="facebook.com"||host.endsWith(".facebook.com");return supported&&/\/reels?\//i.test(url.pathname)}catch(_){return false}}function isInlineMediaUrlClick(node,href){var slot=findInlineMediaSlot(node);if(!slot)return false;var slotUrl=readInlineMediaUrl(slot);if(slotUrl)return urlsMatch(href,slotUrl);return isFirstPartyReelUrl(href)}function findDataHref(start){for(var node=start;node&&node!==document.body;node=node.parentElement){if(node.getAttribute){var href=node.getAttribute("data-href")||node.getAttribute("data-url");if(href)return{href:href,node:node}}}return null}var nativeOpen=window.open;window.open=function(url){if(parent!==window&&typeof url==="string"&&/^https?:\/\//.test(url)){parent.postMessage({type:"ecto:usercontent-link-click",href:url},"*");return null}return nativeOpen?nativeOpen.apply(window,arguments):null};document.addEventListener("click",function(e){var target=e.target instanceof Element?e.target:null;if(!target)return;if(parent===window)return;var a=target.closest?target.closest("a[href]"):null;if(a&&a.href&&/^https?:\/\//.test(a.href)&&a.href.replace(/#.*$/,"")!==loc){if(isInlineMediaUrlClick(a,a.href))return;var productId=extractProductId(target)||extractProductId(a);if(productId){e.preventDefault();parent.postMessage({type:"ecto-artifact-link-click",productId:productId},"*");return}e.preventDefault();parent.postMessage({type:"ecto:usercontent-link-click",href:a.href},"*");return}var dataHref=findDataHref(target);if(dataHref&&/^https?:\/\//.test(dataHref.href)&&dataHref.href.replace(/#.*$/,"")!==loc){if(isInlineMediaUrlClick(dataHref.node,dataHref.href))return;e.preventDefault();parent.postMessage({type:"ecto:usercontent-link-click",href:dataHref.href},"*")}},true)})();</script><script>(function(){var FOCUS_TYPE="ecto:artifact-focus-request";var CLOSE_TYPE="ecto:artifact-close-request";function focusArtifactDocument(){var body=document.body;if(!body)return;try{window.focus();}catch(e){}if(!body.hasAttribute("tabindex"))body.setAttribute("tabindex","-1");try{body.focus({preventScroll:true});}catch(e){try{body.focus();}catch(e2){}}}window.addEventListener("message",function(event){if(event.source!==window.parent)return;var data=event.data;if(!data||typeof data!=="object"||data.type!==FOCUS_TYPE)return;if(document.readyState==="loading"){document.addEventListener("DOMContentLoaded",focusArtifactDocument,{once:true});return;}focusArtifactDocument();});window.addEventListener("keydown",function(event){if(event.key!=="Escape")return;window.setTimeout(function(){if(event.defaultPrevented)return;window.parent.postMessage({type:CLOSE_TYPE},"*");},0);});})();</script></body>
 </html>
