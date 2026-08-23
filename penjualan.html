@@ -635,16 +635,21 @@ let currentUser=null, ownerUid=null, isOwner=false, allProduk=[], konterName="",
 // SESI AKUN — ACUAN servisan.html
 // businessUid adalah pemisah data utama:
 // OWNER      -> UID akun sendiri
-// SUPERADMIN -> TIDAK BOLEH masuk transaksi bisnis
-// KARYAWAN   -> ownerUid/ownerId pada profil karyawan
+// ADMIN/SUPERADMIN -> scope akun sendiri
+// OWNER            -> UID akun sendiri
+// KARYAWAN         -> ownerUid/ownerId pada profil karyawan
 // =========================================================
 function roleNorm(v){return String(v||"").trim().toLowerCase();}
 function resolveBusinessUid(profile,user){
   const role=roleNorm(profile?.role);
+  // Admin/Superadmin boleh membuka halaman sesuai index,
+  // tetapi scope datanya hanya akun sendiri — bukan data Owner lain.
+  if(role==="admin" || role==="superadmin" || role==="super_admin"){
+    return String(user.uid||"").trim();
+  }
   if(role==="owner" || profile?.isOwner===true){
     return String(user.uid||"").trim();
   }
-  if(role==="superadmin" || role==="super_admin") return "";
   return String(profile?.ownerUid||profile?.ownerId||"").trim();
 }
 
@@ -665,10 +670,9 @@ onAuthStateChanged(auth, async u=>{
     const email=String(u.email||"").trim().toLowerCase();
     const superAdmin=(role==="superadmin"||role==="super_admin"||email==="servicehpmaja@gmail.com");
 
-    if(superAdmin){
-      throw new Error("SUPERADMIN hanya mengelola sistem dan tidak boleh mengakses data bisnis Owner.");
-    }
-    if(!["owner","employee","karyawan"].includes(role)){
+    // Hak akses halaman mengikuti index.html.
+    // Admin/Superadmin boleh masuk, tetapi data yang dipakai hanya scope akun sendiri.
+    if(!["admin","superadmin","super_admin","owner","employee","karyawan"].includes(role)){
       throw new Error("Akun tidak memiliki akses input penjualan.");
     }
 
@@ -712,75 +716,49 @@ onAuthStateChanged(auth, async u=>{
 
 async function loadKaryawan(){
   try{
-    let list=[];
-    try{
-      const sK=await getDocs(collection(db,"karyawan"));
-      sK.forEach(d=>{
-        const data=d.data();
-        const namaK = data.nama || data.namaKaryawan || data.name || data.displayName || '';
-        if(namaK) list.push({uid:d.id, email:data.email||'', nama:namaK, asal:'karyawan'});
-      });
-    }catch{}
-    try{
-      const q=query(collection(db,"users"), where("ownerId","==", ownerUid));
-      const s=await getDocs(q);
-      s.forEach(d=>{
-        const data=d.data();
-        const namaK = data.nama || data.namaKaryawan || data.displayName || data.name || '';
-        if(namaK){
-          list.push({uid:d.id, email:data.email||'', nama:namaK, asal:'users'});
-        }else if(data.email){
-          const fallbackNama = data.email.split('@')[0];
-          list.push({uid:d.id, email:data.email, nama:fallbackNama, asal:'users-fallback'});
-        }
-      });
-    }catch{}
-    if(list.length===0){
+    const byId=new Map();
+    const scopedQueries=[
+      query(collection(db,"users"), where("ownerUid","==",ownerUid)),
+      query(collection(db,"users"), where("ownerId","==",ownerUid)),
+      query(collection(db,"users"), where("businessUid","==",ownerUid)),
+      query(collection(db,"karyawan"), where("ownerUid","==",ownerUid)),
+      query(collection(db,"karyawan"), where("ownerId","==",ownerUid)),
+      query(collection(db,"karyawan"), where("businessUid","==",ownerUid))
+    ];
+
+    for(const q of scopedQueries){
       try{
-        const s2=await getDocs(collection(db,"users"));
-        s2.forEach(d=>{
-          const data=d.data();
-          if((data.role||'').toLowerCase().includes('karyawan')){
-            const namaK = data.nama || data.namaKaryawan || data.displayName || data.name || data.email?.split('@')[0] || '';
-            if(namaK) list.push({uid:d.id, email:data.email||'', nama:namaK, asal:'users-all'});
-          }
+        const snap=await getDocs(q);
+        snap.forEach(d=>{
+          const data=d.data()||{};
+          const role=String(data.role||"").toLowerCase();
+          if(role && !["employee","karyawan"].includes(role)) return;
+          if(data.status && String(data.status).toLowerCase()!=="aktif") return;
+          const scope=String(data.ownerUid||data.ownerId||data.businessUid||"").trim();
+          if(scope!==String(ownerUid).trim()) return;
+
+          const namaK=data.nama||data.namaKaryawan||data.displayName||data.name||data.email?.split("@")[0]||"";
+          if(namaK) byId.set(d.id,{uid:d.id,email:data.email||"",nama:namaK,asal:"scoped"});
         });
-      }catch{}
+      }catch(e){ console.warn("loadKaryawan scoped query error",e); }
     }
-    if(!list.find(x=>x.email===currentUser.email)){
-      try{
-        const curSnap = await getDoc(doc(db,"users", currentUser.uid));
-        let curNama = '';
-        if(curSnap.exists()){
-          const cd = curSnap.data();
-          curNama = cd.nama || cd.namaKaryawan || cd.displayName || cd.name || currentUser.email.split('@')[0];
-        }else{
-          curNama = currentUser.email.split('@')[0];
-        }
-        if(curNama.toLowerCase() === konterName.toLowerCase()){
-          curNama = currentUser.email.split('@')[0];
-        }
-        list.unshift({uid:currentUser.uid, email:currentUser.email, nama:curNama, asal:'current-user'});
-      }catch{
-        list.unshift({uid:currentUser.uid, email:currentUser.email, nama:currentUser.email.split('@')[0], asal:'current-user-fallback'});
-      }
-    }
-    const seen = new Set();
-    let filtered = [];
-    for(let k of list){
-      const key = (k.nama||'').toLowerCase().trim();
-      if(!key) continue;
-      if(seen.has(key)) continue;
-      seen.add(key);
-      filtered.push(k);
-    }
-    karyawanList=filtered;
-    const sel=document.getElementById('teknisiSelect');
-    sel.innerHTML=filtered.map(k=>{
-      const namaBersih=(k.nama||'').toString().trim();
-      return `<option value="${namaBersih}" data-email="${k.email}" data-nama="${namaBersih}" data-asal="${k.asal||''}">${namaBersih}</option>`;
-    }).join('');
-  }catch(e){ console.error('loadKaryawan error', e); }
+
+    // Jangan pernah fallback membaca seluruh collection users/karyawan.
+    // Hanya akun aktif pada ownerUid yang sedang digunakan.
+    karyawanList=[...byId.values()];
+
+    const sel=document.getElementById("teknisiSelect");
+    sel.innerHTML='<option value="">-- Pilih Teknisi --</option>'+
+      karyawanList.map(k=>{
+        const namaBersih=String(k.nama||"").trim();
+        return `<option value="${namaBersih}" data-email="${k.email||""}" data-nama="${namaBersih}" data-asal="${k.asal||""}">${namaBersih}</option>`;
+      }).join("");
+  }catch(e){
+    console.error("loadKaryawan error",e);
+    karyawanList=[];
+    const sel=document.getElementById("teknisiSelect");
+    if(sel) sel.innerHTML='<option value="">-- Teknisi tidak tersedia --</option>';
+  }
 }
 
 
@@ -838,12 +816,14 @@ window.fixStokSinkron=async()=>{
 function activeStockOwner(){
   const role=roleNorm(currentUser?.profileRole||currentUser?.role||"");
   // PERSIS pola servisan:
-  // Owner/Superadmin -> UID sendiri
+  // Admin/Superadmin/Owner -> UID akun sendiri
   // Karyawan -> businessOwnerUid yang berasal dari ownerUid/ownerId profil
+  if(role==="admin" || role==="superadmin" || role==="super_admin"){
+    return String(currentUser?.uid||"").trim();
+  }
   if(role==="owner" || currentUser?.isOwner===true){
     return String(currentUser?.uid||"").trim();
   }
-  if(role==="superadmin" || role==="super_admin") return "";
   return String(currentUser?.businessOwnerUid||currentUser?.ownerUid||currentUser?.ownerId||"").trim();
 }
 
@@ -856,7 +836,7 @@ async function loadProduk(){
 
   // ACUAN servisan.html:
   // hanya query ownerUid / ownerId.
-  // Superadmin juga boleh membaca stok dengan uid miliknya sendiri.
+  // Admin/Superadmin membaca stok hanya dengan UID akunnya sendiri.
   const queries=[
     query(collection(db,"stok"),where("ownerUid","==",businessUid)),
     query(collection(db,"stok"),where("ownerId","==",businessUid))
