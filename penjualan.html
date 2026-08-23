@@ -5,35 +5,147 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Fixzy - Input Penjualan</title>
 <script src="https://cdn.tailwindcss.com"></script>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;700;800&display=swap" rel="stylesheet">
 <style>
-*{box-sizing:border-box}html,body{margin:0;padding:0}body{background:#eef2f6;color:#111827;font-family:Arial,Helvetica,sans-serif;line-height:1.35}header{background:#111827;color:#fff;padding:10px 14px;min-height:72px;display:flex;align-items:center;gap:12px;position:sticky;top:0;z-index:100;border-bottom:2px solid #000;box-shadow:0 3px 0 #000}.logo{width:52px;height:52px;flex:0 0 52px;display:flex;align-items:center;justify-content:center;background:#000;border:1px solid #334155;border-radius:14px;padding:4px;overflow:hidden}.logo img{width:100%;height:100%;object-fit:contain}main{width:100%;max-width:920px;margin:0 auto;padding:14px}.card{background:#fff;border:2px solid #111827;border-radius:14px;padding:16px;margin-bottom:16px;box-shadow:4px 4px 0 #111827}.card-header{min-height:34px;display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:14px;padding-bottom:9px;border-bottom:2px solid #111827;font-size:16px;font-weight:900}label{display:block;margin:0 0 5px;color:#4b5563;font-size:12px;font-weight:800}input,select,textarea{width:100%;min-height:44px;padding:10px 11px;border:2px solid #111827;border-radius:9px;background:#fff;color:#111827;font:inherit;font-size:14px;outline:none;box-shadow:2px 2px 0 #111827}textarea{min-height:78px;resize:vertical}input:focus,select:focus,textarea:focus{border-color:#334155;box-shadow:2px 2px 0 #111827,0 0 0 2px rgba(37,99,235,.12)}input::placeholder,textarea::placeholder{color:#94a3b8}input[readonly]{background:#f8fafc;color:#475569}.grid2{display:grid;grid-template-columns:1fr 1fr;gap:11px}.grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:11px}button{border:0;border-radius:9px;padding:9px 12px;font-weight:800;cursor:pointer;box-shadow:3px 3px 0 #111827}.info-transaksi-card{padding:16px}.info-transaksi-box{width:100%;border:2px solid #111827;border-radius:13px;overflow:hidden;background:#fff;box-shadow:3px 3px 0 #111827}.info-row{min-height:54px;display:grid;grid-template-columns:170px minmax(0,1fr);align-items:center;gap:12px;padding:0 12px;border-bottom:1px solid #e5e7eb}.info-row:last-child{border-bottom:0}.info-label{color:#64748b;font-size:13px;font-weight:800;margin:0}.info-value{min-width:0;display:flex;align-items:center;justify-content:flex-end}.info-value input,.info-value select{min-height:36px;width:100%;padding:6px 8px;border:0;border-radius:6px;box-shadow:none;background:transparent;color:#111827;font-size:13px;font-weight:800;text-align:right}.info-value input:focus,.info-value select:focus{box-shadow:none;outline:none;background:#f8fafc}.info-value select{cursor:pointer;direction:rtl}.info-value select option{direction:ltr}.info-with-button{gap:6px}.info-refresh-btn{flex:0 0 36px;width:36px!important;height:36px!important;min-height:36px!important;padding:0!important;border-radius:8px!important;background:#111827!important;color:#fff!important;box-shadow:2px 2px 0 #000!important}.teknisi-wrap{width:100%;min-width:0}.teknisi-status{text-align:right;color:#64748b;font-size:10px;font-weight:700;margin-bottom:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.teknisi-info-value{justify-content:flex-end!important}#teknisiSelect{width:100%!important;min-height:36px!important;padding:6px 8px!important;border:0!important;border-radius:6px!important;box-shadow:none!important;background:transparent!important;color:#111827!important;font-size:13px!important;font-weight:800!important;text-align:right;cursor:pointer}.produk-dropdown{position:absolute;left:0;right:0;top:100%;margin-top:5px;background:#fff;color:#111827;border:2px solid #111827;border-radius:10px;box-shadow:4px 4px 0 #111827;max-height:240px;overflow:auto;z-index:30;display:none}.produk-dropdown.show{display:block}.produk-item{padding:10px 12px;cursor:pointer;border-bottom:1px solid #e5e7eb;display:flex;justify-content:space-between;align-items:center;gap:10px}.rincian-table{width:100%;border-collapse:collapse;margin-top:8px;border:2px solid #111827;box-shadow:3px 3px 0 #111827}.rincian-table th{background:#f8fafc;color:#111827;font-size:10px;font-weight:900;text-align:left;text-transform:uppercase;padding:9px;border-bottom:1px solid #e5e7eb}.rincian-table td{background:#fff;color:#111827;padding:9px;border-bottom:1px solid #e5e7eb;font-size:12px}.modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.62);z-index:200;align-items:center;justify-content:center;padding:14px}.modal.show{display:flex}.modal-box{width:min(500px,100%);max-height:90vh;overflow:auto;background:#fff;color:#111827;border:2px solid #111827;border-radius:14px;padding:18px;box-shadow:6px 6px 0 #111827}@media(max-width:700px){header{min-height:72px;padding:9px 12px}main{padding:12px}.card{padding:14px;margin-bottom:15px}.grid2,.grid3{grid-template-columns:1fr}.rincian-table{display:block;overflow-x:auto;white-space:nowrap}.info-row{grid-template-columns:120px minmax(0,1fr);gap:8px;padding:0 10px}.info-label{font-size:12px}.info-value input,.info-value select{font-size:12px;min-height:36px;padding:6px 4px}.teknisi-status{font-size:9px}#teknisiSelect{font-size:12px!important;min-height:36px!important;padding:6px 4px!important}}
+*{box-sizing:border-box}
+body{background:#f5f7fb;color:#0f172a;font-family:'Plus Jakarta Sans',Arial,sans-serif;line-height:1.4;-webkit-font-smoothing:antialiased}
+input,select,textarea{outline:none;transition:.15s}
+.card{background:#fff;border:1px solid #e2e8f0;border-radius:24px;padding:20px 20px;box-shadow:0 8px 32px rgba(15,23,42,.04),0 1px 2px rgba(15,23,42,.04)}
+.card-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:18px}
+.badge-dot{width:32px;height:32px;border-radius:12px;display:grid;place-items:center;font-size:14px;font-weight:800}
+.info-box{border:1px solid #e2e8f0;border-radius:16px;overflow:hidden;background:#fcfdff}
+.info-row{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:13px 14px;background:#fff;border-bottom:1px solid #f1f5f9}
+.info-row:last-child{border-bottom:0}
+.info-label{font-size:11.5px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;color:#64748b;white-space:nowrap}
+.info-value{flex:1;display:flex;align-items:center;justify-content:flex-end;gap:8px;min-width:0}
+.info-value input,.info-value select{border:0!important;box-shadow:none!important;background:transparent!important;text-align:right;font-size:13.5px;font-weight:800;color:#0f172a;padding:0!important;min-height:auto!important;width:100%}
+.info-refresh{width:30px!important;height:30px!important;min-height:30px!important;border-radius:10px!important;background:#0f172a!important;color:#fff!important;display:grid!important;place-items:center!important;padding:0!important;box-shadow:none!important;font-size:12px}
+.input-base{width:100%;min-height:46px;padding:11px 14px;border:1px solid #e2e8f0;border-radius:14px;background:#f8fafc;font-size:13.5px;font-weight:600;color:#0f172a}
+.input-base:focus{background:#fff;border-color:#0f172a;box-shadow:0 0 0 3px rgba(15,23,42,.12)}
+.input-base::placeholder{color:#94a3b8;font-weight:500}
+.label-mini{display:block;margin:0 0 6px 2px;font-size:11px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:#64748b}
+.produk-dropdown{position:absolute;left:0;right:0;top:calc(100% + 8px);background:#fff;border:1px solid #e2e8f0;border-radius:16px;box-shadow:0 16px 40px rgba(15,23,42,.12);max-height:280px;overflow:auto;z-index:40;display:none}
+.produk-dropdown.show{display:block}
+.produk-item{padding:11px 12px;cursor:pointer;display:flex;justify-content:space-between;gap:12px;border-bottom:1px solid #f1f5f9}
+.produk-item:last-child{border-bottom:0}
+.produk-item:hover{background:#f8fafc}
+.rincian-table{width:100%;border-collapse:separate;border-spacing:0;overflow:hidden;border:1px solid #e2e8f0;border-radius:16px}
+.rincian-table th{background:#f8fafc;font-size:10px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:#64748b;padding:12px 10px;text-align:left;white-space:nowrap}
+.rincian-table td{padding:12px 10px;font-size:13px;border-top:1px solid #f1f5f9;background:#fff;vertical-align:top}
+.modal{display:none;position:fixed;inset:0;background:rgba(15,23,42,.55);backdrop-filter:blur(8px);z-index:200;align-items:center;justify-content:center;padding:16px}
+.modal.show{display:flex}
+.modal-box{width:min(440px,100%);background:#fff;border-radius:20px;padding:22px;border:1px solid #e2e8f0;box-shadow:0 24px 64px rgba(0,0,0,.18)}
+@media(max-width:700px){.card{padding:16px;border-radius:20px}.info-row{padding:11px 12px}.rincian-table{display:block;overflow:auto;white-space:nowrap}.rincian-table th,.rincian-table td{white-space:nowrap}}
 </style>
 </head>
 <body>
-<header>
-  <div style="display:flex;align-items:center;gap:10px;min-width:0">
-    <div class="logo"><img src="logo.png" onerror="this.style.display='none'"></div>
-    <div style="min-width:0;line-height:1.1"><div><span id="namaToko" style="font-size:14px;font-weight:900">Input Penjualan</span> <span id="roleSide" style="background:#2563eb;color:#fff;padding:2px 6px;border-radius:6px;font-size:9px;font-weight:900">-</span></div><div id="akunSide" style="font-size:11px;font-weight:700;max-width:200px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;opacity:.9;margin-top:2px">Memuat akun...</div></div>
-  </div><div style="flex:1"></div><button onclick="refreshHalaman()" style="background:transparent;color:#fff;border:1px solid #ffffff30">Refresh</button>
+<header class="sticky top-0 z-50 bg-white/85 backdrop-blur-xl border-b border-slate-200/80">
+  <div class="max-w-[960px] mx-auto px-4 h-[68px] flex items-center gap-3">
+    <div class="flex items-center gap-3 min-w-0">
+      <div class="w-10 h-10 rounded-xl bg-slate-900 flex items-center justify-center overflow-hidden shadow-sm ring-1 ring-slate-900/10">
+        <img src="logo.png" onerror="this.style.display='none'" class="w-full h-full object-contain p-1.5">
+      </div>
+      <div class="min-w-0 leading-[1.1]">
+        <div class="flex items-center gap-2">
+          <span id="namaToko" class="text-[14px] font-extrabold tracking-tight">Input Penjualan</span>
+          <span id="roleSide" class="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-slate-900 text-white">-</span>
+        </div>
+        <div id="akunSide" class="text-[11px] font-semibold text-slate-500 truncate max-w-[180px] sm:max-w-[260px] mt-0.5">Memuat akun...</div>
+      </div>
+    </div>
+    <div class="flex-1"></div>
+    <button onclick="refreshHalaman()" class="h-9 px-4 rounded-full bg-white border border-slate-200 text-[12px] font-bold hover:bg-slate-50 transition">Refresh</button>
+  </div>
 </header>
-<main>
-<form id="inputForm">
-<div class="card info-transaksi-card">
-  <div class="card-header"><span>Informasi Transaksi</span></div>
-  <div style="display:none"><input id="akunLoginField" readonly><input id="konterField" readonly></div>
-  <div class="info-transaksi-box">
-    <div class="info-row"><span class="info-label">Nomor Nota</span><div class="info-value info-with-button"><input id="notaField" readonly><button type="button" class="info-refresh-btn" onclick="regenerate()">🔄</button></div></div>
-    <div class="info-row"><span class="info-label">Tanggal</span><div class="info-value"><input id="tanggalField" type="date"></div></div>
-    <div class="info-row"><span class="info-label">Barcode</span><div class="info-value info-with-button"><input id="barcodeField" readonly><button type="button" class="info-refresh-btn" onclick="regenerate()">🔄</button></div></div>
-    <div class="info-row teknisi-info-row"><span class="info-label">👨‍🔧 Teknisi</span><div class="info-value teknisi-info-value"><div class="teknisi-wrap"><div id="teknisiStatus" class="teknisi-status">⏳ Memuat teknisi akun ini...</div><select id="teknisiSelect"><option value="">⏳ Memuat teknisi...</option></select></div></div></div>
+
+<main class="max-w-[960px] mx-auto px-4 py-5">
+<form id="inputForm" class="space-y-5">
+<!-- INFO TRANSAKSI -->
+<div class="card">
+  <div class="card-head">
+    <div class="flex items-center gap-3">
+      <div class="badge-dot bg-slate-900 text-white">🧾</div>
+      <div><h2 class="text-[14px] font-extrabold">Informasi Transaksi</h2><p class="text-[11px] text-slate-500 font-medium -mt-0.5">Nota & teknisi otomatis dari akun</p></div>
+    </div>
+  </div>
+  <div class="hidden"><input id="akunLoginField" readonly><input id="konterField" readonly></div>
+  <div class="info-box">
+    <div class="info-row"><span class="info-label">Nomor Nota</span><div class="info-value"><input id="notaField" readonly><button type="button" class="info-refresh" onclick="regenerate()">↻</button></div></div>
+    <div class="info-row"><span class="info-label">Tanggal</span><div class="info-value"><input id="tanggalField" type="date" class="!text-slate-700"></div></div>
+    <div class="info-row"><span class="info-label">Barcode</span><div class="info-value"><input id="barcodeField" readonly><button type="button" class="info-refresh" onclick="regenerate()">↻</button></div></div>
+    <div class="info-row!items-start py-3">
+      <span class="info-label mt-1">👨‍🔧 Teknisi</span>
+      <div class="info-value!flex-col!items-end w-[65%]">
+        <div class="w-full text-right"><div id="teknisiStatus" class="text-[10px] font-bold text-slate-500 mb-1">⏳ Memuat teknisi akun ini...</div><select id="teknisiSelect" class="!bg-slate-50!border!border-slate-200!rounded-xl!px-3!py-2!text-left"><option value="">⏳ Memuat teknisi...</option></select></div>
+      </div>
+    </div>
   </div>
 </div>
-<div class="card"><div class="card-header"><span>Data Pelanggan</span></div><div><label>Nama Pelanggan *</label><input id="namaPelangganField" placeholder="Wajib" required></div><div class="grid2" style="margin-top:10px"><div><label>No Whatsapp</label><input id="waField" placeholder="no whatsapp"></div><div><label>Alamat</label><textarea id="alamatField" placeholder="Alamat pelanggan" style="min-height:60px"></textarea></div></div></div>
-<div class="card"><div class="card-header"><span>Data Produk (Stok) + Manual</span><span id="produkInfo" style="font-size:10px;color:#64748b">Memuat...</span></div><div id="autoProdukWrap"><label>Cari Produk Auto</label><div style="position:relative"><input id="produkSearch" placeholder="Ketik nama / barcode..."><input type="hidden" id="produkNamaAuto"></div><div class="grid3" style="margin-top:8px"><div><label>Harga</label><input id="hargaAuto" type="number"></div><div><label>Modal</label><input id="modalAuto" type="number"></div><div><label>Qty</label><input id="qtyAuto" type="number" value="1" min="1"></div></div><div style="margin-top:6px"><label>Subtotal Auto</label><input id="subtotalAuto" readonly></div></div><div style="margin:12px 0;display:flex;align-items:center;gap:8px"><input type="checkbox" id="manualToggle" onchange="toggleManual()" style="width:18px;height:18px"><label for="manualToggle">Aktifkan Kolom Manual Produk</label></div><div id="manualWrap" style="display:none;grid-template-columns:1fr 1fr;gap:10px"><div style="grid-column:1/-1"><label>Nama Produk Manual *</label><input id="produkNamaManual"></div><div><label>Barcode Manual</label><input id="barcodeManual"></div><div><label>Harga Manual</label><input id="hargaManual" type="number"></div><div><label>Qty Manual</label><input id="qtyManual" type="number" value="1" min="1"></div><div><label>Subtotal Manual</label><input id="subtotalManual" readonly></div></div><div style="margin-top:12px"><button type="button" onclick="tambahProduk()" style="width:100%;background:#111827;color:#fff;padding:12px">Tambah ke Rincian Belanja</button></div></div>
-<div class="card"><div class="card-header"><span>Rincian Produk Yang Dipilih</span></div><table class="rincian-table"><thead><tr><th>No</th><th>Produk</th><th>Harga</th><th>Qty</th><th>Subtotal</th><th>Aksi</th></tr></thead><tbody id="rincianBody"><tr><td colspan="6" style="text-align:center;color:#94a3b8;padding:16px">Belum ada produk</td></tr></tbody></table><div style="margin-top:10px;display:flex;justify-content:space-between;font-weight:900"><span>Total Rincian:</span><span id="totalDisplay">Rp 0</span></div></div>
-<div class="card"><div class="card-header"><span>Rincian Pembayaran</span></div><div class="grid2"><div><label>Total</label><input id="totalField" type="number" readonly></div><div><label>Diskon</label><input id="diskonField" type="number" value="0"></div></div><div class="grid2" style="margin-top:10px"><div><label>DP (Uang Muka)</label><input id="dpField" type="number" value="0"></div><div><label>Sisa</label><input id="sisaField" type="number" readonly></div></div><div style="margin-top:10px"><label>Status</label><select id="statusField"><option value="masuk">Masuk</option><option value="tagihan">Tagihan</option><option value="tunai">Tunai</option><option value="diambil">Diambil</option><option value="batal">Batal</option></select></div><div style="margin-top:10px;display:flex;justify-content:space-between;font-weight:900;background:#f8fafc;padding:10px;border-radius:10px"><span>Sisa Bayar:</span><span id="sisaDisplay" style="color:#15803d">Rp 0</span></div><div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:16px"><button type="button" onclick="batalInput()" style="background:#e5e7eb">Batal</button><button type="button" onclick="simpan()" style="background:#111827;color:#fff">💾 Simpan</button></div></div>
-</form></main>
-<div class="modal" id="konterAlertModal"><div class="modal-box" style="max-width:400px;text-align:center"><div id="konterAlertIcon" style="font-size:32px">ℹ️</div><h3 id="konterAlertTitle">📢 Info</h3><p id="konterAlertMessage">Pesan</p><button onclick="closeKonterPopup()" style="width:100%;background:#111827;color:#fff">OK Tutup</button></div></div>
+
+<!-- PELANGGAN -->
+<div class="card">
+  <div class="card-head"><div class="flex items-center gap-3"><div class="badge-dot bg-blue-50 text-blue-600">👤</div><h2 class="text-[14px] font-extrabold">Data Pelanggan</h2></div></div>
+  <div><span class="label-mini">Nama Pelanggan *</span><input id="namaPelangganField" class="input-base" placeholder="Contoh: Budi Santoso" required></div>
+  <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-3">
+    <div><span class="label-mini">No Whatsapp</span><input id="waField" class="input-base" placeholder="08xxxxxxxxxx"></div>
+    <div><span class="label-mini">Alamat</span><textarea id="alamatField" class="input-base min-h-[46px] py-3" placeholder="Alamat lengkap pelanggan"></textarea></div>
+  </div>
+</div>
+
+<!-- PRODUK -->
+<div class="card">
+  <div class="card-head">
+    <div class="flex items-center gap-3"><div class="badge-dot bg-amber-50 text-amber-600">📦</div><div><h2 class="text-[14px] font-extrabold">Data Produk</h2><p id="produkInfo" class="text-[11px] text-slate-500 font-medium">Memuat...</p></div></div>
+    <label class="flex items-center gap-2 text-[11px] font-bold cursor-pointer"><input type="checkbox" id="manualToggle" onchange="toggleManual()" class="w-4 h-4 rounded"> Manual</label>
+  </div>
+
+  <div id="autoProdukWrap" class="space-y-3">
+    <div><span class="label-mini">Cari Produk (Auto)</span><div class="relative"><input id="produkSearch" class="input-base!bg-white!pl-11" placeholder="Ketik nama / barcode / merk..."><span class="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400">🔍</span><input type="hidden" id="produkNamaAuto"></div></div>
+    <div class="grid grid-cols-3 gap-3">
+      <div><span class="label-mini">Harga</span><input id="hargaAuto" type="number" class="input-base"></div>
+      <div><span class="label-mini">Modal</span><input id="modalAuto" type="number" class="input-base"></div>
+      <div><span class="label-mini">Qty</span><input id="qtyAuto" type="number" value="1" min="1" class="input-base"></div>
+    </div>
+    <div><span class="label-mini">Subtotal Auto</span><input id="subtotalAuto" readonly class="input-base!bg-slate-50 font-extrabold"></div>
+  </div>
+
+  <div id="manualWrap" style="display:none" class="grid grid-cols-2 gap-3 pt-3 border-t border-dashed border-slate-200 mt-4">
+    <div class="col-span-2"><span class="label-mini">Nama Produk Manual *</span><input id="produkNamaManual" class="input-base"></div>
+    <div><span class="label-mini">Barcode Manual</span><input id="barcodeManual" class="input-base"></div>
+    <div><span class="label-mini">Harga Manual</span><input id="hargaManual" type="number" class="input-base"></div>
+    <div><span class="label-mini">Qty Manual</span><input id="qtyManual" type="number" value="1" min="1" class="input-base"></div>
+    <div><span class="label-mini">Subtotal Manual</span><input id="subtotalManual" readonly class="input-base!bg-slate-50 font-extrabold"></div>
+  </div>
+
+  <button type="button" onclick="tambahProduk()" class="w-full mt-5 h-[48px] rounded-2xl bg-slate-900 text-white font-extrabold text-[13px] tracking-wide hover:bg-black transition">+ Tambah ke Rincian</button>
+</div>
+
+<!-- RINCIAN -->
+<div class="card">
+  <div class="card-head"><div class="flex items-center gap-3"><div class="badge-dot bg-emerald-50 text-emerald-600">🛒</div><h2 class="text-[14px] font-extrabold">Rincian Belanja</h2></div><span id="totalDisplay" class="text-[14px] font-extrabold bg-slate-900 text-white px-3 py-1 rounded-full">Rp 0</span></div>
+  <div class="overflow-hidden rounded-2xl border border-slate-200">
+    <table class="rincian-table"><thead><tr><th>No</th><th>Produk</th><th>Harga</th><th>Qty</th><th>Subtotal</th><th>Aksi</th></tr></thead><tbody id="rincianBody"><tr><td colspan="6" style="text-align:center;color:#94a3b8;padding:18px">Belum ada produk — cari di atas lalu tambah</td></tr></tbody></table>
+  </div>
+</div>
+
+<!-- PEMBAYARAN -->
+<div class="card">
+  <div class="card-head"><div class="flex items-center gap-3"><div class="badge-dot bg-violet-50 text-violet-600">💳</div><h2 class="text-[14px] font-extrabold">Rincian Pembayaran</h2></div></div>
+  <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+    <div><span class="label-mini">Total</span><input id="totalField" type="number" readonly class="input-base!bg-slate-50"></div>
+    <div><span class="label-mini">Diskon</span><input id="diskonField" type="number" value="0" class="input-base"></div>
+    <div><span class="label-mini">DP (Uang Muka)</span><input id="dpField" type="number" value="0" class="input-base"></div>
+    <div><span class="label-mini">Sisa</span><input id="sisaField" type="number" readonly class="input-base!bg-slate-50"></div>
+  </div>
+  <div class="mt-3"><span class="label-mini">Status</span><select id="statusField" class="input-base"><option value="masuk">Masuk</option><option value="tagihan">Tagihan</option><option value="tunai">Tunai</option><option value="diambil">Diambil</option><option value="batal">Batal</option></select></div>
+  <div class="mt-4 flex items-center justify-between bg-emerald-50 border border-emerald-200 rounded-2xl px-4 py-3"><span class="text-[12px] font-extrabold uppercase tracking-wide text-emerald-700">Sisa Bayar</span><span id="sisaDisplay" class="text-[15px] font-extrabold text-emerald-700">Rp 0</span></div>
+  <div class="grid grid-cols-2 gap-3 mt-5"><button type="button" onclick="batalInput()" class="h-12 rounded-2xl bg-white border border-slate-200 font-bold text-[13px] hover:bg-slate-50">Batal</button><button type="button" onclick="simpan()" class="h-12 rounded-2xl bg-slate-900 text-white font-extrabold text-[13px] hover:bg-black">💾 Simpan Penjualan</button></div>
+</div>
+</form>
+</main>
+
+<div class="modal" id="konterAlertModal"><div class="modal-box"><div id="konterAlertIcon" class="text-[28px] mb-2">ℹ️</div><h3 id="konterAlertTitle" class="font-extrabold text-[15px]">Info</h3><p id="konterAlertMessage" class="text-[13px] text-slate-600 mt-1 leading-relaxed">Pesan</p><button onclick="closeKonterPopup()" class="w-full mt-4 h-11 rounded-xl bg-slate-900 text-white font-bold text-[13px]">OK Tutup</button></div></div>
+
 <script type="module">
 import {initializeApp} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import {getAuth,onAuthStateChanged} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
@@ -42,19 +154,17 @@ const firebaseConfig={apiKey:"AIzaSyC_PcarMTT5Un7qfSLzf92o5OGn5rginsI",authDomai
 const app=initializeApp(firebaseConfig),auth=getAuth(app),db=getFirestore(app);let currentUser=null,ownerUid=null,isOwner=false,allProduk=[],konterName="",karyawanList=[],rincianItems=[];
 const roleNorm=v=>String(v||"").trim().toLowerCase();
 function resolveBusinessUid(p,u){const r=roleNorm(p?.role);if(["admin","superadmin","super_admin","owner"].includes(r)||p?.isOwner===true)return u.uid;return String(p?.ownerUid||p?.ownerId||"").trim()}
-async function loadKaryawan(){const byId=new Map();for(const q of [query(collection(db,"users"),where("ownerUid","==",ownerUid)),query(collection(db,"users"),where("ownerId","==",ownerUid)),query(collection(db,"users"),where("businessUid","==",ownerUid)),query(collection(db,"karyawan"),where("ownerUid","==",ownerUid)),query(collection(db,"karyawan"),where("ownerId","==",ownerUid)),query(collection(db,"karyawan"),where("businessUid","==",ownerUid))]){try{const s=await getDocs(q);s.forEach(d=>{const x=d.data()||{},r=roleNorm(x.role),scope=String(x.ownerUid||x.ownerId||x.businessUid||"").trim();if(r&&!["employee","karyawan"].includes(r))return;if(x.status&&String(x.status).toLowerCase()!=="aktif")return;if(scope!==String(ownerUid).trim())return;const n=x.nama||x.namaKaryawan||x.displayName||x.name||x.email?.split("@")[0]||"";if(n)byId.set(d.id,{uid:d.id,email:x.email||"",nama:n})})}catch(e){console.warn(e)}}karyawanList=[...byId.values()];document.getElementById("teknisiStatus").textContent=karyawanList.length?`✅ ${karyawanList.length} teknisi dari Owner/scope akun ini`:"⚠️ Tidak ada teknisi aktif pada Owner/scope akun ini.";document.getElementById("teknisiSelect").innerHTML='<option value="">-- Pilih Teknisi --</option>'+karyawanList.map(k=>`<option value="${String(k.nama).replace(/"/g,'&quot;')}" data-email="${k.email}" data-nama="${String(k.nama).replace(/"/g,'&quot;')}">${k.nama}</option>`).join("")}
+async function loadKaryawan(){const byId=new Map();for(const q of [query(collection(db,"users"),where("ownerUid","==",ownerUid)),query(collection(db,"users"),where("ownerId","==",ownerUid)),query(collection(db,"users"),where("businessUid","==",ownerUid)),query(collection(db,"karyawan"),where("ownerUid","==",ownerUid)),query(collection(db,"karyawan"),where("ownerId","==",ownerUid)),query(collection(db,"karyawan"),where("businessUid","==",ownerUid))]){try{const s=await getDocs(q);s.forEach(d=>{const x=d.data()||{},r=roleNorm(x.role),scope=String(x.ownerUid||x.ownerId||x.businessUid||"").trim();if(r&&!["employee","karyawan"].includes(r))return;if(x.status&&String(x.status).toLowerCase()!=="aktif")return;if(scope!==String(ownerUid).trim())return;const n=x.nama||x.namaKaryawan||x.displayName||x.name||x.email?.split("@")[0]||"";if(n)byId.set(d.id,{uid:d.id,email:x.email||"",nama:n})})}catch(e){console.warn(e)}}karyawanList=[...byId.values()];document.getElementById("teknisiStatus").textContent=karyawanList.length?`✅ ${karyawanList.length} teknisi aktif`:"⚠️ Tidak ada teknisi aktif.";document.getElementById("teknisiSelect").innerHTML='<option value="">-- Pilih Teknisi --</option>'+karyawanList.map(k=>`<option value="${String(k.nama).replace(/"/g,'&quot;')}" data-email="${k.email}" data-nama="${String(k.nama).replace(/"/g,'&quot;')}">${k.nama}</option>`).join("")}
 async function loadProduk(){
   allProduk=[];
   const businessUid=String(ownerUid||"").trim();
   if(!businessUid) throw new Error("Identitas owner akun aktif tidak ditemukan.");
-
   const docsById=new Map();
   const queries=[
     query(collection(db,"stok"),where("ownerUid","==",businessUid)),
     query(collection(db,"stok"),where("ownerId","==",businessUid)),
     query(collection(db,"stok"),where("businessUid","==",businessUid))
   ];
-
   for(const q of queries){
     try{
       const snap=await getDocs(q);
@@ -67,8 +177,6 @@ async function loadProduk(){
       });
     }catch(e){ console.warn("loadProduk query error:",e); }
   }
-
-  // Deduplicate produk berdasarkan barcode/kode/nama.
   const mapByProduct=new Map();
   for(const prod of docsById.values()){
     const key=String(prod.barcode||prod.kode||prod.sku||prod.nama||prod.namaProduk||prod.name||prod.id).trim().toLowerCase();
@@ -77,7 +185,6 @@ async function loadProduk(){
     if(!old){ mapByProduct.set(key,prod); continue; }
     if(Number(prod._stok)>Number(old._stok)) mapByProduct.set(key,prod);
   }
-
   allProduk=[...mapByProduct.values()];
   const info=document.getElementById('produkInfo');
   if(!allProduk.length){
@@ -85,13 +192,12 @@ async function loadProduk(){
   }else{
     const totalStok=allProduk.reduce((sum,d)=>sum+Number(d._stok||0),0);
     const habis=allProduk.filter(d=>Number(d._stok||0)<=0).length;
-    if(info) info.textContent=`${allProduk.length} produk - Total stok: ${totalStok} - Habis: ${habis}`;
+    if(info) info.textContent=`${allProduk.length} produk • ${totalStok} stok • ${habis} habis`;
   }
 }
-
 function filterProduk(keyword){
   const kw=String(keyword||'').trim().toLowerCase();
-  const filtered=!kw ? allProduk : allProduk.filter(p=>{
+  const filtered=!kw? allProduk : allProduk.filter(p=>{
     const nama=String(p.nama||p.namaProduk||p.name||'').toLowerCase();
     const kode=String(p.kode||p.sku||p.code||'').toLowerCase();
     const barcode=String(p.barcode||'').toLowerCase();
@@ -102,28 +208,21 @@ function filterProduk(keyword){
   showProdukDropdown(filtered);
 }
 window.filterProduk=filterProduk;
-
 function showProdukDropdown(list){
   const input=document.getElementById('produkSearch');
   if(!input) return;
   const wrap=input.parentElement;
   let dd=wrap.querySelector('.produk-dropdown');
-  if(!dd){
-    dd=document.createElement('div');
-    dd.className='produk-dropdown';
-    wrap.style.position='relative';
-    wrap.appendChild(dd);
-  }
-  if(!list.length){
-    dd.innerHTML='<div class="produk-item" style="color:#94a3b8">Tidak ada produk</div>';
-  }else{
+  if(!dd){ dd=document.createElement('div'); dd.className='produk-dropdown'; wrap.style.position='relative'; wrap.appendChild(dd); }
+  if(!list.length){ dd.innerHTML='<div class="produk-item" style="color:#94a3b8">Tidak ada produk</div>'; }
+  else{
     dd.innerHTML=list.map(p=>{
       const nama=p.nama||p.namaProduk||p.name||'-';
       const kode=p.kode||p.sku||p.barcode||'';
-      const harga=Number(p.harga||p.hargaJual||p.price||p.hargaModal||0);
-      const stok=Number(p._stok??p.sisa??p.stok??p.qty??p.jumlah??0);
+      const harga=Number(p.harga||p.hargaJual||p.price||0);
+      const stok=Number(p._stok??p.sisa??p.stok??p.qty??0);
       const habis=stok<=0;
-      return `<div class="produk-item" data-id="${String(p.id).replace(/"/g,'&quot;')}" style="background:${habis?'#fffbeb':'#fff'};cursor:pointer;border-left:3px solid ${habis?'#f59e0b':'#16a34a'}"><div><b>${nama}</b> <span style="font-size:10px;color:#888">[${kode}]</span><br><span style="font-size:10px;color:#64748b">${p.kategori||''} • <span style="color:${habis?'#f59e0b':'#16a34a'};font-weight:900">${habis?'STOK HABIS':'Stok: '+stok}</span></span></div><div style="text-align:right"><div>Rp ${harga.toLocaleString('id-ID')}</div><div style="font-size:10px;color:${habis?'#f59e0b':'#16a34a'}">${habis?'⚠️ Habis':'✅ Tersedia'}</div></div></div>`;
+      return `<div class="produk-item" data-id="${String(p.id).replace(/"/g,'&quot;')}"><div class="min-w-0"><div class="text-[13px] font-bold truncate">${nama}</div><div class="text-[11px] text-slate-500">${kode} • ${p.kategori||'Umum'} • <span class="${habis?'text-amber-600':'text-emerald-600'} font-bold">${habis?'HABIS':'Stok '+stok}</span></div></div><div class="text-right"><div class="text-[12px] font-extrabold">Rp ${harga.toLocaleString('id-ID')}</div><div class="text-[10px]">${habis?'⚠️':'✅'}</div></div></div>`;
     }).join('');
   }
   dd.classList.add('show');
@@ -139,13 +238,7 @@ function showProdukDropdown(list){
   });
 }
 window.showProdukDropdown=showProdukDropdown;
-
-function hideProdukDropdown(){
-  const input=document.getElementById('produkSearch');
-  const dd=input?.parentElement?.querySelector('.produk-dropdown');
-  if(dd) dd.classList.remove('show');
-}
-
+function hideProdukDropdown(){ const input=document.getElementById('produkSearch'); const dd=input?.parentElement?.querySelector('.produk-dropdown'); if(dd) dd.classList.remove('show'); }
 function selectProdukAuto(prod){
   const nama=prod.nama||prod.namaProduk||prod.name||'';
   const harga=prod.harga||prod.hargaJual||prod.price||0;
@@ -164,15 +257,13 @@ function selectProdukAuto(prod){
   document.getElementById('barcodeField').value=prod.barcode||document.getElementById('barcodeField').value;
   hitungSubtotalAuto();
 }
-
-
-onAuthStateChanged(auth,async u=>{if(!u){location.replace("login.html");return}currentUser=u;document.getElementById("akunSide").textContent=u.email||"Akun aktif";try{const d=await getDoc(doc(db,"users",u.uid));if(!d.exists())throw Error("Profil akun tidak ditemukan");const p=d.data()||{},r=roleNorm(p.role);if(!["admin","superadmin","super_admin","owner","employee","karyawan"].includes(r))throw Error("Akun tidak memiliki akses input penjualan.");isOwner=r==="owner"||p.isOwner===true;ownerUid=resolveBusinessUid(p,u);konterName=p.namaKonter||p.namaToko||p.tokoName||p.displayName||p.nama||p.name||"Fixzy - A Yudi Thea";document.getElementById("roleSide").textContent=r.toUpperCase();document.getElementById("roleSide").style.background=isOwner?"#16a34a":"#2563eb";document.getElementById("akunLoginField").value=u.email||"";document.getElementById("konterField").value=konterName;document.getElementById("tanggalField").valueAsDate=new Date();autoGenerateNotaBarcode();await loadKaryawan();await loadProduk()}catch(e){console.error(e);document.getElementById("produkInfo").textContent=e.message}});
+onAuthStateChanged(auth,async u=>{if(!u){location.replace("login.html");return}currentUser=u;document.getElementById("akunSide").textContent=u.email||"Akun aktif";try{const d=await getDoc(doc(db,"users",u.uid));if(!d.exists())throw Error("Profil akun tidak ditemukan");const p=d.data()||{},r=roleNorm(p.role);if(!["admin","superadmin","super_admin","owner","employee","karyawan"].includes(r))throw Error("Akun tidak memiliki akses input penjualan.");isOwner=r==="owner"||p.isOwner===true;ownerUid=resolveBusinessUid(p,u);konterName=p.namaKonter||p.namaToko||p.tokoName||p.displayName||p.nama||p.name||"Fixzy - A Yudi Thea";document.getElementById("roleSide").textContent=r.toUpperCase();document.getElementById("roleSide").className="px-2 py-0.5 rounded-full text-[10px] font-extrabold "+(isOwner?"bg-emerald-600 text-white":"bg-slate-900 text-white");document.getElementById("akunLoginField").value=u.email||"";document.getElementById("konterField").value=konterName;document.getElementById("tanggalField").valueAsDate=new Date();autoGenerateNotaBarcode();await loadKaryawan();await loadProduk()}catch(e){console.error(e);document.getElementById("produkInfo").textContent=e.message}});
 function autoGenerateNotaBarcode(){const n=new Date(),dd=String(n.getDate()).padStart(2,"0"),mm=String(n.getMonth()+1).padStart(2,"0"),yy=String(n.getFullYear()).slice(-2),r=Math.floor(1000+Math.random()*9000);document.getElementById("notaField").value=`NOTA-${yy}${mm}${dd}-${r}`;document.getElementById("barcodeField").value=`82${Date.now().toString().slice(-8)}${r}`}
 window.regenerate=()=>autoGenerateNotaBarcode();window.refreshHalaman=()=>location.reload();window.closeKonterPopup=()=>document.getElementById("konterAlertModal").classList.remove("show");function showKonterPopup(m,t="info"){document.getElementById("konterAlertMessage").textContent=m;document.getElementById("konterAlertModal").classList.add("show")}
 window.toggleManual=()=>{const c=document.getElementById("manualToggle").checked;document.getElementById("manualWrap").style.display=c?"grid":"none";document.getElementById("autoProdukWrap").style.display=c?"none":"block"};
 function hitungSubtotalAuto(){document.getElementById("subtotalAuto").value=Number(document.getElementById("hargaAuto").value||0)*Number(document.getElementById("qtyAuto").value||0)}function hitungSubtotalManual(){document.getElementById("subtotalManual").value=Number(document.getElementById("hargaManual").value||0)*Number(document.getElementById("qtyManual").value||0)}
 function hitungSisa(){const t=Number(document.getElementById("totalField").value||0),d=Number(document.getElementById("diskonField").value||0),p=Number(document.getElementById("dpField").value||0),s=t-d-p;document.getElementById("sisaField").value=s;document.getElementById("sisaDisplay").textContent="Rp "+s.toLocaleString("id-ID")}
-function renderRincian(){const b=document.getElementById("rincianBody");if(!rincianItems.length){b.innerHTML='<tr><td colspan="6" style="text-align:center;color:#94a3b8;padding:16px">Belum ada produk</td></tr>'}else{b.innerHTML=rincianItems.map((x,i)=>`<tr><td>${i+1}</td><td><b>${x.nama}</b><br><small>${x.barcode||""}</small></td><td>Rp ${Number(x.harga).toLocaleString("id-ID")}</td><td>${x.qty}</td><td>Rp ${Number(x.subtotal).toLocaleString("id-ID")}</td><td><button type="button" onclick="hapusItem(${i})" style="background:#fee2e2;color:#dc2626">Hapus</button></td></tr>`).join("")}const t=rincianItems.reduce((s,x)=>s+Number(x.subtotal||0),0);document.getElementById("totalDisplay").textContent="Rp "+t.toLocaleString("id-ID");document.getElementById("totalField").value=t;hitungSisa()}
+function renderRincian(){const b=document.getElementById("rincianBody");if(!rincianItems.length){b.innerHTML='<tr><td colspan="6" style="text-align:center;color:#94a3b8;padding:18px">Belum ada produk</td></tr>'}else{b.innerHTML=rincianItems.map((x,i)=>`<tr><td>${i+1}</td><td><b>${x.nama}</b><br><small class="text-slate-500">${x.barcode||""}</small></td><td>Rp ${Number(x.harga).toLocaleString("id-ID")}</td><td>${x.qty}</td><td class="font-extrabold">Rp ${Number(x.subtotal).toLocaleString("id-ID")}</td><td><button type="button" onclick="hapusItem(${i})" class="px-2.5 py-1 rounded-full bg-red-50 text-red-600 text-[11px] font-bold border border-red-100">Hapus</button></td></tr>`).join("")}const t=rincianItems.reduce((s,x)=>s+Number(x.subtotal||0),0);document.getElementById("totalDisplay").textContent="Rp "+t.toLocaleString("id-ID");document.getElementById("totalField").value=t;hitungSisa()}
 window.hapusItem=i=>{rincianItems.splice(i,1);renderRincian()};window.tambahProduk=()=>{const m=document.getElementById("manualToggle").checked,n=m?document.getElementById("produkNamaManual").value.trim():document.getElementById("produkNamaAuto").value||document.getElementById("produkSearch").value.trim(),h=Number((m?document.getElementById("hargaManual"):document.getElementById("hargaAuto")).value||0),q=Number((m?document.getElementById("qtyManual"):document.getElementById("qtyAuto")).value||0);if(!n||q<=0){showKonterPopup("Produk dan qty wajib diisi","error");return}rincianItems.push({nama:n,barcode:m?document.getElementById("barcodeManual").value:document.getElementById("barcodeField").value,harga:h,modal:h,qty:q,subtotal:h*q,type:m?"manual":"auto"});renderRincian()};window.batalInput=()=>{if(confirm("Batal input?")){rincianItems=[];document.getElementById("inputForm").reset();renderRincian();document.getElementById("tanggalField").valueAsDate=new Date();autoGenerateNotaBarcode()}};
 window.simpan=async()=>{if(!rincianItems.length){showKonterPopup("Rincian produk kosong","error");return}const nama=document.getElementById("namaPelangganField").value.trim();if(!nama){showKonterPopup("Nama pelanggan wajib","error");return}try{await addDoc(collection(db,"penjualan"),{akun:currentUser.email,akunLogin:currentUser.email,namaKonter:konterName,konter:konterName,teknisi:document.getElementById("teknisiSelect").value,teknisiEmail:document.getElementById("teknisiSelect").selectedOptions[0]?.dataset.email||currentUser.email,namaKaryawan:document.getElementById("teknisiSelect").value,tanggal:document.getElementById("tanggalField").value,nomorNota:document.getElementById("notaField").value,barcode:document.getElementById("barcodeField").value,pelanggan:{nama,wa:document.getElementById("waField").value,alamat:document.getElementById("alamatField").value},nama, noHp:document.getElementById("waField").value,alamat:document.getElementById("alamatField").value,items:rincianItems,total:Number(document.getElementById("totalField").value||0),diskon:Number(document.getElementById("diskonField").value||0),dp:Number(document.getElementById("dpField").value||0),sisa:Number(document.getElementById("sisaField").value||0),status:document.getElementById("statusField").value,createdBy:currentUser.email,uid:ownerUid,ownerId:ownerUid,businessUid:ownerUid,ownerUid,createdAt:serverTimestamp(),updatedAt:new Date().toISOString()});showKonterPopup("Berhasil simpan! Nota: "+document.getElementById("notaField").value,"success");setTimeout(()=>location.href="data-penjualan.html",1200)}catch(e){showKonterPopup("Gagal simpan: "+e.message,"error")}};
 document.addEventListener("DOMContentLoaded",()=>{const ps=document.getElementById("produkSearch");ps.addEventListener("focus",()=>filterProduk(ps.value));ps.addEventListener("click",()=>filterProduk(ps.value));ps.addEventListener("input",e=>filterProduk(e.target.value));document.addEventListener("click",e=>{if(!e.target.closest("#produkSearch")&&!e.target.closest(".produk-dropdown"))hideProdukDropdown()});document.getElementById("hargaAuto").addEventListener("input",hitungSubtotalAuto);document.getElementById("qtyAuto").addEventListener("input",hitungSubtotalAuto);document.getElementById("hargaManual").addEventListener("input",hitungSubtotalManual);document.getElementById("qtyManual").addEventListener("input",hitungSubtotalManual);document.getElementById("diskonField").addEventListener("input",hitungSisa);document.getElementById("dpField").addEventListener("input",hitungSisa)})
