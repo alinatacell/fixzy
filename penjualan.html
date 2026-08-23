@@ -631,49 +631,80 @@ const db = getFirestore(app);
 
 let currentUser=null, ownerUid=null, isOwner=false, allProduk=[], konterName="", karyawanList=[], rincianItems=[];
 
+// =========================================================
+// SESI AKUN — ACUAN servisan.html
+// businessUid adalah pemisah data utama:
+// OWNER      -> UID akun sendiri
+// SUPERADMIN -> UID akun sendiri
+// KARYAWAN   -> ownerUid/ownerId pada profil karyawan
+// =========================================================
+function roleNorm(v){return String(v||"").trim().toLowerCase();}
+function resolveBusinessUid(profile,user){
+  const role=roleNorm(profile?.role);
+  if(role==="owner" || role==="superadmin" || role==="super_admin" || profile?.isOwner===true){
+    return String(user.uid||"").trim();
+  }
+  return String(profile?.ownerUid||profile?.ownerId||"").trim();
+}
+
 onAuthStateChanged(auth, async u=>{
-  if(!u){ location.href="login.html"; return; }
+  const akun=document.getElementById('akunSide');
+  const roleEl=document.getElementById('roleSide');
+  if(!u){ location.replace("login.html"); return; }
+
   currentUser=u;
-  document.getElementById('akunSide').textContent=u.email;
-  document.getElementById('namaToko').textContent='Input Penjualan';
-  document.getElementById('akunLoginField').value=u.email;
+  if(akun) akun.textContent=u.email||"Akun aktif";
+
   try{
     const d=await getDoc(doc(db,"users",u.uid));
-    if(!d.exists()) throw new Error("Profil akun tidak ditemukan.");
+    if(!d.exists()) throw new Error("Profil akun tidak ditemukan di users/"+u.uid);
+
     const p=d.data()||{};
-    const role=String(p.role||"").toLowerCase().trim();
-    if(!["owner","employee","karyawan","superadmin"].includes(role)) throw new Error("Akun tidak memiliki akses input penjualan.");
-    isOwner = role==="owner" || p.isOwner===true;
-    ownerUid = (role==="owner" || role==="superadmin") ? u.uid : String(p.ownerUid||p.ownerId||u.uid).trim();
-    currentUser.profileRole=role;
+    const role=roleNorm(p.role);
+    const email=String(u.email||"").trim().toLowerCase();
+    const superAdmin=(role==="superadmin"||role==="super_admin"||email==="servicehpmaja@gmail.com");
+
+    if(!superAdmin && !["owner","employee","karyawan"].includes(role)){
+      throw new Error("Akun tidak memiliki akses input penjualan.");
+    }
+
+    isOwner=(role==="owner" || p.isOwner===true || superAdmin);
+    ownerUid=resolveBusinessUid(p,u);
+    if(!ownerUid) throw new Error("Identitas owner akun tidak ditemukan.");
+
+    currentUser.profileRole=superAdmin?"superadmin":role;
     currentUser.ownerUid=p.ownerUid||"";
     currentUser.ownerId=p.ownerId||"";
     currentUser.businessOwnerUid=ownerUid;
     currentUser.isOwner=isOwner;
-      if(isOwner){
-        konterName = p.namaKonter || p.namaToko || p.tokoName || p.namaKonterToko || p.konter || p.storeName || p.displayName || p.nama || p.name || p.username || "Fixzy - A Yudi Thea";
-      }else{
-        try{
-          const ownerSnap = await getDoc(doc(db,"users", ownerUid));
-          if(ownerSnap.exists()){
-            const op = ownerSnap.data();
-            konterName = op.namaKonter || op.namaToko || op.tokoName || op.namaKonterToko || op.konter || op.storeName || op.displayName || op.nama || op.name || op.username || "Fixzy - A Yudi Thea";
-          }else{
-            konterName = p.namaKonter || p.namaToko || p.nama || "Fixzy - A Yudi Thea";
-          }
-        }catch(e){
-          konterName = p.namaKonter || p.namaToko || p.nama || "Fixzy - A Yudi Thea";
-        }
-      }
-      document.getElementById('roleSide').textContent=isOwner?'OWNER':(p.role||'KARYAWAN').toUpperCase();
-      document.getElementById('roleSide').style.background=isOwner?'#16a34a':'#2563eb';
+
+    // Sama seperti servisan: akun Owner/Superadmin memakai profil sendiri.
+    // Karyawan tidak dipaksa membaca profil Owner jika rules tidak mengizinkan.
+    if(isOwner){
+      konterName=p.namaKonter||p.namaToko||p.tokoName||p.namaKonterToko||p.konter||p.storeName||p.displayName||p.nama||p.name||p.username||"Fixzy - A Yudi Thea";
+    }else{
+      konterName=p.namaKonter||p.namaToko||p.tokoName||p.namaKonterToko||p.konter||p.storeName||p.displayName||p.nama||p.name||p.username||"Fixzy - A Yudi Thea";
     }
-  }catch(e){ ownerUid=u.uid; isOwner=true; konterName="Fixzy - A Yudi Thea"; }
-  document.getElementById('konterField').value=konterName;
-  document.getElementById('tanggalField').valueAsDate=new Date();
-  autoGenerateNotaBarcode();
-  await loadKaryawan();
-  await loadProduk();
+
+    document.getElementById('namaToko').textContent='Input Penjualan';
+    document.getElementById('akunLoginField').value=u.email||'';
+    if(roleEl){
+      roleEl.textContent=superAdmin?'SUPERADMIN':role.toUpperCase();
+      roleEl.style.background=superAdmin?'#7c3aed':(isOwner?'#16a34a':'#2563eb');
+    }
+    document.getElementById('konterField').value=konterName;
+    document.getElementById('tanggalField').valueAsDate=new Date();
+    autoGenerateNotaBarcode();
+
+    try{ await loadKaryawan(); }catch(e){ console.warn('LOAD KARYAWAN:',e); }
+    try{ await loadProduk(); }catch(e){ console.error('LOAD PRODUK:',e); }
+  }catch(e){
+    console.error('FIXZY SESSION:',e);
+    if(akun) akun.textContent=u.email||'Akun tidak dikenal';
+    if(roleEl){ roleEl.textContent='AKSES DITOLAK'; roleEl.style.background='#dc2626'; }
+    document.getElementById('konterField').value='';
+    document.getElementById('produkInfo').textContent=e.message||'Gagal memuat akun.';
+  }
 });
 
 async function loadKaryawan(){
@@ -802,15 +833,14 @@ window.fixStokSinkron=async()=>{
 
 
 function activeStockOwner(){
-  const role=String(currentUser?.profileRole||currentUser?.role||"").toLowerCase().trim();
-  // IDENTITAS BISNIS:
-  // Owner      -> UID sendiri
-  // Superadmin -> UID sendiri (stok milik Superadmin sendiri)
-  // Karyawan   -> ownerUid/ownerId dari profil karyawan
+  const role=roleNorm(currentUser?.profileRole||currentUser?.role||"");
+  // PERSIS pola servisan:
+  // Owner/Superadmin -> UID sendiri
+  // Karyawan -> businessOwnerUid yang berasal dari ownerUid/ownerId profil
   if(role==="owner" || role==="superadmin" || currentUser?.isOwner===true){
-    return String(currentUser.uid||"").trim();
+    return String(currentUser?.uid||"").trim();
   }
-  return String(currentUser?.businessOwnerUid||currentUser?.ownerUid||currentUser?.ownerId||currentUser?.uid||"").trim();
+  return String(currentUser?.businessOwnerUid||currentUser?.ownerUid||currentUser?.ownerId||"").trim();
 }
 
 async function loadProduk(){
@@ -818,84 +848,65 @@ async function loadProduk(){
   const businessUid=activeStockOwner();
   if(!businessUid) throw new Error("Identitas owner akun aktif tidak ditemukan.");
 
-  try{
-    const seen=new Map();
-    const email=String(currentUser?.email||"").trim().toLowerCase();
-    const queries=[
-      ["ownerUid",businessUid],["ownerId",businessUid],["uid",businessUid],
-      ["uidOwner",businessUid],["pemilikUid",businessUid],["konterOwnerUid",businessUid],
-      ["userUid",businessUid],["userId",businessUid],["createdByUid",businessUid],["createdById",businessUid]
-    ];
-    if(email){
-      queries.push(["ownerEmail",email],["emailOwner",email],["akun",email],["akunLogin",email],["email",email],["userEmail",email],["createdBy",email]);
+  const docsById=new Map();
+
+  // ACUAN servisan.html:
+  // hanya query ownerUid / ownerId.
+  // Superadmin juga boleh membaca stok dengan uid miliknya sendiri.
+  const queries=[
+    query(collection(db,"stok"),where("ownerUid","==",businessUid)),
+    query(collection(db,"stok"),where("ownerId","==",businessUid))
+  ];
+  const role=roleNorm(currentUser?.profileRole||"");
+  if(role==="superadmin"){
+    queries.push(query(collection(db,"stok"),where("uid","==",businessUid)));
+  }
+
+  for(const q of queries){
+    try{
+      const snap=await getDocs(q);
+      snap.forEach(d=>{
+        const data=d.data()||{};
+        // Filter kedua untuk memastikan dokumen benar-benar milik businessUid.
+        const owner=String(data.ownerUid||data.ownerId||"").trim();
+        const creator=String(data.uid||"").trim();
+        const valid=owner===businessUid || (role==="superadmin" && creator===businessUid);
+        if(!valid) return;
+
+        const stokVal=Number(data.sisa??data.sisaStok??data.stokTersedia??data.stokAkhir??data.pcs??data.ready??data.stok??data.qty??data.jumlah??data.stock??0)||0;
+        docsById.set(d.id,{id:d.id,_col:"stok",_stok:stokVal,...data});
+      });
+    }catch(e){
+      console.warn("loadProduk query error:",e);
     }
+  }
 
-    // WAJIB terfilter. Tidak ada lagi getDocs(collection(db,"stok"))
-    // karena itu yang menyebabkan produk Owner lain bocor ke akun aktif.
-    for(const [field,value] of queries){
-      try{
-        const snap=await getDocs(query(collection(db,"stok"),where(field,"==",value)));
-        snap.forEach(d=>{
-          const data=d.data()||{};
-          const ou=String(data.ownerUid||"").trim();
-          const oi=String(data.ownerId||"").trim();
-          const pu=String(data.uid||"").trim();
-          const uo=String(data.uidOwner||"").trim();
-          const po=String(data.pemilikUid||"").trim();
-          const ko=String(data.konterOwnerUid||"").trim();
-          const uu=String(data.userUid||"").trim();
-          const ui=String(data.userId||"").trim();
-          const cbuid=String(data.createdByUid||"").trim();
-          const cbid=String(data.createdById||"").trim();
-          const emails=[data.ownerEmail,data.emailOwner,data.akun,data.akunLogin,data.email,data.userEmail,data.createdBy]
-            .map(v=>String(v??"").trim().toLowerCase());
+  // Deduplicate produk berdasarkan barcode/kode/nama.
+  const mapByProduct=new Map();
+  for(const p of docsById.values()){
+    const key=String(p.barcode||p.kode||p.sku||p.nama||p.namaProduk||p.name||p.id).trim().toLowerCase();
+    if(!key) continue;
+    const old=mapByProduct.get(key);
+    if(!old){ mapByProduct.set(key,p); continue; }
+    const pt=p.updatedAt?.toDate?p.updatedAt.toDate().getTime():new Date(p.updatedAt||p.createdAt||0).getTime();
+    const ot=old.updatedAt?.toDate?old.updatedAt.toDate().getTime():new Date(old.updatedAt||old.createdAt||0).getTime();
+    if(Number(p._stok)>Number(old._stok) || pt>ot) mapByProduct.set(key,p);
+  }
 
-          // SECOND FILTER: hasil yang masuk harus benar-benar milik businessUid/email aktif.
-          const uidMatch=[ou,oi,pu,uo,po,ko,uu,ui,cbuid,cbid].includes(businessUid);
-          const emailMatch=!!email && emails.includes(email);
-          if(!uidMatch && !emailMatch) return;
-          seen.set(d.id,{id:d.id,_col:"stok",...data});
-        });
-      }catch(e){
-        console.warn("Query stok "+field,e.message);
-      }
-    }
-
-    const docs=[...seen.values()].map(p=>{
-      const stokVal=Number(p.sisa ?? p.sisaStok ?? p.stokTersedia ?? p.stokAkhir ?? p.pcs ?? p.ready ?? p.stok ?? p.qty ?? p.jumlah ?? p.stock ?? 0)||0;
-      return {...p,_stok:stokVal,_rawSisa:p.sisa,_rawStok:p.stok};
-    });
-
-    // Deduplicate berdasarkan barcode/nama, pilih stok terbaru/terbesar.
-    const mapByBarcode=new Map();
-    for(const p of docs){
-      const key=(p.barcode||p.kode||p.sku||p.nama||p.namaProduk||p.name||p.id).toString().trim().toLowerCase();
-      const old=mapByBarcode.get(key);
-      if(!old){ mapByBarcode.set(key,p); continue; }
-      const pt=new Date(p.updatedAt?.toDate?p.updatedAt.toDate():p.updatedAt||p.createdAt||0).getTime();
-      const ot=new Date(old.updatedAt?.toDate?old.updatedAt.toDate():old.updatedAt||old.createdAt||0).getTime();
-      if(Number(p._stok)>Number(old._stok) || pt>ot) mapByBarcode.set(key,p);
-    }
-
-    allProduk=[...mapByBarcode.values()];
-    const info=document.getElementById('produkInfo');
-    if(allProduk.length===0){
-      if(info) info.textContent='Belum ada stok untuk akun/owner ini.';
-      document.getElementById('autoProdukWrap').style.opacity='0.35';
-      document.getElementById('autoProdukWrap').style.pointerEvents='none';
-      document.getElementById('manualToggle').checked=true;
-      toggleManual();
-    }else{
-      const totalStok=allProduk.reduce((s,d)=>s+Number(d._stok||0),0);
-      const habis=allProduk.filter(d=>Number(d._stok||0)<=0).length;
-      if(info) info.textContent=`${allProduk.length} produk - Total stok: ${totalStok} - Habis: ${habis}`;
-      document.getElementById('autoProdukWrap').style.opacity='1';
-      document.getElementById('autoProdukWrap').style.pointerEvents='auto';
-    }
-  }catch(e){
-    allProduk=[];
-    console.error('LOAD PRODUK:',e);
-    throw e;
+  allProduk=[...mapByProduct.values()];
+  const info=document.getElementById('produkInfo');
+  if(allProduk.length===0){
+    if(info) info.textContent='Belum ada stok untuk akun/owner ini.';
+    document.getElementById('autoProdukWrap').style.opacity='0.35';
+    document.getElementById('autoProdukWrap').style.pointerEvents='none';
+    document.getElementById('manualToggle').checked=true;
+    toggleManual();
+  }else{
+    const totalStok=allProduk.reduce((sum,d)=>sum+Number(d._stok||0),0);
+    const habis=allProduk.filter(d=>Number(d._stok||0)<=0).length;
+    if(info) info.textContent=`${allProduk.length} produk - Total stok: ${totalStok} - Habis: ${habis}`;
+    document.getElementById('autoProdukWrap').style.opacity='1';
+    document.getElementById('autoProdukWrap').style.pointerEvents='auto';
   }
 }
 
