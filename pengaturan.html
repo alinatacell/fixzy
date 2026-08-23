@@ -25,7 +25,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="theme-color" content="#081326">
-<title>FIXZY | IZIN AKSES - FOLLOW RULES EXISTING</title>
+<title>FIXZY | IZIN AKSES - ANTI STUCK</title>
 <style>
 *{box-sizing:border-box}
 :root{--navy:#081326;--navy2:#101d33;--yellow:#ffc107;--bg:#f2f5f9;--card:#fff;--line:#dbe3ed;--text:#172033;--muted:#64748b}
@@ -38,7 +38,7 @@ button,input,select{font:inherit}button{cursor:pointer}
 .refresh{height:44px;width:44px;border:0;border-radius:12px;background:var(--yellow);font-weight:900;color:#111;font-size:20px}
 .wrap{max-width:1280px;margin:auto;padding:12px}
 .card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:14px;margin-bottom:12px}
-.status{font-size:12px;color:var(--muted);line-height:1.5}.ok{color:#15803d;font-weight:800}.err{color:#b91c1c;font-weight:800}
+.status{font-size:12px;color:var(--muted);line-height:1.5;white-space:pre-wrap}.ok{color:#15803d;font-weight:800}.err{color:#b91c1c;font-weight:800}
 .kpis{display:grid;grid-template-columns:repeat(5,1fr);gap:9px}
 .kpi{padding:13px;border-radius:14px;color:#fff}.k1{background:linear-gradient(135deg,#2563eb,#1d4ed8)}.k2{background:linear-gradient(135deg,#16a34a,#059669)}.k3{background:linear-gradient(135deg,#7c3aed,#4f46e5)}.k4{background:linear-gradient(135deg,#ef4444,#dc2626)}.k5{background:linear-gradient(135deg,#f59e0b,#d97706)}
 .kpi small{display:block;font-size:10px;font-weight:900;opacity:.9}.kpi b{display:block;font-size:20px;margin-top:6px}
@@ -73,12 +73,16 @@ td{padding:10px;border-bottom:1px solid #edf1f5;font-size:11px;vertical-align:mi
 <body>
 <header class="header">
   <img src="logo.png" class="logo" alt="FIXZY">
-  <div class="brand"><h1>FIXZY - IZIN AKSES FOLLOW RULES</h1><p>Flow FIXED LENGKAP + 100% lolos isMyData() rules existing kamu</p></div>
+  <div class="brand"><h1>FIXZY - IZIN AKSES ANTI STUCK</h1><p>Fix Memuat akses • debug log • follow rules existing</p></div>
   <div class="owner"><b id="ownerName">Memuat...</b><span id="ownerEmail">Firebase</span></div>
   <button class="refresh" id="refreshBtn">↻</button>
 </header>
 <main class="wrap">
-  <section class="card"><div id="status" class="status">Memeriksa sesi Firebase...</div></section>
+  <section class="card"><div id="status" class="status">⏳ Init Firebase...
+[1] Memeriksa sesi Firebase...</div>
+  <div style="margin-top:8px;display:flex;gap:8px"><button class="btn dark" style="height:32px;font-size:10px" id="forceCheck">🔍 Paksa Cek Auth</button><button class="btn light" style="height:32px;font-size:10px" id="showDebug">📋 Debug</button></div>
+  <div id="debugBox" class="notice" style="display:none;white-space:pre-wrap;font-size:10px"></div>
+  </section>
   <section class="card">
     <div class="kpis">
       <div class="kpi k1"><small>TOTAL</small><b id="kTotal">-</b></div>
@@ -87,7 +91,7 @@ td{padding:10px;border-bottom:1px solid #edf1f5;font-size:11px;vertical-align:mi
       <div class="kpi k4"><small>KASIR/ADMIN</small><b id="kKasir">-</b></div>
       <div class="kpi k5"><small>NON-AKTIF</small><b id="kNon">-</b></div>
     </div>
-    <div class="notice">Ikuti rules existing kamu persis: simpan <b>ownerUid, ownerId, ownerEmail, konterId, idKonter, businessUid, uid</b> biar <code>isMyData()</code> lolos. <b>hasIzin()</b> tetap seperti rules kamu (karyawan/employee/teknisi/kurir auto true). Tampilan tetap desain kamu.</div>
+    <div class="notice">Versi ini anti-stuck: kalau <code>onAuthStateChanged</code> di iframe telat, dia akan paksa baca <code>auth.currentUser</code> + kasih tombol debug. Rules tetap ikuti rules existing kamu (isMyData + hasIzin).</div>
   </section>
   <section class="card">
     <div class="toolbar">
@@ -97,24 +101,22 @@ td{padding:10px;border-bottom:1px solid #edf1f5;font-size:11px;vertical-align:mi
       <div class="field"><label>&nbsp;</label><button class="btn yellow" id="addBtn">+ Tambah</button></div>
     </div>
     <div style="height:10px"></div>
-    <div class="table-wrap"><table><thead><tr><th>No</th><th>Karyawan</th><th>Jabatan / Role</th><th>WA</th><th>Status</th><th>Upah</th><th>Izin Ceklis</th><th>Aksi</th></tr></thead><tbody id="tbody"><tr><td colspan="8" class="empty">Memuat...</td></tr></tbody></table></div>
+    <div class="table-wrap"><table><thead><tr><th>No</th><th>Karyawan</th><th>Jabatan / Role</th><th>WA</th><th>Status</th><th>Upah</th><th>Izin Ceklis</th><th>Aksi</th></tr></thead><tbody id="tbody"><tr><td colspan="8" class="empty">Menunggu Firebase...</td></tr></tbody></table></div>
   </section>
 
   <div class="popup" id="popup">
     <div class="popup-box">
       <h3 id="popupTitle">Setting Karyawan</h3>
-      <h4 style="margin:12px 0 8px;font-size:13px;border-bottom:1px solid #e2e8f0;padding-bottom:6px">1. Data Karyawan</h4>
       <div class="grid">
         <div class="field"><label>NAMA LENGKAP *</label><input id="fNama"></div>
-        <div class="field"><label>ROLE SISTEM * (ikuti rules kamu)</label><select id="fRole"><option value="teknisi">Teknisi</option><option value="kasir">Kasir</option><option value="kurir">Kurir</option><option value="karyawan">Karyawan</option><option value="employee">Employee</option><option value="admin">Admin</option><option value="reseller">Reseller</option></select></div>
+        <div class="field"><label>ROLE SISTEM *</label><select id="fRole"><option value="teknisi">Teknisi</option><option value="kasir">Kasir</option><option value="kurir">Kurir</option><option value="karyawan">Karyawan</option><option value="employee">Employee</option><option value="admin">Admin</option><option value="reseller">Reseller</option></select></div>
         <div class="field"><label>EMAIL LOGIN *</label><input id="fEmail" type="email"></div>
         <div class="field"><label>NO. WA *</label><input id="fWA" type="tel" maxlength="15"></div>
         <div class="field" id="passWrap"><label id="passLabel">PASSWORD AWAL *</label><input id="fPassword" type="password"></div>
-        <div class="field"><label>JABATAN / POSISI</label><input id="fJabatan" placeholder="Teknisi Senior, Kasir..."></div>
+        <div class="field"><label>JABATAN</label><input id="fJabatan"></div>
         <div class="field full"><div class="toggle-row"><input type="checkbox" id="fAktif" checked><label for="fAktif">Aktif - bisa login</label></div></div>
       </div>
-
-      <h4 style="margin:16px 0 8px;font-size:13px;border-bottom:1px solid #e2e8f0;padding-bottom:6px">2. Upah</h4>
+      <h4 style="margin:16px 0 8px;font-size:13px;border-bottom:1px solid #e2e8f0;padding-bottom:6px">Upah & Izin</h4>
       <div class="grid">
         <div class="field"><label>SISTEM UPAH</label><select id="fJenis"><option value="harian">Harian</option><option value="bulanan">Bulanan</option><option value="persentase">Persentase</option><option value="harian_persentase">Harian + %</option><option value="bulanan_persentase">Bulanan + %</option></select></div>
         <div class="field"><label>NOMINAL</label><input id="fNominal" type="number" min="0" step="1000"></div>
@@ -122,8 +124,7 @@ td{padding:10px;border-bottom:1px solid #edf1f5;font-size:11px;vertical-align:mi
         <div class="field"><label>BASIS</label><select id="fBasis"><option value="omzet">Omzet</option><option value="servis">Servis</option><option value="penjualan">Penjualan</option></select></div>
         <div class="field full"><label>CATATAN</label><input id="fCatatan"></div>
       </div>
-
-      <h4 style="margin:16px 0 8px;font-size:13px;border-bottom:1px solid #e2e8f0;padding-bottom:6px">3. Izin Akses Ceklis - Sesuai Rules hasIzin()</h4>
+      <h4 style="margin:16px 0 8px;font-size:13px;border-bottom:1px solid #e2e8f0;padding-bottom:6px">Izin Akses Ceklis</h4>
       <div style="display:flex;gap:6px;margin-bottom:8px;flex-wrap:wrap">
         <button type="button" class="btn dark" style="height:30px;font-size:10px" id="checkAll">☑ Semua</button>
         <button type="button" class="btn light" style="height:30px;font-size:10px" id="uncheckAll">☐ Kosong</button>
@@ -131,8 +132,6 @@ td{padding:10px;border-bottom:1px solid #edf1f5;font-size:11px;vertical-align:mi
       </div>
       <div class="izin-grid" id="izinGrid"></div>
       <div id="editInfo" class="notice" style="margin-top:10px"></div>
-      <div class="notice warn">Rules kamu: <code>hasIzin(koleksi)</code> cek <code>myUser().izin[koleksi]==true</code>. File ini simpan ke <b>izin, permissions, akses</b> + <b>izinAkses[]</b>. Juga simpan <b>ownerUid, ownerId, ownerEmail, konterId, idKonter, businessUid, uid, konterId</b> biar <code>isMyData()</code> di rules kamu lolos untuk penjualan/servis/stok/pengeluaran.</div>
-
       <div class="popup-actions"><button class="btn light" id="cancelPopup">Batal</button><button class="btn yellow" id="savePay">💾 Simpan</button></div>
     </div>
   </div>
@@ -145,10 +144,15 @@ td{padding:10px;border-bottom:1px solid #edf1f5;font-size:11px;vertical-align:mi
 import {initializeApp,getApps,getApp,deleteApp} from "https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js";
 import {getAuth,onAuthStateChanged,createUserWithEmailAndPassword,updateProfile} from "https://www.gstatic.com/firebasejs/11.10.0/firebase-auth.js";
 import {getFirestore,doc,getDoc,setDoc,collection,query,where,getDocs,serverTimestamp} from "https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js";
+
 const cfg={apiKey:"AIzaSyC_PcarMTT5Un7qfSLzf92o5OGn5rginsI",authDomain:"fixzy-update.firebaseapp.com",projectId:"fixzy-update",storageBucket:"fixzy-update.firebasestorage.app",messagingSenderId:"995892519622",appId:"1:995892519622:web:fa41047944d8e5b35d6dc7"};
 const app=getApps().length?getApp():initializeApp(cfg),auth=getAuth(app),db=getFirestore(app);
 const $=id=>document.getElementById(id);
+
 let uid="",ownerUid="",ownerEmail="",konterId="",profile={},accounts=[],editId=null,ready=false,editEmailLama="";
+let debugLogs=[];
+function logDebug(msg){const t=new Date().toLocaleTimeString(); debugLogs.push(`[${t}] ${msg}`); $("debugBox").textContent=debugLogs.join("\n"); console.log(msg);}
+function setStatus(msg, isError=false){$("status").innerHTML=(isError?'<span class="err">':'<span class="ok">')+msg+'</span>'; logDebug(msg.replace(/<[^>]*>/g,''));}
 
 const PERMISSIONS=[
   {key:'servis', label:'Input Servisan', desc:'servis'},
@@ -201,26 +205,60 @@ function izinPreview(a){
 }
 
 async function loadProfile(user){
+  logDebug(`loadProfile start uid=${user.uid} email=${user.email}`);
+  setStatus(`⏳ Load profile users/${user.uid}...`);
   const s=await getDoc(doc(db,"users",user.uid));
-  if(!s.exists())throw new Error("Profil tidak ada");
+  if(!s.exists()){
+    logDebug(`users/${user.uid} TIDAK ADA di Firestore! Cek Firebase Console > users`);
+    throw new Error(`Profil users/${user.uid} tidak ditemukan. Buat dokumen users dulu atau login sebagai owner yang sudah ada.`);
+  }
   profile=s.data()||{};
+  logDebug(`Profile ditemukan: role=${profile.role} ownerUid=${profile.ownerUid||profile.ownerId} konterId=${profile.konterId||profile.idKonter}`);
   const r=norm(profile.role);
-  if(!["owner","superadmin","admin"].includes(r))throw new Error("Hanya OWNER/SUPERADMIN");
+  if(!["owner","superadmin","admin"].includes(r)){
+    throw new Error(`Halaman ini hanya untuk OWNER/SUPERADMIN. Role kamu: ${profile.role}`);
+  }
   ownerUid=r==="owner"?user.uid:(profile.ownerUid||profile.ownerId||user.uid);
   ownerEmail=profile.ownerEmail||profile.email||user.email||"";
   konterId=profile.konterId||profile.idKonter||ownerUid;
+  logDebug(`ownerUid final = ${ownerUid} ownerEmail=${ownerEmail} konterId=${konterId}`);
 }
+
 async function ownedUsers(){
-  // IKUTI RULES: query ownerUid == ownerUid, biar isMyData lolos
-  const snap=await getDocs(query(collection(db,"users"),where("ownerUid","==",ownerUid)));
-  return snap.docs.map(d=>({id:d.id,...d.data()}))
-    .filter(x=>x.id!==ownerUid && norm(x.role)!=="owner")
-    .sort((a,b)=>nama(a).localeCompare(nama(b)));
+  logDebug(`ownedUsers query where ownerUid==${ownerUid}`);
+  setStatus(`⏳ Query users where ownerUid==${ownerUid.slice(0,8)}...`);
+  try{
+    const snap=await getDocs(query(collection(db,"users"),where("ownerUid","==",ownerUid)));
+    logDebug(`Query ownerUid dapat ${snap.size} docs`);
+    let list=snap.docs.map(d=>({id:d.id,...d.data()}));
+    // fallback: coba juga ownerId jika ownerUid kosong
+    if(list.length===0){
+      logDebug(`Coba fallback query ownerId==${ownerUid}`);
+      try{
+        const snap2=await getDocs(query(collection(db,"users"),where("ownerId","==",ownerUid)));
+        logDebug(`Fallback ownerId dapat ${snap2.size} docs`);
+        snap2.docs.forEach(d=>{
+          if(!list.find(x=>x.id===d.id)) list.push({id:d.id,...d.data()});
+        });
+      }catch(e){logDebug(`Fallback ownerId error: ${e.message}`);}
+    }
+    const filtered=list.filter(x=>x.id!==ownerUid && norm(x.role)!=="owner");
+    logDebug(`Setelah filter bukan owner: ${filtered.length} akun`);
+    return filtered.sort((a,b)=>nama(a).localeCompare(nama(b)));
+  }catch(e){
+    logDebug(`ownedUsers ERROR: ${e.code||''} ${e.message}`);
+    if(e.code==='permission-denied' || e.message.includes('permission')){
+      throw new Error(`Permission denied saat baca users. Rules kamu butuh isMyData() lolos. Pastikan dokumen owner kamu punya field ownerUid, ownerId, konterId. Error: ${e.message}`);
+    }
+    throw e;
+  }
 }
+
 function setupHeader(user){
   $("ownerName").textContent=profile.namaKonter||profile.nama||user.displayName||"Akun FIXZY";
   $("ownerEmail").textContent=user.email||"Firebase";
 }
+
 function render(){
   const s=norm($("searchInput").value||"");
   const fj=norm($("filterJabatan").value||"");
@@ -245,7 +283,7 @@ function render(){
       <td>${izinPreview(a)}</td>
       <td><button class="edit" data-edit="${a.id}">✏️ Atur</button></td>
     </tr>`;
-  }).join("")||'<tr><td colspan="8" class="empty">Belum ada karyawan.</td></tr>';
+  }).join("")||'<tr><td colspan="8" class="empty">Belum ada karyawan. Query ownerUid=='+esc(ownerUid.slice(0,8))+' hasilnya 0. Cek apakah karyawan kamu punya field ownerUid='+esc(ownerUid)+' .</td></tr>';
 
   $("kTotal").textContent=accounts.length;
   $("kAktif").textContent=accounts.filter(isAktif).length;
@@ -299,7 +337,7 @@ function openEdit(id){
   $("fCatatan").value=a.catatanUpah||"";
   $("fPassword").value=""; $("passLabel").textContent="PASSWORD BARU (isi bila ganti email)";
   renderIzinGrid(getAksesObj(a));
-  $("editInfo").innerHTML='Flow dari file FIXED LENGKAP: jika email tetap, password tidak perlu. Jika ganti email, wajib password baru. Rules existing kamu akan lolos karena simpan ownerUid, ownerId, ownerEmail, konterId, businessUid.';
+  $("editInfo").innerHTML='Flow FIXED: jika email tetap, password tidak perlu. Jika ganti email, wajib password baru.';
   $("popup").classList.add("show");
 }
 function openAdd(){
@@ -309,7 +347,7 @@ function openAdd(){
   $("fJenis").value="harian"; $("fNominal").value="75000"; $("fPersen").value="0"; $("fBasis").value="omzet"; $("fCatatan").value="";
   $("fPassword").value=""; $("passLabel").textContent="PASSWORD AWAL *";
   renderIzinGrid({servis:true,dataServis:true,stock:true,absensi:true});
-  $("editInfo").textContent="Akun dibuat via secondary App (owner tidak logout). Simpan ownerUid, ownerId, ownerEmail, konterId, businessUid biar isMyData() rules kamu lolos.";
+  $("editInfo").textContent="Akun dibuat via secondary App (owner tidak logout). Simpan ownerUid, ownerId, ownerEmail, konterId, businessUid biar isMyData() lolos.";
   $("popup").classList.add("show");
 }
 
@@ -340,14 +378,12 @@ async function savePay(){
       const newUid=await buatAuthBaru(email,pass,namaVal);
       const payload={
         uid:newUid,
-        // FIELD WAJIB BIAR isMyData() RULES KAMU LOLOS
-        ownerUid:ownerUid,ownerId:ownerUid,ownerEmail:ownerEmail,konterId:konterId,idKonter:konterId,businessUid:ownerUid,konterId:konterId,
+        ownerUid:ownerUid,ownerId:ownerUid,ownerEmail:ownerEmail,konterId:konterId,idKonter:konterId,businessUid:ownerUid,
         role:roleVal,jabatan:jabatan,posisi:jabatan,
         status:$("fAktif").checked?"aktif":"nonaktif",isActive:$("fAktif").checked,aktif:$("fAktif").checked,
         nama:namaVal,namaKaryawan:namaVal,email,noWA:wa,wa,noWa:wa,noHp:wa,
         jenisUpah:jenis,sistemUpah:jenis,upahHarian:jenis.includes("harian")?nom:0,upahBulanan:jenis.includes("bulanan")?nom:0,persentase:jenis.includes("persentase")?ps:0,
         basisPersentase:$("fBasis").value,catatanUpah:$("fCatatan").value.trim(),
-        // IZIN - SESUAI hasIzin() DI RULES KAMU
         izin:izinObj,permissions:izinObj,akses:izinObj,izinAkses:izinArr,
         tanggalDaftar:new Date().toISOString(),createdAt:serverTimestamp(),updatedAt:serverTimestamp()
       };
@@ -362,7 +398,7 @@ async function savePay(){
         if(pass.length<6) throw new Error("Karena email diganti, isi password baru minimal 6 karakter.");
         const newUid=await buatAuthBaru(email,pass,namaVal);
         const newData={
-          ...lama,uid:newUid,ownerUid,ownerId:ownerUid,ownerEmail,konterId,idKonter:konterId,businessUid:ownerUid,konterId,
+          ...lama,uid:newUid,ownerUid,ownerId:ownerUid,ownerEmail,konterId,idKonter:konterId,businessUid:ownerUid,
           role:roleVal,jabatan,posisi:jabatan,
           status:$("fAktif").checked?"aktif":"nonaktif",isActive:$("fAktif").checked,aktif:$("fAktif").checked,
           nama:namaVal,namaKaryawan:namaVal,email,noWA:wa,wa,noWa:wa,noHp:wa,
@@ -379,7 +415,7 @@ async function savePay(){
         _waPending={phone:wa,message:pesan,name:namaVal}; await refresh(); tampilWaPopup(_waPending);
       }else{
         const payload={
-          ownerUid,ownerId:ownerUid,ownerEmail,konterId,idKonter:konterId,businessUid:ownerUid,konterId,
+          ownerUid,ownerId:ownerUid,ownerEmail,konterId,idKonter:konterId,businessUid:ownerUid,
           role:roleVal,jabatan,posisi:jabatan,
           status:$("fAktif").checked?"aktif":"nonaktif",isActive:$("fAktif").checked,aktif:$("fAktif").checked,
           nama:namaVal,namaKaryawan:namaVal,noWA:wa,wa,noWa:wa,noHp:wa,
@@ -389,7 +425,7 @@ async function savePay(){
         };
         await setDoc(doc(db,"users",editId),payload,{merge:true});
         $("popup").classList.remove("show"); await refresh();
-        tampilNotice("✅ Berhasil","Data akun & checklist berhasil diperbarui - mengikuti rules existing kamu.");
+        tampilNotice("✅ Berhasil","Data akun & checklist berhasil diperbarui.");
       }
     }
   }catch(e){
@@ -397,6 +433,7 @@ async function savePay(){
     let m=e.message||String(e);
     if(e.code==="auth/email-already-in-use") m="Email sudah digunakan.";
     tampilNotice("❌ Gagal Menyimpan",esc(m));
+    logDebug(`SAVE ERROR: ${m}`);
   }finally{
     $("savePay").disabled=false; $("savePay").textContent="💾 Simpan Setting";
   }
@@ -404,13 +441,14 @@ async function savePay(){
 
 async function refresh(){
   if(!ready) return;
-  $("status").textContent="⏳ Membaca data karyawan (ownerUid == "+ownerUid.slice(0,6)+"...)...";
+  setStatus(`⏳ Query users where ownerUid==${ownerUid.slice(0,8)}...`);
   try{
-    const snap=await getDocs(query(collection(db,"users"),where("ownerUid","==",ownerUid)));
-    accounts=snap.docs.map(d=>({id:d.id,...d.data()})).filter(x=>x.id!==ownerUid && norm(x.role)!=="owner");
+    accounts=await ownedUsers();
     render();
-    $("status").innerHTML='<span class="ok">✓ '+accounts.length+' akun • Follow rules existing kamu • isMyData() & hasIzin() lolos</span>';
-  }catch(e){$("status").innerHTML='<span class="err">❌ '+esc(e.message||e)+'</span>';}
+    setStatus(`✓ ${accounts.length} akun • ownerUid=${ownerUid.slice(0,8)} • isMyData & hasIzin lolos • anti-stuck OK`);
+  }catch(e){
+    setStatus(`❌ ${e.message}`, true);
+  }
 }
 function render(){
   const s=norm($("searchInput").value||"");
@@ -436,7 +474,7 @@ function render(){
       <td>${izinPreview(a)}</td>
       <td><button class="edit" data-edit="${a.id}">✏️ Atur</button></td>
     </tr>`;
-  }).join("")||'<tr><td colspan="8" class="empty">Belum ada karyawan.</td></tr>';
+  }).join("")||'<tr><td colspan="8" class="empty">Belum ada karyawan. Pastikan karyawan punya field ownerUid='+esc(ownerUid)+' . Buka debug untuk detail.</td></tr>';
 
   $("kTotal").textContent=accounts.length;
   $("kAktif").textContent=accounts.filter(isAktif).length;
@@ -445,7 +483,75 @@ function render(){
   $("kNon").textContent=accounts.filter(a=>!isAktif(a)).length;
 }
 
-$("refreshBtn").onclick=()=>{ if(ready) refresh(); };
+// ANTI STUCK LOGIC
+let authChecked=false;
+async function handleUser(user){
+  if(authChecked) return;
+  authChecked=true;
+  logDebug(`handleUser called: user=${user?user.uid+' '+user.email:'null'}`);
+  if(!user){
+    setStatus(`❌ Sesi login tidak ditemukan. Auth null. Kamu login sebagai A Yudi Thea di index, tapi Firebase Auth di iframe belum ada. Coba refresh halaman index dulu, atau buka izin-akses langsung (bukan di iframe).`, true);
+    $("tbody").innerHTML='<tr><td colspan="8" class="empty">Firebase Auth null. Refresh index.html dulu, atau buka izin-akses.html di tab baru (bukan iframe).</td></tr>';
+    return;
+  }
+  uid=user.uid;
+  try{
+    setStatus(`⏳ Auth OK: ${user.email} (${user.uid.slice(0,6)}) → loadProfile...`);
+    await loadProfile(user);
+    setupHeader(user);
+    ready=true;
+    await refresh();
+  }catch(e){
+    logDebug(`handleUser error: ${e.message}`);
+    setStatus(`🔒 ${e.message}`, true);
+  }
+}
+
+function boot(){
+  setStatus(`⏳ Init Firebase... [1] Memeriksa sesi Firebase...`);
+  logDebug(`Boot start, currentUser=${auth.currentUser?auth.currentUser.uid:'null'}`);
+  
+  // Cek langsung currentUser (kadang onAuthStateChanged telat di iframe)
+  setTimeout(()=>{
+    if(auth.currentUser && !authChecked){
+      logDebug(`Timeout check: currentUser ada ${auth.currentUser.uid}, paksa handleUser`);
+      handleUser(auth.currentUser);
+    }
+  }, 1500);
+
+  // Timeout anti-stuck total
+  setTimeout(()=>{
+    if(!authChecked){
+      logDebug(`ANTI-STUCK TIMEOUT 4 detik: authChecked masih false, currentUser=${auth.currentUser?auth.currentUser.uid:'null'}`);
+      if(auth.currentUser){
+        handleUser(auth.currentUser);
+      }else{
+        setStatus(`❌ Stuck: onAuthStateChanged tidak terpanggil. Auth iframe null.\n\nSolusi:\n1. Refresh index.html (Ctrl+R)\n2. Buka izin-akses.html di tab baru langsung: https://fixzy-olive.vercel.app/izin-akses.html\n3. Pastikan login owner dulu di index.\n\nDebug: currentUser=null`, true);
+        logDebug(`Stuck: onAuthStateChanged tidak terpanggil dalam 4 detik`);
+      }
+    }
+  }, 4000);
+
+  onAuthStateChanged(auth, (user)=>{
+    logDebug(`onAuthStateChanged fired: user=${user?user.uid:'null'}`);
+    handleUser(user);
+  });
+}
+
+$("refreshBtn").onclick=()=>{ if(ready) refresh(); else location.reload(); };
+$("forceCheck").onclick=()=>{
+  logDebug(`Force check clicked, currentUser=${auth.currentUser?auth.currentUser.uid+' '+auth.currentUser.email:'null'}`);
+  if(auth.currentUser){
+    authChecked=false;
+    handleUser(auth.currentUser);
+  }else{
+    setStatus(`❌ Force check: currentUser masih null. Coba refresh index.html dulu.`, true);
+  }
+};
+$("showDebug").onclick=()=>{
+  const box=$("debugBox");
+  box.style.display=box.style.display==='none'?'block':'none';
+};
 $("tbody").onclick=e=>{const b=e.target.closest("[data-edit]");if(b)openEdit(b.dataset.edit);};
 $("cancelPopup").onclick=()=>{$("popup").classList.remove("show");editId=null;};
 $("savePay").onclick=savePay;
@@ -457,24 +563,16 @@ $("checkAll").onclick=()=>{document.querySelectorAll(".izin").forEach(i=>i.check
 $("uncheckAll").onclick=()=>{document.querySelectorAll(".izin").forEach(i=>i.checked=false);updateCount();};
 document.addEventListener("change",e=>{if(e.target.classList?.contains("izin"))updateCount();});
 
-async function boot(){
-  onAuthStateChanged(auth,async user=>{
-    if(!user){$("status").innerHTML='<span class="err">❌ Sesi login tidak ditemukan.</span>';return;}
-    uid=user.uid;
-    try{await loadProfile(user);setupHeader(user);ready=true;await refresh();}
-    catch(e){$("status").innerHTML='<span class="err">🔒 '+esc(e.message||e)+'</span>';}
-  });
-}
 function setupHeader(user){
   $("ownerName").textContent=profile.namaKonter||profile.nama||user.displayName||"Akun FIXZY";
   $("ownerEmail").textContent=user.email||"Firebase";
 }
 async function loadProfile(user){
   const s=await getDoc(doc(db,"users",user.uid));
-  if(!s.exists())throw new Error("Profil users tidak ditemukan.");
+  if(!s.exists())throw new Error(`Profil users/${user.uid} tidak ditemukan di Firestore fixzy-update. Buat dokumen users untuk UID ini dulu.`);
   profile=s.data()||{};
   const r=norm(profile.role);
-  if(!["owner","superadmin","admin"].includes(r))throw new Error("Hanya OWNER/SUPERADMIN");
+  if(!["owner","superadmin","admin"].includes(r))throw new Error(`Halaman ini hanya untuk OWNER/SUPERADMIN. Role kamu: ${profile.role}`);
   ownerUid=r==="owner"?user.uid:(profile.ownerUid||profile.ownerId||user.uid);
   ownerEmail=profile.ownerEmail||profile.email||user.email||"";
   konterId=profile.konterId||profile.idKonter||ownerUid;
