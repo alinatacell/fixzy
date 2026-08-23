@@ -147,21 +147,21 @@ body{overflow:hidden}
     <button class="menu-link" data-page="ringkasan-pendapatan.html" data-roles="owner,employee,karyawan,kasir,kurir,reseller" data-permission="laporanKeuangan" onclick="bukaHalaman(this)">
       <span class="ico">💰</span>Laporan Keuangan
     </button>
-    <button class="menu-link" data-page="dashboard-admin.html" data-roles="owner,superadmin" data-permission="ownerOnly" onclick="bukaHalaman(this)">
+    <button class="menu-link" data-page="dashboard-admin.html" data-roles="owner,employee,karyawan,kasir,kurir,reseller,superadmin" data-permission="dashboardPendapatan" onclick="bukaHalaman(this)">
       <span class="ico">📊</span>Dashboard Admin - FIXED
     </button>
 
     <div class="menu-section">KARYAWAN & ABSENSI (FIXED)</div>
-    <button class="menu-link" data-page="absensi-karyawan.html" data-roles="owner,employee,karyawan" data-permission="absensi" onclick="bukaHalaman(this)">
+    <button class="menu-link" data-page="absensi-karyawan.html" data-roles="owner,employee,karyawan,kasir,kurir,reseller" data-permission="absensi" onclick="bukaHalaman(this)">
       <span class="ico">⏰</span>Absensi Karyawan - FIXED
     </button>
-    <button class="menu-link" data-page="data-karyawan.html" data-roles="owner" data-permission="ownerOnly" onclick="bukaHalaman(this)">
+    <button class="menu-link" data-page="data-karyawan.html" data-roles="owner,employee,karyawan,kasir,kurir,reseller" data-permission="dataKaryawan" onclick="bukaHalaman(this)">
       <span class="ico">👥</span>Data Upah Karyawan - FIXED
     </button>
-    <button class="menu-link" data-page="upah-kerja.html" data-roles="owner" data-permission="ownerOnly" onclick="bukaHalaman(this)">
+    <button class="menu-link" data-page="upah-kerja.html" data-roles="owner,employee,karyawan,kasir,kurir,reseller" data-permission="upahKerja" onclick="bukaHalaman(this)">
       <span class="ico">💵</span>Upah Kerja
     </button>
-    <button class="menu-link" data-page="pengaturan.html" data-roles="owner" data-permission="ownerOnly" onclick="bukaHalaman(this)">
+    <button class="menu-link" data-page="pengaturan.html" data-roles="owner,employee,karyawan,kasir,kurir,reseller" data-permission="pengaturan" onclick="bukaHalaman(this)">
       <span class="ico">⚙️</span>Pengaturan
     </button>
     <button class="menu-link" data-page="izin-akses.html" data-roles="owner,superadmin" data-permission="ownerOnly" onclick="bukaHalaman(this)">
@@ -169,10 +169,10 @@ body{overflow:hidden}
     </button>
 
     <div class="menu-section">RESELLER & SALDO</div>
-    <button class="menu-link" data-page="saldo-token.html" data-roles="owner,reseller,superadmin" data-permission="saldoToken" onclick="bukaHalaman(this)">
+    <button class="menu-link" data-page="saldo-token.html" data-roles="owner,employee,karyawan,kasir,kurir,reseller,superadmin" data-permission="saldoToken" onclick="bukaHalaman(this)">
       <span class="ico">💳</span>Saldo & Token Saya
     </button>
-    <button class="menu-link" data-page="cek-paket.html" data-roles="owner,reseller,employee,karyawan" data-permission="cekPaket" onclick="bukaHalaman(this)">
+    <button class="menu-link" data-page="cek-paket.html" data-roles="owner,employee,karyawan,kasir,kurir,reseller" data-permission="cekPaket" onclick="bukaHalaman(this)">
       <span class="ico">📦</span>Cek Paket Langganan
     </button>
 
@@ -227,11 +227,11 @@ const FIXZY_PERMISSION_BY_PAGE={
   "tampil-stock.html":"stock",
   "pengeluaran.html":"pengeluaran",
   "ringkasan-pendapatan.html":"laporanKeuangan",
-  "dashboard-admin.html":"ownerOnly",
+  "dashboard-admin.html":"dashboardPendapatan",
   "absensi-karyawan.html":"absensi",
-  "data-karyawan.html":"ownerOnly",
-  "upah-kerja.html":"ownerOnly",
-  "pengaturan.html":"ownerOnly",
+  "data-karyawan.html":"dataKaryawan",
+  "upah-kerja.html":"upahKerja",
+  "pengaturan.html":"pengaturan",
   "izin-akses.html":"ownerOnly",
   "saldo-token.html":"saldoToken",
   "cek-paket.html":"cekPaket",
@@ -266,8 +266,8 @@ function permissionTersedia(permissions, key){
   if(key==="superAdminOnly") return false;
   const session=window.fixzySession||{};
   const role=String(session.role||"").toLowerCase();
-  const basicAllow=["servis","penjualan","pengeluaran","dataServis","dataPenjualan","stock","laporanKeuangan","absensi","saldoToken","cekPaket","laporanPendapatan","dashboardPendapatan"];
-  if(["karyawan","employee","kasir","kurir","reseller"].includes(role) && basicAllow.includes(key)) return true;
+  // Semua menu yang mempunyai data-permission HARUS mengikuti checklist.
+  // Tidak ada lagi bypass otomatis untuk karyawan/kasir/kurir/reseller.
   if(!permissions) return false;
   if(permissions[key]===true) return true;
   if(permissions["semua"]===true) return true;
