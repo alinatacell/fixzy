@@ -6,7 +6,616 @@
 <title>Fixzy - Input Penjualan</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <style>
-*{box-sizing:border-box}html,body{margin:0;padding:0}body{background:#eef2f6;color:#111827;font-family:Arial,Helvetica,sans-serif;line-height:1.35}header{background:#111827;color:#fff;padding:10px 14px;min-height:72px;display:flex;align-items:center;gap:12px;position:sticky;top:0;z-index:100;border-bottom:2px solid #000;box-shadow:0 3px 0 #000}.logo{width:52px;height:52px;flex:0 0 52px;display:flex;align-items:center;justify-content:center;background:#000;border:1px solid #334155;border-radius:14px;padding:4px;overflow:hidden}.logo img{width:100%;height:100%;object-fit:contain}main{width:100%;max-width:920px;margin:0 auto;padding:14px}.card{background:#fff;border:2px solid #111827;border-radius:14px;padding:16px;margin-bottom:16px;box-shadow:4px 4px 0 #111827}.card-header{min-height:34px;display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:14px;padding-bottom:9px;border-bottom:2px solid #111827;font-size:16px;font-weight:900}label{display:block;margin:0 0 5px;color:#4b5563;font-size:12px;font-weight:800}input,select,textarea{width:100%;min-height:44px;padding:10px 11px;border:2px solid #111827;border-radius:9px;background:#fff;color:#111827;font:inherit;font-size:14px;outline:none;box-shadow:2px 2px 0 #111827}textarea{min-height:78px;resize:vertical}input:focus,select:focus,textarea:focus{border-color:#334155;box-shadow:2px 2px 0 #111827,0 0 0 2px rgba(37,99,235,.12)}input::placeholder,textarea::placeholder{color:#94a3b8}input[readonly]{background:#f8fafc;color:#475569}.grid2{display:grid;grid-template-columns:1fr 1fr;gap:11px}.grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:11px}button{border:0;border-radius:9px;padding:9px 12px;font-weight:800;cursor:pointer;box-shadow:3px 3px 0 #111827}.info-transaksi-card{padding:16px}.info-transaksi-box{width:100%;border:2px solid #111827;border-radius:13px;overflow:hidden;background:#fff;box-shadow:3px 3px 0 #111827}.info-row{min-height:54px;display:grid;grid-template-columns:170px minmax(0,1fr);align-items:center;gap:12px;padding:0 12px;border-bottom:1px solid #e5e7eb}.info-row:last-child{border-bottom:0}.info-label{color:#64748b;font-size:13px;font-weight:800;margin:0}.info-value{min-width:0;display:flex;align-items:center;justify-content:flex-end}.info-value input,.info-value select{min-height:36px;width:100%;padding:6px 8px;border:0;border-radius:6px;box-shadow:none;background:transparent;color:#111827;font-size:13px;font-weight:800;text-align:right}.info-value input:focus,.info-value select:focus{box-shadow:none;outline:none;background:#f8fafc}.info-value select{cursor:pointer;direction:rtl}.info-value select option{direction:ltr}.info-with-button{gap:6px}.info-refresh-btn{flex:0 0 36px;width:36px!important;height:36px!important;min-height:36px!important;padding:0!important;border-radius:8px!important;background:#111827!important;color:#fff!important;box-shadow:2px 2px 0 #000!important}.teknisi-wrap{width:100%;min-width:0}.teknisi-status{text-align:right;color:#64748b;font-size:10px;font-weight:700;margin-bottom:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.teknisi-info-value{justify-content:flex-end!important}#teknisiSelect{width:100%!important;min-height:36px!important;padding:6px 8px!important;border:0!important;border-radius:6px!important;box-shadow:none!important;background:transparent!important;color:#111827!important;font-size:13px!important;font-weight:800!important;text-align:right;cursor:pointer}.produk-dropdown{position:absolute;left:0;right:0;top:100%;margin-top:5px;background:#fff;color:#111827;border:2px solid #111827;border-radius:10px;box-shadow:4px 4px 0 #111827;max-height:240px;overflow:auto;z-index:30;display:none}.produk-dropdown.show{display:block}.produk-item{padding:10px 12px;cursor:pointer;border-bottom:1px solid #e5e7eb;display:flex;justify-content:space-between;align-items:center;gap:10px}.rincian-table{width:100%;border-collapse:collapse;margin-top:8px;border:2px solid #111827;box-shadow:3px 3px 0 #111827}.rincian-table th{background:#f8fafc;color:#111827;font-size:10px;font-weight:900;text-align:left;text-transform:uppercase;padding:9px;border-bottom:1px solid #e5e7eb}.rincian-table td{background:#fff;color:#111827;padding:9px;border-bottom:1px solid #e5e7eb;font-size:12px}.modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.62);z-index:200;align-items:center;justify-content:center;padding:14px}.modal.show{display:flex}.modal-box{width:min(500px,100%);max-height:90vh;overflow:auto;background:#fff;color:#111827;border:2px solid #111827;border-radius:14px;padding:18px;box-shadow:6px 6px 0 #111827}@media(max-width:700px){header{min-height:72px;padding:9px 12px}main{padding:12px}.card{padding:14px;margin-bottom:15px}.grid2,.grid3{grid-template-columns:1fr}.rincian-table{display:block;overflow-x:auto;white-space:nowrap}.info-row{grid-template-columns:120px minmax(0,1fr);gap:8px;padding:0 10px}.info-label{font-size:12px}.info-value input,.info-value select{font-size:12px;min-height:36px;padding:6px 4px}.teknisi-status{font-size:9px}#teknisiSelect{font-size:12px!important;min-height:36px!important;padding:6px 4px!important}}
+@font-face {
+  font-family: "Optimistic";
+  font-style: normal;
+  font-weight: 400 600;
+  font-display: swap;
+  src: url("/fonts/OptimisticAI_VF_Optimized.woff2") format("woff2");
+}
+@font-face {
+  font-family: "Optimistic Mono";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("/fonts/OptimisticMono_W_TextRegular.woff2") format("woff2");
+}
+:where(html) {
+  font-family: "Optimistic", system-ui, sans-serif;
+}
+:where(code, pre, kbd, samp) {
+  font-family: "Optimistic Mono", ui-monospace, monospace;
+}
+</style><style>
+@font-face {
+  font-family: "Optimistic";
+  font-style: normal;
+  font-weight: 400 600;
+  font-display: swap;
+  src: url("/fonts/OptimisticAI_VF_Optimized.woff2") format("woff2");
+}
+@font-face {
+  font-family: "Optimistic Mono";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("/fonts/OptimisticMono_W_TextRegular.woff2") format("woff2");
+}
+:where(html) {
+  font-family: "Optimistic", system-ui, sans-serif;
+}
+:where(code, pre, kbd, samp) {
+  font-family: "Optimistic Mono", ui-monospace, monospace;
+}
+</style>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Fixzy - Input Penjualan - 5 Header Rapi</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<style id="fixzy-custom-css">
+/* =========================================================
+   FIXZY — CSS MUDAH DIUBAH
+   =========================================================
+   UBAH WARNA / UKURAN DI BAGIAN "PENGATURAN UTAMA" SAJA.
+
+   File ini hanya merapikan TAMPILAN.
+   ID, field, JavaScript, Firebase, dan alur data tidak diubah.
+   ========================================================= */
+
+/* =========================
+   PENGATURAN UTAMA
+   ========================= */
+:root{
+  /* WARNA UTAMA */
+  --fx-bg:#eef2f6;
+  --fx-card:#ffffff;
+  --fx-header:#111827;
+  --fx-header-2:#0b1220;
+  --fx-text:#111827;
+  --fx-muted:#64748b;
+  --fx-label:#4b5563;
+  --fx-border:#111827;
+  --fx-border-soft:#d8dee8;
+
+  /* INPUT */
+  --fx-input-bg:#ffffff;
+  --fx-input-readonly:#f8fafc;
+  --fx-input-border:#111827;
+  --fx-input-radius:9px;
+
+  /* CARD */
+  --fx-card-radius:14px;
+  --fx-card-padding:16px;
+  --fx-card-shadow:4px 4px 0 #111827;
+
+  /* UKURAN */
+  --fx-max-width:920px;
+  --fx-input-height:44px;
+  --fx-gap:11px;
+
+  /* TOMBOL */
+  --fx-button-radius:9px;
+  --fx-button-shadow:3px 3px 0 #111827;
+
+  /* WARNA AKSEN */
+  --fx-green:#16a34a;
+  --fx-blue:#2563eb;
+  --fx-yellow:#f59e0b;
+  --fx-red:#dc2626;
+
+  /* POPUP */
+  --fx-popup-radius:14px;
+}
+
+/* =========================
+   DASAR
+   ========================= */
+*{
+  box-sizing:border-box;
+}
+
+html,body{
+  margin:0;
+  padding:0;
+}
+
+body{
+  background:var(--fx-bg) !important;
+  color:var(--fx-text) !important;
+  font-family:Arial,Helvetica,sans-serif !important;
+  line-height:1.35;
+}
+
+body.dark{
+  background:#0b0f14 !important;
+  color:#f3f4f6 !important;
+}
+
+/* =========================
+   HEADER
+   ========================= */
+header{
+  background:var(--fx-header) !important;
+  color:#fff !important;
+  padding:10px 14px !important;
+  min-height:72px;
+  display:flex;
+  align-items:center;
+  gap:12px;
+  position:sticky;
+  top:0;
+  z-index:100;
+  border-bottom:2px solid #000 !important;
+  box-shadow:0 3px 0 #000 !important;
+}
+
+header .logo,
+.logo{
+  width:52px !important;
+  height:52px !important;
+  flex:0 0 52px !important;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  background:#000 !important;
+  border:1px solid #334155 !important;
+  border-radius:14px !important;
+  padding:4px;
+  overflow:hidden;
+}
+
+header .logo img{
+  width:100% !important;
+  height:100% !important;
+  object-fit:contain !important;
+}
+
+/* =========================
+   AREA UTAMA
+   ========================= */
+main{
+  width:100%;
+  max-width:var(--fx-max-width) !important;
+  margin:0 auto !important;
+  padding:14px !important;
+}
+
+/* =========================
+   CARD / HEADER SECTION
+   ========================= */
+.card{
+  background:var(--fx-card) !important;
+  color:var(--fx-text) !important;
+  border:2px solid var(--fx-border) !important;
+  border-radius:var(--fx-card-radius) !important;
+  padding:var(--fx-card-padding) !important;
+  margin-bottom:16px !important;
+  box-shadow:var(--fx-card-shadow) !important;
+}
+
+.card-header{
+  min-height:34px;
+  display:flex !important;
+  justify-content:space-between !important;
+  align-items:center !important;
+  gap:8px;
+  flex-wrap:wrap;
+  margin-bottom:14px !important;
+  padding-bottom:9px !important;
+  border-bottom:2px solid var(--fx-border) !important;
+  color:var(--fx-text) !important;
+  font-size:16px !important;
+  font-weight:900 !important;
+}
+
+/* =========================
+   LABEL
+   ========================= */
+label{
+  display:block !important;
+  margin:0 0 5px !important;
+  color:var(--fx-label) !important;
+  font-size:12px !important;
+  font-weight:800 !important;
+}
+
+/* =========================
+   INPUT / SELECT / TEXTAREA
+   ========================= */
+input,
+select,
+textarea{
+  width:100% !important;
+  min-height:var(--fx-input-height);
+  padding:10px 11px !important;
+  border:2px solid var(--fx-input-border) !important;
+  border-radius:var(--fx-input-radius) !important;
+  background:var(--fx-input-bg) !important;
+  color:var(--fx-text) !important;
+  font:inherit !important;
+  font-size:14px !important;
+  outline:none !important;
+  box-shadow:2px 2px 0 #111827 !important;
+  transition:.15s ease;
+}
+
+textarea{
+  min-height:78px;
+  resize:vertical;
+}
+
+input:focus,
+select:focus,
+textarea:focus{
+  border-color:#334155 !important;
+  box-shadow:
+    2px 2px 0 #111827,
+    0 0 0 2px rgba(37,99,235,.12) !important;
+}
+
+input::placeholder,
+textarea::placeholder{
+  color:#94a3b8 !important;
+}
+
+/* Field otomatis / readonly */
+input[readonly]{
+  background:var(--fx-input-readonly) !important;
+  color:#475569 !important;
+}
+
+/* =========================
+   GRID
+   ========================= */
+.grid2{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:var(--fx-gap);
+}
+
+.grid3{
+  display:grid;
+  grid-template-columns:1fr 1fr 1fr;
+  gap:var(--fx-gap);
+}
+
+/* =========================
+   TOMBOL
+   ========================= */
+button{
+  border:0;
+  border-radius:var(--fx-button-radius);
+  padding:9px 12px;
+  font-weight:800;
+  cursor:pointer;
+  box-shadow:var(--fx-button-shadow) !important;
+  transition:transform .08s ease,filter .12s ease;
+}
+
+button:hover{
+  filter:brightness(1.05);
+  transform:translateY(-1px);
+}
+
+button:active{
+  transform:translate(2px,2px);
+  box-shadow:1px 1px 0 #111827 !important;
+}
+
+.btn-refresh{
+  background:transparent !important;
+  color:#fff !important;
+  border:1px solid #ffffff30 !important;
+  padding:9px 12px !important;
+}
+
+.btn-dark{
+  background:#000 !important;
+  color:#fff !important;
+  border:1px solid #334155 !important;
+}
+
+/* =========================
+   DROPDOWN PRODUK
+   ========================= */
+.produk-dropdown{
+  position:absolute;
+  left:0;
+  right:0;
+  top:100%;
+  margin-top:5px;
+  background:#fff !important;
+  color:#111827;
+  border:2px solid #111827 !important;
+  border-radius:10px !important;
+  box-shadow:4px 4px 0 #111827 !important;
+  max-height:240px;
+  overflow:auto;
+  z-index:30;
+  display:none;
+}
+
+.produk-dropdown.show{
+  display:block;
+}
+
+.produk-item{
+  padding:10px 12px !important;
+  cursor:pointer;
+  border-bottom:1px solid #e5e7eb;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:10px;
+}
+
+.produk-item:hover{
+  background:#f1f5f9 !important;
+}
+
+/* =========================
+   TABEL RINCIAN
+   ========================= */
+.rincian-table{
+  width:100% !important;
+  border-collapse:collapse !important;
+  margin-top:8px;
+  border:2px solid #111827 !important;
+  border-radius:10px;
+  overflow:hidden;
+  box-shadow:3px 3px 0 #111827 !important;
+}
+
+.rincian-table th{
+  background:#f8fafc !important;
+  color:#111827 !important;
+  font-size:10px !important;
+  font-weight:900 !important;
+  text-align:left;
+  text-transform:uppercase;
+  padding:9px !important;
+  border-bottom:1px solid #e5e7eb !important;
+}
+
+.rincian-table td{
+  background:#fff !important;
+  color:#111827 !important;
+  padding:9px !important;
+  border-bottom:1px solid #e5e7eb !important;
+  font-size:12px !important;
+}
+
+/* =========================
+   TOTAL / RINGKASAN
+   ========================= */
+#totalDisplay,
+#sisaDisplay{
+  font-weight:900;
+}
+
+#sisaDisplay{
+  color:var(--fx-green) !important;
+}
+
+#totalField,
+#sisaField,
+#subtotalAuto,
+#subtotalManual{
+  font-weight:900 !important;
+}
+
+/* =========================
+   POPUP / MODAL
+   ========================= */
+.modal{
+  display:none;
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,.62) !important;
+  z-index:200;
+  align-items:center;
+  justify-content:center;
+  padding:14px;
+}
+
+.modal.show{
+  display:flex;
+}
+
+.modal-box{
+  width:min(500px,100%) !important;
+  max-height:90vh;
+  overflow:auto;
+  background:#fff !important;
+  color:#111827 !important;
+  border:2px solid #111827 !important;
+  border-radius:var(--fx-popup-radius) !important;
+  padding:18px !important;
+  box-shadow:6px 6px 0 #111827 !important;
+}
+
+/* =========================
+   POPUP INFO KONTER
+   ========================= */
+#konterAlertModal .modal-box{
+  max-width:400px !important;
+}
+
+#konterAlertTitle{
+  color:#111827 !important;
+}
+
+#konterAlertMessage{
+  color:#374151 !important;
+}
+
+/* =========================
+   DARK MODE
+   ========================= */
+body.dark .card{
+  background:#151b23 !important;
+  color:#f3f4f6 !important;
+  border-color:#000 !important;
+  box-shadow:4px 4px 0 #000 !important;
+}
+
+body.dark .card-header{
+  color:#f3f4f6 !important;
+  border-bottom-color:#334155 !important;
+}
+
+body.dark label{
+  color:#aeb7c4 !important;
+}
+
+body.dark input,
+body.dark select,
+body.dark textarea{
+  background:#0f141b !important;
+  color:#f3f4f6 !important;
+  border-color:#334155 !important;
+  box-shadow:2px 2px 0 #000 !important;
+}
+
+body.dark input[readonly]{
+  background:#10161e !important;
+  color:#cbd5e1 !important;
+}
+
+body.dark input::placeholder,
+body.dark textarea::placeholder{
+  color:#64748b !important;
+}
+
+body.dark .produk-dropdown{
+  background:#111827 !important;
+  color:#f3f4f6 !important;
+  border-color:#334155 !important;
+  box-shadow:4px 4px 0 #000 !important;
+}
+
+body.dark .produk-item{
+  color:#f3f4f6 !important;
+  border-color:#263241 !important;
+}
+
+body.dark .produk-item:hover{
+  background:#1e293b !important;
+}
+
+body.dark .rincian-table{
+  border-color:#334155 !important;
+  box-shadow:3px 3px 0 #000 !important;
+}
+
+body.dark .rincian-table th{
+  background:#10161e !important;
+  color:#f3f4f6 !important;
+  border-color:#334155 !important;
+}
+
+body.dark .rincian-table td{
+  background:#151b23 !important;
+  color:#f3f4f6 !important;
+  border-color:#2b3440 !important;
+}
+
+body.dark .modal-box{
+  background:#151b23 !important;
+  color:#f3f4f6 !important;
+  border-color:#000 !important;
+  box-shadow:6px 6px 0 #000 !important;
+}
+
+body.dark #konterAlertTitle{
+  color:#f3f4f6 !important;
+}
+
+body.dark #konterAlertMessage{
+  color:#cbd5e1 !important;
+}
+
+body.dark #konterAlertModal div[style*="background:#111827"]{
+  background:#0f172a !important;
+  border:1px solid #334155;
+}
+
+/* =========================
+   MOBILE
+   ========================= */
+@media(max-width:700px){
+
+  header{
+    min-height:72px;
+    padding:9px 12px !important;
+  }
+
+  header .logo,
+  .logo{
+    width:52px !important;
+    height:52px !important;
+    flex-basis:52px !important;
+  }
+
+  main{
+    padding:12px !important;
+  }
+
+  .card{
+    padding:14px !important;
+    margin-bottom:15px !important;
+    border-radius:13px !important;
+    box-shadow:4px 4px 0 #111827 !important;
+  }
+
+  .card-header{
+    font-size:16px !important;
+    line-height:1.3;
+  }
+
+  .grid2,
+  .grid3{
+    grid-template-columns:1fr !important;
+  }
+
+  input,
+  select,
+  textarea{
+    min-height:44px;
+    font-size:14px !important;
+  }
+
+  .rincian-table{
+    display:block;
+    overflow-x:auto;
+    white-space:nowrap;
+  }
+
+  .modal-box{
+    width:calc(100% - 20px) !important;
+  }
+}
+
+/* =========================
+   PRINT
+   ========================= */
+.template-cetak-btn.active{border-color:#ffc107 !important;background:#fffaf0 !important;box-shadow:2px 2px 0 #111827 !important}
+
+@media print{
+  header,
+  .no-print{
+    display:none !important;
+  }
+
+  body{
+    background:#fff !important;
+  }
+
+  .card{
+    box-shadow:none !important;
+    break-inside:avoid;
+  }
+}
 </style>
 </head>
 <body>
