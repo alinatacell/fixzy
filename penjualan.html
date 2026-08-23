@@ -747,6 +747,11 @@ async function loadKaryawan(){
     // Hanya akun aktif pada ownerUid yang sedang digunakan.
     karyawanList=[...byId.values()];
 
+    const status=document.getElementById("teknisiStatus");
+    if(status) status.textContent=karyawanList.length
+      ? `✅ ${karyawanList.length} teknisi dari Owner/scope akun ini`
+      : "⚠️ Tidak ada teknisi aktif pada Owner/scope akun ini.";
+
     const sel=document.getElementById("teknisiSelect");
     sel.innerHTML='<option value="">-- Pilih Teknisi --</option>'+
       karyawanList.map(k=>{
@@ -758,6 +763,8 @@ async function loadKaryawan(){
     karyawanList=[];
     const sel=document.getElementById("teknisiSelect");
     if(sel) sel.innerHTML='<option value="">-- Teknisi tidak tersedia --</option>';
+    const status=document.getElementById("teknisiStatus");
+    if(status) status.textContent="❌ Gagal memuat teknisi untuk akun ini.";
   }
 }
 
@@ -1624,11 +1631,13 @@ body.dark #manualToggle + label{
     digunakan oleh JavaScript/Firebase untuk menyimpan transaksi.
     Hanya tidak ditampilkan pada bagian informasi.
   -->
-  <div style="display:none" aria-hidden="true">
-    <input id="akunLoginField" readonly>
-    <input id="konterField" readonly>
-    <select id="teknisiSelect"><option>Memuat karyawan...</option></select>
-  </div>
+  <div style="display:none" aria-hidden="true"><input id="akunLoginField" readonly><input id="konterField" readonly></div><div id="teknisiPanel" class="panel" style="margin:10px 0;padding:12px;border:1px solid #d1d5db;border-radius:10px;background:#f8fafc">
+  <div style="font-weight:800;margin-bottom:6px">👨‍🔧 Teknisi</div>
+  <div id="teknisiStatus" style="font-size:12px;color:#64748b;margin-bottom:6px">⏳ Memuat teknisi akun ini...</div>
+  <select id="teknisiSelect" style="width:100%;padding:10px;border:1px solid #cbd5e1;border-radius:8px">
+    <option value="">⏳ Memuat teknisi...</option>
+  </select>
+</div>
 
   <div class="info-transaksi-box">
 
