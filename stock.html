@@ -32,10 +32,10 @@ button,input,select{font:inherit}button{cursor:pointer}
 .dark{background:#111827;color:#fff}.green{background:#16a34a;color:#fff}.danger{background:#dc2626;color:#fff}
 .card{background:var(--card);border:1px solid var(--line);border-radius:17px;padding:15px;margin-bottom:14px;box-shadow:0 5px 18px #17203308}
 .title{font-size:15px;font-weight:900;margin-bottom:11px;color:#111827}.sub{font-size:11px;color:var(--muted);line-height:1.5}
-.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:14px}
+.stats{display:grid;grid-template-columns:repeat(6,1fr);gap:10px;margin-bottom:14px}
 .stat{background:#fff;border:1px solid var(--line);border-radius:15px;padding:14px;box-shadow:0 4px 14px #17203308}
 .stat small{font-size:10px;color:var(--muted);font-weight:800}.stat strong{display:block;color:#111827;font-size:23px;margin-top:6px}.stat span{font-size:10px;color:#94a3b8}
-.stat:nth-child(2) strong{color:var(--green)}.stat:nth-child(3) strong{color:var(--red)}.stat:nth-child(4) strong{color:#d97706}
+.stat:nth-child(2) strong{color:var(--green)}.stat:nth-child(3) strong{color:var(--red)}.stat:nth-child(4) strong{color:#d97706}.stat:nth-child(5) strong{color:var(--blue)}.stat:nth-child(6) strong{color:#7c3aed}
 .field label{display:block;color:#475569;font-size:10px;font-weight:900;margin:0 0 5px 2px}
 .field input,.field select{width:100%;height:42px;background:#fff;color:#111827;border:1px solid #cbd5e1;border-radius:10px;padding:0 11px;outline:none}
 .field input:focus,.field select:focus{border-color:var(--y);box-shadow:0 0 0 3px #f59e0b18}
@@ -87,11 +87,12 @@ button,input,select{font:inherit}button{cursor:pointer}
 .confirm-actions{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:15px}
 .confirm-no,.confirm-yes{border:0;border-radius:10px;padding:11px;font-weight:900;cursor:pointer}.confirm-no{background:#f1f5f9;color:#334155}.confirm-yes{background:#dc2626;color:#fff}
 
-@media(max-width:900px){.stats{grid-template-columns:repeat(2,1fr)}.product-list{grid-template-columns:1fr}}
+@media(max-width:1100px){.stats{grid-template-columns:repeat(3,1fr)}}
+@media(max-width:900px){.product-list{grid-template-columns:1fr}}
 @media(max-width:600px){
   .header-in{padding:10px 14px;gap:8px}.logo{width:52px;height:52px}.brand h1{font-size:18px}.brand p{font-size:10px}
   .account-name{max-width:110px;font-size:9px}.head-actions{gap:4px}.head-btn{width:44px;height:44px}
-  .container{padding:10px 10px 70px}.stats{gap:7px}.stat{padding:11px}.stat strong{font-size:20px}
+  .container{padding:10px 10px 70px}.stats{grid-template-columns:repeat(2,1fr);gap:7px}.stat{padding:11px}.stat strong{font-size:20px}
   .import-box{grid-template-columns:1fr}.import-actions .btn{width:100%}
   .form{grid-template-columns:1fr}.full{grid-column:auto}
   .price-rule-box{grid-template-columns:1fr 1fr}.price-rule-box .apply-price-btn{grid-column:1/-1;width:100%}
@@ -130,21 +131,8 @@ button,input,select{font:inherit}button{cursor:pointer}
     <div class="stat"><small>Ready Stock</small><strong id="ready">0</strong><span>sisa &gt; 0</span></div>
     <div class="stat"><small>Stok Kosong</small><strong id="empty">0</strong><span>perlu restock</span></div>
     <div class="stat"><small>Nilai Modal</small><strong id="value">Rp 0</strong><span>modal × sisa</span></div>
-  </section>
-
-  <section class="card">
-    <div class="title">📦 Daftar Produk</div>
-    <div class="product-toolbar">
-      <input id="productSearch" placeholder="Cari nama, kode, merk..." oninput="filterProducts()">
-      <select id="productCategory" onchange="filterProducts()"><option value="">Semua kategori</option></select>
-      <select id="productStockFilter" onchange="filterProducts()">
-        <option value="">Semua stok</option><option value="ready">Ready Stock</option><option value="empty">Stok Kosong</option>
-      </select>
-    </div>
-    <div class="product-count" id="productCount">Memuat produk...</div>
-    <div id="productList" class="product-list">
-      <div class="empty-list">⏳ Memuat daftar produk...</div>
-    </div>
+    <div class="stat"><small>Nominal Terjual</small><strong id="soldValue">Rp 0</strong><span>harga jual × terjual</span></div>
+    <div class="stat"><small>Nominal Sisa</small><strong id="remainingValue">Rp 0</strong><span>harga jual × sisa</span></div>
   </section>
 
   <section class="card">
@@ -177,6 +165,21 @@ button,input,select{font:inherit}button{cursor:pointer}
       <div class="price-rule-preview" id="priceRulePreview">Rumus: <b>Harga Jual = Modal + (% × Modal) + Nominal Tambahan</b>. Contoh modal Rp100.000 + 15% + Rp10.000 = <b>Rp125.000</b>.</div>
     </div>
   </section>
+  <section class="card">
+    <div class="title">📦 Daftar Produk</div>
+    <div class="product-toolbar">
+      <input id="productSearch" placeholder="Cari nama, kode, merk..." oninput="filterProducts()">
+      <select id="productCategory" onchange="filterProducts()"><option value="">Semua kategori</option></select>
+      <select id="productStockFilter" onchange="filterProducts()">
+        <option value="">Semua stok</option><option value="ready">Ready Stock</option><option value="empty">Stok Kosong</option>
+      </select>
+    </div>
+    <div class="product-count" id="productCount">Memuat produk...</div>
+    <div id="productList" class="product-list">
+      <div class="empty-list">⏳ Memuat daftar produk...</div>
+    </div>
+  </section>
+
 </main>
 
 <div class="overlay" id="manualModal">
@@ -325,10 +328,38 @@ function renderProductList(list){
     </article>`;
   }).join("");
 }
+function getSoldQty(p){
+  // Prioritaskan field terjual yang memang disimpan oleh modul transaksi.
+  const directFields=["terjual","qtyTerjual","jumlahTerjual","sold","soldQty","qtySold","jumlahJual"];
+  for(const key of directFields){
+    if(Object.prototype.hasOwnProperty.call(p,key) && String(p[key]).trim()!=="") return Math.max(0,num(p[key]));
+  }
+  // Jika tidak ada field terjual, hitung dari stok awal bila tersedia.
+  const initialFields=["stokAwal","stokAwalQty","jumlahAwal","qtyAwal","stokAwalJumlah","stockAwal","initialStock","initialQty"];
+  const s=Math.max(0,num(p.sisa));
+  for(const key of initialFields){
+    if(Object.prototype.hasOwnProperty.call(p,key) && String(p[key]).trim()!=="") return Math.max(0,num(p[key])-s);
+  }
+  // Data stok lama yang tidak memiliki riwayat terjual tidak ditebak.
+  return 0;
+}
+
 function updateStockStats(){
-  let ready=0,empty=0,value=0;
-  products.forEach(p=>{const s=num(p.sisa);if(s>0){ready++;value+=s*num(p.hargaModal)}else empty++});
-  $("total").textContent=products.length;$("ready").textContent=ready;$("empty").textContent=empty;$("value").textContent=money(value);
+  let ready=0,empty=0,value=0,soldValue=0,remainingValue=0;
+  products.forEach(p=>{
+    const s=Math.max(0,num(p.sisa));
+    const jual=Math.max(0,num(p.hargaJual));
+    const sold=getSoldQty(p);
+    if(s>0){ready++;value+=s*num(p.hargaModal)}else empty++;
+    soldValue+=sold*jual;
+    remainingValue+=s*jual;
+  });
+  $("total").textContent=products.length;
+  $("ready").textContent=ready;
+  $("empty").textContent=empty;
+  $("value").textContent=money(value);
+  $("soldValue").textContent=money(soldValue);
+  $("remainingValue").textContent=money(remainingValue);
   renderCategoryOptions();filterProducts();updatePriceRulePreview();
 }
 window.filterProducts=filterProducts;
