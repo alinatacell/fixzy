@@ -99,7 +99,7 @@ td{padding:10px;border-bottom:1px solid #edf0f3;font-size:11px;vertical-align:to
 
  <section class="card">
   <div class="title">📦 Stok Produk <span id="shown" class="sub"></span></div>
-  <div id="listMsg" class="sub">Menunggu login Firebase...</div>
+  <div id="listMsg" class="sub">Menunggu login Firebase...</div><div id="accessLine" class="sub" style="margin-top:4px"></div>
 
   <div class="table-wrap" style="margin-top:11px">
    <table>
@@ -165,23 +165,32 @@ async function loadProducts(){
  if(!uid)return;
  $("listMsg").textContent="Memuat data stok...";
  try{
-  // HANYA membaca dokumen milik owner akun aktif.
-  // Tidak mengambil seluruh koleksi stok agar akun lain tidak ikut terbaca.
+  // Superadmin melihat seluruh stok.
+  // Owner/karyawan tetap hanya melihat stok milik owner akun aktif.
   const map=new Map();
-  const qs=[
-   query(collection(db,"stok"),where("ownerUid","==",ownerUid)),
-   query(collection(db,"stok"),where("ownerId","==",ownerUid))
-  ];
-  for(const q of qs){
-   try{
-    const snap=await getDocs(q);
-    snap.forEach(d=>{
-     const p={id:d.id,...d.data()};
-     const key=d.id;
-     map.set(key,p);
-    });
-   }catch(e){console.warn("Query stok:",e)}
+
+  if(role==="superadmin"){
+   const snap=await getDocs(collection(db,"stok"));
+   snap.forEach(d=>{
+    const p={id:d.id,...d.data()};
+    map.set(d.id,p);
+   });
+  }else{
+   const qs=[
+    query(collection(db,"stok"),where("ownerUid","==",ownerUid)),
+    query(collection(db,"stok"),where("ownerId","==",ownerUid))
+   ];
+   for(const q of qs){
+    try{
+     const snap=await getDocs(q);
+     snap.forEach(d=>{
+      const p={id:d.id,...d.data()};
+      map.set(d.id,p);
+     });
+    }catch(e){console.warn("Query stok:",e)}
+   }
   }
+
   products=[...map.values()].map(p=>{
    if(p.hargaModal==null&&p.hargaBeli!=null)p.hargaModal=p.hargaBeli;
    if(p.hargaJual==null&&p.harga!=null)p.hargaJual=p.harga;
@@ -196,7 +205,9 @@ async function loadProducts(){
  }catch(e){
   console.error(e);
   $("listMsg").textContent="Gagal membaca stok.";
-  showPopup("Gagal membaca stok Firebase.\n\n"+e.message,"FIXZY");
+  showPopup("Gagal membaca stok Firebase.
+
+"+e.message,"FIXZY");
  }
 }
 
@@ -284,8 +295,11 @@ onAuthStateChanged(auth,async u=>{
   if(!snap.exists())throw Error("Profil akun tidak ditemukan.");
   const p=snap.data()||{};
   role=roleOf(p);
-  ownerUid=await getOwner(u,p);
-  await loadProducts();
+   ownerUid=await getOwner(u,p);
+   $("accessLine").textContent=role==="superadmin"
+    ?"Mode Superadmin • Menampilkan seluruh stok"
+    :"Mode "+(role||"akun")+" • Menampilkan stok owner akun aktif";
+   await loadProducts();
  }catch(e){
   console.error(e);
   $("listMsg").textContent="Akses/data tidak dapat dibuka.";
