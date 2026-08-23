@@ -155,52 +155,62 @@ function stockOf(p){
 
 function roleOf(p){return String(p.role||"").toLowerCase()}
 
-async function getOwner(u,p){
- const r=roleOf(p);
- if(r==="superadmin"||r==="super admin"||r==="super_admin")return "";
- if(r==="owner"||p.isOwner===true)return u.uid;
- return String(p.ownerUid||p.ownerId||u.uid);
+function isSuperAdmin(p){
+  const r=roleOf(p);
+  return r==="superadmin" || r==="super_admin" || p.isSuperAdmin===true;
+}
+
+function getOwner(u,p){
+  const r=roleOf(p);
+  if(isSuperAdmin(p)) return "__ALL__";
+  if(r==="owner" || p.isOwner===true) return u.uid;
+  return String(p.ownerUid||p.ownerId||u.uid);
 }
 
 async function loadProducts(){
- if(!uid)return;
- $("listMsg").textContent="Memuat data stok...";
- try{
-  // SUPERADMIN melihat seluruh stok. OWNER/KARYAWAN tetap terisolasi ke owner akun aktif.
-  const map=new Map();
-  const isSuperAdmin=role==="superadmin"||role==="super admin"||role==="super_admin";
-  const qs=isSuperAdmin
-   ? [query(collection(db,"stok"))]
-   : [
-      query(collection(db,"stok"),where("ownerUid","==",ownerUid)),
-      query(collection(db,"stok"),where("ownerId","==",ownerUid))
-     ];
-  for(const q of qs){
-   try{
-    const snap=await getDocs(q);
-    snap.forEach(d=>{
-     const p={id:d.id,...d.data()};
-     const key=d.id;
-     map.set(key,p);
+  if(!uid)return;
+  $("listMsg").textContent="Memuat data stok...";
+  try{
+    const map=new Map();
+
+    if(ownerUid==="__ALL__"){
+      // Superadmin boleh melihat seluruh stok.
+      // Firestore Rules tetap harus membatasi hak ini di server.
+      const snap=await getDocs(collection(db,"stok"));
+      snap.forEach(d=>map.set(d.id,{id:d.id,...d.data()}));
+    }else{
+      // Owner/karyawan hanya membaca stok owner terkait.
+      const qs=[
+        query(collection(db,"stok"),where("ownerUid","==",ownerUid)),
+        query(collection(db,"stok"),where("ownerId","==",ownerUid))
+      ];
+      for(const q of qs){
+        try{
+          const snap=await getDocs(q);
+          snap.forEach(d=>map.set(d.id,{id:d.id,...d.data()}));
+        }catch(e){console.warn("Query stok:",e)}
+      }
+    }
+
+    products=[...map.values()].map(p=>{
+      if(p.hargaModal==null&&p.hargaBeli!=null)p.hargaModal=p.hargaBeli;
+      if(p.hargaJual==null&&p.harga!=null)p.hargaJual=p.harga;
+      if(p.sisa==null&&p.stok!=null)p.sisa=p.stok;
+      if(!p.kode&&p.sku)p.kode=p.sku;
+      p._stok=stockOf(p);
+      return p;
     });
-   }catch(e){console.warn("Query stok:",e)}
+
+    fillCategories();
+    render();
+    $("listMsg").textContent=products.length
+      ? `${products.length} produk ditampilkan${ownerUid==="__ALL__"?" • MODE SUPERADMIN":""}`
+      : "Belum ada data stok.";
+  }catch(e){
+    console.error(e);
+    $("listMsg").textContent="Gagal membaca stok.";
+    showPopup("Gagal membaca stok Firebase.\n\n"+e.message,"FIXZY");
   }
-  products=[...map.values()].map(p=>{
-   if(p.hargaModal==null&&p.hargaBeli!=null)p.hargaModal=p.hargaBeli;
-   if(p.hargaJual==null&&p.harga!=null)p.hargaJual=p.harga;
-   if(p.sisa==null&&p.stok!=null)p.sisa=p.stok;
-   if(!p.kode&&p.sku)p.kode=p.sku;
-   p._stok=stockOf(p);
-   return p;
-  });
-  fillCategories();
-  render();
-  $("listMsg").textContent=products.length?`${products.length} produk ditampilkan`:"Belum ada data stok.";
- }catch(e){
-  console.error(e);
-  $("listMsg").textContent="Gagal membaca stok.";
-  showPopup("Gagal membaca stok Firebase.\n\n"+e.message,"FIXZY");
- }
 }
 
 function fillCategories(){
@@ -287,7 +297,7 @@ onAuthStateChanged(auth,async u=>{
   if(!snap.exists())throw Error("Profil akun tidak ditemukan.");
   const p=snap.data()||{};
   role=roleOf(p);
-  ownerUid=await getOwner(u,p);
+  ownerUid=getOwner(u,p);
   await loadProducts();
  }catch(e){
   console.error(e);
