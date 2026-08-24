@@ -631,87 +631,49 @@ const db = getFirestore(app);
 
 let currentUser=null, ownerUid=null, isOwner=false, allProduk=[], konterName="", karyawanList=[], rincianItems=[];
 
-// =========================================================
-// SESI AKUN — ACUAN servisan.html
-// businessUid adalah pemisah data utama:
-// OWNER      -> UID akun sendiri
-// ADMIN/SUPERADMIN -> scope akun sendiri
-// OWNER            -> UID akun sendiri
-// KARYAWAN         -> ownerUid/ownerId pada profil karyawan
-// =========================================================
-function roleNorm(v){return String(v||"").trim().toLowerCase();}
-function resolveBusinessUid(profile,user){
-  const role=roleNorm(profile?.role);
-  // Admin/Superadmin boleh membuka halaman sesuai index,
-  // tetapi scope datanya hanya akun sendiri — bukan data Owner lain.
-  if(role==="admin" || role==="superadmin" || role==="super_admin"){
-    return String(user.uid||"").trim();
-  }
-  if(role==="owner" || profile?.isOwner===true){
-    return String(user.uid||"").trim();
-  }
-  return String(profile?.ownerUid||profile?.ownerId||"").trim();
-}
-
 onAuthStateChanged(auth, async u=>{
-  const akun=document.getElementById('akunSide');
-  const roleEl=document.getElementById('roleSide');
-  if(!u){ location.replace("login.html"); return; }
-
+  if(!u){ location.href="login.html"; return; }
   currentUser=u;
-  if(akun) akun.textContent=u.email||"Akun aktif";
-
+  document.getElementById('akunSide').textContent=u.email;
+  document.getElementById('namaToko').textContent='Input Penjualan';
+  document.getElementById('akunLoginField').value=u.email;
   try{
-    const d=await getDoc(doc(db,"users",u.uid));
-    if(!d.exists()) throw new Error("Profil akun tidak ditemukan di users/"+u.uid);
-
-    const p=d.data()||{};
-    const role=roleNorm(p.role);
-    const email=String(u.email||"").trim().toLowerCase();
-    const superAdmin=(role==="superadmin"||role==="super_admin"||email==="servicehpmaja@gmail.com");
-
-    // Hak akses halaman mengikuti index.html.
-    // Admin/Superadmin boleh masuk, tetapi data yang dipakai hanya scope akun sendiri.
-    if(!["admin","superadmin","super_admin","owner","employee","karyawan"].includes(role)){
-      throw new Error("Akun tidak memiliki akses input penjualan.");
-    }
-
-    isOwner=(role==="owner" || p.isOwner===true);
-    ownerUid=resolveBusinessUid(p,u);
-    if(!ownerUid) throw new Error("Identitas owner akun tidak ditemukan.");
-
-    currentUser.profileRole=superAdmin?"superadmin":role;
-    currentUser.ownerUid=p.ownerUid||"";
-    currentUser.ownerId=p.ownerId||"";
-    currentUser.businessOwnerUid=ownerUid;
-    currentUser.isOwner=isOwner;
-
-    // Owner memakai profil sendiri. Karyawan memakai ownerUid/ownerId dari profilnya.
-    if(isOwner){
-      konterName=p.namaKonter||p.namaToko||p.tokoName||p.namaKonterToko||p.konter||p.storeName||p.displayName||p.nama||p.name||p.username||"Fixzy - A Yudi Thea";
+    const snap=await getDocs(query(collection(db,"users"), where("__name__","==", u.uid)));
+    let p=null;
+    if(!snap.empty) p=snap.docs[0].data();
+    else{ const d=await getDoc(doc(db,"users",u.uid)); if(d.exists()) p=d.data(); }
+    if(!p){
+      ownerUid=u.uid; isOwner=true;
+      konterName="Fixzy - A Yudi Thea";
+      document.getElementById('roleSide').textContent='OWNER';
+      document.getElementById('roleSide').style.background='#16a34a';
     }else{
-      konterName=p.namaKonter||p.namaToko||p.tokoName||p.namaKonterToko||p.konter||p.storeName||p.displayName||p.nama||p.name||p.username||"Fixzy - A Yudi Thea";
+      isOwner = (p.role||'').toLowerCase()==='owner' || p.isOwner===true;
+      ownerUid = p.ownerId || p.ownerUid || (isOwner ? u.uid : p.ownerUid) || u.uid;
+      if(isOwner){
+        konterName = p.namaKonter || p.namaToko || p.tokoName || p.namaKonterToko || p.konter || p.storeName || p.displayName || p.nama || p.name || p.username || "Fixzy - A Yudi Thea";
+      }else{
+        try{
+          const ownerSnap = await getDoc(doc(db,"users", ownerUid));
+          if(ownerSnap.exists()){
+            const op = ownerSnap.data();
+            konterName = op.namaKonter || op.namaToko || op.tokoName || op.namaKonterToko || op.konter || op.storeName || op.displayName || op.nama || op.name || op.username || "Fixzy - A Yudi Thea";
+          }else{
+            konterName = p.namaKonter || p.namaToko || p.nama || "Fixzy - A Yudi Thea";
+          }
+        }catch(e){
+          konterName = p.namaKonter || p.namaToko || p.nama || "Fixzy - A Yudi Thea";
+        }
+      }
+      document.getElementById('roleSide').textContent=isOwner?'OWNER':(p.role||'KARYAWAN').toUpperCase();
+      document.getElementById('roleSide').style.background=isOwner?'#16a34a':'#2563eb';
     }
-
-    document.getElementById('namaToko').textContent='Input Penjualan';
-    document.getElementById('akunLoginField').value=u.email||'';
-    if(roleEl){
-      roleEl.textContent=superAdmin?'SUPERADMIN':role.toUpperCase();
-      roleEl.style.background=superAdmin?'#7c3aed':(isOwner?'#16a34a':'#2563eb');
-    }
-    document.getElementById('konterField').value=konterName;
-    document.getElementById('tanggalField').valueAsDate=new Date();
-    autoGenerateNotaBarcode();
-
-    try{ await loadKaryawan(); }catch(e){ console.warn('LOAD KARYAWAN:',e); }
-    try{ await loadProduk(); }catch(e){ console.error('LOAD PRODUK:',e); }
-  }catch(e){
-    console.error('FIXZY SESSION:',e);
-    if(akun) akun.textContent=u.email||'Akun tidak dikenal';
-    if(roleEl){ roleEl.textContent='AKSES DITOLAK'; roleEl.style.background='#dc2626'; }
-    document.getElementById('konterField').value='';
-    document.getElementById('produkInfo').textContent=e.message||'Gagal memuat akun.';
-  }
+  }catch(e){ ownerUid=u.uid; isOwner=true; konterName="Fixzy - A Yudi Thea"; }
+  document.getElementById('konterField').value=konterName;
+  document.getElementById('tanggalField').valueAsDate=new Date();
+  autoGenerateNotaBarcode();
+  await loadKaryawan();
+  await loadProduk();
 });
 
 async function loadKaryawan(){
@@ -839,78 +801,72 @@ window.fixStokSinkron=async()=>{
 };
 
 
-function activeStockOwner(){
-  const role=roleNorm(currentUser?.profileRole||currentUser?.role||"");
-  // PERSIS pola servisan:
-  // Admin/Superadmin/Owner -> UID akun sendiri
-  // Karyawan -> businessOwnerUid yang berasal dari ownerUid/ownerId profil
-  if(role==="admin" || role==="superadmin" || role==="super_admin"){
-    return String(currentUser?.uid||"").trim();
-  }
-  if(role==="owner" || currentUser?.isOwner===true){
-    return String(currentUser?.uid||"").trim();
-  }
-  return String(currentUser?.businessOwnerUid||currentUser?.ownerUid||currentUser?.ownerId||"").trim();
-}
-
 async function loadProduk(){
-  allProduk=[];
-  const businessUid=activeStockOwner();
-  if(!businessUid) throw new Error("Identitas owner akun aktif tidak ditemukan.");
-
-  const docsById=new Map();
-
-  // ACUAN servisan.html:
-  // hanya query ownerUid / ownerId.
-  // Admin/Superadmin membaca stok hanya dengan UID akunnya sendiri.
-  const queries=[
-    query(collection(db,"stok"),where("ownerUid","==",businessUid)),
-    query(collection(db,"stok"),where("ownerId","==",businessUid))
-  ];
-  for(const q of queries){
-    try{
-      const snap=await getDocs(q);
-      snap.forEach(d=>{
-        const data=d.data()||{};
-        // Filter kedua untuk memastikan dokumen benar-benar milik businessUid.
-        const owner=String(data.ownerUid||data.ownerId||"").trim();
-        if(owner!==businessUid) return;
-
-        const stokVal=Number(data.sisa??data.sisaStok??data.stokTersedia??data.stokAkhir??data.pcs??data.ready??data.stok??data.qty??data.jumlah??data.stock??0)||0;
-        docsById.set(d.id,{id:d.id,_col:"stok",_stok:stokVal,...data});
-      });
-    }catch(e){
-      console.warn("loadProduk query error:",e);
+  try{
+    let docs=[];
+    const stokCols = ["stok"];
+    for(let col of stokCols){
+      try{
+        let snaps=[];
+        // Coba filter owner dulu
+        try{ const s=await getDocs(query(collection(db,col), where("ownerUid","==", ownerUid))); if(s.size>0) snaps.push(s); }catch(e){}
+        try{ const s=await getDocs(query(collection(db,col), where("uid","==", ownerUid))); if(s.size>0) snaps.push(s); }catch(e){}
+        try{ const s=await getDocs(query(collection(db,col), where("ownerId","==", ownerUid))); if(s.size>0) snaps.push(s); }catch(e){}
+        // IZINKAN SEMUA: kalau hasil filter kosong atau untuk karyawan, ambil semua
+        try{
+          const allSnap=await getDocs(collection(db,col));
+          console.log(`[PENJUALAN] Total ${col}: ${allSnap.size}, filtered: ${snaps.reduce((a,s)=>a+s.size,0)}`);
+          if(allSnap.size>0) snaps.push(allSnap);
+        }catch(e){}
+        
+        const mapId = new Map();
+        snaps.forEach(snap=>{
+          snap.forEach(d=>{
+            if(!mapId.has(d.id)){
+              const data=d.data();
+              const stokVal = Number(data.sisa ?? data.sisaStok ?? data.stokTersedia ?? data.stokAkhir ?? data.pcs ?? data.ready ?? data.stok ?? data.qty ?? data.jumlah ?? data.stock ?? 0);
+              mapId.set(d.id, {id:d.id, _col:col, _stok:stokVal, _rawSisa:data.sisa, _rawStok:data.stok, ...data});
+            }
+          });
+        });
+        docs=[...docs, ...Array.from(mapId.values())];
+      }catch(e){ console.warn('load col',col,e); }
     }
-  }
+    // Deduplicate by barcode / nama - ambil stok TERBESAR / TERBARU (A53 0 vs 3 -> ambil 3)
+    const mapByBarcode = new Map();
+    for(let p of docs){
+      const key = (p.barcode||'').toString().trim() || (p.nama||p.namaProduk||p.name||'').toString().toLowerCase().trim();
+      if(!key) continue;
+      const existing = mapByBarcode.get(key);
+      if(!existing){
+        mapByBarcode.set(key, p);
+      }else{
+        const pTime = new Date(p.updatedAt||p.createdAt||0).getTime();
+        const exTime = new Date(existing.updatedAt||existing.createdAt||0).getTime();
+        if(Number(p._stok) > Number(existing._stok) || pTime > exTime){
+          mapByBarcode.set(key, p);
+        }
+      }
+    }
+    docs = Array.from(mapByBarcode.values());
 
-  // Deduplicate produk berdasarkan barcode/kode/nama.
-  const mapByProduct=new Map();
-  for(const p of docsById.values()){
-    const key=String(p.barcode||p.kode||p.sku||p.nama||p.namaProduk||p.name||p.id).trim().toLowerCase();
-    if(!key) continue;
-    const old=mapByProduct.get(key);
-    if(!old){ mapByProduct.set(key,p); continue; }
-    const pt=p.updatedAt?.toDate?p.updatedAt.toDate().getTime():new Date(p.updatedAt||p.createdAt||0).getTime();
-    const ot=old.updatedAt?.toDate?old.updatedAt.toDate().getTime():new Date(old.updatedAt||old.createdAt||0).getTime();
-    if(Number(p._stok)>Number(old._stok) || pt>ot) mapByProduct.set(key,p);
-  }
 
-  allProduk=[...mapByProduct.values()];
-  const info=document.getElementById('produkInfo');
-  if(allProduk.length===0){
-    if(info) info.textContent='Belum ada stok untuk akun/owner ini.';
-    document.getElementById('autoProdukWrap').style.opacity='0.35';
-    document.getElementById('autoProdukWrap').style.pointerEvents='none';
-    document.getElementById('manualToggle').checked=true;
-    toggleManual();
-  }else{
-    const totalStok=allProduk.reduce((sum,d)=>sum+Number(d._stok||0),0);
-    const habis=allProduk.filter(d=>Number(d._stok||0)<=0).length;
-    if(info) info.textContent=`${allProduk.length} produk - Total stok: ${totalStok} - Habis: ${habis}`;
-    document.getElementById('autoProdukWrap').style.opacity='1';
-    document.getElementById('autoProdukWrap').style.pointerEvents='auto';
-  }
+    allProduk=docs;
+    const info=document.getElementById('produkInfo');
+    if(docs.length===0){
+      info.textContent='Stok kosong - mode manual aktif';
+      document.getElementById('autoProdukWrap').style.opacity='0.35';
+      document.getElementById('autoProdukWrap').style.pointerEvents='none';
+      document.getElementById('manualToggle').checked=true;
+      toggleManual();
+    }else{
+      const totalStok = docs.reduce((s,d)=>s+Number(d._stok||0),0);
+      const habis = docs.filter(d=>Number(d._stok||0)<=0).length;
+      info.textContent=`${docs.length} produk - Total stok: ${totalStok} - Habis: ${habis}`;
+      document.getElementById('autoProdukWrap').style.opacity='1';
+      document.getElementById('autoProdukWrap').style.pointerEvents='auto';
+    }
+  }catch(e){ allProduk=[]; }
 }
 
 function filterProduk(keyword){
@@ -1366,6 +1322,96 @@ document.addEventListener('DOMContentLoaded', ()=>{
     }
   });
 });
+
+// =========================================================
+// BACKUP TRANSAKSI PENJUALAN SAAT INI — TAMBAHAN SAJA
+// File penjualan.html adalah halaman INPUT, bukan daftar
+// data penjualan. Karena itu backup mengambil transaksi
+// yang sedang diisi pada form, tanpa mengubah Firebase.
+// =========================================================
+function penjualanBackupData(){
+  const escv=v=>String(v??"").trim();
+  const produk=(Array.isArray(rincianItems)?rincianItems:[]).map((x,i)=>({
+    No:i+1,
+    Produk:x.nama??"-",
+    Qty:Number(x.qty??1)||0,
+    Harga:Number(x.harga??0)||0,
+    Subtotal:Number(x.subtotal??((Number(x.qty??1)||0)*(Number(x.harga??0)||0)))||0
+  }));
+  const total=Number(document.getElementById("totalField")?.value||0)||0;
+  const diskon=Number(document.getElementById("diskonField")?.value||0)||0;
+  const dp=Number(document.getElementById("dpField")?.value||0)||0;
+  const sisa=Number(document.getElementById("sisaField")?.value||0)||0;
+  return {
+    meta:{
+      "Konter":escv(typeof konterName!=="undefined"?konterName:"FIXZY"),
+      "Akun":escv(document.getElementById("akunLoginField")?.value),
+      "Tanggal":escv(document.getElementById("tanggalField")?.value),
+      "Nota":escv(document.getElementById("notaField")?.value),
+      "Pelanggan":escv(document.getElementById("namaPelangganField")?.value),
+      "WA":escv(document.getElementById("waPelangganField")?.value),
+      "Teknisi":escv(document.getElementById("teknisiSelect")?.value),
+      "Status":escv(document.getElementById("statusField")?.value),
+      "Total":total,"Diskon":diskon,"DP":dp,"Sisa":sisa,
+      "Waktu Backup":new Date().toLocaleString("id-ID")
+    },
+    produk
+  };
+}
+window.backupPenjualanExcel=()=>{
+  try{
+    if(typeof XLSX==="undefined"){alert("Modul Excel belum termuat. Coba refresh halaman.");return;}
+    const d=penjualanBackupData();
+    if(!d.meta["Nota"] && d.produk.length===0){alert("Belum ada transaksi yang diisi untuk dibackup.");return;}
+    const wb=XLSX.utils.book_new();
+    const info=XLSX.utils.json_to_sheet([d.meta]);
+    info["!cols"]=Object.keys(d.meta).map(k=>({wch:Math.max(12,Math.min(28,k.length+8))}));
+    XLSX.utils.book_append_sheet(wb,info,"Transaksi");
+    const ws=XLSX.utils.json_to_sheet(d.produk.length?d.produk:[{No:"",Produk:"-",Qty:0,Harga:0,Subtotal:0}]);
+    ws["!cols"]=[{wch:6},{wch:40},{wch:10},{wch:16},{wch:16}];
+    XLSX.utils.book_append_sheet(wb,ws,"Produk");
+    XLSX.writeFile(wb,`FIXZY-Backup-Penjualan-${d.meta["Nota"]||"draft"}-${new Date().toISOString().slice(0,10)}.xlsx`);
+  }catch(e){alert("Gagal backup Excel: "+e.message);}
+};
+
+window.backupPenjualanPDF=()=>{
+  try{
+    if(typeof window.jspdf==="undefined"){alert("Modul PDF belum termuat. Coba refresh halaman.");return;}
+    const d=penjualanBackupData();
+    if(!d.meta["Nota"] && d.produk.length===0){alert("Belum ada transaksi yang diisi untuk dibackup.");return;}
+    const {jsPDF}=window.jspdf;
+    const doc=new jsPDF({orientation:"portrait",unit:"mm",format:"a4"});
+    doc.setFontSize(16);doc.setFont("helvetica","bold");
+    doc.text(d.meta["Konter"]||"FIXZY",14,14);
+    doc.setFontSize(13);doc.text("BACKUP TRANSAKSI PENJUALAN",14,21);
+    doc.setFontSize(9);doc.setFont("helvetica","normal");
+    let y=28;
+    const infoLines=[
+      ["Nota",d.meta["Nota"]],["Tanggal",d.meta["Tanggal"]],["Pelanggan",d.meta["Pelanggan"]],
+      ["WA",d.meta["WA"]],["Teknisi",d.meta["Teknisi"]],["Status",d.meta["Status"]]
+    ];
+    infoLines.forEach(([k,v])=>{doc.text(`${k}: ${v||"-"}`,14,y);y+=5;});
+    doc.autoTable({
+      startY:y+2,
+      head:[["No","Produk","Qty","Harga","Subtotal"]],
+      body:d.produk.map(x=>[x.No,x.Produk,x.Qty,money(x.Harga),money(x.Subtotal)]),
+      styles:{fontSize:8,cellPadding:2},
+      headStyles:{fillColor:[17,24,39],textColor:[255,255,255]},
+      columnStyles:{1:{cellWidth:75}}
+    });
+    let fy=doc.lastAutoTable.finalY+8;
+    if(fy>270){doc.addPage();fy=15;}
+    doc.setFont("helvetica","bold");
+    doc.text(`Total: ${money(d.meta["Total"])}`,120,fy);
+    doc.text(`Diskon: ${money(d.meta["Diskon"])}`,120,fy+6);
+    doc.text(`DP: ${money(d.meta["DP"])}`,120,fy+12);
+    doc.text(`Sisa: ${money(d.meta["Sisa"])}`,120,fy+18);
+    doc.setFont("helvetica","normal");
+    doc.setFontSize(8);doc.text(`Backup: ${d.meta["Waktu Backup"]}`,14,285);
+    doc.save(`FIXZY-Backup-Penjualan-${d.meta["Nota"]||"draft"}-${new Date().toISOString().slice(0,10)}.pdf`);
+  }catch(e){alert("Gagal backup PDF: "+e.message);}
+};
+
 </script>
 
 <style id="fixzy-info-servis-style">
@@ -1617,6 +1663,97 @@ body.dark #manualToggle + label{
 }
 </style>
 
+/* =========================================================
+   PANEL TEKNISI + STATUS — SATU HEADER
+   ========================================================= */
+.teknisi-status-panel{
+  margin-top:12px;
+  border:2px solid #111827;
+  border-radius:13px;
+  overflow:hidden;
+  background:#fff;
+  box-shadow:3px 3px 0 #111827;
+}
+.teknisi-status-header{
+  min-height:42px;
+  display:flex;
+  align-items:center;
+  padding:9px 12px;
+  background:#111827;
+  color:#fff;
+  font-size:13px;
+  font-weight:900;
+}
+.teknisi-status-row{
+  min-height:56px;
+  display:grid;
+  grid-template-columns:120px minmax(0,1fr);
+  align-items:center;
+  gap:8px;
+  padding:7px 10px;
+  border-bottom:1px solid #e5e7eb;
+}
+.teknisi-status-row:last-child{border-bottom:0}
+.teknisi-status-label{
+  color:#64748b;
+  font-size:12px;
+  font-weight:800;
+}
+.teknisi-status-control{min-width:0}
+.teknisi-status-control select{
+  width:100% !important;
+  min-height:40px !important;
+  margin:0 !important;
+  padding:7px 10px !important;
+  border:2px solid #111827 !important;
+  border-radius:9px !important;
+  background:#fff !important;
+  color:#111827 !important;
+  box-shadow:2px 2px 0 #111827 !important;
+  font-size:13px !important;
+  font-weight:800 !important;
+}
+.teknisi-status-control select:focus{
+  outline:none !important;
+  box-shadow:2px 2px 0 #111827,0 0 0 2px rgba(37,99,235,.12) !important;
+}
+body.dark .teknisi-status-panel{
+  background:#151b23 !important;
+  border-color:#334155 !important;
+  box-shadow:3px 3px 0 #000 !important;
+}
+body.dark .teknisi-status-header{
+  background:#0f172a !important;
+  color:#f3f4f6 !important;
+}
+body.dark .teknisi-status-row{border-bottom-color:#2b3440 !important}
+body.dark .teknisi-status-label{color:#94a3b8 !important}
+body.dark .teknisi-status-control select{
+  background:#0f141b !important;
+  color:#f3f4f6 !important;
+  border-color:#334155 !important;
+  box-shadow:2px 2px 0 #000 !important;
+}
+@media(max-width:700px){
+  .teknisi-status-panel{margin-top:12px;border-radius:12px}
+  .teknisi-status-header{min-height:40px;padding:8px 10px;font-size:13px}
+  .teknisi-status-row{
+    min-height:54px;
+    grid-template-columns:90px minmax(0,1fr);
+    gap:8px;
+    padding:6px 9px;
+  }
+  .teknisi-status-label{font-size:12px}
+  .teknisi-status-control select{
+    min-height:40px !important;
+    font-size:12px !important;
+    padding:7px 8px !important;
+  }
+}
+
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jspdf-autotable@3.8.2/dist/jspdf.plugin.autotable.min.js"></script>
 </head>
 <body>
 <header>
@@ -1634,6 +1771,8 @@ body.dark #manualToggle + label{
   <button onclick="refreshHalaman()" style="background:transparent;color:#fff;padding:8px 10px;font-weight:800;font-size:13px;border:1px solid #ffffff30;border-radius:8px">
     Refresh
   </button>
+  <button onclick="backupPenjualanExcel()" style="background:#16a34a;color:#fff;padding:8px 10px;font-weight:800;font-size:12px;border:1px solid #ffffff30;border-radius:8px;margin-left:4px">📊 Excel</button>
+  <button onclick="backupPenjualanPDF()" style="background:#dc2626;color:#fff;padding:8px 10px;font-weight:800;font-size:12px;border:1px solid #ffffff30;border-radius:8px;margin-left:4px">📄 PDF</button>
   <button id="btnDark" class="btn-dark" style="margin-left:6px">🌙</button>
 </header>
 
@@ -1646,14 +1785,13 @@ body.dark #manualToggle + label{
   </div>
 
   <!--
-    ID akun, pemilik usaha, dan teknisi TETAP dipertahankan karena
-    digunakan oleh JavaScript/Firebase untuk menyimpan transaksi.
-    Hanya tidak ditampilkan pada bagian informasi.
+    ID akun dan pemilik usaha tetap disimpan tersembunyi karena
+    digunakan oleh JavaScript/Firebase. Teknisi ditampilkan pada
+    panel Teknisi & Status di bagian pembayaran.
   -->
   <div style="display:none" aria-hidden="true">
     <input id="akunLoginField" readonly>
     <input id="konterField" readonly>
-    <select id="teknisiSelect"><option>Memuat karyawan...</option></select>
   </div>
 
   <div class="info-transaksi-box">
@@ -1744,7 +1882,34 @@ body.dark #manualToggle + label{
     <div><label style="font-size:11px;font-weight:800">DP (Uang Muka)</label><input id="dpField" type="number" value="0"></div>
     <div><label style="font-size:11px;font-weight:800">Sisa (Total - Diskon - DP)</label><input id="sisaField" type="number" readonly style="background:#f8fafc;font-weight:900;color:#15803d"></div>
   </div>
-  <div style="margin-top:10px"><label style="font-size:11px;font-weight:800">Status</label><select id="statusField"><option value="masuk">Masuk</option><option value="tagihan">Tagihan</option><option value="tunai">Tunai</option><option value="diambil">Diambil</option><option value="batal" class="ownerOnly">Batal (Admin Only)</option></select></div>
+  <!-- PANEL TEKNISI + STATUS: SATU HEADER -->
+  <div class="teknisi-status-panel">
+    <div class="teknisi-status-header">
+      <span>Teknisi &amp; Status</span>
+    </div>
+
+    <div class="teknisi-status-row">
+      <span class="teknisi-status-label">Teknisi</span>
+      <div class="teknisi-status-control">
+        <select id="teknisiSelect" aria-label="Teknisi">
+          <option value="">Memuat karyawan...</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="teknisi-status-row">
+      <span class="teknisi-status-label">Status</span>
+      <div class="teknisi-status-control">
+        <select id="statusField" aria-label="Status">
+          <option value="masuk">Masuk</option>
+          <option value="tagihan">Tagihan</option>
+          <option value="tunai">Tunai</option>
+          <option value="diambil">Diambil</option>
+          <option value="batal" class="ownerOnly">Batal (Admin Only)</option>
+        </select>
+      </div>
+    </div>
+  </div>
   <div style="margin-top:10px;display:flex;justify-content:space-between;font-weight:900;background:#f8fafc;padding:10px;border-radius:10px"><span>Sisa Bayar:</span><span id="sisaDisplay" style="color:#15803d">Rp 0</span></div>
   <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-top:16px">
     <button type="button" onclick="batalInput()" style="background:#e5e7eb;color:#111827;padding:12px;border-radius:10px">Batal</button>
