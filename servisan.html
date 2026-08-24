@@ -122,7 +122,7 @@ body.dark.template-preview{background:#111827!important;border-color:#475569!imp
  </div>
 </header>
 <main>
- 
+ <div id="accessNotice" class="notice">Memeriksa akun dan isolasi data...</div>
  <div class="card">
   <div class="title">Informasi Transaksi</div>
   <input type="hidden" id="nomorNota">
@@ -153,6 +153,8 @@ body.dark.template-preview{background:#111827!important;border-color:#475569!imp
     <label>KELENGKAPAN HP</label>
     <div class="kelengkapan-box">
      <div class="kelengkapan-grid">
+      <label class="kelengkapan-item"><input class="kelengkapan" type="checkbox" value="Unit HP"> Unit HP</label>
+      <label class="kelengkapan-item"><input class="kelengkapan" type="checkbox" value="Baterai"> Baterai</label>
       <label class="kelengkapan-item"><input class="kelengkapan" type="checkbox" value="Charger"> Charger</label>
       <label class="kelengkapan-item"><input class="kelengkapan" type="checkbox" value="Kabel Data"> Kabel Data</label>
       <label class="kelengkapan-item"><input class="kelengkapan" type="checkbox" value="SIM Card"> SIM Card</label>
@@ -209,7 +211,7 @@ body.dark.template-preview{background:#111827!important;border-color:#475569!imp
  <div class="card">
   <div class="title">Pembayaran</div>
   <div class="grid">
-   <div><label>BIAYA SERVIS *</label><input id="biayaService" value=""></div>
+   <div><label>BIAYA SERVIS *</label><input id="biayaService" value="0"></div>
    <div><label>DISKON</label><input id="diskon" value="0"></div>
    <div><label>DP</label><input id="dp" value="0"></div>
    <div class="full"><div class="money">Total: <strong id="previewTotal">Rp 0</strong> • Sisa: <strong id="previewSisa">Rp 0</strong></div></div>
@@ -266,14 +268,9 @@ const cfg={apiKey:"AIzaSyC_PcarMTT5Un7qfSLzf92o5OGn5rginsI",authDomain:"fixzy-up
 const app=initializeApp(cfg);const auth=getAuth(app);const db=getFirestore(app);
 let uid=null;let businessUid=null;let profile={};let role="";let products=[];let employees=[];let selectedProduct=null;let pendingData=null;let selectedTemplate=2;let pageReady=false;
 const $=id=>document.getElementById(id);const num=id=>Number(String($(id)?.value||"").replace(/[^\d]/g,""))||0;const rupiah=n=>"Rp "+(Number(n)||0).toLocaleString("id-ID");const esc=s=>String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
-function setNotice(text,type=""){
-  const el=$("accessNotice");
-  if(!el) return;
-  el.textContent=text;
-  el.className="notice"+(type?" "+type:"");
-}
+function setNotice(text,type=""){const el=$("accessNotice");el.textContent=text;el.className="notice"+(type?" "+type:"");}
 function roleAllowed(r){return ["superadmin","admin","owner","employee","karyawan","kurir"].includes(r);}
-function resolveBusinessUid(data){const r=String(data.role||"").toLowerCase();if(r==="owner" || r==="superadmin") return uid;return String(data.ownerUid||data.ownerId||uid);}
+function resolveBusinessUid(data){const r=String(data.role||"").trim().toLowerCase();if(r==="owner") return uid;const v=String(data.ownerUid||data.ownerId||"").trim();if(v) return v;if(r==="superadmin" || r==="admin") return uid;throw new Error("Akun karyawan belum memiliki ownerUid/ownerId.");}
 function notaBaru(){const d=new Date(),p=n=>String(n).padStart(2,"0");return "SRV-"+d.getFullYear()+p(d.getMonth()+1)+p(d.getDate())+"-"+p(d.getHours())+p(d.getMinutes())+p(d.getSeconds())+String(d.getMilliseconds()).padStart(3,"0");}
 function makeBarcode(nota){return "FX-"+nota.replace(/^SRV-/,"");}
 function namaProduk(p){return String(p.nama||p.namaProduk||"-")}function kodeProduk(p){return String(p.kode||p.kodeProduk||"").trim()}function modalProduk(p){return Number(p.hargaModal??p.modal??0)||0}function dateOnly(){return new Date().toISOString().slice(0,10)}
