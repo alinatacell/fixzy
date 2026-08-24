@@ -70,7 +70,7 @@ main{max-width:1180px;margin:auto;padding:14px 10px 70px}.card{background:#fff;b
 <label class="check"><input type="checkbox" value="laporanPendapatan" class="izin">💻 Ringkasan Pendapatan</label>
 <label class="check"><input type="checkbox" value="dashboardPendapatan" class="izin">📊 Dashboard Admin</label>
 </div>
-<div class="status" style="margin-top:8px">Owner Only (pengaturan, data karyawan, izin akses) tetap hanya bisa diakses owner, meski diceklis. Superadmin menu tidak bisa diberikan ke karyawan.</div>
+<div class="status" style="margin-top:8px">Owner Only (pengaturan, data karyawan, izin akses) hanya dapat digunakan oleh Owner. Superadmin tidak melihat atau mengelola data bisnis Owner.</div>
 </div></div>
 <div id="editInfo" class="status"></div><div class="popup-actions"><button class="btn secondary" onclick="tutupPopup()">Batal</button><button class="btn primary" onclick="simpanAkun()">💾 Simpan</button></div></div></div>
 
@@ -131,18 +131,22 @@ window.pilihAksesKaryawan=()=>{
 function renderIzin(a){const izin=gabungIzin(a);if(!izin.length)return '<span style="color:#94a3b8">Tidak ada akses</span>';return izin.map(v=>`<span class="badge">${esc(izinLabel(v))}</span>`).join("")}
 
 async function load(){if(!ready)return;
-  // ISOLASI: OWNER/ADMIN hanya melihat akun di ownerUid-nya.
-  // SUPERADMIN adalah pembuat aplikasi, sehingga boleh mengelola akun semua owner.
-  let snap;
-  if(norm(profile.role)==="superadmin"){
-    snap=await getDocs(collection(db,"users"));
-  }else{
-    snap=await getDocs(query(collection(db,"users"),where("ownerUid","==",ownerUid)));
+  // ISOLASI OWNER:
+  // Halaman ini adalah pengaturan hak akses bisnis milik OWNER.
+  // Tidak pernah membaca seluruh users dan tidak pernah membaca owner lain.
+  if(norm(profile.role)!=="owner"){
+    accounts=[];
+    render();
+    $("status").innerHTML=`<span class="err">🔒 Izin Akses bisnis hanya dapat dikelola oleh Owner.</span>`;
+    return;
   }
-  accounts=snap.docs.map(d=>({id:d.id,...d.data()})).filter(x=>["employee","reseller"].includes(norm(x.role)));
+  const snap=await getDocs(query(collection(db,"users"),where("ownerUid","==",ownerUid)));
+  accounts=snap.docs
+    .map(d=>({id:d.id,...d.data()}))
+    .filter(x=>["employee","reseller"].includes(norm(x.role)))
+    .filter(x=>String(x.ownerUid||x.ownerId||"")===String(ownerUid));
   render();
-  const scope=norm(profile.role)==="superadmin"?"semua owner":"konter ini";
-  $("status").innerHTML=`<span class="ok">✓ ${accounts.length} akun karyawan/reseller untuk ${scope} • Hak akses sinkron dengan index.</span>`
+  $("status").innerHTML=`<span class="ok">✓ ${accounts.length} akun karyawan/reseller untuk Owner ini • Hak akses sinkron dengan index.</span>`
 }
 
 function render(){const role=$("roleFilter").value,q=norm($("cari").value);const arr=accounts.filter(a=>(!role||a.role===role)&&(!q||norm(nama(a)).includes(q)||norm(a.email).includes(q)||norm(a.jabatan).includes(q)));$("total").textContent=arr.length;$("aktif").textContent=arr.filter(a=>norm(a.status)==="aktif").length;$("jmlKaryawan").textContent=arr.filter(a=>a.role==="employee").length;$("jmlReseller").textContent=arr.filter(a=>a.role==="reseller").length;$("tbody").innerHTML=arr.length?arr.map(a=>`<tr><td><b>${esc(nama(a))}</b></td><td>${esc(a.email||"-")}</td><td>${esc(a.noWA||a.wa||a.noWa||a.noHp||"-")}</td><td><span class="badge ${esc(a.role||"")}">${esc(roleLabel(a.role))}</span></td><td>${esc(a.jabatan||a.posisi||"-")}</td><td><span class="badge ${norm(a.status)==="aktif"?"active":"off"}">${esc(a.status||"-")}</span></td><td>${renderIzin(a)}</td><td><button class="btn secondary" style="padding:7px 9px;font-size:10px" onclick="editAkun('${a.id}')">✏️ Edit</button></td></tr>`).join(""):'<tr><td colspan="8" class="empty">Belum ada akun karyawan/reseller untuk konter ini.</td></tr>'}
@@ -177,7 +181,8 @@ window.simpanAkun=async()=>{
        const newUid=await buatAuthBaru(email,pass,n);
        // Saat SUPERADMIN mengedit akun owner lain, JANGAN pindahkan akun ke ownerUid SUPERADMIN.
        // Pertahankan ownerUid/ownerId milik akun yang sedang diedit.
-       const targetOwnerUid=lama.ownerUid||lama.ownerId||ownerUid;
+       const targetOwnerUid=String(lama.ownerUid||lama.ownerId||"");
+       if(targetOwnerUid!==String(ownerUid))throw new Error("Akun bukan milik Owner ini.");
        const newData={...lama,uid:newUid,ownerUid:targetOwnerUid,role:r,status,nama:n,namaKaryawan:n,email,noWA:wa,wa,noWa:wa,jabatan:j,upahHarian:upah,izin,permissions:izin,replacesUid:editId,replacesEmail:editEmailLama,tanggalDaftar:new Date().toISOString(),createdAt:serverTimestamp(),updatedAt:serverTimestamp()};
        delete newData.id;
        await setDoc(doc(db,"users",newUid),newData,{merge:true});
@@ -215,7 +220,7 @@ Terima kasih 🙏
    }
    if(pass.length<6)return tampilNotice("⚠️ Password","Password minimal 6 karakter.");
    const newUid=await buatAuthBaru(email,pass,n);
-   const accountData={uid:newUid,ownerUid,role:r,status,nama:n,namaKaryawan:n,email,noWA:wa,wa,noWa:wa,jabatan:j,upahHarian:upah,izin,permissions:izin,tanggalDaftar:new Date().toISOString(),createdAt:serverTimestamp(),updatedAt:serverTimestamp()};
+   const accountData={uid:newUid,ownerUid:ownerUid,role:r,status,nama:n,namaKaryawan:n,email,noWA:wa,wa,noWa:wa,jabatan:j,upahHarian:upah,izin,permissions:izin,tanggalDaftar:new Date().toISOString(),createdAt:serverTimestamp(),updatedAt:serverTimestamp()};
    await setDoc(doc(db,"users",newUid),accountData);
    $("popup").classList.remove("show");
    const namaKonter = profile.namaKonter || profile.namaToko || "FIXZY";
@@ -323,7 +328,7 @@ window.kirimResetPassword=async email=>{
  catch(e){tampilNotice("❌ Reset Password",esc(e.message||e))}
 };
 
-async function init(){onAuthStateChanged(auth,async u=>{if(!u){location.replace("login.html");return}uid=u.uid;try{const s=await getDoc(doc(db,"users",uid));if(!s.exists())throw new Error("Profil Owner tidak ditemukan.");profile=s.data()||{};if(!["owner","superadmin","admin"].includes(norm(profile.role)))throw new Error("Halaman Izin Akses hanya untuk Owner / Superadmin.");ownerUid=norm(profile.role)==="owner"?uid:(profile.ownerUid||profile.ownerId||uid);ready=true;await load()}catch(e){ready=false;$("status").innerHTML=`<span class="err">🔒 ${esc(e.message||e)}</span>`;$("tbody").innerHTML='<tr><td colspan="8" class="empty">Akses tidak tersedia.</td></tr>'}})}
+async function init(){onAuthStateChanged(auth,async u=>{if(!u){location.replace("login.html");return}uid=u.uid;try{const s=await getDoc(doc(db,"users",uid));if(!s.exists())throw new Error("Profil Owner tidak ditemukan.");profile=s.data()||{};if(norm(profile.role)!=="owner")throw new Error("Halaman Izin Akses bisnis hanya untuk Owner.");ownerUid=uid;ready=true;await load()}catch(e){ready=false;$("status").innerHTML=`<span class="err">🔒 ${esc(e.message||e)}</span>`;$("tbody").innerHTML='<tr><td colspan="8" class="empty">Akses tidak tersedia.</td></tr>'}})}
 window.muatSemua=async()=>{if(ready){$("status").textContent="Memuat ulang...";await load()}};
 init();
 </script>
