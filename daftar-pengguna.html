@@ -46,8 +46,34 @@ function parseDateFIXZY(v){
     const d=new Date(str); return isNaN(d.getTime())?null:d;
   }catch(e){return null;}
 }
-function getExpirationFIXZY(u){return parseDateFIXZY(u?.tanggalBerakhir);}
-function getPaketTerakhirFIXZY(u){return u?.paketTerakhir || "-";}
+function getExpirationFIXZY(u){
+  return parseDateFIXZY(u?.tanggalBerakhir);
+}
+
+function getPaketTerakhirFIXZY(u){
+  if(!u) return "-";
+
+  const kandidat = [
+    u.paketTerakhir,
+    u.paketAktif,
+    u.paket,
+    u.namaPaket,
+    u.paketLangganan,
+    u.jenisPaket,
+    u.plan,
+    u.subscriptionPlan,
+    u.package,
+    u.packageName
+  ];
+
+  for(const v of kandidat){
+    if(v !== undefined && v !== null && String(v).trim() !== ""){
+      return String(v).trim();
+    }
+  }
+
+  return "-";
+}
 
 async function isSuperAdmin(user){
   if(!user) return false;
