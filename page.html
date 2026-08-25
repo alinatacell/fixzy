@@ -146,6 +146,123 @@ footer{text-align:center;padding:25px;color:#888}
   .card h2{font-size:21px}
   .card p{font-size:14px}
 }
+
+/* ===== SPONSOR FIXZY ===== */
+.sponsor-card{
+  background:linear-gradient(135deg,#171717,#0d0d0d);
+  border:1px solid #4a3c0a;
+  border-radius:22px;
+  padding:18px;
+  margin-bottom:22px;
+  box-shadow:0 10px 25px rgba(0,0,0,.35);
+}
+.sponsor-head{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+  margin-bottom:12px;
+}
+.sponsor-head h2{
+  margin:0;
+  color:var(--y);
+  font-size:24px;
+}
+.sponsor-badge{
+  background:#252525;
+  border:1px solid #51430d;
+  color:var(--y);
+  border-radius:999px;
+  padding:5px 9px;
+  font-size:10px;
+  font-weight:900;
+  white-space:nowrap;
+}
+.sponsor-media{
+  width:100%;
+  aspect-ratio:16/9;
+  background:#050505;
+  border-radius:16px;
+  overflow:hidden;
+  border:1px solid #333;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}
+.sponsor-media img,
+.sponsor-media video,
+.sponsor-media iframe{
+  width:100%;
+  height:100%;
+  border:0;
+  display:block;
+  object-fit:contain;
+  background:#050505;
+}
+.sponsor-info{padding:12px 2px 2px}
+.sponsor-name{
+  color:var(--y);
+  font-weight:900;
+  font-size:18px;
+}
+.sponsor-title{
+  color:#fff;
+  font-weight:800;
+  font-size:15px;
+  margin-top:2px;
+}
+.sponsor-desc{
+  color:#ccc;
+  font-size:13px;
+  margin-top:4px;
+}
+.sponsor-actions{
+  display:flex;
+  flex-wrap:wrap;
+  gap:8px;
+  margin-top:11px;
+}
+.sponsor-action{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  min-height:42px;
+  padding:9px 13px;
+  border-radius:11px;
+  text-decoration:none;
+  font-weight:900;
+  font-size:12px;
+  background:linear-gradient(90deg,var(--y),var(--orange));
+  color:#111;
+}
+.sponsor-action.secondary{
+  background:#222;
+  border:1px solid #444;
+  color:#fff;
+}
+.sponsor-dots{
+  display:flex;
+  justify-content:center;
+  gap:6px;
+  margin-top:10px;
+}
+.sponsor-dot{
+  width:7px;height:7px;border-radius:50%;
+  background:#555;border:0;padding:0;
+}
+.sponsor-dot.active{background:var(--y);width:20px;border-radius:10px}
+.sponsor-empty{
+  text-align:center;
+  color:#888;
+  padding:12px;
+  font-size:12px;
+}
+@media(max-width:768px){
+  .sponsor-card{padding:14px;border-radius:18px}
+  .sponsor-head h2{font-size:21px}
+  .sponsor-name{font-size:16px}
+}
+
 </style>
 </head>
 <body>
@@ -168,6 +285,26 @@ footer{text-align:center;padding:25px;color:#888}
 </header>
 
 <div class="wrap">
+
+<!-- ===== IKLAN SPONSOR FIXZY ===== -->
+<section class="sponsor-card" id="fixzySponsorBox" style="display:none">
+  <div class="sponsor-head">
+    <h2>🤝 Sponsor FIXZY</h2>
+    <span class="sponsor-badge">PROMO PARTNER</span>
+  </div>
+
+  <div class="sponsor-media" id="fixzySponsorMedia"></div>
+
+  <div class="sponsor-info">
+    <div class="sponsor-name" id="fixzySponsorName">-</div>
+    <div class="sponsor-title" id="fixzySponsorTitle">-</div>
+    <div class="sponsor-desc" id="fixzySponsorDesc">-</div>
+    <div class="sponsor-actions" id="fixzySponsorActions"></div>
+  </div>
+
+  <div class="sponsor-dots" id="fixzySponsorDots"></div>
+</section>
+
 
 <section class="card welcome">
   <h2>👋 Selamat Datang di FIXZY</h2>
@@ -339,6 +476,237 @@ function tutupHalaman(){
     window.close();
   }catch(e){}
 }
+</script>
+
+
+<script type="module">
+/* ===== FIXZY SPONSOR DISPLAY ===== */
+import { initializeApp, getApps } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js";
+import { getFirestore, collection, getDocs } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js";
+
+const FIXZY_SPONSOR_CFG = {
+  apiKey:"AIzaSyC_PcarMTT5Un7qfSLzf92o5OGn5rginsI",
+  authDomain:"fixzy-update.firebaseapp.com",
+  projectId:"fixzy-update",
+  storageBucket:"fixzy-update.firebasestorage.app",
+  messagingSenderId:"995892519622",
+  appId:"1:995892519622:web:fa41047944d8e5b35d6dc7"
+};
+
+const sponsorApp = getApps().length
+  ? getApps()[0]
+  : initializeApp(FIXZY_SPONSOR_CFG);
+
+const sponsorDb = getFirestore(sponsorApp);
+const SPONSOR_COLLECTION = "sponsors";
+
+let fixzySponsors = [];
+let fixzySponsorIndex = 0;
+let fixzySponsorTimer = null;
+
+function sponsorEscape(v){
+  return String(v ?? "")
+    .replace(/&/g,"&amp;")
+    .replace(/</g,"&lt;")
+    .replace(/>/g,"&gt;")
+    .replace(/"/g,"&quot;")
+    .replace(/'/g,"&#039;");
+}
+
+function sponsorIsActive(s){
+  if(String(s.status || "").toLowerCase() !== "aktif") return false;
+
+  const now = new Date();
+
+  let mulai = null;
+  let berakhir = null;
+
+  if(s.mulai){
+    mulai = new Date(String(s.mulai) + "T00:00:00");
+  }
+
+  if(s.berakhir){
+    berakhir = new Date(String(s.berakhir) + "T23:59:59");
+  }
+
+  if(mulai && !Number.isNaN(mulai.getTime()) && now < mulai) return false;
+  if(berakhir && !Number.isNaN(berakhir.getTime()) && now > berakhir) return false;
+
+  return true;
+}
+
+function youtubeId(url){
+  try{
+    const u = new URL(url);
+    const host = u.hostname.toLowerCase();
+
+    if(host === "youtu.be"){
+      return u.pathname.replace(/^\/+/,"").split("/")[0] || null;
+    }
+
+    if(host.includes("youtube.com")){
+      if(u.searchParams.get("v")) return u.searchParams.get("v");
+
+      const parts = u.pathname.split("/").filter(Boolean);
+      const idx = parts.findIndex(x => x === "shorts" || x === "embed");
+      if(idx >= 0 && parts[idx + 1]) return parts[idx + 1];
+    }
+  }catch(e){}
+
+  return null;
+}
+
+function isDirectVideo(url){
+  return /\.(mp4|webm|ogg|m4v)(\?.*)?$/i.test(url);
+}
+
+function sponsorMedia(s){
+  const url = String(s.bannerUrl || "").trim();
+
+  if(!url){
+    return '<div class="sponsor-empty">Sponsor belum memasang media.</div>';
+  }
+
+  const yt = youtubeId(url);
+
+  if(yt){
+    const embed =
+      "https://www.youtube.com/embed/" + encodeURIComponent(yt) +
+      "?autoplay=1&mute=1&playsinline=1&rel=0&modestbranding=1";
+
+    return `
+      <iframe
+        src="${sponsorEscape(embed)}"
+        title="${sponsorEscape(s.judul || "Video Sponsor")}"
+        allow="autoplay; encrypted-media; picture-in-picture"
+        allowfullscreen>
+      </iframe>`;
+  }
+
+  if(isDirectVideo(url)){
+    return `
+      <video
+        src="${sponsorEscape(url)}"
+        autoplay
+        muted
+        loop
+        playsinline
+        controls
+        preload="metadata">
+      </video>`;
+  }
+
+  return `
+    <img
+      src="${sponsorEscape(url)}"
+      alt="${sponsorEscape(s.judul || s.nama || "Sponsor FIXZY")}"
+      loading="eager"
+      onerror="this.parentElement.innerHTML='<div class=&quot;sponsor-empty&quot;>Media sponsor tidak dapat dimuat.</div>'">`;
+}
+
+function sponsorActions(s){
+  const arr = [];
+
+  if(s.link && /^https?:\/\//i.test(String(s.link))){
+    arr.push(
+      `<a class="sponsor-action" href="${sponsorEscape(s.link)}" target="_blank" rel="noopener noreferrer">🔗 Lihat Promo</a>`
+    );
+  }
+
+  if(s.wa){
+    const digits = String(s.wa).replace(/\D/g,"");
+    if(digits){
+      let number = digits;
+      if(number.startsWith("0")) number = "62" + number.slice(1);
+      if(number.startsWith("8")) number = "62" + number;
+
+      const waText = encodeURIComponent(
+        "Halo " + (s.nama || "Sponsor") + ", saya melihat sponsor di FIXZY."
+      );
+
+      arr.push(
+        `<a class="sponsor-action secondary" href="https://wa.me/${number}?text=${waText}" target="_blank" rel="noopener noreferrer">💬 WhatsApp</a>`
+      );
+    }
+  }
+
+  return arr.join("");
+}
+
+function renderSponsor(){
+  const box = document.getElementById("fixzySponsorBox");
+  const media = document.getElementById("fixzySponsorMedia");
+  const name = document.getElementById("fixzySponsorName");
+  const title = document.getElementById("fixzySponsorTitle");
+  const desc = document.getElementById("fixzySponsorDesc");
+  const actions = document.getElementById("fixzySponsorActions");
+  const dots = document.getElementById("fixzySponsorDots");
+
+  if(!box || !media) return;
+
+  if(!fixzySponsors.length){
+    box.style.display = "none";
+    return;
+  }
+
+  box.style.display = "block";
+
+  const s = fixzySponsors[fixzySponsorIndex] || fixzySponsors[0];
+
+  media.innerHTML = sponsorMedia(s);
+  name.textContent = s.nama || "Sponsor FIXZY";
+  title.textContent = s.judul || "";
+  desc.textContent = s.deskripsi || "";
+  actions.innerHTML = sponsorActions(s);
+
+  dots.innerHTML = fixzySponsors.map((_,i)=>
+    `<button type="button" class="sponsor-dot ${i===fixzySponsorIndex?"active":""}" aria-label="Sponsor ${i+1}" onclick="window.fixzyPilihSponsor(${i})"></button>`
+  ).join("");
+}
+
+window.fixzyPilihSponsor = function(index){
+  if(index < 0 || index >= fixzySponsors.length) return;
+  fixzySponsorIndex = index;
+  renderSponsor();
+  startSponsorRotation();
+};
+
+function startSponsorRotation(){
+  clearInterval(fixzySponsorTimer);
+
+  if(fixzySponsors.length <= 1) return;
+
+  fixzySponsorTimer = setInterval(()=>{
+    fixzySponsorIndex = (fixzySponsorIndex + 1) % fixzySponsors.length;
+    renderSponsor();
+  }, 10000);
+}
+
+async function loadFixzySponsors(){
+  try{
+    const snap = await getDocs(collection(sponsorDb, SPONSOR_COLLECTION));
+
+    fixzySponsors = snap.docs
+      .map(d => ({id:d.id, ...d.data()}))
+      .filter(sponsorIsActive);
+
+    fixzySponsors.sort((a,b)=>{
+      const aa = String(a.dibuatPada?.seconds || a.dibuatPada || "");
+      const bb = String(b.dibuatPada?.seconds || b.dibuatPada || "");
+      return bb.localeCompare(aa);
+    });
+
+    fixzySponsorIndex = 0;
+    renderSponsor();
+    startSponsorRotation();
+  }catch(err){
+    console.error("FIXZY Sponsor:", err);
+    const box = document.getElementById("fixzySponsorBox");
+    if(box) box.style.display = "none";
+  }
+}
+
+loadFixzySponsors();
 </script>
 
 </body>
