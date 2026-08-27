@@ -212,13 +212,34 @@ body{
     font-size:9px;
   }
 }
+
+/* === TAMBAHAN: MODE DARK, tanpa mengubah desain lama === */
+:root.dark-mode{--bg:#0b0b0b;--card:#171717;--line:#2d2d2d;--txt:#f3f4f6;--muted:#a3a3a3}
+html.dark-mode,html.dark-mode body{background:#0b0b0b;color:#f3f4f6}
+html.dark-mode body{background:linear-gradient(180deg,#111 0,#0b0b0b 250px)}
+html.dark-mode .card,html.dark-mode .stat,html.dark-mode .product-item{background:#171717;color:#f3f4f6;border-color:#2d2d2d}
+html.dark-mode .title,html.dark-mode .stat strong,html.dark-mode .product-name,html.dark-mode .modal-head h2,html.dark-mode .confirm-box h3{color:#f3f4f6}
+html.dark-mode .field label,html.dark-mode .sub,html.dark-mode .product-code,html.dark-mode .product-count,html.dark-mode .sync-status,html.dark-mode .stat small,html.dark-mode .meta-box small{color:#a3a3a3}
+html.dark-mode .field input,html.dark-mode .field select,html.dark-mode .import-box input,html.dark-mode .excel-file,html.dark-mode .product-toolbar input,html.dark-mode .product-toolbar select{background:#202020;color:#f3f4f6;border-color:#3a3a3a}
+html.dark-mode .meta-box{background:#202020}
+html.dark-mode .meta-box b{color:#e5e7eb}
+html.dark-mode .modal,html.dark-mode .confirm-box,html.dark-mode .loader{background:#171717;border-color:#333}
+html.dark-mode .close,html.dark-mode .confirm-no{background:#2a2a2a;color:#ddd}
+html.dark-mode .empty-list{background:#171717;border-color:#444;color:#aaa}
+html.dark-mode .price-rule-box{background:#1b1b1b;border-color:#333}
+html.dark-mode .price-rule-preview{color:#aaa}
+html.dark-mode .preview th{background:#2a2108}
+.product-select{width:20px;height:20px;accent-color:#ffc107;cursor:pointer;flex:0 0 auto}
+.select-actions{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:10px}
+.select-actions .btn{min-height:38px;padding:8px 12px;font-size:11px}
+
 </style>
 </head>
 <body>
 <header class="header"><div class="header-in">
 <div class="brand"><img src="logo.png" class="logo" onerror="this.style.display='none'"><div><h1>FIXZY</h1><p>Stok Produk • <span id="headerRole">Memuat...</span></p></div></div>
 <div class="header-account"><div class="account-name" id="headerAccount">Memuat...</div><div class="account-exp">Exp: <span id="headerExp">-</span></div></div>
-<button class="head-btn refresh" id="refreshBtn" type="button" onclick="refreshHalaman()">↻</button></div>
+<button class="head-btn" id="darkModeBtn" type="button" onclick="toggleDarkMode()">🌙</button><button class="head-btn refresh" id="refreshBtn" type="button" onclick="refreshHalaman()">↻</button></div>
 </div></header>
 
 <main class="container">
@@ -245,6 +266,7 @@ body{
 
 <section class="card">
 <div class="title">📦 Daftar Produk</div>
+<div class="select-actions"><button type="button" class="btn dark" onclick="toggleSelectAll()">☑️ PILIH SEMUA</button><button type="button" class="btn danger" onclick="deleteSelectedProducts()">🗑️ HAPUS CEKLIS</button></div>
 <div class="product-toolbar"><input id="productSearch" placeholder="Cari nama, kode, merk..." oninput="filterProducts()"><select id="productCategory" onchange="filterProducts()"><option value="">Semua kategori</option></select><select id="productStockFilter" onchange="filterProducts()"><option value="">Semua stok</option><option value="ready">Ready Stock</option><option value="empty">Stok Kosong</option></select></div>
 <div class="product-count" id="productCount">Memuat produk...</div><div id="productList" class="product-list"><div class="empty-list">⏳ Memuat daftar produk...</div></div>
 </section>
@@ -271,6 +293,7 @@ import{getFirestore,collection,getDocs,addDoc,updateDoc,deleteDoc,doc,query,wher
 const firebaseConfig={apiKey:"AIzaSyC_PcarMTT5Un7qfSLzf92o5OGn5rginsI",authDomain:"fixzy-update.firebaseapp.com",projectId:"fixzy-update",storageBucket:"fixzy-update.firebasestorage.app",messagingSenderId:"995892519622",appId:"1:995892519622:web:fa41047944d8e5b35d6dc7"};
 const app=initializeApp(firebaseConfig),auth=getAuth(app),db=getFirestore(app);
 let uid=null,currentUser=null,currentProfile=null,isSuperAdmin=false,products=[],sales=[],csvRows=[],editingId=null,stockUnsubs=[],salesUnsubs=[],manualSalesFallback=false;
+const selectedProductIds=new Set();
 const $=id=>document.getElementById(id),money=n=>"Rp "+Number(n||0).toLocaleString("id-ID");
 function showLoading(v,text="Memproses..."){$("loadingText").textContent=text;$("loading").classList.toggle("show",v)}
 function toast(text){$("toast").textContent=text;$("toast").classList.add("show");setTimeout(()=>$("toast").classList.remove("show"),2600)}
@@ -436,8 +459,14 @@ function updateStockStats(){
 /* ---------------- LIST PRODUK ---------------- */
 function renderCategoryOptions(){const sel=$("productCategory"),old=sel.value,cats=[...new Set(products.map(p=>String(p.kategori||"LAINNYA").trim().toUpperCase()).filter(Boolean))].sort();sel.innerHTML='<option value="">Semua kategori</option>'+cats.map(c=>`<option value="${esc(c)}">${esc(c)}</option>`).join("");if(cats.includes(old))sel.value=old}
 function filterProducts(){const q=String($("productSearch").value||"").trim().toLowerCase(),cat=String($("productCategory").value||"").toUpperCase(),sf=String($("productStockFilter").value||"");const list=products.filter(p=>{const text=[p.nama,p.kode,p.merk,p.kategori,p.catatan].map(x=>String(x||"").toLowerCase()).join(" "),s=num(p.sisa);return(!q||text.includes(q))&&(!cat||String(p.kategori||"LAINNYA").toUpperCase()===cat)&&(!sf||(sf==="ready"?s>0:s<=0))});$("productCount").textContent=`Menampilkan ${list.length} dari ${products.length} produk`;renderProductList(list)}
-function renderProductList(list){const el=$("productList");if(!list.length){el.innerHTML='<div class="empty-list" style="grid-column:1/-1">📦 Belum ada produk yang sesuai.</div>';return}el.innerHTML=list.map(p=>{const s=num(p.sisa),sold=calculateSold(p),status=s>0?'<span class="badge ready">READY</span>':'<span class="badge empty">KOSONG</span>';return`<article class="product-item"><div class="product-top"><div><div class="product-name">${esc(p.nama||"Tanpa nama")}</div><div class="product-code">${esc(p.kode||"-")} • ${esc(p.kategori||"LAINNYA")}</div></div>${status}</div><div class="product-meta"><div class="meta-box"><small>Modal</small><b>${money(p.hargaModal)}</b></div><div class="meta-box"><small>Harga Jual</small><b>${money(p.hargaJual)}</b></div><div class="meta-box"><small>Stok</small><b>${s}</b></div><div class="meta-box"><small>Terjual</small><b>${sold.qty}</b></div><div class="meta-box"><small>Nilai Stok</small><b>${money(s*num(p.hargaModal))}</b></div><div class="meta-box"><small>Merk / Supplier</small><b>${esc(p.merk||"-")}</b></div></div><div class="product-actions"><button class="edit-btn" onclick="editProduct('${p.id}')">✏️ EDIT</button><button class="delete-btn" onclick="deleteProduct('${p.id}')">🗑️ HAPUS</button></div></article>`}).join("")}
+function renderProductList(list){const el=$("productList");if(!list.length){el.innerHTML='<div class="empty-list" style="grid-column:1/-1">📦 Belum ada produk yang sesuai.</div>';return}el.innerHTML=list.map(p=>{const s=num(p.sisa),sold=calculateSold(p),status=s>0?'<span class="badge ready">READY</span>':'<span class="badge empty">KOSONG</span>';return`<article class="product-item"><div class="product-top"><div style="display:flex;align-items:flex-start;gap:8px;min-width:0"><input class="product-select" data-product-id="${esc(p.id)}" type="checkbox" ${selectedProductIds.has(p.id)?"checked":""} onchange="toggleProductSelection('${p.id}',this.checked)"><div><div class="product-name">${esc(p.nama||"Tanpa nama")}</div><div class="product-code">${esc(p.kode||"-")} • ${esc(p.kategori||"LAINNYA")}</div></div></div>${status}</div><div class="product-meta"><div class="meta-box"><small>Modal</small><b>${money(p.hargaModal)}</b></div><div class="meta-box"><small>Harga Jual</small><b>${money(p.hargaJual)}</b></div><div class="meta-box"><small>Stok</small><b>${s}</b></div><div class="meta-box"><small>Terjual</small><b>${sold.qty}</b></div><div class="meta-box"><small>Nilai Stok</small><b>${money(s*num(p.hargaModal))}</b></div><div class="meta-box"><small>Merk / Supplier</small><b>${esc(p.merk||"-")}</b></div></div><div class="product-actions"><button class="edit-btn" onclick="editProduct('${p.id}')">✏️ EDIT</button><button class="delete-btn" onclick="deleteProduct('${p.id}')">🗑️ HAPUS</button></div></article>`}).join("")}
 window.filterProducts=filterProducts;
+
+/* ---------------- PILIH & HAPUS CEKLIS ---------------- */
+function toggleProductSelection(id,checked){if(checked)selectedProductIds.add(String(id));else selectedProductIds.delete(String(id))}
+window.toggleProductSelection=toggleProductSelection;
+function toggleSelectAll(){const boxes=[...document.querySelectorAll(".product-select")];if(!boxes.length){toast("Tidak ada produk yang tampil.");return}const all=boxes.every(x=>x.checked);boxes.forEach(x=>{const id=x.dataset.productId;if(all){selectedProductIds.delete(String(id));x.checked=false}else{selectedProductIds.add(String(id));x.checked=true}});}
+async function deleteSelectedProducts(){const ids=[...selectedProductIds].filter(id=>products.some(p=>p.id===id));if(!ids.length){toast("Belum ada produk yang diceklis.");return}const names=ids.map(id=>products.find(p=>p.id===id)?.nama||"Produk").slice(0,6).join("\n");const ok=await uiConfirm(`Hapus ${ids.length} produk yang diceklis dari Firebase?\n\n${names}${ids.length>6?"\n... dan lainnya":""}`,"Hapus Produk Terpilih","Hapus");if(!ok)return;showLoading(true,"Menghapus produk terpilih...");try{for(const id of ids)await deleteDoc(doc(db,"stok",id));selectedProductIds.clear();toast(`${ids.length} produk berhasil dihapus`)}catch(e){console.error(e);toast("Gagal menghapus: "+(e.message||e))}finally{showLoading(false)}}window.deleteSelectedProducts=deleteSelectedProducts;
 
 /* ---------------- CRUD ---------------- */
 async function deleteProduct(id){const p=products.find(x=>x.id===id);if(!p)return;const ok=await uiConfirm(`Hapus produk ini dari Firebase?\n\n${p.nama||p.kode||"Produk"}\nStok: ${num(p.sisa)}`,"Hapus Produk","Hapus");if(!ok)return;showLoading(true,"Menghapus produk...");try{await deleteDoc(doc(db,"stok",id));toast("Produk berhasil dihapus")}catch(e){console.error(e);toast("Gagal menghapus: "+(e.message||e))}finally{showLoading(false)}}window.deleteProduct=deleteProduct;
@@ -458,6 +487,11 @@ async function previewCSV(){clearMsg();$("excelMsg").className="msg";$("duplicat
 async function saveCSVToFirebase(){if(!uid){msg("Sesi Firebase belum tersedia.","err");return}if(!csvRows.length){msg("Tidak ada produk baru untuk disimpan.","err");return}if(!await uiConfirm(`Simpan ${csvRows.length} produk baru ke Firebase?`,"Simpan Stok","Simpan"))return;showLoading(true,"Menyimpan stok...");try{const result=findDuplicateProducts(csvRows,products);for(const r of result.accepted)await addDoc(collection(db,"stok"),{...r,...identityFields(),updatedAt:serverTimestamp(),createdAt:serverTimestamp(),sumber:"CSV/Excel"});msg(`Berhasil menyimpan ${result.accepted.length} produk baru ke Firebase.`,"ok");csvRows=[];$("saveCsvBtn").style.display="none";$("preview").style.display="none"}catch(e){console.error(e);msg("Gagal menyimpan ke Firebase:\n"+(e.message||e),"err")}finally{showLoading(false)}}window.saveCSVToFirebase=saveCSVToFirebase;
 async function applyGlobalSellingPrice(){if(!uid){toast("Sesi Firebase belum tersedia.");return}const{percent,nominal}=getGlobalPriceSettings();if(percent===0&&nominal===0){toast("Isi % atau nominal tambahan terlebih dahulu.");return}if(!products.length){toast("Belum ada stok untuk diubah.");return}showLoading(true,"Mengubah harga jual seluruh stok...");try{let berhasil=0;for(const p of products){await updateDoc(doc(db,"stok",p.id),{hargaJual:getSellingPrice(p.hargaModal,percent,nominal),hargaJualPercent:percent,hargaJualNominal:nominal,updatedAt:serverTimestamp(),sumberHargaJual:"aturan_harga_global"});berhasil++}toast(`Harga jual ${berhasil} produk berhasil diperbarui.`)}catch(e){console.error(e);toast("Gagal mengubah harga jual: "+e.message)}finally{showLoading(false)}}window.applyGlobalSellingPrice=applyGlobalSellingPrice;
 $("pricePercent").addEventListener("input",updatePriceRulePreview);$("priceNominal").addEventListener("input",updatePriceRulePreview);
+
+/* ---------------- MODE DARK ---------------- */
+function applyDarkMode(){const dark=localStorage.getItem("fixzy_stock_dark")==="1";document.documentElement.classList.toggle("dark-mode",dark);const b=$("darkModeBtn");if(b)b.textContent=dark?"☀️":"🌙"}
+function toggleDarkMode(){const dark=document.documentElement.classList.toggle("dark-mode");localStorage.setItem("fixzy_stock_dark",dark?"1":"0");const b=$("darkModeBtn");if(b)b.textContent=dark?"☀️":"🌙"}
+window.toggleDarkMode=toggleDarkMode;applyDarkMode();
 
 /* ---------------- SESSION ---------------- */
 async function initFixzyStockSession(user){
