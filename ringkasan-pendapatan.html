@@ -24,7 +24,7 @@ button,input,select{font:inherit}
 .brand p{font-size:11px;color:#cbd5e1;margin:3px 0 0}
 .refresh{height:44px;width:44px;border:0;border-radius:12px;background:var(--yellow);color:#111;font-weight:900;cursor:pointer;font-size:22px}
 .wrap{max-width:1200px;margin:auto;padding:12px}
-.notice{background:#000;color:#fff;border:1px solid #000;border-radius:14px;padding:10px 13px;margin-bottom:12px;font-size:12px}.notice b{color:#ffc107}
+.notice{background:#fff;border:1px solid var(--line);border-radius:14px;padding:10px 13px;margin-bottom:12px;font-size:12px;color:var(--muted)}
 .tabs{display:flex;gap:8px;overflow:auto;margin-bottom:12px}
 .tab{border:0;border-radius:12px;padding:11px 16px;background:#e2e8f0;color:#334155;font-weight:900;white-space:nowrap;cursor:pointer}
 .tab.active{background:var(--navy);color:#fff}
@@ -89,6 +89,12 @@ body.dark .cancel{background:#1e293b;color:#e5e7eb}
   background:#1e293b;color:#fff;font-weight:900;cursor:pointer;font-size:18px;
 }
 body.dark .dark-toggle{background:#ffc107;color:#111}
+.income-form{display:grid;grid-template-columns:160px 1fr 180px auto;gap:9px;align-items:center}
+.income-form input{width:100%;height:44px;border:1px solid var(--line);border-radius:11px;padding:0 12px;background:var(--card);color:var(--text);outline:none}
+.income-form input:focus{border-color:#2563eb}
+.save-income{height:44px;border:0;border-radius:11px;padding:0 16px;background:var(--navy);color:#fff;font-weight:900;cursor:pointer}
+body.dark .save-income{background:#ffc107;color:#111}
+@media(max-width:700px){.income-form{grid-template-columns:1fr 1fr}.income-form .save-income{grid-column:1/-1}}
 
 </style>
 </head>
@@ -114,6 +120,17 @@ body.dark .dark-toggle{background:#ffc107;color:#111}
       <button class="tab" id="tab-tahunan" onclick="setMode('tahunan')">📈 Tahunan</button>
     </div>
     <div class="list" id="menu"></div>
+  </section>
+
+  <!-- INPUT PENGHASILAN LUAR -->
+  <section class="card">
+    <h2 class="title">💰 Input Penghasilan Luar</h2>
+    <div class="income-form">
+      <input id="luarTanggal" type="date" aria-label="Tanggal penghasilan luar">
+      <input id="luarSumber" type="text" placeholder="Sumber / Keterangan" aria-label="Sumber atau keterangan">
+      <input id="luarNominal" type="number" min="0" step="1" placeholder="Nominal (Rp)" aria-label="Nominal">
+      <button class="save-income" id="btnSimpanLuar" onclick="simpanPenghasilanLuar()">💾 Simpan</button>
+    </div>
   </section>
 
   <section class="card">
@@ -169,7 +186,7 @@ body.dark .dark-toggle{background:#ffc107;color:#111}
 <script type="module">
 import {initializeApp} from "https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js";
 import {getAuth,onAuthStateChanged} from "https://www.gstatic.com/firebasejs/11.10.0/firebase-auth.js";
-import {getFirestore,collection,getDocs,query,where,getDoc,doc} from "https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js";
+import {getFirestore,collection,getDocs,query,where,getDoc,doc,addDoc,serverTimestamp} from "https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js";
 
 const firebaseConfig={
  apiKey:"AIzaSyC_PcarMTT5Un7qfSLzf92o5OGn5rginsI",
@@ -218,6 +235,25 @@ function showPopup(t,x){
  $("popupTitle").textContent=t;$("popupText").textContent=x;$("popup").classList.add("show");
 }
 function tutupPopup(){$("popup").classList.remove("show")}
+function setTanggalLuarDefault(){
+ const el=$("luarTanggal");
+ if(el&&!el.value){const d=new Date();el.value=`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;}
+}
+async function simpanPenghasilanLuar(){
+ if(!uid){showPopup("Belum login","Sesi login FIXZY belum aktif.");return;}
+ const tanggal=$("luarTanggal").value,sumber=$("luarSumber").value.trim(),nominal=num($("luarNominal").value);
+ if(!tanggal){showPopup("Tanggal belum diisi","Silakan pilih tanggal penghasilan.");return;}
+ if(!sumber){showPopup("Keterangan belum diisi","Silakan isi sumber / keterangan penghasilan.");return;}
+ if(nominal<=0){showPopup("Nominal belum benar","Masukkan nominal penghasilan lebih dari 0.");return;}
+ const btn=$("btnSimpanLuar");btn.disabled=true;btn.textContent="⏳ Menyimpan...";
+ try{
+  await addDoc(collection(db,"pendapatanLuar"),{uid,ownerUid,tanggal,sumber,nominal,total:nominal,dibuatPada:serverTimestamp(),createdAt:serverTimestamp()});
+  $("luarSumber").value="";$("luarNominal").value="";
+  await muatSemua();showPopup("Berhasil","Penghasilan luar berhasil disimpan.");
+ }catch(e){console.error(e);showPopup("Gagal menyimpan",e.message||String(e));}
+ finally{btn.disabled=false;btn.textContent="💾 Simpan";}
+}
+window.simpanPenghasilanLuar=simpanPenghasilanLuar;
 window.tutupPopup=tutupPopup;
 
 function localDate(d){
@@ -485,6 +521,7 @@ function lihat(k){
  `).join("") || '<tr><td colspan="3" class="empty">Tidak ada penghasilan luar.</td></tr>';
 }
 window.lihat=lihat;
+setTanggalLuarDefault();
 
 onAuthStateChanged(auth,async user=>{
  if(user){
