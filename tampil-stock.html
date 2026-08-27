@@ -460,43 +460,6 @@ const app=initializeApp(firebaseConfig);
 const auth=getAuth(app);
 const db=getFirestore(app);
 
-window.toggleDark=function(){
-  const dark=!document.body.classList.contains("dark");
-
-  document.body.classList.toggle("dark",dark);
-
-  localStorage.setItem(
-    "fixzy_dark_mode",
-    dark?"1":"0"
-  );
-
-  const btn=$("darkToggle");
-
-  if(btn){
-    btn.textContent=dark?"☀️":"🌙";
-    btn.title=dark?"Mode Terang":"Mode Gelap";
-  }
-};
-
-applyDarkMode();
-
-window.toggleDark=function(){
-  const dark=!document.body.classList.contains("dark");
-
-  document.body.classList.toggle("dark",dark);
-
-  localStorage.setItem(
-    "fixzy_dark_mode",
-    dark?"1":"0"
-  );
-
-  const btn=$("darkToggle");
-
-  if(btn){
-    btn.textContent=dark?"☀️":"🌙";
-    btn.title=dark?"Mode Terang":"Mode Gelap";
-  }
-};
 
 applyDarkMode();
 let uid=null;
@@ -514,18 +477,38 @@ const money=n=>"Rp "+Number(n||0).toLocaleString("id-ID");
    ========================= */
 
 function applyDarkMode(){
-  const dark=localStorage.getItem("fixzy_dark_mode")==="1";
+  const dark = localStorage.getItem("fixzy_dark_mode") === "1";
 
-  document.body.classList.toggle("dark",dark);
+  document.body.classList.toggle("dark", dark);
 
-  const btn=$("darkToggle");
+  const btn = document.getElementById("darkToggle");
 
   if(btn){
-    btn.textContent=dark?"☀️":"🌙";
-    btn.title=dark?"Mode Terang":"Mode Gelap";
+    btn.textContent = dark ? "☀️" : "🌙";
+    btn.title = dark ? "Mode Terang" : "Mode Gelap";
   }
 }
 
+window.toggleDark = function(){
+  const dark = !document.body.classList.contains("dark");
+
+  document.body.classList.toggle("dark", dark);
+
+  localStorage.setItem(
+    "fixzy_dark_mode",
+    dark ? "1" : "0"
+  );
+
+  const btn = document.getElementById("darkToggle");
+
+  if(btn){
+    btn.textContent = dark ? "☀️" : "🌙";
+    btn.title = dark ? "Mode Terang" : "Mode Gelap";
+  }
+};
+
+/* Terapkan setelah DOM tersedia */
+applyDarkMode();
 function showLoading(v,text="Memproses..."){
   $("loadingText").textContent=text;
   $("loading").classList.toggle("show",v);
