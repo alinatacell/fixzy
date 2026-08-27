@@ -78,44 +78,47 @@ function getProdukChips(r){const p=parseProduk(r);if(!p.has)return'<span style="
 const getEstimasi=r=>Number(r.estimasi||r.estimasiBiaya||r.biayaEstimasi||r.totalEstimasi||r.biayaServis||0),getDiskon=r=>Number(r.diskon||r.potongan||0),getDP=r=>Number(r.dp||r.uangMuka||r.panjar||0),getTotal=r=>Number(r.total||r.totalBiaya||r.estimasi?.total||r.totalBayar||0);
 function getPendapatan(r){if(getStatus(r)!=="diambil")return 0;return Math.max(0,getTotal(r)-getDiskon(r))}
 function nomorWA(v){let s=String(v||"").replace(/[^0-9]/g,"");if(!s)return"";if(s.startsWith("0"))s="62"+s.slice(1);else if(s.startsWith("8"))s="62"+s;else if(!s.startsWith("62"))s="62"+s;return s}
-function konterName(){return profile.namaKonter||profile.namaToko||"FIXZY - "+(profile.namaPemilik||"Service HP")}
-async function loadProfile(user){const snap=await getDoc(doc(db,"users",user.uid));if(!snap.exists())throw new Error("Profil tidak ditemukan");profile=snap.data()||{};const role=String(profile.role||"").toLowerCase();ownerUid=(role==="owner"||profile.isOwner===true)?user.uid:(profile.ownerUid||profile.ownerId||user.uid);uid=user.uid;$("konterInfo").textContent=konterName()+" • "+ownerUid.slice(0,6)+" • "+role}
-async function getOwnedServis(){const map=new Map();async function ambil(field,value){if(!value)return;try{const q=query(collection(db,"servis"),where(field,"==",value));const snap=await getDocsFromServer(q);snap.docs.forEach(d=>map.set(d.id,{id:d.id,...d.data()}))}catch(e){console.warn(e.message)}}await ambil("ownerUid",ownerUid);await ambil("ownerId",ownerUid);await ambil("uid",ownerUid);if(ownerUid!==uid){await ambil("ownerUid",uid);await ambil("uid",uid)}return[...map.values()].sort((a,b)=>String(b.tanggal||b.createdAt||"").localeCompare(String(a.tanggal||a.createdAt||"")))}
-async function muatSemua(){if(!uid)return;$("statusMsg").textContent="⏳ Membaca data servis...";try{allRows=await getOwnedServis();render();const totalNilai=allRows.reduce((s,r)=>s+getTotal(r),0),totalPendapatan=allRows.reduce((s,r)=>s+getPendapatan(r),0);$("dataStats").innerHTML=`💰 <b>${allRows.length}</b> data servis • Total nilai <b>${money(totalNilai)}</b> • Pendapatan <span class="income">${money(totalPendapatan)}</span> • Konter: ${esc(konterName())} • Produk kosong: ${allRows.filter(r=>!parseProduk(r).has).length}`;$("statusMsg").textContent=`✅ ${allRows.length} servis`}catch(e){$("statusMsg").textContent="❌ "+e.message}}
-function filteredRows(){const q=($("q").value||"").toLowerCase().trim(),st=($("fStatus").value||"").toLowerCase().trim(),tg=$("fTanggal").value||"";return allRows.filter(r=>{if(q){const hay=[getNota(r),getNama(r),getWa(r),getTipe(r),getKerusakan(r),getProdukText(r)].join(" ").toLowerCase();if(!hay.includes(q))return false}if(st&&getStatus(r)!==st)return false;if(tg&&!dateVal(r).startsWith(tg))return false;return true})}
-function render(){const filtered=filteredRows();if(!filtered.length){$("tbody").innerHTML='<tr><td colspan="8" style="text-align:center;color:#667085;padding:25px">Belum ada servis</td></tr>';$("cards").innerHTML='<div class="card" style="text-align:center">Belum ada data</div>';return}
-$("tbody").innerHTML=filtered.map(r=>{const s=getStatus(r),nota=getNota(r),wa=getWa(r),p=getPendapatan(r);return`<tr><td>${esc(dateVal(r))}</td><td><b>${esc(nota)}</b><br><span class="barcode">${esc(nota)}</span></td><td><b>${esc(getNama(r))}</b><br><small>${esc(wa)}</small></td><td><b>${esc(getTipe(r))}</b><br><small>${esc(getKerusakan(r))}</small></td><td>${getProdukChips(r)}</td><td>Estimasi: ${money(getEstimasi(r))}<br>Diskon: ${money(getDiskon(r))}<br>DP: ${money(getDP(r))}<br><b>Total: ${money(getTotal(r))}</b></td><td><b style="color:${p>0?'#047857':'#94a3b8'}">${money(p)}</b><br><small>${s==='diambil'?'✅ sudah diambil':'⏳ belum diambil'}</small></td><td><span class="badge status-${s}">${esc(s.replace('_',' '))}</span><br><br><div style="display:flex;gap:5px;flex-wrap:wrap"><button class="mini" onclick="bukaEdit('${esc(r.id)}')">✏️ Edit</button><button class="mini" style="background:#22c55e;color:#fff" onclick="kirimWALangsung('${esc(r.id)}')">📲 WA</button></div></td></tr>`}).join("");
-$("cards").innerHTML=filtered.map(r=>{const s=getStatus(r),nota=getNota(r);return`<div class="servis-card"><div class="top"><b>${esc(nota)}</b><span class="badge status-${s}">${esc(s)}</span></div><div class="row"><span>📅 Tanggal</span><b>${esc(dateVal(r))}</b></div><div class="row"><span>👤 Pelanggan</span><b>${esc(getNama(r))} - ${esc(getWa(r))}</b></div><div class="row"><span>📱 Servisan</span><b>${esc(getTipe(r))}</b></div><div class="row"><span>🔧 Kerusakan</span><b>${esc(getKerusakan(r))}</b></div><div class="row"><span>📦 Produk</span><b>${esc(getProdukText(r))}</b></div><div class="row"><span>💰 Total</span><b>${money(getTotal(r))}</b></div><div class="row"><span>💎 Pendapatan</span><b>${money(getPendapatan(r))}</b></div><div class="foot"><button class="mini" onclick="bukaEdit('${esc(r.id)}')">✏️ Edit Status</button><button class="mini" style="background:#22c55e;color:#fff" onclick="kirimWALangsung('${esc(r.id)}')">📲 WA</button></div></div>`}).join("")}
-function buildPesanWA(r,newStatus){const namaKonter=konterName(),nama=getNama(r),nota=getNota(r),tipe=getTipe(r),kerusakan=getKerusakan(r),total=getTotal(r),produk=getProdukText(r),estimasi=getEstimasi(r),diskon=getDiskon(r),dp=getDP(r);if(newStatus==="masuk")return`Halo Kak ${nama} 👋\n\nServisan HP ${tipe} (${kerusakan}) sudah kami terima di *${namaKonter}*.\n\n📄 Nota: ${nota}\n📅 Tgl: ${dateVal(r)}\n🔧 Keluhan: ${kerusakan}\n\nEstimasi: ${money(estimasi)}\nKami cek dulu ya.\n\nTerima kasih 🙏\n*${namaKonter}*`;if(newStatus==="nunggu_sparepart")return`Halo Kak ${nama} 👋\n\nUpdate servisan *${nota}* di *${namaKonter}*:\n\nStatus: ⏳ *NUNGGU SPAREPART*\nHP: ${tipe}\nKerusakan: ${kerusakan}\nProduk dibutuhkan: ${produk}\n\nMenunggu sparepart datang.\n\nTerima kasih 🙏\n*${namaKonter}*`;if(newStatus==="proses")return`Halo Kak ${nama} 👋\n\nUpdate servisan *${nota}* di *${namaKonter}*:\n\nStatus: 🔧 *PROSES*\nHP: ${tipe} - ${kerusakan}\nProduk: ${produk}\n\nEstimasi biaya: ${money(total)}\n\nMohon ditunggu ya Kak.\n*${namaKonter}*`;if(newStatus==="selesai")return`Halo Kak ${nama} 🎉\n\nServisan HP *${tipe}* Nota *${nota}* di *${namaKonter}* sudah *SELESAI* ✅\n\nDetail:\nKerusakan: ${kerusakan}\nProduk dipakai: ${produk}\nTotal: ${money(total)}\nDiskon: ${money(diskon)}\nDP: ${money(dp)}\nSisa bayar: ${money(total-diskon-dp)}\n\nSilakan ambil di konter kami ya Kak.\n\n*${namaKonter}*`;if(newStatus==="diambil")return`Halo Kak ${nama} 🙏\n\nTerima kasih sudah mengambil HP *${tipe}* Nota *${nota}* di *${namaKonter}*.\n\nStatus: 📦 *DIAMBIL* ✅\nTotal bayar: ${money(total)}\nProduk: ${produk}\n\nSemoga puas, ditunggu servis berikutnya!\n*${namaKonter}*`;return`Halo Kak ${nama},\n\nStatus servisan Nota ${nota} di ${namaKonter} diupdate menjadi: *${newStatus.toUpperCase()}*.\n\nHP: ${tipe}\nProduk: ${produk}\n\nTerima kasih.\n*${namaKonter}*`}
-function bukaWhatsApp(nomor,pesan){if(!nomor)return;const u="https://wa.me/"+nomor+"?text="+encodeURIComponent(pesan||"");try{const w=window.open(u,"_blank");if(!w)window.location.href=u}catch(e){window.location.href=u}}
-function siapkanTombolWA(nomor,pesan){pendingWA={phone:nomor,message:pesan};$("waLinkBtn").onclick=()=>bukaWhatsApp(nomor,pesan)}
-window.bukaEdit=id=>{const r=allRows.find(x=>x.id===id);if(!r)return;editId=id;$("editTitle").textContent="Edit Status - "+getNota(r);$("editBody").innerHTML=`<b>Nota:</b> ${esc(getNota(r))} <span class="barcode">${esc(getNota(r))}</span><br><b>Pelanggan:</b> ${esc(getNama(r))} - ${esc(getWa(r))}<br><b>HP:</b> ${esc(getTipe(r))} - ${esc(getKerusakan(r))}<br><b>Produk:</b> ${getProdukChips(r)}<br><b>Total:</b> ${money(getTotal(r))} | Diskon: ${money(getDiskon(r))} | DP: ${money(getDP(r))}<br><b>Status sekarang:</b> <span class="badge status-${getStatus(r)}">${esc(getStatus(r))}</span><br>`;$("newStatus").value=getStatus(r);$("editPopup").classList.add("show")}
-window.closeEdit=()=>{$("editPopup").classList.remove("show");editId=null}
-window.simpanStatus=async()=>{if(!editId)return;const r=allRows.find(x=>x.id===editId);if(!r)return;const newSt=$("newStatus").value;try{await updateDoc(doc(db,"servis",editId),{status:newSt,statusTerakhir:newSt,updatedAt:serverTimestamp(),...(newSt==="diambil"?{pendapatan:getPendapatan({...r,status:"diambil"}),tanggalDiambil:new Date().toISOString()}: {})});closeEdit();await muatSemua();const waNomor=nomorWA(getWa(r));if(!waNomor)return;const pesan=buildPesanWA(r,newSt);siapkanTombolWA(waNomor,pesan);$("waInfo").innerHTML=`Status <b>${esc(newSt)}</b> disimpan ✅<br>Konfirmasi WA ke <b>${esc(getNama(r))}</b> (${esc(waNomor)})<br>Konter: <b>${esc(konterName())}</b>`;$("waText").textContent=pesan;$("waPopup").classList.add("show")}catch(e){alert("Gagal update: "+e.message)}}
-window.kirimWALangsung=id=>{const r=allRows.find(x=>x.id===id);if(!r)return;const waNomor=nomorWA(getWa(r));if(!waNomor){alert("No WA kosong");return}const pesan=buildPesanWA(r,getStatus(r));siapkanTombolWA(waNomor,pesan);$("waInfo").innerHTML=`Kirim WA manual - Nota <b>${esc(getNota(r))}</b> Status <b>${esc(getStatus(r))}</b>`;$("waText").textContent=pesan;$("waPopup").classList.add("show")}
-window.tutupWA=()=>{$("waPopup").classList.remove("show");pendingWA=null;$("waLinkBtn").onclick=null}
-window.salinWA=async()=>{if(!pendingWA)return;try{await navigator.clipboard.writeText(pendingWA.message);alert("Pesan disalin ✅")}catch{const range=document.createRange();range.selectNode($("waText"));window.getSelection().removeAllRanges();window.getSelection().addRange(range);document.execCommand("copy");alert("Pesan disalin ✅")}}
-window.bukaScan=()=>{$("scanPopup").classList.add("show");$("scanResult").textContent="Menyalakan kamera...";html5Qr=new Html5Qrcode("reader");html5Qr.start({facingMode:"environment"},{fps:10,qrbox:{width:250,height:250}},decodedText=>{$("scanResult").textContent="✅ Terdeteksi: "+decodedText;$("q").value=decodedText;render();setTimeout(tutupScan,1000)},err=>{}).catch(e=>$("scanResult").textContent="❌ Gagal buka kamera: "+e)}
-window.tutupScan=()=>{$("scanPopup").classList.remove("show");if(html5Qr){html5Qr.stop().then(()=>{html5Qr.clear();html5Qr=null}).catch(()=>{})}}
-$("q").addEventListener("input",render);$("fStatus").addEventListener("change",render);$("fTanggal").addEventListener("change",render);
+function konterName(){
+  return profile.namaPemilik ||
+         profile.namaOwner ||
+         profile.ownerName ||
+         profile.namaLengkap ||
+         profile.name ||
+         profile.displayName ||
+         profile.namaKonter ||
+         profile.namaToko ||
+         "Pemilik Aplikasi";
+}
 
-/* =========================
-   IMPORT EXCEL / GOOGLE SHEET
-   ========================= */
-const aliases={
- tanggal:["tanggal","tgl","tanggal masuk","tanggalmasuk","date","created at","createdat"],
- nota:["nomor nota","nota","no nota","no. nota","nomor","kode nota","invoice","invoice no"],
- nama:["pelanggan","nama pelanggan","nama","customer","customer name"],
- wa:["no whatsapp","nomor whatsapp","whatsapp","wa","no wa","nomor wa","telepon","no hp","no handphone","hp"],
- tipe:["tipe hp","model hp","model","tipe","merk tipe","merk/model","handphone","hp model"],
- kerusakan:["kerusakan","keluhan","jenis kerusakan","masalah","problem"],
- produk:["produk digunakan","produk yang digunakan","produk","sparepart","spare part","barang digunakan","produk terpakai","items"],
- estimasi:["estimasi","estimasi biaya","biaya estimasi"],
- diskon:["diskon","potongan"],
- dp:["dp","uang muka","panjar","down payment"],
- total:["total","total biaya","total bayar","jumlah","grand total"],
- status:["status","status servis","status service"],
- tanggalDiambil:["tanggal diambil","tanggal diambil hp","tanggaldiambil","diambil"]
+async function loadProfile(user){
+  const snap=await getDoc(doc(db,"users",user.uid));
+  if(!snap.exists())throw new Error("Profil pengguna tidak ditemukan");
+
+  const loginProfile=snap.data()||{};
+  const role=String(loginProfile.role||"").toLowerCase().trim();
+
+  // Tentukan Owner aplikasi.
+  ownerUid=(role==="owner"||loginProfile.isOwner===true)
+    ? user.uid
+    : (loginProfile.ownerUid||loginProfile.ownerId||user.uid);
+
+  uid=user.uid;
+
+  // Pesan WA harus menggunakan identitas Owner/pengguna aplikasi,
+  // bukan nama FIXZY. Jika login sebagai karyawan, ambil profil Owner.
+  if(ownerUid && ownerUid!==user.uid){
+    try{
+      const ownerSnap=await getDoc(doc(db,"users",ownerUid));
+      profile=ownerSnap.exists() ? (ownerSnap.data()||{}) : loginProfile;
+    }catch(e){
+      console.warn("Profil Owner gagal dibaca, memakai profil login:",e);
+      profile=loginProfile;
+    }
+  }else{
+    profile=loginProfile;
+  }
+
+  $("konterInfo").textContent=konterName()+" • "+ownerUid.slice(0,6)+" • "+role;
 };
 function normKey(v){return String(v??"").toLowerCase().trim().replace(/[_\-./]+/g," ").replace(/\s+/g," ")}
 function findCol(headers,names){const hs=headers.map(normKey);for(const n of names){const i=hs.indexOf(normKey(n));if(i>=0)return headers[i]}for(const h of headers){const nh=normKey(h);for(const n of names){const nn=normKey(n);if(nn.length>=4&&(nh.includes(nn)||nn.includes(nh)))return h}}return null}
