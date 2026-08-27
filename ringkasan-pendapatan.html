@@ -35,7 +35,6 @@ button,input,select{font:inherit}
 .kpi small{display:block;font-size:11px;font-weight:800}
 .kpi b{display:block;font-size:18px;margin-top:7px}
 .pend{background:linear-gradient(135deg,#0d6efd,#1d4ed8)}
-.luar{background:linear-gradient(135deg,#059669,#16a34a)}
 .total{background:linear-gradient(135deg,#7c3aed,#4f46e5)}
 .peng{background:linear-gradient(135deg,#ef4444,#dc2626)}
 .laba{background:linear-gradient(135deg,#f59e0b,#d97706)}
@@ -67,35 +66,6 @@ td.num{text-align:right;white-space:nowrap}
  .header{padding:9px 10px}.logo{width:48px;height:48px}.brand h1{font-size:17px}.brand p{font-size:10px}
  .wrap{padding:9px}.tab{padding:9px 12px;font-size:12px}.kpi{padding:10px}.kpi b{font-size:15px}
 }
-
-/* ===== TAMBAHAN MODE DARK ===== */
-body.dark{
-  --bg:#0b1220;
-  --card:#111827;
-  --line:#263449;
-  --text:#e5e7eb;
-  --muted:#94a3b8;
-}
-body.dark .notice,
-body.dark .item,
-body.dark .popup{background:#111827;color:var(--text)}
-body.dark .item:hover{background:#172033}
-body.dark .tab{background:#1e293b;color:#cbd5e1}
-body.dark .tab.active{background:#ffc107;color:#111}
-body.dark td{border-bottom-color:#263449}
-body.dark .cancel{background:#1e293b;color:#e5e7eb}
-.dark-toggle{
-  height:44px;min-width:44px;padding:0 10px;border:0;border-radius:12px;
-  background:#1e293b;color:#fff;font-weight:900;cursor:pointer;font-size:18px;
-}
-body.dark .dark-toggle{background:#ffc107;color:#111}
-.income-form{display:grid;grid-template-columns:160px 1fr 180px auto;gap:9px;align-items:center}
-.income-form input{width:100%;height:44px;border:1px solid var(--line);border-radius:11px;padding:0 12px;background:var(--card);color:var(--text);outline:none}
-.income-form input:focus{border-color:#2563eb}
-.save-income{height:44px;border:0;border-radius:11px;padding:0 16px;background:var(--navy);color:#fff;font-weight:900;cursor:pointer}
-body.dark .save-income{background:#ffc107;color:#111}
-@media(max-width:700px){.income-form{grid-template-columns:1fr 1fr}.income-form .save-income{grid-column:1/-1}}
-
 </style>
 </head>
 <body>
@@ -104,10 +74,9 @@ body.dark .save-income{background:#ffc107;color:#111}
   <img class="logo" src="logo.png" alt="FIXZY">
   <div class="brand">
     <h1>RINGKASAN PENDAPATAN</h1>
-    <p>Pendapatan konter • Penjualan + Servis + Penghasilan Luar</p>
+    <p>Pendapatan konter • Penjualan + Servis</p>
   </div>
   <button class="refresh" onclick="muatSemua()" title="Refresh">↻</button>
-  <button class="dark-toggle" id="darkToggle" onclick="toggleDark()" title="Mode Dark">🌙</button>
 </header>
 
 <main class="wrap">
@@ -122,17 +91,6 @@ body.dark .save-income{background:#ffc107;color:#111}
     <div class="list" id="menu"></div>
   </section>
 
-  <!-- INPUT PENGHASILAN LUAR -->
-  <section class="card">
-    <h2 class="title">💰 Input Penghasilan Luar</h2>
-    <div class="income-form">
-      <input id="luarTanggal" type="date" aria-label="Tanggal penghasilan luar">
-      <input id="luarSumber" type="text" placeholder="Sumber / Keterangan" aria-label="Sumber atau keterangan">
-      <input id="luarNominal" type="number" min="0" step="1" placeholder="Nominal (Rp)" aria-label="Nominal">
-      <button class="save-income" id="btnSimpanLuar" onclick="simpanPenghasilanLuar()">💾 Simpan</button>
-    </div>
-  </section>
-
   <section class="card">
     <div class="detail-head">
       <h2 class="title">📊 Detail: <span id="detailTitle">-</span></h2>
@@ -141,7 +99,6 @@ body.dark .save-income{background:#ffc107;color:#111}
 
     <div class="kpis">
       <div class="kpi pend"><small>PENDAPATAN KONTER</small><b id="kpKonter">Rp 0</b></div>
-      <div class="kpi luar"><small>PENGHASILAN LUAR</small><b id="kpLuar">Rp 0</b></div>
       <div class="kpi total"><small>TOTAL PENDAPATAN</small><b id="kpTotal">Rp 0</b></div>
       <div class="kpi peng"><small>PENGELUARAN</small><b id="kpPeng">Rp 0</b></div>
       <div class="kpi laba"><small>LABA BERSIH</small><b id="kpLaba">Rp 0</b></div>
@@ -165,13 +122,6 @@ body.dark .save-income{background:#ffc107;color:#111}
       </table>
     </div>
 
-    <h3 class="title" style="margin-top:18px">💸 Penghasilan Luar</h3>
-    <div class="table-wrap">
-      <table>
-        <thead><tr><th>Tanggal</th><th>Sumber / Keterangan</th><th>Nominal</th></tr></thead>
-        <tbody id="tbodyLuar"></tbody>
-      </table>
-    </div>
   </section>
 </main>
 
@@ -186,7 +136,7 @@ body.dark .save-income{background:#ffc107;color:#111}
 <script type="module">
 import {initializeApp} from "https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js";
 import {getAuth,onAuthStateChanged} from "https://www.gstatic.com/firebasejs/11.10.0/firebase-auth.js";
-import {getFirestore,collection,getDocs,query,where,getDoc,doc,addDoc,serverTimestamp} from "https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js";
+import {getFirestore,collection,getDocs,query,where,getDoc,doc} from "https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js";
 
 const firebaseConfig={
  apiKey:"AIzaSyC_PcarMTT5Un7qfSLzf92o5OGn5rginsI",
@@ -196,23 +146,6 @@ const firebaseConfig={
  messagingSenderId:"995892519622",
  appId:"1:995892519622:web:fa41047944d8e5b35d6dc7"
 };
-
-
-const DARK_KEY="fixzy_dark_mode";
-function applyDarkMode(on){
-  document.body.classList.toggle("dark",on);
-  const b=document.getElementById("darkToggle");
-  if(b){
-    b.textContent=on?"☀️":"🌙";
-    b.title=on?"Mode Light":"Mode Dark";
-  }
-}
-function toggleDark(){
-  const on=!document.body.classList.contains("dark");
-  localStorage.setItem(DARK_KEY,on?"1":"0");
-  applyDarkMode(on);
-}
-applyDarkMode(localStorage.getItem(DARK_KEY)==="1");
 
 const app=initializeApp(firebaseConfig);
 const auth=getAuth(app);
@@ -228,32 +161,13 @@ const esc=v=>String(v??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&
 const lower=v=>String(v??"").trim().toLowerCase();
 
 let uid="",ownerUid="",profile={};
-let servis=[],penjualan=[],pengeluaran=[],luar=[];
+let servis=[],penjualan=[],pengeluaran=[];
 let mode="harian",currentKey="";
 
 function showPopup(t,x){
  $("popupTitle").textContent=t;$("popupText").textContent=x;$("popup").classList.add("show");
 }
 function tutupPopup(){$("popup").classList.remove("show")}
-function setTanggalLuarDefault(){
- const el=$("luarTanggal");
- if(el&&!el.value){const d=new Date();el.value=`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;}
-}
-async function simpanPenghasilanLuar(){
- if(!uid){showPopup("Belum login","Sesi login FIXZY belum aktif.");return;}
- const tanggal=$("luarTanggal").value,sumber=$("luarSumber").value.trim(),nominal=num($("luarNominal").value);
- if(!tanggal){showPopup("Tanggal belum diisi","Silakan pilih tanggal penghasilan.");return;}
- if(!sumber){showPopup("Keterangan belum diisi","Silakan isi sumber / keterangan penghasilan.");return;}
- if(nominal<=0){showPopup("Nominal belum benar","Masukkan nominal penghasilan lebih dari 0.");return;}
- const btn=$("btnSimpanLuar");btn.disabled=true;btn.textContent="⏳ Menyimpan...";
- try{
-  await addDoc(collection(db,"pendapatanLuar"),{uid,ownerUid,tanggal,sumber,nominal,total:nominal,dibuatPada:serverTimestamp(),createdAt:serverTimestamp()});
-  $("luarSumber").value="";$("luarNominal").value="";
-  await muatSemua();showPopup("Berhasil","Penghasilan luar berhasil disimpan.");
- }catch(e){console.error(e);showPopup("Gagal menyimpan",e.message||String(e));}
- finally{btn.disabled=false;btn.textContent="💾 Simpan";}
-}
-window.simpanPenghasilanLuar=simpanPenghasilanLuar;
 window.tutupPopup=tutupPopup;
 
 function localDate(d){
@@ -414,17 +328,16 @@ async function muatSemua(){
  try{
   await loadProfile(auth.currentUser);
 
-  const [s,p,e,l]=await Promise.all([
+  const [s,p,e]=await Promise.all([
    getOwned("servis"),
    getOwned("penjualan"),
-   getOwned("pengeluaran"),
-   getOwned("pendapatanLuar")
+   getOwned("pengeluaran")
   ]);
 
-  servis=s;penjualan=p;pengeluaran=e;luar=l;
+  servis=s;penjualan=p;pengeluaran=e;
 
   $("status").textContent=
-   `✅ Firebase terhubung • ${p.length} penjualan • ${s.length} servis • ${e.length} pengeluaran • ${l.length} luar`;
+   `✅ Firebase terhubung • ${p.length} penjualan • ${s.length} servis • ${e.length} pengeluaran`;
 
   renderList();
   pilihDefault();
@@ -439,7 +352,7 @@ window.muatSemua=muatSemua;
 
 function allKeys(){
  const set=new Set();
- [...allTx(),...luar,...pengeluaran].forEach(r=>{
+ [...allTx(),...pengeluaran].forEach(r=>{
   const d=dateOf(r); if(d)set.add(periodKey(d));
  });
  return [...set].sort().reverse();
@@ -449,20 +362,17 @@ function renderList(){
  const keys=allKeys();
  $("menu").innerHTML=keys.map(k=>{
   const tx=allTx().filter(r=>belongs(r,k));
-  const lr=luar.filter(r=>belongs(r,k));
   const pg=pengeluaran.filter(r=>belongs(r,k));
   const omzet=tx.filter(r=>active(r,r._jenis)).reduce((a,r)=>a+moneyOf(r),0);
-  const ext=lr.reduce((a,r)=>a+num(r?.total??r?.nominal??r?.jumlah??r?.amount),0);
   const out=pg.reduce((a,r)=>a+expenseOf(r),0);
   return `<div class="item" onclick="lihat('${k}')">
     <div class="item-left">
       <div class="item-title">${esc(labelKey(k))}
         <span class="badge">${tx.length} trx</span>
-        ${lr.length?`<span class="badge green">Luar ${lr.length}</span>`:""}
       </div>
       <div class="item-sub">Penjualan + servis: ${rp(omzet)} • Pengeluaran: ${rp(out)}</div>
     </div>
-    <b>${rp(omzet+ext)}</b>
+    <b>${rp(omzet)}</b>
   </div>`;
  }).join("") || `<div class="empty">Belum ada data Firebase yang bisa ditampilkan.</div>`;
 }
@@ -482,23 +392,20 @@ function pilihDefault(){
 
 function clearDetail(){
  $("detailTitle").textContent="-";$("detailCount").textContent="";
- ["kpKonter","kpLuar","kpTotal","kpPeng","kpLaba"].forEach(id=>$(id).textContent="Rp 0");
+ ["kpKonter","kpTotal","kpPeng","kpLaba"].forEach(id=>$(id).textContent="Rp 0");
  $("tbody").innerHTML='<tr><td colspan="7" class="empty">Belum ada transaksi.</td></tr>';
- $("tbodyLuar").innerHTML='<tr><td colspan="3" class="empty">Belum ada penghasilan luar.</td></tr>';
 }
 
 function lihat(k){
  currentKey=k;
  const tx=allTx().filter(r=>belongs(r,k)).sort((a,b)=>dateOf(b).localeCompare(dateOf(a)));
- const lr=luar.filter(r=>belongs(r,k)).sort((a,b)=>dateOf(b).localeCompare(dateOf(a)));
  const pg=pengeluaran.filter(r=>belongs(r,k));
  const konter=tx.filter(r=>active(r,r._jenis)).reduce((a,r)=>a+recordedRevenue(r),0);
- const luarTotal=lr.reduce((a,r)=>a+num(r?.total??r?.nominal??r?.jumlah??r?.amount),0);
  const peng=pg.reduce((a,r)=>a+expenseOf(r),0);
- const total=konter+luarTotal;
+ const total=konter;
  $("detailTitle").textContent=labelKey(k);
- $("detailCount").textContent=`${tx.length} transaksi • ${lr.length} penghasilan luar`;
- $("kpKonter").textContent=rp(konter);$("kpLuar").textContent=rp(luarTotal);
+ $("detailCount").textContent=`${tx.length} transaksi`;
+ $("kpKonter").textContent=rp(konter);
  $("kpTotal").textContent=rp(total);$("kpPeng").textContent=rp(peng);$("kpLaba").textContent=rp(total-peng);
 
  $("tbody").innerHTML=tx.map(r=>{
@@ -513,15 +420,8 @@ function lihat(k){
    <td class="num">${rp(recordedRevenue(r))}</td>
   </tr>`;
  }).join("") || '<tr><td colspan="7" class="empty">Tidak ada transaksi pada periode ini.</td></tr>';
-
- $("tbodyLuar").innerHTML=lr.map(r=>`
-  <tr><td>${esc(dateOf(r))}</td>
-  <td>${esc(r?.sumber||r?.keterangan||r?.deskripsi||"Penghasilan Luar")}</td>
-  <td class="num">${rp(r?.total??r?.nominal??r?.jumlah??r?.amount)}</td></tr>
- `).join("") || '<tr><td colspan="3" class="empty">Tidak ada penghasilan luar.</td></tr>';
 }
 window.lihat=lihat;
-setTanggalLuarDefault();
 
 onAuthStateChanged(auth,async user=>{
  if(user){
