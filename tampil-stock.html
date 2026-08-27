@@ -265,6 +265,110 @@ section.card:has(#csvUrl),
 #loading,
 #toast{display:none!important}
 </style>
+
+<style id="stock-mobile-responsive-patch">
+/* RESPONSIVE STOCK MOBILE — hanya memperbaiki tampilan HP.
+   Tidak mengubah Firebase, data, filter, logika, atau desktop. */
+html,body{overflow-x:hidden}
+.container{width:100%;max-width:1180px}
+
+@media(max-width:600px){
+  .container{
+    width:100%;
+    max-width:100%;
+    padding:10px 8px 70px;
+    overflow-x:hidden;
+  }
+
+  /* Kartu stok selalu mengikuti lebar layar */
+  .mobile-list{
+    width:100%;
+    max-width:100%;
+    min-width:0;
+    overflow:hidden;
+  }
+
+  .m-card{
+    width:100%;
+    max-width:100%;
+    min-width:0;
+    overflow:hidden;
+  }
+
+  .m-head{
+    width:100%;
+    min-width:0;
+  }
+
+  .m-head > div:first-child{
+    min-width:0;
+    max-width:75%;
+  }
+
+  .m-name,
+  .m-code{
+    max-width:100%;
+    overflow-wrap:anywhere;
+    word-break:break-word;
+  }
+
+  .m-grid{
+    width:100%;
+    min-width:0;
+    grid-template-columns:minmax(0,1fr) minmax(0,1fr);
+  }
+
+  .m-grid div{
+    min-width:0;
+    max-width:100%;
+    overflow-wrap:anywhere;
+    word-break:break-word;
+  }
+
+  .price{
+    overflow-wrap:anywhere;
+  }
+
+  /* Header halaman stok tetap rapi di layar kecil */
+  .header{
+    width:100%;
+    max-width:100%;
+    overflow:hidden;
+  }
+
+  .header-in{
+    width:100%;
+    max-width:100%;
+    min-width:0;
+  }
+
+  .brand{
+    min-width:0;
+    flex:1 1 auto;
+  }
+
+  .brand > div{
+    min-width:0;
+  }
+
+  .header-account{
+    flex:0 1 auto;
+    max-width:105px;
+  }
+
+  .head-actions{
+    flex:0 0 auto;
+  }
+}
+
+@media(max-width:380px){
+  .container{padding-left:6px;padding-right:6px}
+  .m-grid{grid-template-columns:1fr}
+  .header-in{padding-left:7px;padding-right:7px}
+  .account-name{max-width:85px}
+}
+</style>
+
 </head>
 <body><script>
 /* FIX TUTUP: hapus iframe yang sedang menampilkan halaman ini. */
