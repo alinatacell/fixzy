@@ -296,6 +296,7 @@ body.dark textarea:focus{
       </div>
 
       <div class="field" id="karyawanField" style="display:none">
+         <small id="karyawanStatus" style="font-size:10px;color:#64748b">Memuat karyawan...</small>
         <label>KARYAWAN</label>
         <select id="karyawan">
           <option value="">Pilih karyawan</option>
@@ -514,48 +515,92 @@ async function ambilProfile(){
 async function ambilKaryawan(){
   employees=[];
 
-  // Utamakan users karena akun karyawan FIXZY menyimpan upah/role di users.
-  try{
-    const s=await getDocs(collection(db,"users"));
-    employees=s.docs.map(d=>({id:d.id,...d.data()})).filter(x=>{
-      const r=String(x.role||"").toLowerCase();
-      const st=String(x.status||"aktif").toLowerCase();
-      const isWorker=["employee","karyawan","kasir","kurir","teknisi","reseller"].includes(r);
-      const belongs=x.ownerUid===ownerUid || x.id===uid || x.uid===ownerUid;
-      return isWorker && st!=="nonaktif" && (belongs || ownerUid===uid);
-    });
-  }catch(e){
-    console.warn("users karyawan:",e.message);
-  }
+  // Ambil dari beberapa sumber yang mungkin dipakai FIXZY.
+  // Data tetap difilter agar karyawan hanya milik owner yang sedang login.
+  const sumber=["users","karyawan","employees"];
+  const map=new Map();
 
-  // Fallback koleksi karyawan lama bila users kosong.
-  if(!employees.length){
+  for(const namaSumber of sumber){
     try{
-      const s=await getDocs(collection(db,"karyawan"));
-      employees=s.docs.map(d=>({id:d.id,...d.data()})).filter(x=>{
-        const st=String(x.status||"aktif").toLowerCase();
-        return st!=="nonaktif";
+      const s=await getDocs(collection(db,namaSumber));
+
+      s.docs.forEach(d=>{
+        const x={id:d.id,...d.data()};
+        const role=String(x.role||x.jabatan||x.posisi||"").toLowerCase().trim();
+        const status=String(x.status||"aktif").toLowerCase().trim();
+
+        const isInactive=[
+          "nonaktif","non aktif","inactive","disabled","hapus","deleted"
+        ].includes(status);
+
+        // Terima beberapa pola relasi owner yang dipakai halaman FIXZY.
+        const ownerMatch =
+          !ownerUid ||
+          x.ownerUid===ownerUid ||
+          x.ownerId===ownerUid ||
+          x.pemilikUid===ownerUid ||
+          x.pemilikId===ownerUid ||
+          x.uidOwner===ownerUid ||
+          x.uid===ownerUid ||
+          x.idOwner===ownerUid ||
+          x.konterUid===ownerUid ||
+          x.konterId===ownerUid;
+
+        // Koleksi karyawan/employees tidak selalu mempunyai role.
+        const koleksiKaryawan = namaSumber!=="users";
+        const roleKaryawan=[
+          "employee","karyawan","kasir","kurir","teknisi",
+          "reseller","staff","staf"
+        ].includes(role);
+
+        const boleh =
+          !isInactive &&
+          ownerMatch &&
+          (koleksiKaryawan || roleKaryawan);
+
+        if(boleh){
+          const nama=String(
+            x.nama||x.namaKaryawan||x.namaLengkap||x.name||x.displayName||x.email||""
+          ).trim();
+
+          if(nama){
+            // Gunakan UID sebagai kunci bila tersedia supaya tidak dobel.
+            const key=String(x.uid||x.id||nama);
+            map.set(key,{...x,_nama:nama});
+          }
+        }
       });
     }catch(e){
-      console.warn("karyawan:",e.message);
+      console.warn("Gagal membaca koleksi "+namaSumber+":",e.message);
     }
   }
+
+  employees=[...map.values()]
+    .sort((a,b)=>a._nama.localeCompare(b._nama,"id"));
 
   const select=$("karyawan");
   select.innerHTML='<option value="">Pilih karyawan</option>';
 
-  employees
-    .sort((a,b)=>String(a.nama||a.namaKaryawan||"").localeCompare(String(b.nama||b.namaKaryawan||"")))
-    .forEach(e=>{
-      const n=String(e.nama||e.namaKaryawan||e.namaLengkap||e.name||e.email||"").trim();
-      if(!n)return;
-      const op=document.createElement("option");
-      op.value=e.id||e.uid||"";
-      op.textContent=n;
-      op.dataset.name=n;
-      op.dataset.uid=e.uid||e.id||"";
-      select.appendChild(op);
-    });
+  employees.forEach(e=>{
+    const n=e._nama;
+    const op=document.createElement("option");
+
+    op.value=e.id||e.uid||"";
+    op.textContent=n;
+    op.dataset.name=n;
+    op.dataset.uid=e.uid||e.id||"";
+
+    select.appendChild(op);
+  });
+
+  // Beri informasi yang jelas bila data memang tidak terbaca.
+  const ks=$("karyawanStatus");
+  if(ks){
+    ks.textContent=employees.length
+      ? `${employees.length} karyawan tersedia`
+      : "Karyawan belum ditemukan di Firebase";
+    ks.style.color=employees.length ? "#15803d" : "#b91c1c";
+  }
 }
 
 async function ambilData(){
