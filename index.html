@@ -159,7 +159,7 @@ body{overflow:hidden}
     <button class="menu-link" data-page="data-karyawan.html" data-roles="admin,superadmin,owner" data-permission="ownerOnly" onclick="bukaHalaman(this)">
       <span class="ico">👥</span>Data Upah Karyawan
     </button>
-    
+
     <button class="menu-link" data-page="izin-akses.html" data-roles="admin,superadmin,owner" data-permission="ownerOnly" onclick="bukaHalaman(this)">
       <span class="ico">🔑</span>Tambah karayawan & Izin Akses nya
     </button>
@@ -211,7 +211,7 @@ body{overflow:hidden}
     <div class="menu-section">LAINNYA</div>
     <button class="menu-link" data-page="about.html" onclick="bukaHalaman(this)">
       <span class="ico">ℹ️</span>About
-   
+
     <button class="menu-link logout-link" onclick="logoutFixzy()"><span class="ico">🚪</span>Logout</button>
     <div style="font-size:9px;color:#94a3b8;padding:10px 8px;line-height:1.5">Versi 12.0 2026</div>
   </nav>
@@ -364,9 +364,7 @@ function bukaHalaman(btn){
   area.innerHTML="";
   const frame=document.createElement("iframe");
   frame.title="Halaman FIXZY";
-  // Kalau file FIXED ada, prioritaskan FIXED
   let page=btn.dataset.page;
-  // Mapping otomatis ke versi FIXED jika ada
   const fixedMap={
     "data-penjualan.html":"data-penjualan-FIXED.html",
     "data-servis.html":"data-servis-FIXED.html",
@@ -379,13 +377,6 @@ function bukaHalaman(btn){
     "token-reseller.html":"token-reseller-FIXED.html",
     "request-saldo.html":"request-saldo-FIXED.html"
   };
-  // Coba load FIXED dulu, kalau gagal fallback ke original (browser akan 404 lalu kita fallback manual? untuk sekarang tetap original name, user sudah ganti file)
-  // Kita tetap pakai nama asli supaya kalau user sudah rename FIXED jadi nama asli tetap jalan
-  // Tapi kalau file FIXED tersedia, pakai FIXED
-  // Di sini kita cek apakah user sudah upload FIXED: kita coba pakai FIXED jika ada mapping
-  // Untuk sekarang, pakai nama asli (user disuruh rename), tapi kalau FIXED ada di folder, pakai FIXED
-  // Simple: pakai page asli, tapi beri catatan
-  // Untuk menghindari 404, kita tetap pakai page asli - user tinggal rename file FIXED jadi nama asli
   frame.src=page;
   frame.style.cssText="width:100%;height:100%;border:0;display:block;background:#fff;position:relative;z-index:1";
   frame.onerror=()=>{ if(fixedMap[page]) frame.src=fixedMap[page]; };
@@ -396,7 +387,6 @@ function bukaHalaman(btn){
 }
 window.bukaHalaman=bukaHalaman;
 
-// LISTENER TUTUP IFRAME DARI PAGE.HTML
 window.addEventListener("message", e=>{
   if(!e.data) return;
   if(e.data.type==="FIXZY_CLOSE_PAGE" || e.data.type==="FIXZY_CLOSE_IZIN_AKSES"){
@@ -509,7 +499,6 @@ onAuthStateChanged(auth,user=>{validasiDanTampilkan(user)});
   padding:18px;
   font-family:Arial,Helvetica,sans-serif
 }
-
 #fixzyFbChromeGate .box{
   width:min(430px,100%);
   background:#111827;
@@ -520,170 +509,85 @@ onAuthStateChanged(auth,user=>{validasiDanTampilkan(user)});
   text-align:center;
   box-shadow:0 20px 60px rgba(0,0,0,.55)
 }
-
 #fixzyFbChromeGate .logo{
-  width:92px;
-  height:92px;
-  object-fit:contain;
-  border-radius:18px;
-  margin:0 auto 14px;
-  display:block
+  width:92px;height:92px;object-fit:contain;border-radius:18px;margin:0 auto 14px;display:block
 }
-
-#fixzyFbChromeGate h2{
-  margin:0 0 8px;
-  color:#FFC107;
-  font-size:23px
-}
-
-#fixzyFbChromeGate p{
-  margin:0 auto 18px;
-  color:#d1d5db;
-  font-size:13px;
-  line-height:1.55
-}
-
+#fixzyFbChromeGate h2{margin:0 0 8px;color:#FFC107;font-size:23px}
+#fixzyFbChromeGate p{margin:0 auto 18px;color:#d1d5db;font-size:13px;line-height:1.55}
 #fixzyFbChromeGate .chromeBtn{
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  width:100%;
-  min-height:50px;
-  border:0;
-  border-radius:12px;
-  background:linear-gradient(90deg,#FFC107,#FF9800);
-  color:#111827;
-  font-size:15px;
-  font-weight:900;
-  text-decoration:none;
-  cursor:pointer
+  display:flex;align-items:center;justify-content:center;width:100%;min-height:50px;border:0;border-radius:12px;
+  background:linear-gradient(90deg,#FFC107,#FF9800);color:#111827;font-size:15px;font-weight:900;text-decoration:none;cursor:pointer
 }
-
-#fixzyFbChromeGate .continueBtn{
-  display:block;
-  margin-top:12px;
-  color:#cbd5e1;
-  font-size:11px;
-  text-decoration:underline;
-  cursor:pointer
-}
+#fixzyFbChromeGate .continueBtn{display:block;margin-top:12px;color:#cbd5e1;font-size:11px;text-decoration:underline;cursor:pointer}
 </style>
 
 <div id="fixzyFbChromeGate" aria-hidden="true">
   <div class="box">
-
-    <img
-      class="logo"
-      src="logo.png?v=2"
-      alt="FIXZY"
-    >
-
+    <img class="logo" src="logo.png?v=2" alt="FIXZY">
     <h2>Buka FIXZY di Chrome</h2>
-
-    <p>
-      FIXZY sedang dibuka dari browser Facebook.
-      Untuk pengalaman login yang lebih baik,
-      buka FIXZY langsung di Google Chrome.
-    </p>
-
-    <a
-      id="fixzyOpenChrome"
-      class="chromeBtn"
-      href="#"
-    >
-      🌐 BUKA DI CHROME
-    </a>
-
-    <span
-      id="fixzyContinueHere"
-      class="continueBtn"
-    >
-      Tetap gunakan browser Facebook
-    </span>
-
+    <p>FIXZY sedang dibuka dari browser Facebook. Untuk pengalaman login yang lebih baik, buka FIXZY langsung di Google Chrome.</p>
+    <a id="fixzyOpenChrome" class="chromeBtn" href="#">🌐 BUKA DI CHROME</a>
+    <span id="fixzyContinueHere" class="continueBtn">Tetap gunakan browser Facebook</span>
   </div>
 </div>
 
 <script>
 (function(){
+  "use strict";
+  var ua=navigator.userAgent||"";
+  var isAndroid=/Android/i.test(ua);
+  var isFacebook=/FBAN|FBAV|FB_IAB|FBIOS|FB4A|Messenger/i.test(ua);
+  var gate=document.getElementById("fixzyFbChromeGate");
+  var openBtn=document.getElementById("fixzyOpenChrome");
+  var continueBtn=document.getElementById("fixzyContinueHere");
+  if(!gate||!openBtn||!continueBtn||!isAndroid||!isFacebook)return;
+  var target=location.href;
+  var intentUrl="intent://"+target.replace(/^https?:\/\//i,"")+"#Intent;scheme=https;package=com.android.chrome;end";
+  openBtn.href=intentUrl;
+  gate.style.display="flex";
+  gate.setAttribute("aria-hidden","false");
+  setTimeout(function(){try{window.location.href=intentUrl}catch(e){}},500);
+  continueBtn.addEventListener("click",function(){gate.style.display="none";gate.setAttribute("aria-hidden","true")});
+})();
+</script>
+<!-- /FIXZY Facebook In-App Browser -> Chrome -->
 
+<!-- FIXZY Android WebView -> Chrome : TAMBAHAN SAJA -->
+<script>
+(function(){
   "use strict";
 
   var ua = navigator.userAgent || "";
 
-  var isAndroid =
-    /Android/i.test(ua);
+  /* Android WebView umumnya mempunyai "; wv)" atau
+     Version/4.0 + Chrome + Mobile Safari.
+     Chrome Android asli tidak dianggap WebView. */
+  var isAndroid = /Android/i.test(ua);
+  var isWebView = isAndroid && (
+    /\bwv\b/i.test(ua) ||
+    /; wv\)/i.test(ua) ||
+    (/Version\/4\.0/i.test(ua) && /Chrome\/\d+/i.test(ua) && /Mobile Safari/i.test(ua))
+  );
 
-  var isFacebook =
-    /FBAN|FBAV|FB_IAB|FBIOS|FB4A|Messenger/i.test(ua);
-
-  var gate =
-    document.getElementById("fixzyFbChromeGate");
-
-  var openBtn =
-    document.getElementById("fixzyOpenChrome");
-
-  var continueBtn =
-    document.getElementById("fixzyContinueHere");
-
-  if(
-    !gate ||
-    !openBtn ||
-    !continueBtn ||
-    !isAndroid ||
-    !isFacebook
-  ){
-    return;
-  }
+  /* Jangan jalankan pada Chrome asli. */
+  var isChrome = /Chrome\/\d+/i.test(ua) && !/EdgA|OPR|SamsungBrowser/i.test(ua);
+  if(!isWebView || isChrome) return;
 
   var target = location.href;
-
   var intentUrl =
     "intent://" +
     target.replace(/^https?:\/\//i,"") +
-    "#Intent;" +
-    "scheme=https;" +
-    "package=com.android.chrome;" +
-    "end";
+    "#Intent;scheme=https;package=com.android.chrome;end";
 
-  openBtn.href = intentUrl;
-
-  gate.style.display = "flex";
-  gate.setAttribute(
-    "aria-hidden",
-    "false"
-  );
-
-  /*
-   * Coba buka Chrome otomatis.
-   * Jika Facebook memblokirnya,
-   * tombol BUKA DI CHROME tetap tersedia.
-   */
+  /* Coba langsung membuka Chrome. */
   setTimeout(function(){
-
     try{
-
       window.location.href = intentUrl;
-
     }catch(e){}
-
-  },500);
-
-  continueBtn.addEventListener(
-    "click",
-    function(){
-
-      gate.style.display = "none";
-
-      gate.setAttribute(
-        "aria-hidden",
-        "true"
-      );
-
-    }
-  );
-
+  }, 300);
 })();
 </script>
-<!-- /FIXZY Facebook In-App Browser -> Chrome --></body>
+<!-- /FIXZY Android WebView -> Chrome : TAMBAHAN SAJA -->
+
+</body>
 </html>
