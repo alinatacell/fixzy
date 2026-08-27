@@ -552,42 +552,77 @@ onAuthStateChanged(auth,user=>{validasiDanTampilkan(user)});
 </script>
 <!-- /FIXZY Facebook In-App Browser -> Chrome -->
 
-<!-- FIXZY Android WebView -> Chrome : TAMBAHAN SAJA -->
+<!-- FIXZY Android WebView / AppGeyser -> Chrome : TAMBAHAN SAJA -->
 <script>
 (function(){
   "use strict";
 
   var ua = navigator.userAgent || "";
 
-  /* Android WebView umumnya mempunyai "; wv)" atau
-     Version/4.0 + Chrome + Mobile Safari.
-     Chrome Android asli tidak dianggap WebView. */
   var isAndroid = /Android/i.test(ua);
-  var isWebView = isAndroid && (
-    /\bwv\b/i.test(ua) ||
-    /; wv\)/i.test(ua) ||
-    (/Version\/4\.0/i.test(ua) && /Chrome\/\d+/i.test(ua) && /Mobile Safari/i.test(ua))
-  );
 
-  /* Jangan jalankan pada Chrome asli. */
-  var isChrome = /Chrome\/\d+/i.test(ua) && !/EdgA|OPR|SamsungBrowser/i.test(ua);
-  if(!isWebView || isChrome) return;
+  /*
+   * Deteksi WebView Android lebih luas, termasuk pola
+   * yang umum dipakai pembungkus website seperti AppGeyser.
+   */
+  var isWebView =
+    isAndroid && (
+      /\bwv\b/i.test(ua) ||
+      /; wv\)/i.test(ua) ||
+      /Version\/4\.0/i.test(ua) ||
+      /AppGeyser/i.test(ua) ||
+      /WebView/i.test(ua)
+    );
+
+  /*
+   * Chrome Android asli jangan dialihkan.
+   */
+  var isChrome =
+    /Chrome\/\d+/i.test(ua) &&
+    !/; wv\)/i.test(ua) &&
+    !/\bwv\b/i.test(ua) &&
+    !/AppGeyser/i.test(ua);
+
+  if(!isAndroid || !isWebView || isChrome) return;
 
   var target = location.href;
-  var intentUrl =
-    "intent://" +
-    target.replace(/^https?:\/\//i,"") +
-    "#Intent;scheme=https;package=com.android.chrome;end";
+  var cleanTarget = target.replace(/^https?:\/\//i,"");
 
-  /* Coba langsung membuka Chrome. */
-  setTimeout(function(){
+  /*
+   * Intent khusus Google Chrome.
+   */
+  var chromeIntent =
+    "intent://" +
+    cleanTarget +
+    "#Intent;" +
+    "scheme=https;" +
+    "package=com.android.chrome;" +
+    "S.browser_fallback_url=" +
+    encodeURIComponent(target) +
+    ";" +
+    "end";
+
+  function bukaChrome(){
     try{
-      window.location.href = intentUrl;
-    }catch(e){}
-  }, 300);
+      window.location.href = chromeIntent;
+    }catch(e){
+      try{
+        window.open(chromeIntent,"_system");
+      }catch(e2){}
+    }
+  }
+
+  if(document.readyState === "loading"){
+    document.addEventListener("DOMContentLoaded", function(){
+      setTimeout(bukaChrome, 250);
+    }, {once:true});
+  }else{
+    setTimeout(bukaChrome, 250);
+  }
+
 })();
 </script>
-<!-- /FIXZY Android WebView -> Chrome : TAMBAHAN SAJA -->
+<!-- /FIXZY Android WebView / AppGeyser -> Chrome : TAMBAHAN SAJA -->
 
 </body>
 </html>
