@@ -350,55 +350,74 @@ async function loadNotes(){
 
 async function loadProducts(){
   products=[];
+  window.products=[];
   const info=document.getElementById('stockInfo');
   if(info) info.textContent='☁️ Memuat produk dari Stock Firebase...';
-  try{
-    const businessUid=activeStockOwner();
-    if(!businessUid) throw new Error('Identitas owner akun aktif tidak ditemukan.');
 
-    const docsById=new Map();
-    const qs=[
-      query(collection(db,'stok'),where('ownerUid','==',businessUid)),
-      query(collection(db,'stok'),where('ownerId','==',businessUid))
-    ];
+  const businessUid=activeStockOwner();
+  if(!businessUid){
+    if(info) info.textContent='❌ Identitas owner akun aktif tidak ditemukan.';
+    throw new Error('Identitas owner akun aktif tidak ditemukan.');
+  }
 
-    for(const q of qs){
+  const docsById=new Map();
+
+  // ACUAN LANGSUNG DARI INPUT PENJUALAN:
+  // OWNER    -> UID sendiri
+  // KARYAWAN -> ownerUid / ownerId dari profil karyawan
+  // SUPERADMIN -> tidak masuk transaksi bisnis
+  const queries=[
+    query(collection(db,'stok'),where('ownerUid','==',businessUid)),
+    query(collection(db,'stok'),where('ownerId','==',businessUid))
+  ];
+
+  for(const q of queries){
+    try{
       const snap=await getDocs(q);
       snap.forEach(d=>{
         const data=d.data()||{};
         const owner=String(data.ownerUid||data.ownerId||'').trim();
         if(owner!==businessUid) return;
-        docsById.set(d.id,{id:d.id,_col:'stok',_stok:stockOf(data),...data});
+        const stokVal=Number(data.sisa??data.sisaStok??data.stokTersedia??data.stokAkhir??data.pcs??data.ready??data.stok??data.qty??data.jumlah??data.stock??0)||0;
+        docsById.set(d.id,{id:d.id,_col:'stok',_stok:stokVal,...data});
       });
+    }catch(e){
+      console.warn('LOAD STOK QUERY:',e);
     }
-
-    const mapByProduct=new Map();
-    for(const p of docsById.values()){
-      const key=String(p.barcode||p.kode||p.sku||p.nama||p.namaProduk||p.name||p.id).trim().toLowerCase();
-      if(!key) continue;
-      const old=mapByProduct.get(key);
-      if(!old){mapByProduct.set(key,p);continue;}
-      const pt=p.updatedAt?.toDate?p.updatedAt.toDate().getTime():new Date(p.updatedAt||p.createdAt||0).getTime();
-      const ot=old.updatedAt?.toDate?old.updatedAt.toDate().getTime():new Date(old.updatedAt||old.createdAt||0).getTime();
-      if(Number(p._stok)>Number(old._stok)||pt>ot) mapByProduct.set(key,p);
-    }
-
-    products=[...mapByProduct.values()].filter(p=>nameOf(p));
-    window.products=products;
-    if(!info) return;
-    if(!products.length){
-      info.textContent='⚠️ Produk Stock tidak ditemukan untuk Owner akun ini.';
-      return;
-    }
-    const totalStok=products.reduce((sum,p)=>sum+Number(p._stok||0),0);
-    const habis=products.filter(p=>Number(p._stok||0)<=0).length;
-    info.textContent=`☁️ ${products.length} produk dimuat dari Stock Firebase • Total stok: ${totalStok} • Habis: ${habis}. Ketik nama/kode/barcode untuk mencari.`;
-  }catch(e){
-    console.error('loadProducts:',e);
-    products=[];
-    window.products=[];
-    if(info) info.textContent='❌ Gagal memuat Stock Firebase: '+(e.message||e);
   }
+
+  // Sama seperti penjualan: deduplicate berdasarkan barcode/kode/nama.
+  const mapByProduct=new Map();
+  for(const p of docsById.values()){
+    const key=String(p.barcode||p.kode||p.sku||p.nama||p.namaProduk||p.name||p.id).trim().toLowerCase();
+    if(!key) continue;
+    const old=mapByProduct.get(key);
+    if(!old){
+      mapByProduct.set(key,p);
+      continue;
+    }
+    const pt=p.updatedAt?.toDate?p.updatedAt.toDate().getTime():new Date(p.updatedAt||p.createdAt||0).getTime();
+    const ot=old.updatedAt?.toDate?old.updatedAt.toDate().getTime():new Date(old.updatedAt||old.createdAt||0).getTime();
+    if(Number(p._stok)>Number(old._stok)||pt>ot) mapByProduct.set(key,p);
+  }
+
+  products=[...mapByProduct.values()].filter(p=>nameOf(p));
+  window.products=products;
+
+  if(!info) return;
+  if(!products.length){
+    info.textContent='⚠️ Belum ada produk Stock untuk Owner akun ini.';
+    return;
+  }
+
+  const totalStok=products.reduce((sum,p)=>sum+Number(p._stok||0),0);
+  const habis=products.filter(p=>Number(p._stok||0)<=0).length;
+  info.textContent=`☁️ ${products.length} produk dimuat dari Stock Firebase • Total stok: ${totalStok} • Habis: ${habis}. Ketuk kolom produk untuk mencari.`;
+
+  // Jika baris pertama sudah ada, pastikan pencarian langsung aktif.
+  document.querySelectorAll('#itemsBody tr .product-search').forEach(inp=>{
+    inp.disabled=inp.closest('tr').querySelector('.manual-check')?.checked===true;
+  });
 }
 
 onAuthStateChanged(auth,async u=>{
