@@ -257,9 +257,9 @@ const firebaseConfig = {
   apiKey: "AIzaSyC_PcarMTT5Un7qfSLzf92o5OGn5rginsI",
   authDomain: "fixzy-update.firebaseapp.com",
   projectId: "fixzy-update",
-  storageBucket: "fixzy-update.appspot.com",
-  messagingSenderId: "431404655232",
-  appId: "1:431404655232:web:5f7d9c9a1b2c3d4e5f6a7"
+  storageBucket: "fixzy-update.firebasestorage.app",
+  messagingSenderId: "995892519622",
+  appId: "1:995892519622:web:fa41047944d8e5b35d6dc7"
 };
 const app=initializeApp(firebaseConfig),auth=getAuth(app),db=getFirestore(app);
 let uid='',ownerUid='',ownerEmail='',members=[];
@@ -269,14 +269,14 @@ let currentUser=null,isOwner=false,businessOwnerUid='';
 function roleNorm(v){return String(v||'').trim().toLowerCase();}
 
 function activeStockOwner(){
+  // ACUAN PERSIS servisan.html V6:
+  // OWNER/SUPERADMIN -> UID akun sendiri
+  // KARYAWAN -> ownerUid dari profil karyawan
   const role=roleNorm(currentUser?.profileRole||currentUser?.role||'');
-  // SAMA DENGAN INPUT PENJUALAN: owner = UID sendiri,
-  // karyawan = ownerUid/ownerId pemilik bisnis.
-  if(role==='owner' || currentUser?.isOwner===true){
+  if(role==='owner' || role==='superadmin' || role==='super_admin' || currentUser?.isOwner===true){
     return String(currentUser?.uid||uid||'').trim();
   }
-  if(role==='superadmin' || role==='super_admin') return '';
-  return String(currentUser?.businessOwnerUid||currentUser?.ownerUid||currentUser?.ownerId||ownerUid||'').trim();
+  return String(currentUser?.businessOwnerUid||currentUser?.ownerUid||ownerUid||'').trim();
 }
 
 function nameOf(p){return String(p.nama||p.namaProduk||p.namaBarang||p.produk||p.product||p.barang||p.name||'').trim()}
@@ -360,48 +360,21 @@ async function loadProducts(){
     throw new Error('Identitas owner akun aktif tidak ditemukan.');
   }
 
-  const docsById=new Map();
+  // ACUAN LANGSUNG servisan.html V6: stok dibaca berdasarkan ownerUid.
+  // Jangan membaca stok Owner lain dan jangan memakai konterId sebagai pengganti UID.
+  const snap=await getDocs(query(collection(db,'stok'),where('ownerUid','==',businessUid)));
+  const map=new Map();
+  snap.forEach(d=>{
+    const data=d.data()||{};
+    const owner=String(data.ownerUid||'').trim();
+    if(owner!==businessUid) return;
+    const stokVal=Number(data.sisa??data.stok??0)||0;
+    const produk={id:d.id,_stok:stokVal,...data};
+    const key=String(data.kode||data.nama||d.id).trim().toLowerCase();
+    if(!map.has(key) || produk._stok>map.get(key)._stok) map.set(key,produk);
+  });
 
-  // ACUAN LANGSUNG DARI INPUT PENJUALAN:
-  // OWNER    -> UID sendiri
-  // KARYAWAN -> ownerUid / ownerId dari profil karyawan
-  // SUPERADMIN -> tidak masuk transaksi bisnis
-  const queries=[
-    query(collection(db,'stok'),where('ownerUid','==',businessUid)),
-    query(collection(db,'stok'),where('ownerId','==',businessUid))
-  ];
-
-  for(const q of queries){
-    try{
-      const snap=await getDocs(q);
-      snap.forEach(d=>{
-        const data=d.data()||{};
-        const owner=String(data.ownerUid||data.ownerId||'').trim();
-        if(owner!==businessUid) return;
-        const stokVal=Number(data.sisa??data.sisaStok??data.stokTersedia??data.stokAkhir??data.pcs??data.ready??data.stok??data.qty??data.jumlah??data.stock??0)||0;
-        docsById.set(d.id,{id:d.id,_col:'stok',_stok:stokVal,...data});
-      });
-    }catch(e){
-      console.warn('LOAD STOK QUERY:',e);
-    }
-  }
-
-  // Sama seperti penjualan: deduplicate berdasarkan barcode/kode/nama.
-  const mapByProduct=new Map();
-  for(const p of docsById.values()){
-    const key=String(p.barcode||p.kode||p.sku||p.nama||p.namaProduk||p.name||p.id).trim().toLowerCase();
-    if(!key) continue;
-    const old=mapByProduct.get(key);
-    if(!old){
-      mapByProduct.set(key,p);
-      continue;
-    }
-    const pt=p.updatedAt?.toDate?p.updatedAt.toDate().getTime():new Date(p.updatedAt||p.createdAt||0).getTime();
-    const ot=old.updatedAt?.toDate?old.updatedAt.toDate().getTime():new Date(old.updatedAt||old.createdAt||0).getTime();
-    if(Number(p._stok)>Number(old._stok)||pt>ot) mapByProduct.set(key,p);
-  }
-
-  products=[...mapByProduct.values()].filter(p=>nameOf(p));
+  products=Array.from(map.values()).filter(p=>nameOf(p));
   window.products=products;
 
   if(!info) return;
@@ -414,7 +387,6 @@ async function loadProducts(){
   const habis=products.filter(p=>Number(p._stok||0)<=0).length;
   info.textContent=`☁️ ${products.length} produk dimuat dari Stock Firebase • Total stok: ${totalStok} • Habis: ${habis}. Ketuk kolom produk untuk mencari.`;
 
-  // Jika baris pertama sudah ada, pastikan pencarian langsung aktif.
   document.querySelectorAll('#itemsBody tr .product-search').forEach(inp=>{
     inp.disabled=inp.closest('tr').querySelector('.manual-check')?.checked===true;
   });
@@ -445,12 +417,23 @@ onAuthStateChanged(auth,async u=>{
   msg.textContent='☁️ Data tersimpan di Firebase dan terisolasi berdasarkan Owner.';
   try{
     await loadProducts();
+  }catch(e){
+    console.error('LOAD PRODUK NOTA MEMBER:',e);
+    msg.textContent='❌ Gagal memuat Stock Firebase: '+(e.message||e);
+    return;
+  }
+  try{
     await loadMembers();
+  }catch(e){
+    console.warn('LOAD MEMBER TEMPO:',e);
+    // Koleksi member tempo mengikuti rules yang tersedia; kegagalan ini tidak boleh mematikan Stock.
+  }
+  try{
     await loadNotes();
   }catch(e){
-    console.error('init nota member:',e);
-    msg.textContent='❌ Gagal memuat data Firebase: '+(e.message||e);
+    console.warn('LOAD NOTA TEMPO:',e);
   }
+  msg.textContent='☁️ Stock Firebase aktif dan terisolasi berdasarkan Owner.';
 });
 </script>
 <script>
