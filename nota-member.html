@@ -175,7 +175,7 @@ function tambahItem(data={}){
 function norm(v){return String(v??'').trim().toLowerCase()}
 
 function nameOf(p){return String(p.nama||p.namaProduk||p.namaBarang||p.produk||p.product||p.barang||p.name||'').trim()}
-function priceOf(p){return Number(p.harga||p.hargaJual||p.price||p.jual||p.sellingPrice||p.hargaModal||0)||0}
+function priceOf(p){return Number(p.hargaJual??p.hargaJual??p.jual??p.harga??p.price??p.sellingPrice??0)}
 function stockOf(p){return Number(p.sisa??p.sisaStok??p.stokTersedia??p.stokAkhir??p.pcs??p.ready??p.stok??p.qty??p.jumlah??p.stock??0)}
 function codeOf(p){return String(p.kode||p.sku||p.barcode||p.code||'')}
 function showProductDropdown(tr,keyword){
@@ -228,209 +228,265 @@ const firebaseConfig = {
   apiKey: "AIzaSyC_PcarMTT5Un7qfSLzf92o5OGn5rginsI",
   authDomain: "fixzy-update.firebaseapp.com",
   projectId: "fixzy-update",
-  storageBucket: "fixzy-update.appspot.com",
-  messagingSenderId: "431404655232",
-  appId: "1:431404655232:web:5f7d9c9a1b2c3d4e5f6a7"
+  storageBucket: "fixzy-update.firebasestorage.app",
+  messagingSenderId: "995892519622",
+  appId: "1:995892519622:web:fa41047944d8e5b35d6dc7"
 };
 const app=initializeApp(firebaseConfig),auth=getAuth(app),db=getFirestore(app);
 let uid='',ownerUid='',ownerEmail='',members=[];
 let products=[];
 let currentUser=null,isOwner=false,businessOwnerUid='';
 
-function roleNorm(v){return String(v||'').trim().toLowerCase();}
-
-function activeStockOwner(){
-  const role=roleNorm(currentUser?.profileRole||currentUser?.role||'');
-  // SAMA DENGAN INPUT PENJUALAN: owner = UID sendiri,
-  // karyawan = ownerUid/ownerId pemilik bisnis.
-  if(role==='owner' || currentUser?.isOwner===true){
-    return String(currentUser?.uid||uid||'').trim();
-  }
-  if(role==='superadmin' || role==='super_admin') return '';
-  return String(currentUser?.businessOwnerUid||currentUser?.ownerUid||currentUser?.ownerId||ownerUid||'').trim();
-}
-
 function roleNorm(v){return String(v||'').trim().toLowerCase()}
-function nameOf(p){return String(p.nama??p.namaProduk??p.name??p.produk??p.namaBarang??p.barang??p.product??'-').trim()}
-function priceOf(p){return Number(p.hargaJual??p.harga??p.price??p.hargaMember??p.jual??p.sellingPrice??p.hargaModal??0)||0}
-function stockOf(p){return Number(p.sisa??p.sisaStok??p.stokTersedia??p.stokAkhir??p.pcs??p.ready??p.stok??p.qty??p.jumlah??p.stock??0)||0}
-function codeOf(p){return String(p.barcode??p.kode??p.kodeProduk??p.sku??p.code??'').trim()}
 
 async function loadOwner(){
   const u=auth.currentUser;
   if(!u)return false;
-  currentUser=u; uid=u.uid; ownerUid=''; ownerEmail=u.email||'';
-  businessOwnerUid=''; isOwner=false;
-  try{
-    const snap=await getDoc(doc(db,'users',u.uid));
-    if(!snap.exists())throw new Error('Profil akun tidak ditemukan di users/'+u.uid);
-    const profile=snap.data()||{};
-    const r=roleNorm(profile.role||profile.profileRole);
 
-    // SAMA DENGAN INPUT PENJUALAN.
-    if(r==='superadmin'||r==='super_admin'||roleNorm(u.email)==='servicehpmaja@gmail.com'){
-      currentUser.profileRole='superadmin'; currentUser.role='superadmin';
-      currentUser.isOwner=false; currentUser.ownerUid=''; currentUser.ownerId='';
-      return true;
-    }
-    if(r==='owner'||profile.isOwner===true){
-      ownerUid=u.uid; isOwner=true;
-    }else if(r==='admin'){
-      ownerUid=u.uid;
-    }else if(r==='employee'||r==='karyawan'){
-      ownerUid=String(profile.ownerUid||profile.ownerId||'').trim();
-      if(!ownerUid)throw new Error('ownerUid/ownerId pemilik bisnis akun karyawan tidak ditemukan.');
-    }else{
-      ownerUid=String(profile.ownerUid||profile.ownerId||'').trim();
-      if(!ownerUid)return false;
-    }
+  currentUser=u;
+  uid=u.uid;
+  ownerUid='';
+  ownerEmail=u.email||'';
+  businessOwnerUid='';
+  isOwner=false;
 
-    ownerEmail=u.email||profile.email||'';
-    businessOwnerUid=ownerUid;
-    currentUser.profileRole=r; currentUser.role=r;
-    currentUser.ownerUid=profile.ownerUid||'';
-    currentUser.ownerId=profile.ownerId||'';
-    currentUser.businessOwnerUid=ownerUid;
-    currentUser.isOwner=isOwner;
-    currentUser.profile=profile;
+  const snap=await getDoc(doc(db,'users',u.uid));
+  if(!snap.exists())throw new Error('Profil akun tidak ditemukan di users/'+u.uid+'.');
+
+  const profile=snap.data()||{};
+  const role=roleNorm(profile.role||profile.profileRole);
+
+  // SAMA DENGAN ACUAN INPUT PENJUALAN:
+  // Owner/Admin memakai UID sendiri.
+  // Karyawan memakai ownerUid/ownerId dari profil.
+  // Superadmin tidak boleh membuka data bisnis Owner.
+  if(role==='superadmin'||role==='super_admin'||roleNorm(u.email)==='servicehpmaja@gmail.com'){
+    currentUser.profileRole='superadmin';
+    currentUser.role='superadmin';
+    currentUser.isOwner=false;
     return true;
-  }catch(e){
-    console.error('loadOwner:',e);
-    return false;
   }
+
+  if(role==='owner'||profile.isOwner===true){
+    ownerUid=u.uid;
+    isOwner=true;
+  }else if(role==='admin'){
+    ownerUid=u.uid;
+  }else if(role==='employee'||role==='karyawan'){
+    ownerUid=String(profile.ownerUid||profile.ownerId||'').trim();
+    if(!ownerUid)throw new Error('ownerUid/ownerId pemilik akun karyawan tidak ditemukan.');
+  }else{
+    ownerUid=String(profile.ownerUid||profile.ownerId||'').trim();
+    if(!ownerUid)return false;
+  }
+
+  ownerEmail=u.email||profile.email||'';
+  businessOwnerUid=ownerUid;
+  currentUser.profileRole=role;
+  currentUser.role=role;
+  currentUser.ownerUid=profile.ownerUid||'';
+  currentUser.ownerId=profile.ownerId||'';
+  currentUser.businessOwnerUid=ownerUid;
+  currentUser.isOwner=isOwner;
+  currentUser.profile=profile;
+  return true;
 }
 
-function showProductDropdown(tr,keyword){
-  const dd=tr.querySelector('.product-dropdown'),kw=String(keyword??'').trim().toLowerCase();
-  const rows=window.products.filter(p=>{
-    if(!kw)return true;
-    return [nameOf(p),codeOf(p),p.merk,p.brand,p.kategori,p.category].some(v=>String(v??'').trim().toLowerCase().includes(kw));
-  }).slice(0,60);
-
-  dd.innerHTML=rows.length?rows.map(p=>{
-    const stok=stockOf(p),harga=priceOf(p),cls=stok<=0?'stock-out':stok<=3?'stock-low':'stock-ok';
-    return `<div class="product-option" data-pid="${esc(p.id)}"><b>${esc(nameOf(p))}</b><small>${esc(codeOf(p))} • <span class="${cls}">${stok<=0?'STOK HABIS':'Stok: '+stok}</span> • ${rupiah(harga)}</small></div>`;
-  }).join(''):'<div class="product-option" style="color:#94a3b8">Produk tidak ditemukan.</div>';
-
-  dd.classList.add('show');
-  dd.querySelectorAll('[data-pid]').forEach(el=>el.onclick=()=>{
-    selectProductForRow(tr,window.products.find(x=>x.id===el.dataset.pid));
-    dd.classList.remove('show');
-  });
+function activeStockOwner(){
+  const role=roleNorm(currentUser?.profileRole||currentUser?.role||'');
+  if(role==='owner'||role==='admin'||currentUser?.isOwner===true){
+    return String(currentUser?.uid||uid||'').trim();
+  }
+  if(role==='superadmin'||role==='super_admin')return '';
+  return String(currentUser?.businessOwnerUid||currentUser?.ownerUid||currentUser?.ownerId||ownerUid||'').trim();
 }
 
-function selectProductForRow(tr,p){
-  if(!p)return;
-  const st=stockOf(p),harga=priceOf(p);
-  tr.querySelector('.manual-check').checked=false;
-  tr.querySelector('.manual-product').classList.remove('show');
-  tr.querySelector('.product-search').disabled=false;
-  tr.querySelector('.manual-name').value='';
-  tr.querySelector('.product-search').value=nameOf(p);
-  tr.querySelector('.product-id').value=p.id;
-  tr.querySelector('.product-stok').value=st;
-  tr.querySelector('.product-source').value='firebase';
-  tr.querySelector('.harga').value=harga;
-  const q=tr.querySelector('.qty');
-  q.max=Math.max(1,st);
-  q.disabled=st<=0;
-  q.value=st<=0?1:Math.min(Math.max(1,Number(q.value||1)),st);
-  tr.querySelector('.product-search').dataset.selected='1';
-  hitungTotal();
+function nameOf(p){return String(p.nama||p.namaProduk||p.namaBarang||p.produk||p.product||p.barang||p.name||'').trim()}
+function codeOf(p){return String(p.kode||p.sku||p.code||p.barcode||'').trim()}
+function stockOf(p){return Number(p.sisa??p.sisaStok??p.stokTersedia??p.stokAkhir??p.pcs??p.ready??p.stok??p.qty??p.jumlah??p.stock??0)||0}
+function priceOf(p){return Number(p.harga||p.hargaJual||p.price||p.hargaModal||0)||0}
+
+async function loadMembers(){
+  const q=query(collection(db,'memberTempoMembers'),where('ownerId','==',ownerUid));
+  const s=await getDocs(q);members=s.docs.map(d=>({id:d.id,...d.data()}));
+  document.getElementById('memberList').innerHTML=members.map(m=>`<option value="${esc(m.nama)}"></option>`).join('');
+}
+window.isiTempoMember=function(){
+  const name=document.getElementById('member').value.trim().toLowerCase(),m=members.find(x=>String(x.nama||'').toLowerCase()===name);
+  if(!m)return;
+  document.getElementById('hp').value=m.hp||'';
+  document.getElementById('tempoHari').value=Number(m.tempoHari||0);
+  if(document.getElementById('tempoMode').value==='member')hitungJatuhTempo();
+}
+window.simpanMember=async function(){
+  const nama=document.getElementById('mNama').value.trim(),hp=document.getElementById('mHp').value.trim(),tempo=Math.max(0,Number(document.getElementById('mTempo').value||0));
+  if(!nama)return alert('Nama member wajib diisi');
+  const old=members.find(x=>String(x.nama||'').toLowerCase()===nama.toLowerCase());
+  const data={nama,hp,tempoHari:tempo,ownerId:ownerUid,ownerEmail,updatedAt:serverTimestamp()};
+  try{
+    if(old) await setDoc(doc(db,'memberTempoMembers',old.id),data,{merge:true});
+    else await addDoc(collection(db,'memberTempoMembers'),{...data,createdAt:serverTimestamp()});
+    document.getElementById('memberMsg').textContent='Member tersimpan.';
+    await loadMembers();document.getElementById('member').value=nama;isiTempoMember();
+  }catch(e){alert('Gagal menyimpan member: '+e.message)}
+}
+window.simpanNota=async function(){
+  const member=document.getElementById('member').value.trim(),hp=document.getElementById('hp').value.trim(),tgl=document.getElementById('tgl').value;
+  const items=getItems();
+  const invalid=items.find(x=>x.qty<=0 || x.harga<=0 || !x.nama || (x.sumber!=='manual' && (!x.productId || x.stok<=0 || x.qty>x.stok)));
+  if(invalid)return alert('Produk Stock harus dipilih dari daftar dan qty tidak boleh melebihi stok. Produk manual wajib memiliki nama dan harga.');
+  const total=items.reduce((a,x)=>a+x.subtotal,0),dp=Math.max(0,Number(document.getElementById('dp').value||0)),tagihan=Math.max(0,total-dp);
+  if(!member)return alert('Nama member wajib diisi');
+  if(!items.length)return alert('Minimal 1 produk');
+  if(tagihan<=0)return alert('Nota ini tidak memiliki tagihan. Gunakan DP kurang dari total untuk nota tempo.');
+  const data={
+    nomorNota:document.getElementById('nota').value,tanggal:tgl,member,hp,items,
+    total,dp,tagihanAwal:tagihan,sisaTagihan:tagihan,dibayar:dp,
+    tempoHari:Number(document.getElementById('tempoHari').value||0),
+    tempoMode:document.getElementById('tempoMode').value,jatuhTempo:document.getElementById('jatuhTempo').value,
+    catatan:document.getElementById('catatan').value.trim(),ownerId:ownerUid,ownerEmail,status:'belum_lunas',
+    createdAt:serverTimestamp(),updatedAt:serverTimestamp()
+  };
+  try{
+    const notaRef=doc(collection(db,'memberTempoNotes'));
+    await runTransaction(db,async tx=>{
+      for(const item of items.filter(x=>x.sumber==='firebase')){
+        const stockRef=doc(db,'stok',item.productId),stockSnap=await tx.get(stockRef);
+        if(!stockSnap.exists())throw new Error(`Produk ${item.nama} tidak ditemukan lagi di Stock Firebase.`);
+        const stock=stockSnap.data()||{},lama=stockOf(stock);
+        if(lama<item.qty)throw new Error(`Stok ${item.nama} tidak cukup. Tersedia ${lama}.`);
+        const baru=lama-item.qty;
+        tx.update(stockRef,{sisa:baru,stok:baru,status:baru>0?'tersedia':'kosong',updatedAt:serverTimestamp()});
+      }
+      tx.set(notaRef,{...data,createdAt:serverTimestamp(),updatedAt:serverTimestamp()});
+    });
+    document.getElementById('saveMsg').style.display='block';document.getElementById('saveMsg').textContent='Nota tersimpan ke Firebase. Tagihan: '+rupiah(tagihan);
+    document.getElementById('nota').value=makeNota();await loadNotes();
+  }catch(e){console.error(e);alert('Gagal menyimpan nota: '+e.message)}
+}
+async function loadNotes(){
+  const q=query(collection(db,'memberTempoNotes'),where('ownerId','==',ownerUid));
+  const s=await getDocs(q);let rows=s.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>String(b.tanggal||'').localeCompare(String(a.tanggal||''))).slice(0,20);
+  document.getElementById('notaList').innerHTML=rows.length?rows.map(n=>`<div class="note"><div class="note-head"><div><b>${esc(n.nomorNota||'-')}</b><div class="muted">${esc(n.member||'-')} • ${esc(n.tanggal||'-')} • JT ${esc(n.jatuhTempo||'-')}</div></div><span class="badge ${Number(n.sisaTagihan||0)<=0?'lunas':''}">${Number(n.sisaTagihan||0)<=0?'Lunas':'Tagihan '+rupiah(n.sisaTagihan)}</span></div><div class="muted" style="margin-top:7px">Total ${rupiah(n.total)} • DP ${rupiah(n.dp)} • Tempo ${n.tempoHari||0} hari</div></div>`).join(''):'<div class="empty">Belum ada nota member.</div>';
 }
 
 async function loadProducts(){
-  products=[];window.products=[];
+  products=[];
+  window.products=[];
+
   const info=document.getElementById('stockInfo');
-  if(info)info.textContent='☁️ Memuat produk dari Stock Firebase...';
-  if(!ownerUid)throw new Error('ownerUid akun aktif tidak ditemukan.');
+  const owner=activeStockOwner();
 
-  const map=new Map();
-  const add=(id,x)=>{
-    x=x||{};
-    const owner=String(x.ownerUid||x.ownerId||x.businessUid||x.uid||'').trim();
-    if(owner!==ownerUid)return;
-    map.set(id,{id,_col:'stok',...x,_stok:stockOf(x)});
-  };
-
-  // ACUAN LANGSUNG DARI INPUT PENJUALAN.
-  const qs=[
-    query(collection(db,'stok'),where('ownerUid','==',ownerUid)),
-    query(collection(db,'stok'),where('ownerId','==',ownerUid)),
-    query(collection(db,'stok'),where('businessUid','==',ownerUid)),
-    query(collection(db,'stok'),where('uid','==',ownerUid))
-  ];
-
-  let success=0,lastError='';
-  for(const q of qs){
-    try{
-      const snap=await getDocs(q);
-      success++;
-      snap.forEach(d=>add(d.id,d.data()));
-    }catch(e){
-      console.warn('loadProducts',e);
-      lastError=e?.message||String(e);
-    }
-  }
-  if(!success)throw new Error(lastError||'Gagal membaca koleksi stok Firebase.');
-
-  // Filter kedua: data owner lain tidak boleh masuk.
-  const unique=new Map();
-  for(const p of map.values()){
-    const owner=String(p.ownerUid||p.ownerId||p.businessUid||p.uid||'').trim();
-    if(owner!==ownerUid)continue;
-    const key=String(p.barcode||p.kode||p.sku||p.nama||p.namaProduk||p.name||p.id).trim().toLowerCase();
-    if(key&&!unique.has(key))unique.set(key,p);
-  }
-
-  products=[...unique.values()].filter(p=>nameOf(p)!=='-');
-  window.products=products;
-
-  if(!info)return;
-  if(!products.length){
-    info.textContent='⚠️ Belum ada produk Stock untuk Owner akun ini.';
+  if(!owner){
+    if(info)info.textContent='🔒 SUPERADMIN tidak membuka data stok Owner.';
     return;
   }
 
-  const totalStok=products.reduce((s,p)=>s+Number(p._stok||0),0);
-  const habis=products.filter(p=>Number(p._stok||0)<=0).length;
-  info.textContent=`☁️ ${products.length} produk dimuat dari Stock Firebase • Total stok: ${totalStok} • Habis: ${habis} • Ketik nama/kode/barcode untuk mencari.`;
+  if(info)info.textContent='☁️ Memuat produk dari Stock Firebase...';
+
+  try{
+    const map=new Map();
+
+    // ACUAN INPUT PENJUALAN: baca hanya stok milik Owner aktif.
+    let snap;
+    try{
+      snap=await getDocs(query(collection(db,'stok'),where('ownerUid','==',owner)));
+    }catch(e1){
+      console.warn('Query ownerUid gagal:',e1);
+      snap=null;
+    }
+
+    // Fallback untuk data lama yang memakai ownerId.
+    if(!snap || snap.empty){
+      try{
+        snap=await getDocs(query(collection(db,'stok'),where('ownerId','==',owner)));
+      }catch(e2){
+        console.warn('Query ownerId gagal:',e2);
+        if(!snap)throw e2;
+      }
+    }
+
+    if(snap){
+      snap.forEach(d=>{
+        const x=d.data()||{};
+        const docOwner=String(x.ownerUid||x.ownerId||'').trim();
+
+        // FILTER KEDUA: jangan pernah masukkan data Owner lain.
+        if(docOwner!==owner)return;
+
+        const p={id:d.id,_stok:stockOf(x),...x};
+        const key=String(x.barcode||x.codigo||x.kode||x.sku||x.nama||x.namaProduk||x.name||d.id).trim().toLowerCase();
+        if(!key)return;
+
+        const old=map.get(key);
+        if(!old || Number(p._stok||0)>Number(old._stok||0))map.set(key,p);
+      });
+    }
+
+    products=[...map.values()].filter(p=>nameOf(p));
+    window.products=products;
+
+    if(!info)return;
+
+    if(!products.length){
+      info.textContent='⚠️ Belum ada produk Stock untuk Owner akun ini.';
+      return;
+    }
+
+    const totalStok=products.reduce((s,p)=>s+Number(p._stok||0),0);
+    const habis=products.filter(p=>Number(p._stok||0)<=0).length;
+    info.textContent=`☁️ ${products.length} produk dimuat dari Stock Firebase • Total stok: ${totalStok} • Habis: ${habis}. Ketik nama/kode/barcode untuk mencari.`;
+  }catch(e){
+    console.error('loadProducts:',e);
+    if(info)info.textContent='❌ Gagal memuat Stock Firebase: '+(e.message||e);
+  }
 }
 
 onAuthStateChanged(auth,async u=>{
   const msg=document.getElementById('authMsg');
+
   if(!u){
     msg.textContent='⛔ Silakan login FIXZY terlebih dahulu.';
     return;
   }
-  uid=u.uid; currentUser=u;
 
-  const ok=await loadOwner();
-  if(!ok){
-    msg.textContent='⛔ Profil akun Firebase tidak ditemukan atau akun tidak memiliki Owner.';
-    return;
-  }
+  uid=u.uid;
+  currentUser=u;
 
-  const role=roleNorm(currentUser?.profileRole||currentUser?.role||'');
-  if(role==='superadmin'||role==='super_admin'||roleNorm(u.email)==='servicehpmaja@gmail.com'){
-    msg.textContent='🔒 SUPERADMIN hanya mengelola sistem. Data bisnis Owner tidak ditampilkan.';
-    document.querySelector('main').style.display='none';
-    return;
-  }
-
-  if(!ownerUid){
-    msg.textContent='⛔ Owner bisnis akun ini tidak ditemukan.';
-    return;
-  }
-
-  msg.textContent='☁️ Data tersimpan di Firebase dan terisolasi berdasarkan Owner.';
   try{
+    const ok=await loadOwner();
+
+    if(!ok){
+      msg.textContent='⛔ Profil akun tidak memiliki Owner.';
+      return;
+    }
+
+    const role=roleNorm(currentUser?.profileRole||currentUser?.role||'');
+
+    if(role==='superadmin'||role==='super_admin'||roleNorm(u.email)==='servicehpmaja@gmail.com'){
+      msg.textContent='🔒 SUPERADMIN hanya mengelola sistem. Data bisnis Owner tidak ditampilkan.';
+      document.querySelector('main').style.display='none';
+      return;
+    }
+
+    if(!ownerUid){
+      msg.textContent='⛔ Owner bisnis akun ini tidak ditemukan.';
+      return;
+    }
+
+    msg.textContent='☁️ Sesi aktif. Memuat data Owner...';
+
     await loadProducts();
-    await loadMembers();
-    await loadNotes();
+
+    try{await loadMembers();}catch(e){console.error('loadMembers:',e);}
+    try{await loadNotes();}catch(e){console.error('loadNotes:',e);}
+
+    msg.textContent=`☁️ Data Firebase aktif • Owner: ${ownerUid}`;
   }catch(e){
-    console.error('init nota member:',e);
-    msg.textContent='❌ Gagal memuat data Firebase: '+(e.message||e);
+    console.error('FIXZY Nota Member init:',e);
+    msg.textContent='❌ Gagal memuat Firebase: '+(e.message||e);
+    const info=document.getElementById('stockInfo');
+    if(info)info.textContent='❌ '+(e.message||e);
   }
 });</script>
 <script>
