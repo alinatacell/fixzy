@@ -154,27 +154,33 @@ function tambahItem(data={}){
 }
 function norm(v){return String(v??'').trim().toLowerCase()}
 async function loadOwner(){
-  const u=auth.currentUser;if(!u)return;
+  const u=auth.currentUser;if(!u)return false;
   currentUser=u;
-  ownerUid=u.uid;
+  uid=u.uid;
+  ownerUid='';
   ownerEmail=u.email||'';
+  businessOwnerUid='';
+  isOwner=false;
   try{
     const s=await getDoc(doc(db,'users',u.uid));
-    if(s.exists()){
-      const d=s.data()||{};
-      const role=roleNorm(d.role);
-      isOwner=(role==='owner'||d.isOwner===true);
-      businessOwnerUid=String(d.ownerUid||d.ownerId||'').trim();
-      currentUser.profileRole=role;
-      currentUser.role=role;
-      currentUser.ownerUid=d.ownerUid||'';
-      currentUser.ownerId=d.ownerId||'';
-      currentUser.businessOwnerUid=businessOwnerUid;
-      currentUser.isOwner=isOwner;
-      ownerUid=isOwner?u.uid:(businessOwnerUid||u.uid);
-      ownerEmail=u.email||d.email||'';
-    }
-  }catch(e){console.warn('users:',e)}
+    if(!s.exists()) throw new Error('Profil akun tidak ditemukan di users/'+u.uid);
+    const d=s.data()||{};
+    const role=roleNorm(d.role||d.profileRole);
+    isOwner=(role==='owner'||d.isOwner===true);
+    businessOwnerUid=String(d.ownerUid||d.ownerId||'').trim();
+    currentUser.profileRole=role;
+    currentUser.role=role;
+    currentUser.ownerUid=d.ownerUid||'';
+    currentUser.ownerId=d.ownerId||'';
+    currentUser.businessOwnerUid=businessOwnerUid;
+    currentUser.isOwner=isOwner;
+    ownerUid=isOwner ? u.uid : businessOwnerUid;
+    ownerEmail=u.email||d.email||'';
+    return true;
+  }catch(e){
+    console.error('loadOwner:',e);
+    return false;
+  }
 }
 
 function nameOf(p){return String(p.nama||p.namaProduk||p.namaBarang||p.produk||p.product||p.barang||p.name||'').trim()}
@@ -385,7 +391,35 @@ async function loadProducts(){
 }
 
 onAuthStateChanged(auth,async u=>{
-  if(!u){document.getElementById('authMsg').textContent='⛔ Silakan login FIXZY terlebih dahulu.';return}
-  uid=u.uid; await loadOwner();document.getElementById('authMsg').textContent='☁️ Data tersimpan di Firebase dan terisolasi berdasarkan Owner.';await loadProducts();await loadMembers();await loadNotes();
+  const msg=document.getElementById('authMsg');
+  if(!u){
+    msg.textContent='⛔ Silakan login FIXZY terlebih dahulu.';
+    return;
+  }
+  uid=u.uid;
+  const ok=await loadOwner();
+  if(!ok){
+    msg.textContent='⛔ Profil pengguna Firebase tidak ditemukan.';
+    return;
+  }
+  const role=roleNorm(currentUser?.profileRole||currentUser?.role||'');
+  if(role==='superadmin' || role==='super_admin'){
+    msg.textContent='🔒 SUPERADMIN hanya mengelola sistem. Data bisnis Owner tidak ditampilkan.';
+    document.querySelector('main').style.display='none';
+    return;
+  }
+  if(!ownerUid){
+    msg.textContent='⛔ Owner bisnis akun ini tidak ditemukan.';
+    return;
+  }
+  msg.textContent='☁️ Data tersimpan di Firebase dan terisolasi berdasarkan Owner.';
+  try{
+    await loadProducts();
+    await loadMembers();
+    await loadNotes();
+  }catch(e){
+    console.error('init nota member:',e);
+    msg.textContent='❌ Gagal memuat data Firebase: '+(e.message||e);
+  }
 });
 </script></body></html>
