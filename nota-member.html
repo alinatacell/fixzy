@@ -127,6 +127,7 @@ th{background:#0f172a;color:#fff;text-align:left;font-size:11px;padding:9px}td{p
 </main>
 
 <script>
+window.products=[];
 function goBack(){history.length>1?history.back():location.href='index.html'}
 function rupiah(n){return 'Rp '+Number(n||0).toLocaleString('id-ID')}
 function today(){return new Date().toISOString().slice(0,10)}
@@ -168,7 +169,7 @@ function tambahItem(data={}){
   });
   manualName.addEventListener('input',()=>{tr.querySelector('.product-source').value='manual';tr.querySelector('.product-id').value='';tr.querySelector('.product-stok').value='0';hitungTotal()});
   tr.querySelector('.qty').addEventListener('change',()=>{const max=Number(tr.querySelector('.product-stok').value||0);if(tr.querySelector('.product-source').value!=='manual'&&max>0&&Number(tr.querySelector('.qty').value)>max)tr.querySelector('.qty').value=max;hitungTotal()});
-  if(!isManual&&data.nama&&products.length)selectProductForRow(tr,products.find(x=>nameOf(x)===data.nama||x.id===data.productId));
+  if(!isManual&&data.nama&&window.products.length)selectProductForRow(tr,window.products.find(x=>nameOf(x)===data.nama||x.id===data.productId));
   hitungTotal();
 }
 function norm(v){return String(v??'').trim().toLowerCase()}
@@ -209,14 +210,14 @@ function codeOf(p){return String(p.kode||p.sku||p.barcode||p.code||'')}
 function showProductDropdown(tr,keyword){
   const dd=tr.querySelector('.product-dropdown');
   const kw=norm(keyword);
-  const rows=products.filter(p=>!kw || [nameOf(p),codeOf(p),p.merk,p.brand,p.kategori,p.category].some(v=>norm(v).includes(kw))).slice(0,50);
+  const rows=window.products.filter(p=>!kw || [nameOf(p),codeOf(p),p.merk,p.brand,p.kategori,p.category].some(v=>norm(v).includes(kw))).slice(0,50);
   dd.innerHTML=rows.length?rows.map((p,i)=>{
     const st=stockOf(p), cls=st<=0?'stock-out':st<=3?'stock-low':'stock-ok';
     return `<div class="product-option" data-pid="${esc(p.id)}"><b>${esc(nameOf(p))}</b><small>${esc(codeOf(p))} • <span class="${cls}">${st<=0?'STOK HABIS':'Stok: '+st}</span> • ${rupiah(priceOf(p))}</small></div>`;
   }).join(''):'<div class="product-option" style="color:#94a3b8">Produk tidak ditemukan.</div>';
   dd.classList.add('show');
   dd.querySelectorAll('[data-pid]').forEach(el=>el.onclick=()=>{
-    const prod=products.find(x=>x.id===el.dataset.pid);selectProductForRow(tr,prod);dd.classList.remove('show');
+    const prod=window.products.find(x=>x.id===el.dataset.pid);selectProductForRow(tr,prod);dd.classList.remove('show');
   });
 }
 function selectProductForRow(tr,p){
@@ -383,6 +384,7 @@ async function loadProducts(){
     }
 
     products=[...mapByProduct.values()].filter(p=>nameOf(p));
+    window.products=products;
     if(!info) return;
     if(!products.length){
       info.textContent='⚠️ Produk Stock tidak ditemukan untuk Owner akun ini.';
@@ -394,6 +396,7 @@ async function loadProducts(){
   }catch(e){
     console.error('loadProducts:',e);
     products=[];
+    window.products=[];
     if(info) info.textContent='❌ Gagal memuat Stock Firebase: '+(e.message||e);
   }
 }
