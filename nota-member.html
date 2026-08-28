@@ -3,15 +3,30 @@
 <title>FIXZY • Nota Member Tempo</title><style>
 *{box-sizing:border-box}
 body{margin:0;background:#eef2f7;color:#111827;font-family:Inter,Arial,sans-serif}
-header{background:#0b0f14;color:#fff;border-bottom:4px solid #facc15;position:sticky;top:0;z-index:50}
-.head{max-width:1100px;margin:auto;padding:10px 14px;display:flex;align-items:center;gap:10px}
-.header-brand{display:flex;align-items:center;gap:10px;min-width:0}
-.header-logo{width:48px;height:48px;object-fit:contain;border-radius:10px;flex:0 0 48px}
-.header-title{min-width:0}.header-title h1{margin:0;font-size:18px;text-transform:uppercase;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.header-title small{display:block;color:#aab4c3;font-size:11px;margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.header-actions{margin-left:auto;display:flex;gap:7px;flex-shrink:0}
+header{position:fixed!important;top:0!important;left:0!important;right:0!important;width:100%!important;z-index:9999!important;background:#0b0f14!important;color:#fff;border-bottom:3px solid #ffc107;height:74px;display:flex;align-items:center}
+.head{max-width:1100px;width:100%;margin:0 auto;padding:0 12px;display:flex;align-items:center;gap:10px}
+.header-brand{display:flex;align-items:center;gap:10px;min-width:0;flex:1;overflow:hidden}
+.header-logo{width:52px;height:52px;object-fit:contain;border-radius:13px;background:#000;border:1px solid #334155;padding:4px;flex:0 0 52px}
+.header-title{min-width:0;overflow:hidden}.header-title h1{margin:0;font-size:18px;text-transform:uppercase;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.header-title small{display:block;color:#cbd5e1;font-size:11px;margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.header-actions{display:flex;gap:8px;flex-shrink:0}
 button{border:0;border-radius:9px;padding:10px 13px;font-weight:800;cursor:pointer}
-.refresh{background:#0b0f14;border:1px solid #374151;color:#fff}.close-btn{background:#374151;color:#fff}
+.refresh{background:transparent;color:#fff;border:1px solid #ffffff30;height:42px;padding:0 14px}
+.close-btn{background:#374151;color:#fff;height:42px}
+.dark-toggle{background:#1f2937;color:#fff;border:1px solid #ffffff30;width:44px;height:42px;padding:0;font-size:18px}
+body.dark{background:#0b0f14!important;color:#e5e7eb!important}
+body.dark .card{background:#1f2937!important;color:#e5e7eb!important;border-color:#334155!important;box-shadow:4px 4px 0 #000!important}
+body.dark .title{color:#fff!important}
+body.dark label,.dark .muted{color:#9ca3af!important}
+body.dark input,body.dark select,body.dark textarea{background:#0b0f14!important;color:#fff!important;border-color:#334155!important}
+body.dark .stat{background:#1f2937!important;color:#e5e7eb!important;border-color:#334155!important}
+body.dark .note{background:#1f2937!important;color:#e5e7eb!important;border-color:#334155!important}
+body.dark .product-dropdown{background:#111827!important;color:#fff!important;border-color:#334155!important}
+body.dark .product-option{border-color:#334155!important}
+body.dark .product-option:hover{background:#1f2937!important}
+body.dark td{color:#e5e7eb!important;border-color:#334155!important}
+body.dark .notice{background:#172554!important;color:#bfdbfe!important}
+body.dark .btn-light{background:#111827!important;color:#fff!important;border-color:#334155!important}
 main{max-width:1100px;margin:auto;padding:14px}
 .card{background:#fff;border:1px solid #dce3ec;border-radius:16px;padding:16px;margin-bottom:14px;box-shadow:0 2px 8px #0f172a0b}
 .title{font-size:20px;font-weight:900;margin-bottom:12px}
@@ -55,7 +70,11 @@ th{background:#0f172a;color:#fff;text-align:left;font-size:11px;padding:9px}td{p
   <div class="header-brand"><img src="logo.png" class="header-logo" alt="FIXZY">
     <div class="header-title"><h1>Nota Member Tempo</h1><small>FIXZY • Pembukuan Tagihan Member</small></div>
   </div>
-  <div class="header-actions"><button class="refresh" onclick="location.reload()">↻ Refresh</button><button class="close-btn" onclick="goBack()">✕ Tutup</button></div>
+  <div class="header-actions">
+    <button class="refresh" onclick="location.reload()">↻ Refresh</button>
+    <button id="btnDark" class="dark-toggle" type="button" aria-label="Mode gelap">🌙</button>
+    <button class="close-btn" onclick="goBack()">✕ Tutup</button>
+  </div>
 </div></header>
 <main>
 <div id="authMsg" class="notice">Memeriksa sesi Firebase...</div>
@@ -422,4 +441,38 @@ onAuthStateChanged(auth,async u=>{
     msg.textContent='❌ Gagal memuat data Firebase: '+(e.message||e);
   }
 });
-</script></body></html>
+</script>
+<script>
+(function(){
+  const b=document.getElementById('btnDark');
+  if(!b) return;
+  const saved=localStorage.getItem('fixzy-dark');
+  if(saved==='1' || (!saved && window.matchMedia('(prefers-color-scheme: dark)').matches)){
+    document.body.classList.add('dark');
+    b.textContent='☀️';
+  }
+  b.addEventListener('click',()=>{
+    document.body.classList.toggle('dark');
+    const isDark=document.body.classList.contains('dark');
+    localStorage.setItem('fixzy-dark',isDark?'1':'0');
+    b.textContent=isDark?'☀️':'🌙';
+  });
+})();
+</script>
+</body></html>
+(function(){
+  const b=document.getElementById('btnDark');
+  if(!b) return;
+  const saved=localStorage.getItem('fixzy-dark');
+  if(saved==='1' || (!saved && window.matchMedia('(prefers-color-scheme: dark)').matches)){
+    document.body.classList.add('dark');
+    b.textContent='☀️';
+  }
+  b.addEventListener('click',()=>{
+    document.body.classList.toggle('dark');
+    const isDark=document.body.classList.contains('dark');
+    localStorage.setItem('fixzy-dark',isDark?'1':'0');
+    b.textContent=isDark?'☀️':'🌙';
+  });
+})();
+</script>
