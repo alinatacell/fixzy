@@ -62,7 +62,7 @@ body.dark{background:#0b0f14!important;color:#e5e7eb!important}body.dark .card{b
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js";
 import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-auth.js";
-import { getFirestore,doc,getDoc,collection,query,where,getDocsFromServer,updateDoc,deleteDoc,serverTimestamp,writeBatch } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js";
+import { getFirestore,doc,getDoc,collection,query,where,getDocsFromServer,updateDoc,deleteDoc,serverTimestamp,writeBatch,runTransaction } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js";
 const cfg={apiKey:"AIzaSyC_PcarMTT5Un7qfSLzf92o5OGn5rginsI",authDomain:"fixzy-update.firebaseapp.com",projectId:"fixzy-update",storageBucket:"fixzy-update.firebasestorage.app",messagingSenderId:"995892519622",appId:"1:995892519622:web:fa41047944d8e5b35d6dc7"};
 const app=initializeApp(cfg),auth=getAuth(app),db=getFirestore(app);
 let uid="",ownerUid="",profile={},role="",isOwner=false,isSuperAdmin=false,allRows=[],editId=null,pendingWA=null,html5Qr=null,importRows=[],importHeaders=[],importWorkbook=null;
@@ -148,8 +148,41 @@ window.simpanDataServis=async()=>{
 }
 async function hapusServis(id){
  if(!(isOwner||isSuperAdmin)){alert("Akun ini tidak memiliki hak menghapus data servis.");return}
- const r=allRows.find(x=>x.id===id);if(!r||!confirm("Hapus data servis nota "+getNota(r)+" secara permanen?"))return;
- try{await deleteDoc(doc(db,"servis",id));await muatSemua()}catch(e){alert("Gagal menghapus: "+e.message)}
+ const r=allRows.find(x=>x.id===id);
+ if(!r||!confirm("Hapus data servis nota "+getNota(r)+" secara permanen?\n\nJika memakai stok Firebase, stok akan dikembalikan otomatis."))return;
+ try{
+   const ref=doc(db,"servis",id);
+   const snap=await getDoc(ref);
+   if(!snap.exists()){await muatSemua();return}
+   const current=snap.data()||{};
+   if(String(current.ownerUid||current.ownerId||"").trim()!==String(ownerUid||"").trim()){
+     throw new Error("Data bukan milik akun yang sedang login.");
+   }
+
+   const usage=getUsageProduct(current);
+   const stokSudahDikurangi=current.stokDikurangi===true || (current.stokDikurangi===undefined && getStatus(current)!=="batal");
+   const stokSudahDikembalikan=current.stokDikembalikan===true;
+
+   // HAPUS + KEMBALIKAN STOK harus satu transaksi Firebase.
+   // Jadi jika salah satu gagal, data servis tidak ikut terhapus.
+   if(usage && stokSudahDikurangi && !stokSudahDikembalikan){
+     const stockRef=doc(db,"stok",usage.produkId);
+     await runTransaction(db,async tx=>{
+       const stockSnap=await tx.get(stockRef);
+       if(!stockSnap.exists())throw new Error("Produk stok tidak ditemukan. Data servis tidak jadi dihapus agar stok tidak hilang.");
+       const stock=stockSnap.data()||{};
+       const stockOwner=String(stock.ownerUid||stock.ownerId||"").trim();
+       if(stockOwner!==String(ownerUid||"").trim())throw new Error("Stok bukan milik konter ini. Data servis tidak jadi dihapus.");
+       const lama=Number(stock.sisa??stock.stok??0)||0;
+       const baru=lama+usage.qty;
+       tx.update(stockRef,{sisa:baru,stok:baru,status:"tersedia",updatedAt:serverTimestamp()});
+       tx.delete(ref);
+     });
+   }else{
+     await deleteDoc(ref);
+   }
+   await muatSemua();
+ }catch(e){alert("Gagal menghapus data servis: "+(e.message||e))}
 }
 
 function buildPesanWA(r,newStatus){const namaKonter=String(profile.namaKonter||profile.namaToko||"").trim(),nama=getNama(r),nota=getNota(r),tipe=getTipe(r),kerusakan=getKerusakan(r),total=getTotal(r),produk=getProdukText(r),estimasi=getEstimasi(r),diskon=getDiskon(r),dp=getDP(r);if(newStatus==="masuk")return`Halo Kak ${nama} 👋\n\nServisan HP ${tipe} (${kerusakan}) sudah kami terima di *${namaKonter}*.\n\n📄 Nota: ${nota}\n📅 Tgl: ${dateVal(r)}\n🔧 Keluhan: ${kerusakan}\n\nEstimasi: ${money(estimasi)}\nKami cek dulu ya.\n\nTerima kasih 🙏\n*${namaKonter}*`;if(newStatus==="nunggu_sparepart")return`Halo Kak ${nama} 👋\n\nUpdate servisan *${nota}* di *${namaKonter}*:\n\nStatus: ⏳ *NUNGGU SPAREPART*\nHP: ${tipe}\nKerusakan: ${kerusakan}\nProduk dibutuhkan: ${produk}\n\nMenunggu sparepart datang.\n\nTerima kasih 🙏\n*${namaKonter}*`;if(newStatus==="proses")return`Halo Kak ${nama} 👋\n\nUpdate servisan *${nota}* di *${namaKonter}*:\n\nStatus: 🔧 *PROSES*\nHP: ${tipe} - ${kerusakan}\nProduk: ${produk}\n\nEstimasi biaya: ${money(total)}\n\nMohon ditunggu ya Kak.\n*${namaKonter}*`;if(newStatus==="selesai")return`Halo Kak ${nama} 🎉\n\nServisan HP *${tipe}* Nota *${nota}* di *${namaKonter}* sudah *SELESAI* ✅\n\nDetail:\nKerusakan: ${kerusakan}\nProduk dipakai: ${produk}\nTotal: ${money(total)}\nDiskon: ${money(diskon)}\nDP: ${money(dp)}\nSisa bayar: ${money(total-diskon-dp)}\n\nSilakan ambil di konter kami ya Kak.\n\n*${namaKonter}*`;if(newStatus==="diambil")return`Halo Kak ${nama} 🙏\n\nTerima kasih sudah mengambil HP *${tipe}* Nota *${nota}* di *${namaKonter}*.\n\nStatus: 📦 *DIAMBIL* ✅\nTotal bayar: ${money(total)}\nProduk: ${produk}\n\nSemoga puas, ditunggu servis berikutnya!\n*${namaKonter}*`;return`Halo Kak ${nama},\n\nStatus servisan Nota ${nota} di ${namaKonter} diupdate menjadi: *${newStatus.toUpperCase()}*.\n\nHP: ${tipe}\nProduk: ${produk}\n\nTerima kasih.\n*${namaKonter}*`}
@@ -157,7 +190,134 @@ function bukaWhatsApp(nomor,pesan){if(!nomor)return;const u="https://wa.me/"+nom
 function siapkanTombolWA(nomor,pesan){pendingWA={phone:nomor,message:pesan};$("waLinkBtn").onclick=()=>bukaWhatsApp(nomor,pesan)}
 window.bukaEdit=id=>{ $("newStatus").parentElement.style.display="block"; $("newStatus").parentElement.nextElementSibling.innerHTML='<button class="btn secondary" onclick="closeEdit()">Batal</button><button class="btn" style="background:#111827;color:#fff" onclick="simpanStatus()">💾 Simpan & Kirim WA</button>'; const r=allRows.find(x=>x.id===id);if(!r)return;editId=id;$("editTitle").textContent="Edit Status - "+getNota(r);$("editBody").innerHTML=`<b>Nota:</b> ${esc(getNota(r))} <span class="barcode">${esc(getNota(r))}</span><br><b>Pelanggan:</b> ${esc(getNama(r))} - ${esc(getWa(r))}<br><b>HP:</b> ${esc(getTipe(r))} - ${esc(getKerusakan(r))}<br><b>Produk:</b> ${getProdukChips(r)}<br><b>Total:</b> ${money(getTotal(r))} | Diskon: ${money(getDiskon(r))} | DP: ${money(getDP(r))}<br><b>Status sekarang:</b> <span class="badge status-${getStatus(r)}">${esc(getStatus(r))}</span><br>`;$("newStatus").value=getStatus(r);$("editPopup").classList.add("show")}
 window.closeEdit=()=>{$("editPopup").classList.remove("show");editId=null}
-window.simpanStatus=async()=>{if(!editId)return;const r=allRows.find(x=>x.id===editId);if(!r)return;const newSt=$("newStatus").value;try{await updateDoc(doc(db,"servis",editId),{status:newSt,statusTerakhir:newSt,pendapatan:(newSt==="diambil"?Math.max(0,getTotal(r)-getDiskon(r)):newSt==="selesai"?Math.min(Math.max(0,getDP(r)),Math.max(0,getTotal(r)-getDiskon(r))):0),ownerUid:ownerUid,ownerId:ownerUid,uid:uid,updatedAt:serverTimestamp(),...(newSt==="diambil"?{tanggalDiambil:new Date().toISOString()}: {})});closeEdit();await muatSemua();const waNomor=nomorWA(getWa(r));if(!waNomor)return;const pesan=buildPesanWA(r,newSt);siapkanTombolWA(waNomor,pesan);$("waInfo").innerHTML=`Status <b>${esc(newSt)}</b> disimpan ✅<br>Konfirmasi WA ke <b>${esc(getNama(r))}</b> (${esc(waNomor)})<br>Konter: <b>${esc(konterName())}</b>`;$("waText").textContent=pesan;$("waPopup").classList.add("show")}catch(e){alert("Gagal update: "+e.message)}}
+function getUsageProduct(r){
+  const candidates=[
+    r.penggunaanProduk,
+    r.produkTerpakai,
+    r.stokTerpakai,
+    Array.isArray(r.items)?r.items[0]:null,
+    Array.isArray(r.produkList)?r.produkList[0]:null
+  ];
+  for(const x of candidates){
+    if(x && typeof x==="object" && x.produkId){
+      return {
+        produkId:String(x.produkId),
+        nama:x.nama||x.namaProduk||x.kode||"",
+        qty:Math.max(1,Number(x.qty||x.jumlah||x.qtyProduk||1))
+      };
+    }
+  }
+  return null;
+}
+
+async function ubahStokKarenaStatus(refServis,current,newSt){
+  const oldSt=getStatus(current);
+  const usage=getUsageProduct(current);
+  if(!usage) {
+    await updateDoc(refServis,{status:newSt,statusTerakhir:newSt,pendapatan:(newSt==="diambil"?Math.max(0,getTotal(current)-getDiskon(current)):newSt==="selesai"?Math.min(Math.max(0,getDP(current)),Math.max(0,getTotal(current)-getDiskon(current))):0),updatedAt:serverTimestamp()});
+    return;
+  }
+
+  const owner=String(current.ownerUid||current.ownerId||ownerUid||"").trim();
+  if(!owner || owner!==String(ownerUid||"").trim()) throw new Error("Data servis bukan milik akun yang sedang login.");
+
+  // Data baru dari servisan.html memiliki marker stokDikurangi.
+  // Untuk data lama yang belum memiliki marker, saat pindah dari status aktif
+  // ke BATAL kita tetap anggap stok sudah terpakai karena produk tercatat.
+  const stokSudahDikurangi=current.stokDikurangi===true ||
+    (current.stokDikurangi===undefined && oldSt!=="batal");
+  const stokSudahDikembalikan=current.stokDikembalikan===true;
+
+  if(newSt==="batal" && oldSt!=="batal"){
+    if(!stokSudahDikurangi) {
+      await updateDoc(refServis,{status:"batal",statusTerakhir:"batal",stokDikembalikan:true,stokDikembalikanQty:0,updatedAt:serverTimestamp()});
+      return;
+    }
+
+    const stockRef=doc(db,"stok",usage.produkId);
+    await runTransaction(db,async tx=>{
+      const [stockSnap,servisSnap]=await Promise.all([tx.get(stockRef),tx.get(refServis)]);
+      if(!servisSnap.exists())throw new Error("Data servis tidak ditemukan.");
+      const fresh=servisSnap.data()||{};
+      if(String(fresh.ownerUid||fresh.ownerId||"").trim()!==String(ownerUid||"").trim())throw new Error("Data servis bukan milik akun ini.");
+      if(getStatus(fresh)==="batal")return;
+      if(fresh.stokDikembalikan===true)return;
+      if(!stockSnap.exists())throw new Error("Produk stok tidak ditemukan. Status batal dibatalkan agar stok tidak hilang.");
+
+      const stock=stockSnap.data()||{};
+      const stockOwner=String(stock.ownerUid||stock.ownerId||"").trim();
+      if(stockOwner!==String(ownerUid||"").trim())throw new Error("Stok bukan milik akun ini.");
+
+      const lama=Number(stock.sisa??stock.stok??0)||0;
+      const baru=lama+usage.qty;
+      tx.update(stockRef,{sisa:baru,stok:baru,status:"tersedia",updatedAt:serverTimestamp()});
+      tx.update(refServis,{status:"batal",statusTerakhir:"batal",stokDikurangi:true,stokDikembalikan:true,stokDikembalikanQty:usage.qty,stokDikembalikanAt:serverTimestamp(),pendapatan:0,ownerUid:ownerUid,ownerId:ownerUid,updatedAt:serverTimestamp()});
+    });
+    return;
+  }
+
+  // BATAL -> status aktif: stok harus diambil lagi.
+  if(oldSt==="batal" && newSt!=="batal"){
+    if(!stokSudahDikembalikan) {
+      await updateDoc(refServis,{status:newSt,statusTerakhir:newSt,updatedAt:serverTimestamp()});
+      return;
+    }
+
+    const stockRef=doc(db,"stok",usage.produkId);
+    await runTransaction(db,async tx=>{
+      const [stockSnap,servisSnap]=await Promise.all([tx.get(stockRef),tx.get(refServis)]);
+      if(!stockSnap.exists())throw new Error("Produk stok tidak ditemukan.");
+      if(!servisSnap.exists())throw new Error("Data servis tidak ditemukan.");
+      const fresh=servisSnap.data()||{};
+      const stock=stockSnap.data()||{};
+      if(String(fresh.ownerUid||fresh.ownerId||"").trim()!==String(ownerUid||"").trim())throw new Error("Data servis bukan milik akun ini.");
+      if(String(stock.ownerUid||stock.ownerId||"").trim()!==String(ownerUid||"").trim())throw new Error("Stok bukan milik akun ini.");
+
+      const lama=Number(stock.sisa??stock.stok??0)||0;
+      if(lama<usage.qty)throw new Error(`Stok tidak cukup. Sisa ${lama}, diperlukan ${usage.qty}.`);
+      const baru=lama-usage.qty;
+      tx.update(stockRef,{sisa:baru,stok:baru,status:baru>0?"tersedia":"kosong",updatedAt:serverTimestamp()});
+      tx.update(refServis,{status:newSt,statusTerakhir:newSt,stokDikurangi:true,stokDikembalikan:false,stokDiaktifkanKembaliQty:usage.qty,stokDiaktifkanKembaliAt:serverTimestamp(),pendapatan:(newSt==="diambil"?Math.max(0,getTotal(current)-getDiskon(current)):newSt==="selesai"?Math.min(Math.max(0,getDP(current)),Math.max(0,getTotal(current)-getDiskon(current))):0),ownerUid:ownerUid,ownerId:ownerUid,updatedAt:serverTimestamp(),...(newSt==="diambil"?{tanggalDiambil:new Date().toISOString()}: {})});
+    });
+    return;
+  }
+
+  await updateDoc(refServis,{status:newSt,statusTerakhir:newSt,pendapatan:(newSt==="diambil"?Math.max(0,getTotal(current)-getDiskon(current)):newSt==="selesai"?Math.min(Math.max(0,getDP(current)),Math.max(0,getTotal(current)-getDiskon(current))):0),ownerUid:ownerUid,ownerId:ownerUid,updatedAt:serverTimestamp(),...(newSt==="diambil"?{tanggalDiambil:new Date().toISOString()}: {})});
+}
+
+window.simpanStatus=async()=>{
+  if(!editId)return;
+  const r=allRows.find(x=>x.id===editId);
+  if(!r)return;
+  const newSt=$("newStatus").value;
+
+  try{
+    const ref=doc(db,"servis",editId);
+    const snap=await getDoc(ref);
+    if(!snap.exists())throw new Error("Data servis tidak ditemukan di Firebase.");
+
+    const current=snap.data()||{};
+    if(String(current.ownerUid||"").trim()!==String(ownerUid||"").trim()){
+      throw new Error("Data bukan milik akun yang sedang login.");
+    }
+
+    await ubahStokKarenaStatus(ref,current,newSt);
+
+    closeEdit();
+    await muatSemua();
+
+    const waNomor=nomorWA(getWa(current));
+    if(!waNomor)return;
+
+    const pesan=buildPesanWA({...current,status:newSt},newSt);
+    siapkanTombolWA(waNomor,pesan);
+    $("waInfo").innerHTML=`Status <b>${esc(newSt)}</b> disimpan ✅<br>Konfirmasi WA ke <b>${esc(getNama(current))}</b> (${esc(waNomor)})<br>Konter: <b>${esc(konterName())}</b>`;
+    $("waText").textContent=pesan;
+    $("waPopup").classList.add("show");
+  }catch(e){
+    alert("Gagal update: "+e.message);
+  }
+}
 window.kirimWALangsung=id=>{const r=allRows.find(x=>x.id===id);if(!r)return;const waNomor=nomorWA(getWa(r));if(!waNomor){alert("No WA kosong");return}const pesan=buildPesanWA(r,getStatus(r));siapkanTombolWA(waNomor,pesan);$("waInfo").innerHTML=`Kirim WA manual - Nota <b>${esc(getNota(r))}</b> Status <b>${esc(getStatus(r))}</b>`;$("waText").textContent=pesan;$("waPopup").classList.add("show")}
 window.tutupWA=()=>{$("waPopup").classList.remove("show");pendingWA=null;$("waLinkBtn").onclick=null}
 window.salinWA=async()=>{if(!pendingWA)return;try{await navigator.clipboard.writeText(pendingWA.message);alert("Pesan disalin ✅")}catch{const range=document.createRange();range.selectNode($("waText"));window.getSelection().removeAllRanges();window.getSelection().addRange(range);document.execCommand("copy");alert("Pesan disalin ✅")}}
