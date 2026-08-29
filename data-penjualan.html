@@ -59,11 +59,16 @@ body.dark{background:#0b0f14!important;color:#e5e7eb}.dark .card,.dark .table-wr
 <script type="module">
 import{initializeApp}from"https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js";
 import{getAuth,onAuthStateChanged}from"https://www.gstatic.com/firebasejs/11.10.0/firebase-auth.js";
-import{getFirestore,collection,query,where,getDocs,getDocsFromServer,doc,getDoc,updateDoc,deleteDoc,serverTimestamp,writeBatch}from"https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js";
+import{getFirestore,collection,query,where,getDocs,getDocsFromServer,doc,getDoc,updateDoc,deleteDoc,serverTimestamp,writeBatch,runTransaction}from"https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js";
 const firebaseConfig={apiKey:"AIzaSyC_PcarMTT5Un7qfSLzf92o5OGn5rginsI",authDomain:"fixzy-update.firebaseapp.com",projectId:"fixzy-update",storageBucket:"fixzy-update.firebasestorage.app",messagingSenderId:"995892519622",appId:"1:995892519622:web:fa41047944d8e5b35d6dc7"};
 const app=initializeApp(firebaseConfig),auth=getAuth(app),db=getFirestore(app),$=id=>document.getElementById(id);
 const rupiah=n=>"Rp "+(Number(n)||0).toLocaleString("id-ID"),esc=v=>String(v??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]));
 let ownerUid="",uid="",role="",isOwner=false,isSuperAdmin=false,all=[],filtered=[],html5Qr=null,importRows=[],importHeaders=[],importWorkbook=null;
+
+async function runTransactionCompat(db, callback){
+  return await runTransaction(db, callback);
+}
+
 const pname=d=>d.pelanggan?.nama||d.namaPelanggan||d.nama||"-";
 const phone=d=>d.noHp||d.noWhatsapp||d.whatsapp||d.pelanggan?.wa||d.hp||d.nomorWa||d.wa||"-";
 const total=d=>Number(d.total??d.totalBayar??0)||0,diskon=d=>Number(d.diskon??d.potongan??0)||0,dp=d=>Number(d.dp??d.uangMuka??0)||0;
@@ -93,7 +98,304 @@ $("summary").innerHTML=`💰 <b>${filtered.length} data penjualan</b> • Total 
 $("tbody").innerHTML=filtered.map(d=>{let x=st(d);return`<tr><td>${esc(fmt(date(d)))}</td><td><b>${esc(d.nomorNota||d.nota||"-")}</b><br><span class="barcode">${esc(d.barcode||d.nomorNota||"-")}</span></td><td><b>${esc(pname(d))}</b><br><small>${esc(phone(d))}</small></td><td>${productChips(d)}</td><td>Total: ${rupiah(total(d))}<br>Diskon: ${rupiah(diskon(d))}<br>DP: ${rupiah(dp(d))}<br><b>Sisa: ${rupiah(sisa(d))}</b></td><td><b style="color:${income(d)>0?'#047857':'#94a3b8'}">${rupiah(income(d))}</b></td><td><span class="badge ${x}">${esc(statusLabel(x))}</span><br><br><div style="display:flex;gap:5px"><button class="mini" onclick="editStatus('${esc(d.id)}')">✏️ Status</button><button class="mini" style="background:#ffc107;color:#111827" onclick="editDataPenjualan('${esc(d.id)}')">📝 Edit Data</button>${(isOwner||isSuperAdmin)?`<button class="mini" style="background:#dc2626;color:#fff" onclick="hapusPenjualan('${esc(d.id)}')">🗑️ Hapus</button>`:""}<button class="mini" style="background:#22c55e;color:#fff" onclick="openWA('${esc(d.id)}')">WA</button></div></td></tr>`}).join("")||'<tr><td colspan="7" style="text-align:center;padding:20px">Tidak ada data</td></tr>';
 $("sales").innerHTML=filtered.map(d=>{let x=st(d);return`<div class="sale"><div class="top"><b>${esc(d.nomorNota||d.nota||"-")}</b><span class="badge ${x}">${esc(statusLabel(x))}</span></div><div class="row"><span>📅 Tanggal</span><b>${esc(fmt(date(d)))}</b></div><div class="row"><span>👤 Pelanggan</span><b>${esc(pname(d))}<br><small>${esc(phone(d))}</small></b></div><div class="row"><span>📦 Produk</span><b>${esc(productText(d))}</b></div><div class="row"><span>💰 Total</span><b>${rupiah(total(d))}</b></div><div class="row"><span>🧾 Sisa</span><b>${rupiah(sisa(d))}</b></div><div class="row"><span>📈 Pendapatan</span><b>${rupiah(income(d))}</b></div><div class="foot"><button class="mini" onclick="editStatus('${esc(d.id)}')">✏️ Status</button><button class="mini" style="background:#ffc107;color:#111827" onclick="editDataPenjualan('${esc(d.id)}')">📝 Edit Data</button>${(isOwner||isSuperAdmin)?`<button class="mini" style="background:#dc2626;color:#fff" onclick="hapusPenjualan('${esc(d.id)}')">🗑️ Hapus</button>`:""}<button class="mini" style="background:#22c55e;color:#fff" onclick="openWA('${esc(d.id)}')">📲 WA</button></div></div>`}).join("")}
 function statusOptions(c){return["masuk","tagihan","tunai","batal"].map(x=>`<option value="${x}" ${x===c?"selected":""}>${statusLabel(x)}</option>`).join("")}
-function editStatus(id){let d=all.find(x=>x.id===id);if(!d)return;modalUI("Edit Status - "+(d.nomorNota||"-"),`<div class="detail">Nota: <b>${esc(d.nomorNota||"-")}</b><br>Pelanggan: <b>${esc(pname(d))}</b> - ${esc(phone(d))}<br>Produk: ${productChips(d)}<br>Total: ${rupiah(total(d))}</div><label style="margin-top:12px">UBAH STATUS</label><select id="editStatus">${statusOptions(st(d))}</select>`,[{label:"Batal",fn:closeModal},{label:"💾 Simpan & WA",cls:"dark",fn:async()=>{let ns=$("editStatus").value;try{await updateDoc(doc(db,"penjualan",id),{status:ns,pendapatan:(ns==="tunai"?Math.max(0,total(d)-diskon(d)):((ns==="masuk"||ns==="tagihan")?Math.min(Math.max(0,dp(d)),Math.max(0,total(d)-diskon(d))):0)),ownerUid:ownerUid,ownerId:ownerUid,uid:uid,updatedAt:serverTimestamp()});closeModal();await loadSales();render();setTimeout(()=>openWA(id,ns),100)}catch(e){modalUI("❌ Gagal",esc(e.message),[{label:"Tutup",fn:closeModal}])}}}])}
+
+function getSaleStockItems(d){
+  const candidates=[
+    d.items,
+    d.produkList,
+    d.stokTerpakai,
+    d.penggunaanProduk,
+    d.produkTerpakai
+  ];
+
+  const out=[];
+  for(const c of candidates){
+    if(!c)continue;
+    const arr=Array.isArray(c)?c:[c];
+
+    for(const x of arr){
+      if(!x || typeof x!=="object")continue;
+
+      const produkId=x.produkId||x.productId||x.stokId||x.idProduk||x.id;
+      if(!produkId)continue;
+
+      out.push({
+        produkId:String(produkId),
+        nama:x.nama||x.namaProduk||x.produk||x.kode||"",
+        qty:Math.max(1,Number(x.qty??x.jumlah??x.qtyProduk??1)||1)
+      });
+    }
+  }
+
+  const map=new Map();
+  for(const x of out){
+    if(!map.has(x.produkId)) map.set(x.produkId,{...x});
+    else map.get(x.produkId).qty+=x.qty;
+  }
+  return [...map.values()];
+}
+
+function stockFieldValue(data){
+  for(const k of [
+    "sisa","sisaStok","stokTersedia","stokAkhir","stokSisa",
+    "stok","stock","jumlahStok","qty","jumlah","saldoStok"
+  ]){
+    if(Object.prototype.hasOwnProperty.call(data,k))return k;
+  }
+  return "stok";
+}
+
+function stockPatchPenjualan(data,field,value){
+  const patch={[field]:value,updatedAt:serverTimestamp()};
+
+  for(const k of [
+    "sisa","sisaStok","stokTersedia","stokAkhir","stokSisa",
+    "stok","stock","jumlahStok","qty","jumlah","saldoStok"
+  ]){
+    if(Object.prototype.hasOwnProperty.call(data,k))patch[k]=value;
+  }
+
+  patch.statusStok=value<=0?"KOSONG":"READY";
+  patch.status=value<=0?"kosong":"tersedia";
+  return patch;
+}
+
+async function ubahStokKarenaStatusPenjualan(refSale,current,newStatus){
+  const oldStatus=st(current);
+  if(oldStatus===newStatus)return;
+
+  const items=getSaleStockItems(current);
+
+  const pendapatanBaru=
+    newStatus==="tunai"
+      ? Math.max(0,total(current)-diskon(current))
+      : (newStatus==="masuk"||newStatus==="tagihan")
+        ? Math.min(
+            Math.max(0,dp(current)),
+            Math.max(0,total(current)-diskon(current))
+          )
+        : 0;
+
+  if(!items.length){
+    await updateDoc(refSale,{
+      status:newStatus,
+      pendapatan:pendapatanBaru,
+      sisa:newStatus==="batal"
+        ? 0
+        : Math.max(0,total(current)-diskon(current)-dp(current)),
+      ownerUid:ownerUid,
+      ownerId:ownerUid,
+      updatedAt:serverTimestamp()
+    });
+    return;
+  }
+
+  const saleOwner=String(
+    current.ownerUid||current.ownerId||ownerUid||""
+  ).trim();
+
+  if(!saleOwner || saleOwner!==String(ownerUid||"").trim()){
+    throw new Error("Data penjualan bukan milik akun yang sedang login.");
+  }
+
+  // Acuan sama dengan Data Servis:
+  // data lama yang belum punya flag dianggap stoknya sudah pernah dikurangi
+  // selama statusnya masih transaksi aktif.
+  const reduced=
+    current.stokDikurangi===true ||
+    (
+      current.stokDikurangi===undefined &&
+      oldStatus!=="batal"
+    );
+
+  const returned=current.stokDikembalikan===true;
+
+  // =========================================================
+  // AKTIF -> BATAL = KEMBALIKAN STOK TEPAT SATU KALI
+  // =========================================================
+  if(newStatus==="batal" && oldStatus!=="batal"){
+    if(!reduced){
+      await updateDoc(refSale,{
+        status:"batal",
+        pendapatan:0,
+        sisa:0,
+        stokDikurangi:false,
+        stokDikembalikan:true,
+        updatedAt:serverTimestamp()
+      });
+      return;
+    }
+
+    await runTransaction(db,async tx=>{
+      const saleSnap=await tx.get(refSale);
+      if(!saleSnap.exists())throw new Error("Data penjualan tidak ditemukan.");
+
+      const fresh=saleSnap.data()||{};
+      const own=String(fresh.ownerUid||fresh.ownerId||"").trim();
+      if(!own || own!==String(ownerUid||"").trim()){
+        throw new Error("Data penjualan bukan milik akun ini.");
+      }
+
+      if(st(fresh)==="batal" && fresh.stokDikembalikan===true)return;
+
+      const stockSnaps=[];
+      for(const item of items){
+        const sr=doc(db,"stok",item.produkId);
+        const ss=await tx.get(sr);
+
+        if(!ss.exists()){
+          throw new Error(
+            `Produk stok "${item.nama||item.produkId}" tidak ditemukan. `+
+            `Status batal tidak disimpan agar stok tidak hilang.`
+          );
+        }
+
+        const data=ss.data()||{};
+        const stockOwner=String(
+          data.ownerUid||data.ownerId||data.uid||""
+        ).trim();
+
+        if(!stockOwner || stockOwner!==String(ownerUid||"").trim()){
+          throw new Error(
+            `Stok "${item.nama||item.produkId}" bukan milik akun ini.`
+          );
+        }
+
+        stockSnaps.push({item,ref:sr,data});
+      }
+
+      for(const x of stockSnaps){
+        const field=stockFieldValue(x.data);
+        const lama=Number(x.data[field])||0;
+        const baru=lama+x.item.qty;
+        tx.update(x.ref,stockPatchPenjualan(x.data,field,baru));
+      }
+
+      tx.update(refSale,{
+        status:"batal",
+        pendapatan:0,
+        sisa:0,
+        stokDikurangi:true,
+        stokDikembalikan:true,
+        stokDikembalikanQty:items.reduce((s,x)=>s+x.qty,0),
+        stokDikembalikanAt:serverTimestamp(),
+        ownerUid:ownerUid,
+        ownerId:ownerUid,
+        updatedAt:serverTimestamp()
+      });
+    });
+    return;
+  }
+
+  // =========================================================
+  // BATAL -> AKTIF = KURANGI LAGI STOK YANG SUDAH DIKEMBALIKAN
+  // =========================================================
+  if(oldStatus==="batal" && newStatus!=="batal"){
+    if(!returned){
+      await updateDoc(refSale,{
+        status:newStatus,
+        pendapatan:pendapatanBaru,
+        sisa:Math.max(0,total(current)-diskon(current)-dp(current)),
+        updatedAt:serverTimestamp()
+      });
+      return;
+    }
+
+    await runTransaction(db,async tx=>{
+      const saleSnap=await tx.get(refSale);
+      if(!saleSnap.exists())throw new Error("Data penjualan tidak ditemukan.");
+
+      const fresh=saleSnap.data()||{};
+      const own=String(fresh.ownerUid||fresh.ownerId||"").trim();
+      if(!own || own!==String(ownerUid||"").trim()){
+        throw new Error("Data penjualan bukan milik akun ini.");
+      }
+
+      const stockSnaps=[];
+      for(const item of items){
+        const sr=doc(db,"stok",item.produkId);
+        const ss=await tx.get(sr);
+
+        if(!ss.exists()){
+          throw new Error(`Produk stok "${item.nama||item.produkId}" tidak ditemukan.`);
+        }
+
+        const data=ss.data()||{};
+        const stockOwner=String(
+          data.ownerUid||data.ownerId||data.uid||""
+        ).trim();
+
+        if(!stockOwner || stockOwner!==String(ownerUid||"").trim()){
+          throw new Error(
+            `Stok "${item.nama||item.produkId}" bukan milik akun ini.`
+          );
+        }
+
+        const field=stockFieldValue(data);
+        const sekarang=Number(data[field])||0;
+
+        if(sekarang<item.qty){
+          throw new Error(
+            `Stok ${item.nama||item.produkId} tidak cukup. `+
+            `Tersedia ${sekarang}, diperlukan ${item.qty}.`
+          );
+        }
+
+        stockSnaps.push({item,ref:sr,data,field,sekarang});
+      }
+
+      for(const x of stockSnaps){
+        const baru=x.sekarang-x.item.qty;
+        tx.update(x.ref,stockPatchPenjualan(x.data,x.field,baru));
+      }
+
+      tx.update(refSale,{
+        status:newStatus,
+        pendapatan:pendapatanBaru,
+        sisa:Math.max(0,total(current)-diskon(current)-dp(current)),
+        stokDikurangi:true,
+        stokDikembalikan:false,
+        stokDiaktifkanKembaliQty:items.reduce((s,x)=>s+x.qty,0),
+        stokDiaktifkanKembaliAt:serverTimestamp(),
+        ownerUid:ownerUid,
+        ownerId:ownerUid,
+        updatedAt:serverTimestamp()
+      });
+    });
+    return;
+  }
+
+  // Aktif -> aktif: stok tidak disentuh.
+  await updateDoc(refSale,{
+    status:newStatus,
+    stokDikurangi:reduced,
+    stokDikembalikan:returned,
+    pendapatan:pendapatanBaru,
+    sisa:Math.max(0,total(current)-diskon(current)-dp(current)),
+    ownerUid:ownerUid,
+    ownerId:ownerUid,
+    updatedAt:serverTimestamp()
+  });
+}
+
+function editStatus(id){
+ let d=all.find(x=>x.id===id);if(!d)return;
+ modalUI("Edit Status - "+(d.nomorNota||"-"),
+ `<div class="detail">Nota: <b>${esc(d.nomorNota||"-")}</b><br>Pelanggan: <b>${esc(pname(d))}</b> - ${esc(phone(d))}<br>Produk: ${productChips(d)}<br>Total: ${rupiah(total(d))}<br>Status sekarang: <b>${esc(statusLabel(st(d)))}</b></div><label style="margin-top:12px">UBAH STATUS</label><select id="editStatus">${statusOptions(st(d))}</select>`,
+ [{label:"Batal",fn:closeModal},{label:"💾 Simpan & WA",cls:"dark",fn:async()=>{
+   const ns=$("editStatus").value;
+   try{
+     const ref=doc(db,"penjualan",id),snap=await getDoc(ref);
+     if(!snap.exists())throw new Error("Data penjualan tidak ditemukan di Firebase.");
+     const current=snap.data()||{};
+     const own=String(current.ownerUid||current.ownerId||"").trim();
+     if(!own||own!==String(ownerUid||"").trim())throw new Error("Data bukan milik akun yang sedang login.");
+     await ubahStokKarenaStatusPenjualan(ref,current,ns);
+     closeModal();await loadSales();render();
+     setTimeout(()=>openWA(id,ns),100);
+   }catch(e){modalUI("❌ Gagal",esc(e.message),[{label:"Tutup",fn:closeModal}])}
+ }}])
+}
 
 function editDataPenjualan(id){
  const d=all.find(x=>x.id===id);if(!d)return;
@@ -133,11 +435,122 @@ function editDataPenjualan(id){
  }}]);
 }
 async function hapusPenjualan(id){
- if(!(isOwner||isSuperAdmin)){modalUI("🔒 Akses ditolak","Akun ini tidak memiliki hak menghapus data penjualan.",[{label:"Tutup",fn:closeModal}]);return}
- const d=all.find(x=>x.id===id);if(!d)return;
- modalUI("⚠️ Hapus Data Penjualan",`<div class="detail">Yakin hapus nota <b>${esc(d.nomorNota||d.nota||id)}</b>?<br>Data akan dihapus permanen dari Firebase.</div>`,[
- {label:"Batal",fn:closeModal},{label:"🗑️ Hapus Permanen",cls:"dark",fn:async()=>{try{await deleteDoc(doc(db,"penjualan",id));closeModal();await loadSales();render()}catch(e){modalUI("❌ Gagal menghapus",esc(e.message),[{label:"Tutup",fn:closeModal}])}}}
- ]);
+  if(!(isOwner||isSuperAdmin)){
+    modalUI("Akses Ditolak","Hanya Owner / Superadmin yang dapat menghapus data.",[
+      {label:"Tutup",fn:closeModal}
+    ]);
+    return;
+  }
+
+  const d=all.find(x=>x.id===id);
+  if(!d)return;
+
+  modalUI(
+    "🗑️ Hapus Penjualan",
+    `<div class="detail">
+      Nota: <b>${esc(d.nomorNota||d.nota||"-")}</b><br>
+      Pelanggan: <b>${esc(pname(d))}</b><br>
+      Produk: ${productChips(d)}<br><br>
+      Jika stok transaksi ini masih terpotong, stok akan
+      <b>dikembalikan otomatis sebelum data dihapus</b>.
+    </div>`,
+    [
+      {label:"Batal",fn:closeModal},
+      {label:"🗑️ Hapus Permanen",cls:"dark",fn:async()=>{
+        try{
+          const ref=doc(db,"penjualan",id);
+          const snap=await getDoc(ref);
+          if(!snap.exists()){
+            closeModal();
+            await loadSales();
+            return;
+          }
+
+          const current=snap.data()||{};
+          const own=String(current.ownerUid||current.ownerId||"").trim();
+          if(!own || own!==String(ownerUid||"").trim()){
+            throw new Error("Data bukan milik akun yang sedang login.");
+          }
+
+          const items=getSaleStockItems(current);
+          const reduced=
+            current.stokDikurangi===true ||
+            (
+              current.stokDikurangi===undefined &&
+              st(current)!=="batal"
+            );
+          const returned=current.stokDikembalikan===true;
+
+          if(items.length && reduced && !returned){
+            await runTransaction(db,async tx=>{
+              const saleSnap=await tx.get(ref);
+              if(!saleSnap.exists())throw new Error("Data penjualan tidak ditemukan.");
+
+              const fresh=saleSnap.data()||{};
+              const freshOwner=String(fresh.ownerUid||fresh.ownerId||"").trim();
+              if(!freshOwner || freshOwner!==String(ownerUid||"").trim()){
+                throw new Error("Data penjualan bukan milik akun ini.");
+              }
+
+              // Kalau proses lain sudah mengembalikan stok, langsung hapus.
+              if(fresh.stokDikembalikan===true){
+                tx.delete(ref);
+                return;
+              }
+
+              const stockSnaps=[];
+              for(const item of items){
+                const sr=doc(db,"stok",item.produkId);
+                const ss=await tx.get(sr);
+
+                if(!ss.exists()){
+                  throw new Error(
+                    `Produk stok "${item.nama||item.produkId}" tidak ditemukan. `+
+                    `Data tidak jadi dihapus agar stok tidak hilang.`
+                  );
+                }
+
+                const data=ss.data()||{};
+                const stockOwner=String(
+                  data.ownerUid||data.ownerId||data.uid||""
+                ).trim();
+
+                if(!stockOwner || stockOwner!==String(ownerUid||"").trim()){
+                  throw new Error(
+                    `Stok "${item.nama||item.produkId}" bukan milik akun ini. `+
+                    `Data tidak jadi dihapus.`
+                  );
+                }
+
+                stockSnaps.push({item,ref:sr,data});
+              }
+
+              for(const x of stockSnaps){
+                const field=stockFieldValue(x.data);
+                const lama=Number(x.data[field])||0;
+                const baru=lama+x.item.qty;
+                tx.update(x.ref,stockPatchPenjualan(x.data,field,baru));
+              }
+
+              tx.delete(ref);
+            });
+          }else{
+            // Sudah batal + stok sudah kembali, atau transaksi tidak pernah
+            // mengurangi stok: hapus tanpa menambah stok lagi.
+            await deleteDoc(ref);
+          }
+
+          closeModal();
+          await loadSales();
+
+        }catch(e){
+          modalUI("❌ Gagal Hapus",esc(e.message||e),[
+            {label:"Tutup",fn:closeModal}
+          ]);
+        }
+      }}
+    ]
+  );
 }
 
 function waText(d,newStatus){let x=newStatus||st(d),nama=pname(d),nota=d.nomorNota||d.nota||"-",produk=productText(d),tot=rupiah(total(d)),disc=rupiah(diskon(d)),dpv=rupiah(dp(d)),sisaV=rupiah(sisa(d)),tgl=fmt(date(d)),konter=d.namaKonter||d.konter||"A Yudi Thea";if(x==="tagihan")return`Halo Kak ${nama} 👋\n\nAda tagihan penjualan di *${konter}* yang belum lunas:\n\n📄 Nota: *${nota}*\n📅 Tanggal: ${tgl}\n📦 Produk: ${produk}\n💰 Total: ${tot}\n🎁 Diskon: ${disc}\n💵 DP: ${dpv}\n🧾 *Sisa tagihan: ${sisaV}*\n\nMohon segera dilunasi ya Kak 🙏\nJika sudah transfer, abaikan pesan ini.\nTerima kasih\n*${konter}*`;if(x==="tunai")return`Halo Kak ${nama} 🙏\n\nTerima kasih sudah berbelanja di *${konter}* ❤️\n\n📄 Nota: *${nota}* • *LUNAS* ✅\n📅 Tanggal: ${tgl}\n📦 Produk: ${produk}\n💰 Total Bayar: ${tot}\n\nPembayaran sudah kami terima lunas.\nSemoga puas dengan produknya!\nDitunggu kedatangannya kembali ya Kak.\n\n*${konter}*`;if(x==="masuk")return`Halo Kak ${nama} 👋\n\nTransaksi penjualan *${nota}* di *${konter}* tercatat sebagai *MASUK* 📝\n\n📅 Tanggal: ${tgl}\n📦 Produk: ${produk}\n💰 Total: ${tot}\n🧾 Sisa: ${sisaV}\n\nKami proses dulu ya Kak.\n\n*${konter}*`;if(x==="batal")return`Halo Kak ${nama} 🙏\n\nTransaksi penjualan *${nota}* di *${konter}* *DIBATALKAN* ❌\n\n📦 Produk: ${produk}\n💰 Total: ${tot}\n\nJika ada pertanyaan silakan hubungi kami.\n\n*${konter}*`;return`Halo Kak ${nama} 👋\nStatus transaksi *${nota}* di *${konter}* menjadi *${x.toUpperCase()}* ✅\nProduk: ${produk}\nTotal: ${tot}\nSisa: ${sisaV}\n*${konter}*`}
@@ -175,7 +588,7 @@ function val(r,c){return c==null?"":r[c]}
 function numVal(v){if(typeof v==="number")return v;let s=String(v??"").trim();if(!s)return 0;s=s.replace(/rp/ig,"").replace(/\s/g,"");if(s.includes(",")&&s.includes(".")){if(s.lastIndexOf(",")>s.lastIndexOf("."))s=s.replace(/\./g,"").replace(",",".");else s=s.replace(/,/g,"")}else if(s.includes(","))s=s.replace(",",".");let n=Number(s.replace(/[^0-9.-]/g,""));return Number.isFinite(n)?n:0}
 function normalizeDate(v){if(v instanceof Date&&!isNaN(v))return v.toISOString().slice(0,10);if(typeof v==="number"){let d=XLSX.SSF.parse_date_code(v);if(d)return`${d.y}-${String(d.m).padStart(2,"0")}-${String(d.d).padStart(2,"0")}`}let s=String(v??"").trim();if(!s)return new Date().toISOString().slice(0,10);if(/^\d{4}-\d{1,2}-\d{1,2}/.test(s))return s.slice(0,10);let m=s.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})/);if(m)return`${m[3]}-${String(m[2]).padStart(2,"0")}-${String(m[1]).padStart(2,"0")}`;return s.slice(0,10)}
 function normalizeStatus(v){let s=normKey(v);if(!s)return"masuk";if(s.includes("batal"))return"batal";if(s.includes("tagihan")||s.includes("tempo")||s.includes("piutang"))return"tagihan";if(s.includes("tunai")||s.includes("lunas")||s.includes("cash"))return"tunai";return"masuk"}
-function rowToPenjualan(row,headers){let c={};for(let k in aliases)c[k]=findCol(headers,aliases[k]);let nota=String(val(row,c.nota)||"").trim(),nama=String(val(row,c.nama)||"").trim(),wa=String(val(row,c.wa)||"").trim(),produk=String(val(row,c.produk)||"").trim(),tanggal=normalizeDate(val(row,c.tanggal)),status=normalizeStatus(val(row,c.status));let tot=numVal(val(row,c.total)),dis=numVal(val(row,c.diskon)),dpv=numVal(val(row,c.dp)),sis=val(row,c.sisa)===""?Math.max(0,tot-dis-dpv):numVal(val(row,c.sisa));let inc=val(row,c.pendapatan)===""?(status==="tunai"?Math.max(0,tot-dis):0):numVal(val(row,c.pendapatan));return{tanggal,nomorNota:nota||`IMPORT-${Date.now()}`,barcode:String(val(row,c.barcode)||nota||""),namaPelanggan:nama||"-",wa,noHp:wa,noWhatsapp:wa,total:tot,diskon:dis,dp:dpv,sisa:sis,pendapatan:inc,status,items:produk||"",teknisi:String(val(row,c.teknisi)||""),namaKonter:String(val(row,c.konter)||"")||"A Yudi Thea",akun:String(val(row,c.akun)||""),ownerUid,ownerId:ownerUid,uid,importedLegacy:true,importedFrom:"excel_or_google_sheet",importedAt:serverTimestamp(),updatedAt:serverTimestamp()}}
+function rowToPenjualan(row,headers){let c={};for(let k in aliases)c[k]=findCol(headers,aliases[k]);let nota=String(val(row,c.nota)||"").trim(),nama=String(val(row,c.nama)||"").trim(),wa=String(val(row,c.wa)||"").trim(),produk=String(val(row,c.produk)||"").trim(),tanggal=normalizeDate(val(row,c.tanggal)),status=normalizeStatus(val(row,c.status));let tot=numVal(val(row,c.total)),dis=numVal(val(row,c.diskon)),dpv=numVal(val(row,c.dp)),sis=val(row,c.sisa)===""?Math.max(0,tot-dis-dpv):numVal(val(row,c.sisa));let inc=val(row,c.pendapatan)===""?(status==="tunai"?Math.max(0,tot-dis):0):numVal(val(row,c.pendapatan));return{tanggal,nomorNota:nota||`IMPORT-${Date.now()}`,barcode:String(val(row,c.barcode)||nota||""),namaPelanggan:nama||"-",wa,noHp:wa,noWhatsapp:wa,total:tot,diskon:dis,dp:dpv,sisa:sis,pendapatan:inc,status,items:produk||"",teknisi:String(val(row,c.teknisi)||""),namaKonter:String(val(row,c.konter)||"")||"A Yudi Thea",akun:String(val(row,c.akun)||""),ownerUid,ownerId:ownerUid,uid,importedLegacy:true,importedFrom:"excel_or_google_sheet",stokDikurangi:false,stokDikembalikan:false,importedAt:serverTimestamp(),updatedAt:serverTimestamp()}}
 function showImportPreview(){if(!importRows.length){$("importPreview").style.display="none";return}let h=importHeaders.slice(0,12),r=importRows.slice(0,100);$("importPreview").style.display="block";$("importPreview").innerHTML=`<table><thead><tr>${h.map(x=>`<th>${esc(x)}</th>`).join("")}</tr></thead><tbody>${r.map(x=>`<tr>${h.map(k=>`<td>${esc(x[k])}</td>`).join("")}</tr>`).join("")}</tbody></table>`}
 function setImportButton(){$("importButton").disabled=!importRows.length||!uid}
 window.bukaImport=()=>{$("importPopup").classList.add("show");$("importResult").textContent="";$("importInfo").textContent="";$("importProgress").style.width="0%";setImportButton()}
