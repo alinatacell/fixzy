@@ -386,20 +386,43 @@ window.simpanNota=async function(){
     total,dp,tagihanAwal:tagihan,sisaTagihan:tagihan,dibayar:dp,
     tempoHari:Number(document.getElementById('tempoHari').value||0),
     tempoMode:document.getElementById('tempoMode').value,jatuhTempo:document.getElementById('jatuhTempo').value,
-    catatan:document.getElementById('catatan').value.trim(),ownerId:ownerUid,ownerEmail,status:'belum_lunas',
+    catatan:document.getElementById('catatan').value.trim(),
+    ownerId:ownerUid,ownerUid:ownerUid,ownerEmail,status:'belum_lunas',
     createdAt:serverTimestamp(),updatedAt:serverTimestamp()
   };
   try{
     const notaRef=doc(collection(db,'memberTempoNotes'));
     await runTransaction(db,async tx=>{
-      for(const item of items.filter(x=>x.sumber==='firebase')){
-        const stockRef=doc(db,'stok',item.productId),stockSnap=await tx.get(stockRef);
-        if(!stockSnap.exists())throw new Error(`Produk ${item.nama} tidak ditemukan lagi di Stock Firebase.`);
-        const stock=stockSnap.data()||{},lama=stockOf(stock);
-        if(lama<item.qty)throw new Error(`Stok ${item.nama} tidak cukup. Tersedia ${lama}.`);
-        const baru=lama-item.qty;
-        tx.update(stockRef,{sisa:baru,stok:baru,status:baru>0?'tersedia':'kosong',updatedAt:serverTimestamp()});
+      // FIRESTORE: semua READ harus selesai sebelum WRITE.
+      // Sebelumnya stock pertama langsung di-update lalu stock berikutnya dibaca,
+      // sehingga transaksi gagal: "require all reads to be executed before all writes".
+      const stockItems=items.filter(x=>x.sumber==='firebase');
+      const reads=[];
+      for(const item of stockItems){
+        const stockRef=doc(db,'stok',item.productId);
+        const stockSnap=await tx.get(stockRef);
+        reads.push({item,stockRef,stockSnap});
       }
+
+      const updates=[];
+      for(const r of reads){
+        if(!r.stockSnap.exists()){
+          throw new Error(`Produk ${r.item.nama} tidak ditemukan lagi di Stock Firebase.`);
+        }
+        const stock=r.stockSnap.data()||{};
+        const lama=stockOf(stock);
+        if(lama<r.item.qty){
+          throw new Error(`Stok ${r.item.nama} tidak cukup. Tersedia ${lama}.`);
+        }
+        const baru=lama-r.item.qty;
+        updates.push({
+          ref:r.stockRef,
+          data:{sisa:baru,stok:baru,status:baru>0?'tersedia':'kosong',updatedAt:serverTimestamp()}
+        });
+      }
+
+      // Setelah semua READ selesai, baru lakukan seluruh WRITE.
+      updates.forEach(x=>tx.update(x.ref,x.data));
       tx.set(notaRef,{...data,createdAt:serverTimestamp(),updatedAt:serverTimestamp()});
     });
     document.getElementById('saveMsg').style.display='block';document.getElementById('saveMsg').textContent='Nota tersimpan ke Firebase. Tagihan: '+rupiah(tagihan);
