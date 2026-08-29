@@ -42,8 +42,9 @@ textarea{min-height:70px;resize:vertical}
 th{background:#0f172a;color:#fff;text-align:left;font-size:11px;padding:9px}td{padding:8px;border-bottom:1px solid #e5e7eb;vertical-align:middle}
 .item-input{min-width:120px}.money{text-align:right;font-weight:900}
 .product-cell{position:relative;min-width:230px}.product-search{min-width:210px}
-.product-dropdown{position:absolute;left:0;right:0;top:100%;z-index:40;background:#fff;border:1px solid #cbd5e1;border-radius:10px;box-shadow:0 10px 25px #0002;max-height:240px;overflow:auto;display:none}
-.product-dropdown.show{display:block}.product-option{padding:10px;border-bottom:1px solid #eef2f7;cursor:pointer}
+.product-dropdown{position:fixed;z-index:10050;background:#fff;border:1px solid #cbd5e1;border-radius:10px;box-shadow:0 10px 25px #0003;max-height:min(280px,45vh);overflow-y:auto;overflow-x:hidden;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;touch-action:pan-y;display:none}
+.product-dropdown.show{display:block}.product-option{padding:11px 10px;border-bottom:1px solid #eef2f7;cursor:pointer;min-height:52px}
+.product-dropdown::-webkit-scrollbar{width:8px}.product-dropdown::-webkit-scrollbar-thumb{background:#94a3b8;border-radius:10px}
 .product-option:last-child{border-bottom:0}.product-option:hover{background:#f8fafc}
 .product-option b{display:block}.product-option small{color:#64748b}.stock-ok{color:#15803d}.stock-low{color:#d97706}.stock-out{color:#dc2626}.manual-product{margin-top:6px;display:none}.manual-product.show{display:block}.source-note{font-size:10px;color:#64748b;margin-top:4px}
 .total-box{display:flex;justify-content:flex-end;margin-top:12px}.totals{width:min(100%,360px)}
@@ -61,6 +62,8 @@ th{background:#0f172a;color:#fff;text-align:left;font-size:11px;padding:9px}td{p
 }
 @media(max-width:480px){
  .grid,.summary{grid-template-columns:1fr}.header-title small{display:none}.header-actions .close-btn{display:none}
+ .product-dropdown{max-height:42vh;max-width:calc(100vw - 20px);border-radius:12px}
+ .product-option{padding:12px 10px}
 }
 @media print{
  header,.no-print{display:none!important}body{background:#fff}main{max-width:none;padding:0}.card{box-shadow:none;border:0}
@@ -178,6 +181,25 @@ function nameOf(p){return String(p.nama||p.namaProduk||p.namaBarang||p.produk||p
 function priceOf(p){return Number(p.hargaJual??p.hargaJual??p.jual??p.harga??p.price??p.sellingPrice??0)}
 function stockOf(p){return Number(p.sisa??p.sisaStok??p.stokTersedia??p.stokAkhir??p.pcs??p.ready??p.stok??p.qty??p.jumlah??p.stock??0)}
 function codeOf(p){return String(p.kode||p.sku||p.barcode||p.code||'')}
+// Dropdown produk dibuat fixed agar tidak ikut scroll halaman/table.
+// Daftar produk memiliki scroll internal sehingga yang bergerak adalah produk.
+function positionProductDropdown(tr){
+  const inp=tr?.querySelector('.product-search'), dd=tr?.querySelector('.product-dropdown');
+  if(!inp||!dd||!dd.classList.contains('show'))return;
+  const r=inp.getBoundingClientRect();
+  const margin=8, gap=4;
+  const maxW=Math.min(r.width,window.innerWidth-margin*2);
+  const left=Math.max(margin,Math.min(r.left,window.innerWidth-maxW-margin));
+  const maxH=Math.min(280,Math.floor(window.innerHeight*0.42));
+  let top=r.bottom+gap;
+  dd.style.width=maxW+'px';
+  dd.style.left=left+'px';
+  dd.style.maxHeight=maxH+'px';
+  // Jika ruang bawah sempit, buka ke atas input.
+  if(top+maxH>window.innerHeight-margin) top=Math.max(margin,r.top-gap-maxH);
+  dd.style.top=top+'px';
+}
+
 function showProductDropdown(tr,keyword){
   const dd=tr.querySelector('.product-dropdown');
   const kw=norm(keyword);
@@ -187,8 +209,11 @@ function showProductDropdown(tr,keyword){
     return `<div class="product-option" data-pid="${esc(p.id)}"><b>${esc(nameOf(p))}</b><small>${esc(codeOf(p))} • <span class="${cls}">${st<=0?'STOK HABIS':'Stok: '+st}</span> • ${rupiah(priceOf(p))}</small></div>`;
   }).join(''):'<div class="product-option" style="color:#94a3b8">Produk tidak ditemukan.</div>';
   dd.classList.add('show');
+  positionProductDropdown(tr);
   dd.querySelectorAll('[data-pid]').forEach(el=>el.onclick=()=>{
-    const prod=window.products.find(x=>x.id===el.dataset.pid);selectProductForRow(tr,prod);dd.classList.remove('show');
+    const prod=window.products.find(x=>x.id===el.dataset.pid);
+    selectProductForRow(tr,prod);
+    dd.classList.remove('show');
   });
 }
 function selectProductForRow(tr,p){
@@ -201,6 +226,16 @@ function selectProductForRow(tr,p){
 document.addEventListener('click',e=>{
   if(!e.target.closest('.product-cell')) document.querySelectorAll('.product-dropdown.show').forEach(x=>x.classList.remove('show'));
 });
+window.addEventListener('resize',()=>{
+  document.querySelectorAll('.product-dropdown.show').forEach(dd=>{
+    const tr=dd.closest('tr'); if(tr) positionProductDropdown(tr);
+  });
+});
+window.addEventListener('scroll',()=>{
+  document.querySelectorAll('.product-dropdown.show').forEach(dd=>{
+    const tr=dd.closest('tr'); if(tr) positionProductDropdown(tr);
+  });
+},true);
 function esc(s){return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
 function getItems(){
   return [...document.querySelectorAll('#itemsBody tr')].map(tr=>{
@@ -261,8 +296,15 @@ async function loadOwner(){
   // Karyawan memakai ownerUid/ownerId dari profil.
   // Superadmin tidak boleh membuka data bisnis Owner.
   if(role==='superadmin'||role==='super_admin'||roleNorm(u.email)==='servicehpmaja@gmail.com'){
+    // Superadmin memiliki akun bisnis uji sendiri.
+    // Tidak membaca atau menulis data Owner lain.
+    ownerUid=u.uid;
+    businessOwnerUid=u.uid;
     currentUser.profileRole='superadmin';
     currentUser.role='superadmin';
+    currentUser.ownerUid=u.uid;
+    currentUser.ownerId=u.uid;
+    currentUser.businessOwnerUid=u.uid;
     currentUser.isOwner=false;
     return true;
   }
