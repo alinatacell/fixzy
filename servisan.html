@@ -927,18 +927,34 @@ async function executeSave(printAfter){
   $("saveStatus").textContent="Menyimpan...";
   setNotice("Menyimpan data servisan...");
 
+  // SIMPAN KE FIREBASE
   await saveData(d);
 
   $("saveStatus").textContent=`Berhasil • ${d.nomorNota}`;
-  setNotice(`Servisan ${d.nomorNota} berhasil disimpan pada akun ${businessUid}.`,"ok");
+  setNotice(
+   `Servisan ${d.nomorNota} berhasil disimpan pada akun ${businessUid}.`,
+   "ok"
+  );
 
-  if(printAfter){
-   pendingData=d;
-   renderTemplateGrid();
-   $("templatePopup").classList.add("show");
+  /*
+   * TOMBOL:
+   * 💾 Simpan
+   * Setelah berhasil langsung ke DATA SERVIS.
+   */
+  if(!printAfter){
+   setTimeout(()=>{
+    window.location.href="data-servis.html";
+   },300);
+   return;
   }
 
-  resetForm();
+  /*
+   * 🖨️ Simpan & Pilih Template
+   * Tetap membuka pilihan template.
+   */
+  pendingData=d;
+  renderTemplateGrid();
+  $("templatePopup").classList.add("show");
 
  }catch(e){
   console.error(e);
@@ -946,7 +962,6 @@ async function executeSave(printAfter){
   setNotice("Gagal menyimpan: "+e.message,"error");
  }
 }
-
 window.simpan=p=>executeSave(p);
 
 $("darkToggle").addEventListener("click",()=>{
