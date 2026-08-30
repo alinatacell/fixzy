@@ -161,66 +161,97 @@ window.simpanDataServis=async()=>{
  const r=allRows.find(x=>x.id===editId);
  if(!r)return;
 
- const ne=Math.max(0,Number($("eds_estimasi").value)||0);
- const nd=Math.min(ne,Math.max(0,Number($("eds_diskon").value)||0));
+ const tanggal=$('eds_tanggal').value||dateVal(r);
+ const nota=$('eds_nota').value.trim()||getNota(r);
+ const nama=$('eds_nama').value.trim()||'-';
+ const wa=$('eds_wa').value.trim();
+ const tipe=$('eds_tipe').value.trim()||'-';
+ const kerusakan=$('eds_kerusakan').value.trim()||'-';
+ const produk=$('eds_produk').value.trim();
+
+ // ATURAN PEMBAYARAN:
+ // Estimasi = harga sebelum diskon
+ // Total = Estimasi - Diskon
+ // DP tidak boleh melebihi Total
+ // Sisa = Total - DP
+ const ne=Math.max(0,Number($('eds_estimasi').value)||0);
+ const nd=Math.min(ne,Math.max(0,Number($('eds_diskon').value)||0));
  const nt=Math.max(0,ne-nd);
- const ndp=Math.min(nt,Math.max(0,Number($("eds_dp").value)||0));
+ const ndp=Math.min(nt,Math.max(0,Number($('eds_dp').value)||0));
  const ns=Math.max(0,nt-ndp);
  const st=getStatus(r);
- const pend=st==="diambil"?nt:st==="selesai"?ndp:0;
+ const pend=st==='diambil'?nt:st==='selesai'?ndp:0;
+ const tanggalDiambil=$('eds_diambil').value||'';
 
  try{
-  await updateDoc(doc(db,"servis",editId),{
-   tanggal:$("eds_tanggal").value||dateVal(r),
-   nomorNota:$("eds_nota").value.trim()||getNota(r),
-   nota:$("eds_nota").value.trim()||getNota(r),
-
-   namaPelanggan:$("eds_nama").value.trim()||"-",
-   wa:$("eds_wa").value.trim(),
-   noWa:$("eds_wa").value.trim(),
-
-   brandTipe:$("eds_tipe").value.trim()||"-",
-   tipeHp:$("eds_tipe").value.trim()||"-",
-
-   kerusakan:$("eds_kerusakan").value.trim()||"-",
-   keluhan:$("eds_kerusakan").value.trim()||"-",
-
-   produkDigunakan:$("eds_produk").value.trim(),
+  // Update FLAT + NESTED fields sekaligus.
+  // Ini penting karena data servis lama FIXZY memiliki sebagian data di dalam
+  // pelanggan/servisan/estimasi, sedangkan Data Servis juga membaca field flat.
+  const changes={
+   tanggal,
+   nomorNota:nota,
+   nota,
+   namaPelanggan:nama,
+   wa,
+   noWa:wa,
+   brandTipe:tipe,
+   tipeHp:tipe,
+   kerusakan,
+   keluhan:kerusakan,
+   produkDigunakan:produk,
+   produk:produk,
+   sparepart:produk,
 
    estimasi:ne,
    estimasiBiaya:ne,
    biayaService:ne,
+   biaya:ne,
    subtotal:ne,
    subtotalSebelumDiskon:ne,
-
    diskon:nd,
    discount:nd,
-
    dp:ndp,
    uangMuka:ndp,
-
    total:nt,
    totalBayar:nt,
-
+   jumlahTotal:nt,
    sisa:ns,
    sisaBayar:ns,
-
-   tanggalDiambil:$("eds_diambil").value||"",
    pendapatan:pend,
+   tanggalDiambil,
 
-   ownerUid:ownerUid,
-   ownerId:ownerUid,
-   uid:uid,
+   // Sinkronisasi struktur nested agar halaman lain FIXZY membaca nilai yang sama.
+   'pelanggan.nama':nama,
+   'pelanggan.wa':wa,
+   'servisan.brandTipe':tipe,
+   'servisan.jenisKerusakan':kerusakan,
+   'estimasi.biayaService':ne,
+   'estimasi.diskon':nd,
+   'estimasi.total':nt,
+   'estimasi.dp':ndp,
+   'estimasi.sisa':ns,
    updatedAt:serverTimestamp()
-  });
+  };
 
-  const verify=await getDoc(doc(db,"servis",editId));
-  if(!verify.exists())throw new Error("Verifikasi Firebase gagal: dokumen tidak ditemukan.");
+  // Jangan mengubah ownerUid/uid/createdBy ketika edit data.
+  // Field kepemilikan harus tetap seperti dokumen aslinya agar isolasi Owner
+  // dan Firestore Rules tidak terganggu.
+  await updateDoc(doc(db,'servis',editId),changes);
+
+  // Verifikasi NILAI yang baru, bukan sekadar memastikan dokumen masih ada.
+  const verify=await getDoc(doc(db,'servis',editId));
+  if(!verify.exists())throw new Error('Verifikasi Firebase gagal: dokumen tidak ditemukan.');
+  const v=verify.data()||{};
+  const vEstimasi=getEstimasi(v),vDiskon=getDiskon(v),vDp=getDP(v),vTotal=getTotal(v),vSisa=getSisa(v);
+  if(vEstimasi!==ne || vDiskon!==nd || vDp!==ndp || vTotal!==nt || vSisa!==ns){
+   throw new Error('Data Firebase belum sesuai setelah penyimpanan. Silakan coba lagi.');
+  }
 
   closeEdit();
   await muatSemua();
  }catch(e){
-  alert("Gagal menyimpan data Firebase: "+e.message);
+  console.error('Gagal edit data servis:',e);
+  alert('Gagal menyimpan data Firebase: '+(e?.message||e));
  }
 }
 async function hapusServis(id){
